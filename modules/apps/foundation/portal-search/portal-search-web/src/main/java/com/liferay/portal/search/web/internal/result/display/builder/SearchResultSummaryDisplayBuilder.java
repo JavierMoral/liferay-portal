@@ -230,6 +230,10 @@ public class SearchResultSummaryDisplayBuilder {
 
 		AssetEntry assetEntry = _assetEntryLocalService.fetchEntry(
 			className, classPK);
+		searchResultSummaryDisplayContext.setClassName(className);
+		searchResultSummaryDisplayContext.setClassPK(classPK);
+		searchResultSummaryDisplayContext.setPortletURL(
+			_portletURLFactory.getPortletURL());
 
 		buildAssetCategoriesOrTags(
 			searchResultSummaryDisplayContext, assetEntry, className, classPK);
@@ -257,14 +261,10 @@ public class SearchResultSummaryDisplayBuilder {
 		if (hasAssetCategoriesOrTags(assetEntry)) {
 			searchResultSummaryDisplayContext.setAssetCategoriesOrTagsVisible(
 				true);
-			searchResultSummaryDisplayContext.setClassName(className);
-			searchResultSummaryDisplayContext.setClassPK(classPK);
 			searchResultSummaryDisplayContext.setFieldAssetCategoryIds(
 				Field.ASSET_CATEGORY_IDS);
 			searchResultSummaryDisplayContext.setFieldAssetTagNames(
 				Field.ASSET_TAG_NAMES);
-			searchResultSummaryDisplayContext.setPortletURL(
-				_portletURLFactory.getPortletURL());
 		}
 	}
 
