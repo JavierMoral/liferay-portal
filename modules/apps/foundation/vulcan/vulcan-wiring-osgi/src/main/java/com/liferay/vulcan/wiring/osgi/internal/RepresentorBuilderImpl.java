@@ -15,6 +15,7 @@
 package com.liferay.vulcan.wiring.osgi.internal;
 
 import com.liferay.vulcan.representor.builder.RepresentorBuilder;
+import com.liferay.vulcan.wiring.osgi.RelatedModel;
 
 import java.util.List;
 import java.util.Map;
@@ -46,7 +47,7 @@ public class RepresentorBuilderImpl<T> implements RepresentorBuilder<T> {
 	}
 
 	@Override
-	public FirstStep<T> getFirstStep(Function<T, String> identifierFunction) {
+	public FirstStep<T> identifier(Function<T, String> identifierFunction) {
 		_identifierFunctions.put(_modelClass.getName(), identifierFunction);
 
 		return new FirstStep<T>() {

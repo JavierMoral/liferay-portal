@@ -809,6 +809,8 @@ AUI.add(
 						}
 						else if (currentTarget.hasClass('lfr-ddm-repeatable-delete-button')) {
 							instance.remove();
+
+							instance.syncRepeatablelUI();
 						}
 
 						event.stopPropagation();
@@ -1094,7 +1096,7 @@ AUI.add(
 
 						var portletNamespace = instance.get('portletNamespace');
 
-						var portletURL = Liferay.PortletURL.createURL(themeDisplay.getLayoutRelativeURL());
+						var portletURL = Liferay.PortletURL.createURL(themeDisplay.getURLControlPanel());
 
 						portletURL.setParameter('criteria', criteria);
 						portletURL.setParameter('itemSelectedEventName', portletNamespace + 'selectDocumentLibrary');
@@ -1139,7 +1141,7 @@ AUI.add(
 					getUploadURL: function() {
 						var instance = this;
 
-						var portletURL = Liferay.PortletURL.createURL(themeDisplay.getLayoutRelativeURL());
+						var portletURL = Liferay.PortletURL.createURL(themeDisplay.getURLControlPanel());
 
 						portletURL.setLifecycle(Liferay.PortletURL.ACTION_PHASE);
 						portletURL.setParameter('cmd', 'add_temp');
@@ -2416,7 +2418,7 @@ AUI.add(
 
 						var portletNamespace = instance.get('portletNamespace');
 
-						var portletURL = Liferay.PortletURL.createURL(themeDisplay.getLayoutRelativeURL());
+						var portletURL = Liferay.PortletURL.createURL(themeDisplay.getURLControlPanel());
 
 						portletURL.setParameter('criteria', criteria);
 						portletURL.setParameter('itemSelectedEventName', portletNamespace + 'selectDocumentLibrary');
@@ -3061,7 +3063,11 @@ AUI.add(
 							else if (event.type === 'liferay-ddm-field:remove') {
 								delete validatorRules[field.getInputName()];
 
-								liferayForm.formValidator.resetField(field.getInputNode());
+								var inputNode = field.getInputNode();
+
+								if (inputNode) {
+									liferayForm.formValidator.resetField(inputNode);
+								}
 
 								if (field.get('repeatable')) {
 									instance.unregisterRepeatable(field);
