@@ -186,7 +186,9 @@ public class SitemapImpl implements Sitemap {
 
 		Element rootElement = null;
 
-		if (Validator.isNull(layoutUuid)) {
+		if (Validator.isNull(layoutUuid) &&
+			PropsValues.XML_SITEMAP_INDEX_ENABLED) {
+
 			rootElement = document.addElement(
 				"sitemapindex", "http://www.sitemaps.org/schemas/sitemap/0.9");
 		}
@@ -200,7 +202,9 @@ public class SitemapImpl implements Sitemap {
 		LayoutSet layoutSet = LayoutSetLocalServiceUtil.getLayoutSet(
 			groupId, privateLayout);
 
-		if (Validator.isNull(layoutUuid)) {
+		if (Validator.isNull(layoutUuid) &&
+			PropsValues.XML_SITEMAP_INDEX_ENABLED) {
+
 			visitLayoutSet(rootElement, layoutSet, themeDisplay);
 
 			return document.asXML();
@@ -210,8 +214,14 @@ public class SitemapImpl implements Sitemap {
 			SitemapURLProviderRegistryUtil.getSitemapURLProviders();
 
 		for (SitemapURLProvider sitemapURLProvider : sitemapURLProviders) {
-			sitemapURLProvider.visitLayout(
-				rootElement, layoutUuid, layoutSet, themeDisplay);
+			if (Validator.isNull(layoutUuid)) {
+				sitemapURLProvider.visitLayoutSet(
+					rootElement, layoutSet, themeDisplay);
+			}
+			else {
+				sitemapURLProvider.visitLayout(
+					rootElement, layoutUuid, layoutSet, themeDisplay);
+			}
 		}
 
 		return document.asXML();
@@ -247,9 +257,10 @@ public class SitemapImpl implements Sitemap {
 
 				Element locationElement = sitemapElement.addElement("loc");
 
-				StringBundler sb = new StringBundler(7);
+				StringBundler sb = new StringBundler(8);
 
 				sb.append(portalURL);
+				sb.append(PortalUtil.getPathContext());
 				sb.append("/sitemap.xml?layoutUuid=");
 				sb.append(layout.getUuid());
 				sb.append("&groupId=");

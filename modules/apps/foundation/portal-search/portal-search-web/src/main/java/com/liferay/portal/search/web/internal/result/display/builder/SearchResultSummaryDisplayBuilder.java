@@ -21,6 +21,8 @@ import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
@@ -72,32 +74,15 @@ import javax.servlet.http.HttpServletRequest;
 public class SearchResultSummaryDisplayBuilder {
 
 	public SearchResultSummaryDisplayContext build() throws Exception {
-		String className = _document.get(Field.ENTRY_CLASS_NAME);
-		long classPK = getEntryClassPK();
-
-		AssetRendererFactory<?> assetRendererFactory =
-			getAssetRendererFactoryByClassName(className);
-
-		AssetRenderer<?> assetRenderer = null;
-
-		if (assetRendererFactory != null) {
-			long resourcePrimKey = GetterUtil.getLong(
-				_document.get(Field.ROOT_ENTRY_CLASS_PK));
-
-			if (resourcePrimKey > 0) {
-				classPK = resourcePrimKey;
-			}
-
-			assetRenderer = assetRendererFactory.getAssetRenderer(classPK);
+		try {
+			return build(
+				_document.get(Field.ENTRY_CLASS_NAME), getEntryClassPK());
 		}
+		catch (Exception e) {
+			_log.error(e, e);
 
-		Summary summary = getSummary(className, assetRenderer);
-
-		if (summary == null) {
-			return null;
+			return buildTemporarilyUnavailable();
 		}
-
-		return build(summary, className, classPK, assetRenderer);
 	}
 
 	public void setAbridged(boolean abridged) {
@@ -193,12 +178,45 @@ public class SearchResultSummaryDisplayBuilder {
 	}
 
 	protected SearchResultSummaryDisplayContext build(
+			String className, long classPK)
+		throws Exception {
+
+		AssetRendererFactory<?> assetRendererFactory =
+			getAssetRendererFactoryByClassName(className);
+
+		AssetRenderer<?> assetRenderer = null;
+
+		if (assetRendererFactory != null) {
+			long resourcePrimKey = GetterUtil.getLong(
+				_document.get(Field.ROOT_ENTRY_CLASS_PK));
+
+			if (resourcePrimKey > 0) {
+				classPK = resourcePrimKey;
+			}
+
+			assetRenderer = getAssetRenderer(
+				className, classPK, assetRendererFactory);
+		}
+
+		Summary summary = getSummary(className, assetRenderer);
+
+		if (summary == null) {
+			return null;
+		}
+
+		return build(summary, className, classPK, assetRenderer);
+	}
+
+	protected SearchResultSummaryDisplayContext build(
 			Summary summary, String className, long classPK,
 			AssetRenderer<?> assetRenderer)
 		throws PortalException, PortletException {
 
 		SearchResultSummaryDisplayContext searchResultSummaryDisplayContext =
 			new SearchResultSummaryDisplayContext();
+
+		searchResultSummaryDisplayContext.setClassName(className);
+		searchResultSummaryDisplayContext.setClassPK(classPK);
 
 		if (Validator.isNotNull(summary.getContent())) {
 			searchResultSummaryDisplayContext.setContent(
@@ -208,6 +226,8 @@ public class SearchResultSummaryDisplayBuilder {
 
 		searchResultSummaryDisplayContext.setHighlightedTitle(
 			summary.getHighlightedTitle());
+		searchResultSummaryDisplayContext.setPortletURL(
+			_portletURLFactory.getPortletURL());
 
 		if (_abridged) {
 			return searchResultSummaryDisplayContext;
@@ -242,14 +262,10 @@ public class SearchResultSummaryDisplayBuilder {
 		if (hasAssetCategoriesOrTags(assetEntry)) {
 			searchResultSummaryDisplayContext.setAssetCategoriesOrTagsVisible(
 				true);
-			searchResultSummaryDisplayContext.setClassName(className);
-			searchResultSummaryDisplayContext.setClassPK(classPK);
 			searchResultSummaryDisplayContext.setFieldAssetCategoryIds(
 				Field.ASSET_CATEGORY_IDS);
 			searchResultSummaryDisplayContext.setFieldAssetTagNames(
 				Field.ASSET_TAG_NAMES);
-			searchResultSummaryDisplayContext.setPortletURL(
-				_portletURLFactory.getPortletURL());
 		}
 	}
 
@@ -305,7 +321,6 @@ public class SearchResultSummaryDisplayBuilder {
 			new SearchResultFieldDisplayContext();
 
 		searchResultFieldDisplayContext.setArray(isArray(field));
-		searchResultFieldDisplayContext.setBoost(field.getBoost());
 		searchResultFieldDisplayContext.setName(field.getName());
 		searchResultFieldDisplayContext.setNumeric(field.isNumeric());
 		searchResultFieldDisplayContext.setTokenized(field.isTokenized());
@@ -426,6 +441,15 @@ public class SearchResultSummaryDisplayBuilder {
 				_themeDisplay.getLocale(), className));
 	}
 
+	protected SearchResultSummaryDisplayContext buildTemporarilyUnavailable() {
+		SearchResultSummaryDisplayContext searchResultSummaryDisplayContext =
+			new SearchResultSummaryDisplayContext();
+
+		searchResultSummaryDisplayContext.setTemporarilyUnavailable(true);
+
+		return searchResultSummaryDisplayContext;
+	}
+
 	protected void buildUserPortrait(
 		SearchResultSummaryDisplayContext searchResultSummaryDisplayContext,
 		AssetEntry assetEntry, String className) {
@@ -478,6 +502,21 @@ public class SearchResultSummaryDisplayBuilder {
 		return assetEntry.getUserId();
 	}
 
+	protected AssetRenderer<?> getAssetRenderer(
+		String className, long classPK,
+		AssetRendererFactory<?> assetRendererFactory) {
+
+		try {
+			return assetRendererFactory.getAssetRenderer(classPK);
+		}
+		catch (Exception e) {
+			throw new IllegalStateException(
+				"Unable to get asset renderer for class " + className +
+					" with primary key " + classPK,
+				e);
+		}
+	}
+
 	protected AssetRendererFactory<?> getAssetRendererFactoryByClassName(
 		String className) {
 
@@ -518,7 +557,7 @@ public class SearchResultSummaryDisplayBuilder {
 
 		Summary summary = null;
 
-		Indexer indexer = getIndexer(className);
+		Indexer<?> indexer = getIndexer(className);
 
 		if (indexer != null) {
 			String snippet = _document.get(Field.SNIPPET);
@@ -608,6 +647,9 @@ public class SearchResultSummaryDisplayBuilder {
 
 		return false;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		SearchResultSummaryDisplayBuilder.class);
 
 	private boolean _abridged;
 	private AssetEntryLocalService _assetEntryLocalService;

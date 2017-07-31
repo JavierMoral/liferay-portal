@@ -334,6 +334,8 @@ public class DLFileEntryLocalServiceImpl
 
 				// File entry
 
+				dlFileEntry.setModifiedDate(
+					latestDLFileVersion.getModifiedDate());
 				dlFileEntry.setExtension(latestDLFileVersion.getExtension());
 				dlFileEntry.setMimeType(latestDLFileVersion.getMimeType());
 				dlFileEntry.setSize(latestDLFileVersion.getSize());
@@ -1025,7 +1027,35 @@ public class DLFileEntryLocalServiceImpl
 
 	@Override
 	public DLFileEntry fetchFileEntryByAnyImageId(long imageId) {
-		return dlFileEntryFinder.fetchByAnyImageId(imageId);
+		DLFileEntry fileEntry =
+			dlFileEntryPersistence.fetchBySmallImageId_First(imageId, null);
+
+		if (fileEntry != null) {
+			return fileEntry;
+		}
+
+		fileEntry = dlFileEntryPersistence.fetchByLargeImageId_First(
+			imageId, null);
+
+		if (fileEntry != null) {
+			return fileEntry;
+		}
+
+		fileEntry = dlFileEntryPersistence.fetchByCustom1ImageId_First(
+			imageId, null);
+
+		if (fileEntry != null) {
+			return fileEntry;
+		}
+
+		fileEntry = dlFileEntryPersistence.fetchByCustom2ImageId_First(
+			imageId, null);
+
+		if (fileEntry != null) {
+			return fileEntry;
+		}
+
+		return null;
 	}
 
 	@Override
@@ -1601,17 +1631,14 @@ public class DLFileEntryLocalServiceImpl
 	public boolean isFileEntryCheckedOut(long fileEntryId)
 		throws PortalException {
 
-		DLFileVersion dlFileVersion =
-			dlFileVersionLocalService.getLatestFileVersion(fileEntryId, false);
+		DLFileVersion dlFileVersion = dlFileVersionPersistence.fetchByF_V(
+			fileEntryId, DLFileEntryConstants.PRIVATE_WORKING_COPY_VERSION);
 
-		String version = dlFileVersion.getVersion();
-
-		if (version.equals(DLFileEntryConstants.PRIVATE_WORKING_COPY_VERSION)) {
-			return true;
-		}
-		else {
+		if (dlFileVersion == null) {
 			return false;
 		}
+
+		return true;
 	}
 
 	@Override
@@ -2006,6 +2033,7 @@ public class DLFileEntryLocalServiceImpl
 					dlFileEntry.getVersion(),
 					dlFileVersion.getVersion()) <= 0) {
 
+				dlFileEntry.setModifiedDate(dlFileVersion.getModifiedDate());
 				dlFileEntry.setFileName(dlFileVersion.getFileName());
 				dlFileEntry.setExtension(dlFileVersion.getExtension());
 				dlFileEntry.setMimeType(dlFileVersion.getMimeType());
@@ -2015,7 +2043,6 @@ public class DLFileEntryLocalServiceImpl
 				dlFileEntry.setFileEntryTypeId(
 					dlFileVersion.getFileEntryTypeId());
 				dlFileEntry.setVersion(dlFileVersion.getVersion());
-				dlFileEntry.setModifiedDate(dlFileVersion.getCreateDate());
 				dlFileEntry.setSize(dlFileVersion.getSize());
 
 				dlFileEntryPersistence.update(dlFileEntry);

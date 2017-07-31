@@ -19,14 +19,14 @@ import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationCo
 import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationFactory;
 import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationHelper;
 import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationSettingsMapFactory;
-import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
+import com.liferay.exportimport.kernel.lar.ExportImportHelper;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalService;
 import com.liferay.exportimport.kernel.service.ExportImportConfigurationService;
 import com.liferay.exportimport.kernel.service.ExportImportService;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTask;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskConstants;
-import com.liferay.portal.kernel.backgroundtask.BackgroundTaskManagerUtil;
+import com.liferay.portal.kernel.backgroundtask.BackgroundTaskManager;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -42,7 +42,7 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.taglib.ui.util.SessionTreeJSClicks;
-import com.liferay.trash.kernel.service.TrashEntryService;
+import com.liferay.trash.service.TrashEntryService;
 
 import java.io.Serializable;
 
@@ -200,8 +200,8 @@ public class EditExportConfigurationMVCActionCommand
 		long backgroundTaskId = ParamUtil.getLong(
 			actionRequest, BackgroundTaskConstants.BACKGROUND_TASK_ID);
 
-		BackgroundTask backgroundTask =
-			BackgroundTaskManagerUtil.getBackgroundTask(backgroundTaskId);
+		BackgroundTask backgroundTask = backgroundTaskManager.getBackgroundTask(
+			backgroundTaskId);
 
 		Map<String, Serializable> taskContextMap =
 			backgroundTask.getTaskContextMap();
@@ -265,9 +265,8 @@ public class EditExportConfigurationMVCActionCommand
 		String openNodes = SessionTreeJSClicks.getOpenNodes(
 			portletRequest, treeId + "SelectedNode");
 
-		String selectedLayoutsJSON =
-			ExportImportHelperUtil.getSelectedLayoutsJSON(
-				groupId, privateLayout, openNodes);
+		String selectedLayoutsJSON = exportImportHelper.getSelectedLayoutsJSON(
+			groupId, privateLayout, openNodes);
 
 		actionRequest.setAttribute("layoutIdMap", selectedLayoutsJSON);
 	}
@@ -294,8 +293,14 @@ public class EditExportConfigurationMVCActionCommand
 		}
 	}
 
+	@Reference
+	protected BackgroundTaskManager backgroundTaskManager;
+
 	protected ExportImportConfigurationLocalService
 		exportImportConfigurationLocalService;
+
+	@Reference
+	protected ExportImportHelper exportImportHelper;
 
 	@Reference
 	protected Portal portal;

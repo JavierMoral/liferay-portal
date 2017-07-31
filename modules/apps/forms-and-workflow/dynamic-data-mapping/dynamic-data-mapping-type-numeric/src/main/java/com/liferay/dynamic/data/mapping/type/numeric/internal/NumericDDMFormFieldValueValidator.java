@@ -18,7 +18,7 @@ import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldValueValidat
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldValueValidator;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.Value;
-import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Locale;
 
@@ -35,16 +35,13 @@ public class NumericDDMFormFieldValueValidator
 	implements DDMFormFieldValueValidator {
 
 	@Override
-	public void validate(
-			DDMFormField ddmFormField, DDMFormFieldValue ddmFormFieldValue)
+	public void validate(DDMFormField ddmFormField, Value value)
 		throws DDMFormFieldValueValidationException {
-
-		Value value = ddmFormFieldValue.getValue();
 
 		for (Locale availableLocale : value.getAvailableLocales()) {
 			String valueString = value.getString(availableLocale);
 
-			if (!isNumber(valueString)) {
+			if (Validator.isNotNull(valueString) && !isNumber(valueString)) {
 				throw new DDMFormFieldValueValidationException(
 					String.format(
 						"\"%s\" is not a %s", valueString,

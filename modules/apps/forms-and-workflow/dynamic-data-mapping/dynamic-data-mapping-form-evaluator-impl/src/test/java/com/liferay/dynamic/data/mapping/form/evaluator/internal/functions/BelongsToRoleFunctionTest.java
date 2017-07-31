@@ -14,15 +14,10 @@
 
 package com.liferay.dynamic.data.mapping.form.evaluator.internal.functions;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -38,6 +33,7 @@ import org.junit.runner.RunWith;
 
 import org.mockito.Matchers;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 /**
@@ -55,10 +51,10 @@ public class BelongsToRoleFunctionTest {
 	@Test
 	public void testEvaluateFalseWithOrganizationalRole() throws Exception {
 		BelongsToRoleFunction belongsToRoleFunction = new BelongsToRoleFunction(
-			_request, 1, _groupLocalService, _roleLocalService,
-			_userGroupRoleLocalService, _userLocalService);
+			_request, 1, _roleLocalService, _userGroupRoleLocalService,
+			_userLocalService);
 
-		mockHasOrganizationalRole();
+		mockHasSiteRole();
 
 		Assert.assertEquals(
 			false, belongsToRoleFunction.evaluate("Role0", "Role2"));
@@ -67,8 +63,8 @@ public class BelongsToRoleFunctionTest {
 	@Test
 	public void testEvaluateFalseWithRegularRole() throws Exception {
 		BelongsToRoleFunction belongsToRoleFunction = new BelongsToRoleFunction(
-			_request, 1, _groupLocalService, _roleLocalService,
-			_userGroupRoleLocalService, _userLocalService);
+			_request, 1, _roleLocalService, _userGroupRoleLocalService,
+			_userLocalService);
 
 		mockHasRegularRole();
 
@@ -79,8 +75,8 @@ public class BelongsToRoleFunctionTest {
 	@Test
 	public void testEvaluateFalseWithSiteRole() throws Exception {
 		BelongsToRoleFunction belongsToRoleFunction = new BelongsToRoleFunction(
-			_request, 1, _groupLocalService, _roleLocalService,
-			_userGroupRoleLocalService, _userLocalService);
+			_request, 1, _roleLocalService, _userGroupRoleLocalService,
+			_userLocalService);
 
 		mockHasSiteRole();
 
@@ -91,10 +87,10 @@ public class BelongsToRoleFunctionTest {
 	@Test
 	public void testEvaluateTrueWithOrganizationalRole() throws Exception {
 		BelongsToRoleFunction belongsToRoleFunction = new BelongsToRoleFunction(
-			_request, 1, _groupLocalService, _roleLocalService,
-			_userGroupRoleLocalService, _userLocalService);
+			_request, 1, _roleLocalService, _userGroupRoleLocalService,
+			_userLocalService);
 
-		mockHasOrganizationalRole();
+		mockHasSiteRole();
 
 		Assert.assertEquals(
 			true, belongsToRoleFunction.evaluate("Role0", "Role1", "Role2"));
@@ -103,8 +99,8 @@ public class BelongsToRoleFunctionTest {
 	@Test
 	public void testEvaluateTrueWithRegularRole() throws Exception {
 		BelongsToRoleFunction belongsToRoleFunction = new BelongsToRoleFunction(
-			_request, 1, _groupLocalService, _roleLocalService,
-			_userGroupRoleLocalService, _userLocalService);
+			_request, 1, _roleLocalService, _userGroupRoleLocalService,
+			_userLocalService);
 
 		mockHasRegularRole();
 
@@ -115,8 +111,8 @@ public class BelongsToRoleFunctionTest {
 	@Test
 	public void testEvaluateTrueWithSiteRole() throws Exception {
 		BelongsToRoleFunction belongsToRoleFunction = new BelongsToRoleFunction(
-			_request, 1, _groupLocalService, _roleLocalService,
-			_userGroupRoleLocalService, _userLocalService);
+			_request, 1, _roleLocalService, _userGroupRoleLocalService,
+			_userLocalService);
 
 		mockHasSiteRole();
 
@@ -127,48 +123,19 @@ public class BelongsToRoleFunctionTest {
 	@Test(expected = IllegalArgumentException.class)
 	public void testIllegalArgument() throws Exception {
 		BelongsToRoleFunction belongsToRoleFunction = new BelongsToRoleFunction(
-			null, 0, null, null, null, null);
+			null, 0, null, null, null);
 
 		belongsToRoleFunction.evaluate();
 	}
 
-	protected void mockHasOrganizationalRole() throws Exception {
-		when(
-			_role.getType()
-		).thenReturn(
-			RoleConstants.TYPE_ORGANIZATION
-		);
-
-		when(
-			_groupLocalService.getOrganizationPrimaryKeys(Matchers.anyLong())
-		).thenReturn(
-			new long[1]
-		);
-
-		when(
-			_groupLocalService.getOrganizationGroup(
-				Matchers.anyLong(), Matchers.anyLong())
-		).thenReturn(
-			_group
-		);
-
-		when(
-			_userGroupRoleLocalService.hasUserGroupRole(
-				Matchers.anyLong(), Matchers.anyLong(), Matchers.eq("Role1"),
-				Matchers.eq(true))
-		).thenReturn(
-			true
-		);
-	}
-
 	protected void mockHasRegularRole() throws Exception {
-		when(
+		Mockito.when(
 			_role.getType()
 		).thenReturn(
 			RoleConstants.TYPE_REGULAR
 		);
 
-		when(
+		Mockito.when(
 			_userLocalService.hasRoleUser(
 				Matchers.anyLong(), Matchers.eq("Role1"), Matchers.anyLong(),
 				Matchers.eq(true))
@@ -178,13 +145,13 @@ public class BelongsToRoleFunctionTest {
 	}
 
 	protected void mockHasSiteRole() throws Exception {
-		when(
+		Mockito.when(
 			_role.getType()
 		).thenReturn(
 			RoleConstants.TYPE_SITE
 		);
 
-		when(
+		Mockito.when(
 			_userGroupRoleLocalService.hasUserGroupRole(
 				Matchers.anyLong(), Matchers.anyLong(), Matchers.eq("Role1"),
 				Matchers.eq(true))
@@ -196,16 +163,25 @@ public class BelongsToRoleFunctionTest {
 	protected void setPortalUtil() throws Exception {
 		PortalUtil portalUtil = new PortalUtil();
 
-		Portal portal = mock(Portal.class);
+		Portal portal = Mockito.mock(Portal.class);
 
-		when(portal.getUser(_request)).thenReturn(_user);
-		when(portal.getCompany(_request)).thenReturn(_company);
+		Mockito.when(
+			portal.getUser(_request)
+		).thenReturn(
+			_user
+		);
+
+		Mockito.when(
+			portal.getCompany(_request)
+		).thenReturn(
+			_company
+		);
 
 		portalUtil.setPortal(portal);
 	}
 
 	protected void setRole() throws Exception {
-		when(
+		Mockito.when(
 			_roleLocalService.fetchRole(
 				Matchers.anyLong(), Matchers.anyString())
 		).thenReturn(
@@ -215,12 +191,6 @@ public class BelongsToRoleFunctionTest {
 
 	@Mock
 	private Company _company;
-
-	@Mock
-	private Group _group;
-
-	@Mock
-	private GroupLocalService _groupLocalService;
 
 	@Mock
 	private HttpServletRequest _request;

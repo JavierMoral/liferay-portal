@@ -439,6 +439,18 @@ public class WikiPageLocalServiceUtil {
 	public static com.liferay.wiki.model.WikiPageDisplay getPageDisplay(
 		com.liferay.wiki.model.WikiPage page,
 		javax.portlet.PortletURL viewPageURL,
+		java.util.function.Supplier<javax.portlet.PortletURL> editPageURLSupplier,
+		java.lang.String attachmentURLPrefix,
+		com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+		return getService()
+				   .getPageDisplay(page, viewPageURL, editPageURLSupplier,
+			attachmentURLPrefix, serviceContext);
+	}
+
+	public static com.liferay.wiki.model.WikiPageDisplay getPageDisplay(
+		com.liferay.wiki.model.WikiPage page,
+		javax.portlet.PortletURL viewPageURL,
 		javax.portlet.PortletURL editPageURL,
 		java.lang.String attachmentURLPrefix)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -711,6 +723,12 @@ public class WikiPageLocalServiceUtil {
 	public static java.util.List<com.liferay.wiki.model.WikiPage> getPages(
 		long userId, long nodeId, int status, int start, int end) {
 		return getService().getPages(userId, nodeId, status, start, end);
+	}
+
+	public static java.util.List<?extends com.liferay.portal.kernel.model.PersistedModel> getPersistedModel(
+		long resourcePrimKey)
+		throws com.liferay.portal.kernel.exception.PortalException {
+		return getService().getPersistedModel(resourcePrimKey);
 	}
 
 	public static java.util.List<com.liferay.wiki.model.WikiPage> getRecentChanges(

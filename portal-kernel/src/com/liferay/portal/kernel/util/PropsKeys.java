@@ -833,13 +833,33 @@ public interface PropsKeys {
 
 	public static final String EHCACHE_BOOTSTRAP_CACHE_LOADER_PROPERTIES_DEFAULT = "ehcache.bootstrap.cache.loader.properties.default";
 
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #EHCACHE_REPLICATOR_PROPERTIES}
+	 */
+	@Deprecated
 	public static final String EHCACHE_CLUSTER_LINK_REPLICATOR_PROPERTIES = "ehcache.cluster.link.replicator.properties";
 
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #EHCACHE_REPLICATOR_PROPERTIES_DEFAULT}
+	 */
+	@Deprecated
 	public static final String EHCACHE_CLUSTER_LINK_REPLICATOR_PROPERTIES_DEFAULT = "ehcache.cluster.link.replicator.properties.default";
 
 	public static final String EHCACHE_MULTI_VM_CONFIG_LOCATION = "ehcache.multi.vm.config.location";
 
 	public static final String EHCACHE_PORTAL_CACHE_MANAGER_JMX_ENABLED = "ehcache.portal.cache.manager.jmx.enabled";
+
+	public static final String EHCACHE_REPLICATOR_PROPERTIES = "ehcache.replicator.properties";
+
+	public static final String EHCACHE_REPLICATOR_PROPERTIES_DEFAULT = "ehcache.replicator.properties.default";
+
+	public static final String EHCACHE_RMI_PEER_LISTENER_FACTORY_CLASS = "ehcache.rmi.peer.listener.factory.class";
+
+	public static final String EHCACHE_RMI_PEER_LISTENER_FACTORY_PROPERTIES = "ehcache.rmi.peer.listener.factory.properties";
+
+	public static final String EHCACHE_RMI_PEER_PROVIDER_FACTORY_CLASS = "ehcache.rmi.peer.provider.factory.class";
+
+	public static final String EHCACHE_RMI_PEER_PROVIDER_FACTORY_PROPERTIES = "ehcache.rmi.peer.provider.factory.properties";
 
 	public static final String EHCACHE_SINGLE_VM_CONFIG_LOCATION = "ehcache.single.vm.config.location";
 
@@ -871,10 +891,28 @@ public interface PropsKeys {
 
 	public static final String FIELD_EDITABLE_USER_TYPES = "field.editable.user.types";
 
+	public static final String FIELD_ENABLE_COM_LIFERAY_PORTAL_KERNEL_MODEL_CONTACT_BIRTHDAY = "field.enable.com.liferay.portal.kernel.model.Contact.birthday";
+
+	public static final String FIELD_ENABLE_COM_LIFERAY_PORTAL_KERNEL_MODEL_CONTACT_MALE = "field.enable.com.liferay.portal.kernel.model.Contact.male";
+
+	public static final String FIELD_ENABLE_COM_LIFERAY_PORTAL_KERNEL_MODEL_ORGANIZATION_STATUS = "field.enable.com.liferay.portal.kernel.model.Organization.status";
+
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #FIELD_ENABLE_COM_LIFERAY_PORTAL_KERNEL_MODEL_CONTACT_BIRTHDAY}
+	 */
+	@Deprecated
 	public static final String FIELD_ENABLE_COM_LIFERAY_PORTAL_MODEL_CONTACT_BIRTHDAY = "field.enable.com.liferay.portal.kernel.model.Contact.birthday";
 
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #FIELD_ENABLE_COM_LIFERAY_PORTAL_KERNEL_MODEL_CONTACT_MALE}
+	 */
+	@Deprecated
 	public static final String FIELD_ENABLE_COM_LIFERAY_PORTAL_MODEL_CONTACT_MALE = "field.enable.com.liferay.portal.kernel.model.Contact.male";
 
+	/**
+	 * @deprecated As of 7.0.0, replaced by {@link #FIELD_ENABLE_COM_LIFERAY_PORTAL_KERNEL_MODEL_ORGANIZATION_STATUS}
+	 */
+	@Deprecated
 	public static final String FIELD_ENABLE_COM_LIFERAY_PORTAL_MODEL_ORGANIZATION_STATUS = "field.enable.com.liferay.portal.kernel.model.Organization.status";
 
 	public static final String FINALIZE_MANAGER_THREAD_ENABLED = "finalize.manager.thread.enabled";
@@ -898,6 +936,8 @@ public interface PropsKeys {
 	public static final String HIBERNATE_GENERATE_STATISTICS = "hibernate.generate_statistics";
 
 	public static final String HIBERNATE_JDBC_BATCH_SIZE = "hibernate.jdbc.batch_size";
+
+	public static final String HIBERNATE_SESSION_FACTORY_IMPORTED_CLASS_NAME_REGEXP = "hibernate.session.factory.imported.class.name.regexp";
 
 	public static final String HOT_DEPLOY_DEPENDENCY_MANAGEMENT_ENABLED = "hot.deploy.dependency.management.enabled";
 
@@ -959,6 +999,10 @@ public interface PropsKeys {
 
 	public static final String INDEX_SEARCH_ENGINE_ID = "index.search.engine.id";
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	public static final String INDEX_SEARCH_HIGHLIGHT_ENABLED = "index.search.highlight.enabled";
 
 	public static final String INDEX_SEARCH_HIGHLIGHT_FRAGMENT_SIZE = "index.search.highlight.fragment.size";
@@ -1867,6 +1911,8 @@ public interface PropsKeys {
 
 	public static final String PORTLET_RESOURCE_ID_BANNED_PATHS_REGEXP = "portlet.resource.id.banned.paths.regexp";
 
+	public static final String PORTLET_SESSION_REPLICATE_ENABLED = "portlet.session.replicate.enabled";
+
 	public static final String PORTLET_URL_ANCHOR_ENABLE = "portlet.url.anchor.enable";
 
 	public static final String PORTLET_URL_APPEND_PARAMETERS = "portlet.url.append.parameters";
@@ -2257,6 +2303,10 @@ public interface PropsKeys {
 
 	public static final String STAGING_REMOTE_TRANSFER_BUFFER_SIZE = "staging.remote.transfer.buffer.size";
 
+	public static final String STAGING_SYSTEM_EVENT_CHECK_INTERVAL = "staging.system.event.check.interval";
+
+	public static final String STAGING_SYSTEM_EVENT_MAX_AGE = "staging.system.event.max.age";
+
 	public static final String STRIP_CSS_SASS_ENABLED = "strip.css.sass.enabled";
 
 	public static final String STRIP_IGNORE_PATHS = "strip.ignore.paths";
@@ -2346,12 +2396,22 @@ public interface PropsKeys {
 
 	public static final String TUNNELING_SERVLET_SHARED_SECRET_HEX = "tunneling.servlet.shared.secret.hex";
 
+	public static final String TUNNELING_SERVLET_TIMEOUT = "tunneling.servlet.timeout";
+
 	public static final String UPGRADE_DATABASE_TRANSACTIONS_DISABLED = "upgrade.database.transactions.disabled";
 
 	public static final String UPGRADE_PROCESSES = "upgrade.processes";
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	public static final String UPLOAD_SERVLET_REQUEST_IMPL_MAX_SIZE = "com.liferay.portal.upload.UploadServletRequestImpl.max.size";
 
+	/**
+	 * @deprecated As of 7.0.0, with no direct replacement
+	 */
+	@Deprecated
 	public static final String UPLOAD_SERVLET_REQUEST_IMPL_TEMP_DIR = "com.liferay.portal.upload.UploadServletRequestImpl.temp.dir";
 
 	public static final String USER_GROUPS_COPY_LAYOUTS_TO_USER_PERSONAL_SITE = "user.groups.copy.layouts.to.user.personal.site";
@@ -2541,6 +2601,8 @@ public interface PropsKeys {
 	public static final String WIDGET_SERVLET_MAPPING = "widget.servlet.mapping";
 
 	public static final String XML_SECURITY_ENABLED = "xml.security.enabled";
+
+	public static final String XML_SITEMAP_INDEX_ENABLED = "xml.sitemap.index.enabled";
 
 	public static final String XML_VALIDATION_ENABLED = "xml.validation.enabled";
 

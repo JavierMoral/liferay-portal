@@ -56,9 +56,7 @@ public class LanguageKeysCheck extends BaseFileCheck {
 			String fileName, String absolutePath, String content)
 		throws Exception {
 
-		if (!isSubrepository() &&
-			!fileName.endsWith("JSPLanguageUtilCheck.java")) {
-
+		if (!isSubrepository()) {
 			_checkLanguageKeys(fileName, absolutePath, content, getPatterns());
 		}
 
@@ -77,9 +75,7 @@ public class LanguageKeysCheck extends BaseFileCheck {
 			List<Pattern> patterns)
 		throws Exception {
 
-		if (fileName.endsWith(".vm") ||
-			isExcludedPath(LANGUAGE_KEYS_CHECK_EXCLUDES, absolutePath)) {
-
+		if (fileName.endsWith(".vm")) {
 			return;
 		}
 

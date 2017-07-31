@@ -30,10 +30,12 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutFriendlyURL;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.StagedModel;
+import com.liferay.portal.kernel.model.VirtualLayoutConstants;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
@@ -45,7 +47,7 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HttpUtil;
+import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -146,7 +148,7 @@ public class DefaultTextExportImportContentProcessor
 
 		String urlParams = sb.substring(beginPos + 1, endPos);
 
-		urlParams = HttpUtil.removeParameter(urlParams, "t");
+		urlParams = _http.removeParameter(urlParams, "t");
 
 		sb.replace(beginPos + 1, endPos, urlParams);
 	}
@@ -191,8 +193,7 @@ public class DefaultTextExportImportContentProcessor
 			}
 			else if (pathArray.length == 5) {
 				map.put("folderId", new String[] {pathArray[3]});
-				map.put(
-					"title", new String[] {HttpUtil.decodeURL(pathArray[4])});
+				map.put("title", new String[] {_http.decodeURL(pathArray[4])});
 			}
 			else if (pathArray.length > 5) {
 				map.put("uuid", new String[] {pathArray[5]});
@@ -202,7 +203,7 @@ public class DefaultTextExportImportContentProcessor
 			dlReference = dlReference.substring(
 				dlReference.indexOf(CharPool.QUESTION) + 1);
 
-			map = HttpUtil.parameterMapFromString(dlReference);
+			map = _http.parameterMapFromString(dlReference);
 
 			String[] imageIds = null;
 
@@ -395,11 +396,11 @@ public class DefaultTextExportImportContentProcessor
 			long groupId, String url, StringBundler urlSB)
 		throws PortalException {
 
-		if (!HttpUtil.hasProtocol(url)) {
+		if (!_http.hasProtocol(url)) {
 			return url;
 		}
 
-		boolean secure = HttpUtil.isSecure(url);
+		boolean secure = _http.isSecure(url);
 
 		int serverPort = _portal.getPortalServerPort(secure);
 
@@ -703,6 +704,18 @@ public class DefaultTextExportImportContentProcessor
 
 				urlSB.append(_DATA_HANDLER_GROUP_FRIENDLY_URL);
 
+				String siteAdminURL =
+					GroupConstants.CONTROL_PANEL_FRIENDLY_URL +
+						PropsValues.CONTROL_PANEL_LAYOUT_FRIENDLY_URL;
+
+				if (url.endsWith(siteAdminURL)) {
+					urlSB.append(_DATA_HANDLER_SITE_ADMIN_URL);
+
+					url = StringPool.BLANK;
+
+					continue;
+				}
+
 				if (pos == -1) {
 					url = StringPool.BLANK;
 
@@ -978,6 +991,12 @@ public class DefaultTextExportImportContentProcessor
 			}
 		}
 
+		StringBundler siteAdminURL = new StringBundler(3);
+
+		siteAdminURL.append(VirtualLayoutConstants.CANONICAL_URL_SEPARATOR);
+		siteAdminURL.append(GroupConstants.CONTROL_PANEL_FRIENDLY_URL);
+		siteAdminURL.append(PropsValues.CONTROL_PANEL_LAYOUT_FRIENDLY_URL);
+
 		content = StringUtil.replace(
 			content, _DATA_HANDLER_COMPANY_SECURE_URL, companySecurePortalURL);
 		content = StringUtil.replace(
@@ -1007,6 +1026,8 @@ public class DefaultTextExportImportContentProcessor
 		content = StringUtil.replace(
 			content, _DATA_HANDLER_PUBLIC_SERVLET_MAPPING,
 			PropsValues.LAYOUT_FRIENDLY_URL_PUBLIC_SERVLET_MAPPING);
+		content = StringUtil.replace(
+			content, _DATA_HANDLER_SITE_ADMIN_URL, siteAdminURL.toString());
 
 		return content;
 	}
@@ -1315,6 +1336,17 @@ public class DefaultTextExportImportContentProcessor
 				continue;
 			}
 
+			String siteAdminURL =
+				GroupConstants.CONTROL_PANEL_FRIENDLY_URL +
+					PropsValues.CONTROL_PANEL_LAYOUT_FRIENDLY_URL;
+
+			if (url.endsWith(
+					VirtualLayoutConstants.CANONICAL_URL_SEPARATOR +
+						siteAdminURL)) {
+
+				url = url.substring(url.indexOf(siteAdminURL));
+			}
+
 			pos = url.indexOf(StringPool.SLASH, 1);
 
 			String groupFriendlyURL = url;
@@ -1415,6 +1447,9 @@ public class DefaultTextExportImportContentProcessor
 	private static final String _DATA_HANDLER_PUBLIC_SERVLET_MAPPING =
 		"@data_handler_public_servlet_mapping@";
 
+	private static final String _DATA_HANDLER_SITE_ADMIN_URL =
+		"@data_handler_site_admin_url@";
+
 	private static final char[] _DL_REFERENCE_LEGACY_STOP_CHARS = {
 		CharPool.APOSTROPHE, CharPool.CLOSE_BRACKET, CharPool.CLOSE_CURLY_BRACE,
 		CharPool.CLOSE_PARENTHESIS, CharPool.GREATER_THAN, CharPool.LESS_THAN,
@@ -1430,7 +1465,8 @@ public class DefaultTextExportImportContentProcessor
 	private static final char[] _LAYOUT_REFERENCE_STOP_CHARS = {
 		CharPool.APOSTROPHE, CharPool.CLOSE_BRACKET, CharPool.CLOSE_CURLY_BRACE,
 		CharPool.CLOSE_PARENTHESIS, CharPool.GREATER_THAN, CharPool.LESS_THAN,
-		CharPool.PIPE, CharPool.QUESTION, CharPool.QUOTE, CharPool.SPACE
+		CharPool.PIPE, CharPool.POUND, CharPool.QUESTION, CharPool.QUOTE,
+		CharPool.SPACE
 	};
 
 	private static final String _PRIVATE_GROUP_SERVLET_MAPPING =
@@ -1467,6 +1503,9 @@ public class DefaultTextExportImportContentProcessor
 
 	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private Http _http;
 
 	@Reference
 	private LayoutFriendlyURLLocalService _layoutFriendlyURLLocalService;

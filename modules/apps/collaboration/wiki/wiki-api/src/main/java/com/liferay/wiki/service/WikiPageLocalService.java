@@ -32,6 +32,7 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.PersistedResourcedModelLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.transaction.Isolation;
@@ -49,6 +50,7 @@ import java.io.Serializable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import javax.portlet.PortletURL;
 
@@ -68,7 +70,7 @@ import javax.portlet.PortletURL;
 @Transactional(isolation = Isolation.PORTAL, rollbackFor =  {
 	PortalException.class, SystemException.class})
 public interface WikiPageLocalService extends BaseLocalService,
-	PersistedModelLocalService {
+	PersistedModelLocalService, PersistedResourcedModelLocalService {
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
@@ -328,6 +330,12 @@ public interface WikiPageLocalService extends BaseLocalService,
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public WikiPageDisplay getPageDisplay(WikiPage page,
+		PortletURL viewPageURL, Supplier<PortletURL> editPageURLSupplier,
+		java.lang.String attachmentURLPrefix, ServiceContext serviceContext)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public WikiPageDisplay getPageDisplay(WikiPage page,
 		PortletURL viewPageURL, PortletURL editPageURL,
 		java.lang.String attachmentURLPrefix) throws PortalException;
 
@@ -518,6 +526,11 @@ public interface WikiPageLocalService extends BaseLocalService,
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<WikiPage> getPages(long userId, long nodeId, int status,
 		int start, int end);
+
+	@Override
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<?extends PersistedModel> getPersistedModel(long resourcePrimKey)
+		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<WikiPage> getRecentChanges(long groupId, long nodeId,

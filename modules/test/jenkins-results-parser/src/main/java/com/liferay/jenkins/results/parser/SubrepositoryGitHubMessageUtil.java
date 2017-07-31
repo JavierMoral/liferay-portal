@@ -14,6 +14,8 @@
 
 package com.liferay.jenkins.results.parser;
 
+import com.liferay.jenkins.results.parser.failure.message.generator.FailureMessageUtil;
+
 import java.io.File;
 
 import org.apache.tools.ant.Project;
@@ -109,7 +111,7 @@ public class SubrepositoryGitHubMessageUtil {
 					project.getProperty("env.TOP_LEVEL_BUILD_NUMBER"));
 
 				String makeDirCommand = JenkinsResultsParserUtil.combine(
-					"ssh -o PasswordAuthentication=no ", topLevelMasterHostname,
+					"ssh -o NumberOfPasswordPrompts=0 ", topLevelMasterHostname,
 					" 'mkdir -p /opt/java/jenkins/userContent/", targetDirPath,
 					"'");
 				String rsyncCommand = JenkinsResultsParserUtil.combine(

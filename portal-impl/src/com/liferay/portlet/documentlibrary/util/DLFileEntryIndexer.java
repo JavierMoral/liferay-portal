@@ -14,6 +14,7 @@
 
 package com.liferay.portlet.documentlibrary.util;
 
+import com.liferay.document.library.kernel.exception.NoSuchFileVersionException;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryMetadata;
 import com.liferay.document.library.kernel.model.DLFileVersion;
@@ -68,6 +69,7 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.CharPool;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringBundler;
@@ -202,7 +204,8 @@ public class DLFileEntryIndexer
 			addRelatedClassNames(contextBooleanFilter, searchContext);
 		}
 
-		if (ArrayUtil.contains(
+		if (ArrayUtil.isEmpty(searchContext.getFolderIds()) ||
+			ArrayUtil.contains(
 				searchContext.getFolderIds(),
 				DLFolderConstants.DEFAULT_PARENT_FOLDER_ID)) {
 
@@ -290,6 +293,8 @@ public class DLFileEntryIndexer
 		addSearchTerm(searchQuery, searchContext, "extension", false);
 		addSearchTerm(searchQuery, searchContext, "fileEntryTypeId", false);
 		addSearchTerm(searchQuery, searchContext, "path", false);
+		addSearchLocalizedTerm(
+			searchQuery, searchContext, Field.CONTENT, false);
 
 		LinkedHashMap<String, Object> params =
 			(LinkedHashMap<String, Object>)searchContext.getAttribute("params");
@@ -384,13 +389,20 @@ public class DLFileEntryIndexer
 			if (indexContent) {
 				if (is != null) {
 					try {
+						Locale defaultLocale = PortalUtil.getSiteDefaultLocale(
+							dlFileEntry.getGroupId());
+
+						String localizedField =
+							LocalizationUtil.getLocalizedName(
+								Field.CONTENT, defaultLocale.toString());
+
 						document.addFile(
-							Field.CONTENT, is, dlFileEntry.getTitle(),
+							localizedField, is, dlFileEntry.getTitle(),
 							PropsValues.DL_FILE_INDEXING_MAX_SIZE);
 					}
 					catch (IOException ioe) {
 						throw new SearchException(
-							"Cannot extract text from file" + dlFileEntry);
+							"Cannot extract text from file" + dlFileEntry, ioe);
 					}
 				}
 				else if (_log.isDebugEnabled()) {
@@ -494,6 +506,10 @@ public class DLFileEntryIndexer
 
 		Summary summary = createSummary(document, Field.TITLE, Field.CONTENT);
 
+		if (Validator.isNull(summary.getContent())) {
+			summary = createSummary(document, Field.TITLE, Field.DESCRIPTION);
+		}
+
 		summary.setMaxContentLength(200);
 
 		return summary;
@@ -501,7 +517,21 @@ public class DLFileEntryIndexer
 
 	@Override
 	protected void doReindex(DLFileEntry dlFileEntry) throws Exception {
-		DLFileVersion dlFileVersion = dlFileEntry.getFileVersion();
+		DLFileVersion dlFileVersion = null;
+
+		try {
+			dlFileVersion = dlFileEntry.getFileVersion();
+		}
+		catch (NoSuchFileVersionException nsfve) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"Unable to get file version for file entry " +
+						dlFileEntry.getFileEntryId(),
+					nsfve);
+			}
+
+			return;
+		}
 
 		if (!dlFileVersion.isApproved() && !dlFileEntry.isInTrash()) {
 			return;

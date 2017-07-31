@@ -695,11 +695,6 @@ public class LocalGitSyncUtil {
 			String upstreamBranchName =
 				gitWorkingDirectory.getUpstreamBranchName();
 
-			if (!pullRequest) {
-				upstreamBranchSHA = gitWorkingDirectory.getBranchSHA(
-					upstreamBranchName, upstreamRemoteConfig);
-			}
-
 			List<RemoteConfig> localGitRemoteConfigs = null;
 
 			try {
@@ -735,12 +730,12 @@ public class LocalGitSyncUtil {
 					return cacheBranchName;
 				}
 
+				gitWorkingDirectory.fetch(
+					cacheBranchName, senderBranchName, senderRemoteConfig);
+
 				updateLocalUpstreamBranch(
 					gitWorkingDirectory, upstreamBranchName, upstreamBranchSHA,
 					upstreamRemoteConfig);
-
-				gitWorkingDirectory.fetch(
-					cacheBranchName, senderBranchName, senderRemoteConfig);
 
 				gitWorkingDirectory.createLocalBranch(
 					cacheBranchName, true, senderBranchSHA);

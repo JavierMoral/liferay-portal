@@ -244,7 +244,7 @@ AUI.add(
 						instance._fillDefaultLanguage = !defaultLanguageValue;
 
 						if (editor) {
-							editor.setHTML(inputPlaceholder.val());
+							editor.setHTML(inputLanguageValue);
 						}
 
 						if (instance._inputPlaceholderDescription) {
@@ -363,7 +363,7 @@ AUI.add(
 										fieldNamePrefix: fieldNamePrefix,
 										fieldNameSuffix: fieldNameSuffix,
 										id: id,
-										name: name,
+										name: A.Lang.String.escapeHTML(name),
 										namespace: namespace,
 										value: languageId
 									}

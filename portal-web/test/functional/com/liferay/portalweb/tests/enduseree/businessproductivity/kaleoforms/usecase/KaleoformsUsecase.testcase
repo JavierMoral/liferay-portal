@@ -150,7 +150,9 @@
 			<var name="portletName" value="My Workflow Tasks" />
 		</execute>
 
-		<execute macro="Workflow#gotoAssignedToMyRoles" />
+		<execute macro="Navigator#gotoNavTab">
+			<var name="navTab" value="Assigned to My Roles" />
+		</execute>
 
 		<execute macro="Workflow#viewTaskAssignedToMyRolesDetails">
 			<var name="workflowAssetTitle" value="Kaleo Forms Process" />
@@ -618,7 +620,9 @@
 			<var name="portletName" value="My Workflow Tasks" />
 		</execute>
 
-		<execute macro="Workflow#gotoAssignedToMyRoles" />
+		<execute macro="Navigator#gotoNavTab">
+			<var name="navTab" value="Assigned to My Roles" />
+		</execute>
 
 		<execute macro="Workflow#viewPendingTasks">
 			<var name="workflowAssetTitle" value="Kaleo Forms 2 Process" />
@@ -972,7 +976,9 @@
 			<var name="portletName" value="My Workflow Tasks" />
 		</execute>
 
-		<execute macro="Workflow#gotoAssignedToMe" />
+		<execute macro="Navigator#gotoNavTab">
+			<var name="navTab" value="Assigned to Me" />
+		</execute>
 
 		<execute macro="Workflow#viewCompletedTask">
 			<var name="workflowAssetTitle" value="Kaleo Forms Process" />
@@ -1134,7 +1140,9 @@
 			<var name="portletName" value="My Workflow Tasks" />
 		</execute>
 
-		<execute macro="Workflow#gotoAssignedToMyRoles" />
+		<execute macro="Navigator#gotoNavTab">
+			<var name="navTab" value="Assigned to My Roles" />
+		</execute>
 
 		<execute macro="Workflow#viewPendingTasks">
 			<var name="workflowAssetTitle" value="Kaleo Forms Process" />
@@ -1367,7 +1375,9 @@
 			<var name="portletName" value="My Workflow Tasks" />
 		</execute>
 
-		<execute macro="Workflow#gotoAssignedToMe" />
+		<execute macro="Navigator#gotoNavTab">
+			<var name="navTab" value="Assigned to Me" />
+		</execute>
 
 		<execute macro="Workflow#viewCompletedTask">
 			<var name="workflowAssetTitle" value="Kaleo Forms Process" />
@@ -1589,7 +1599,9 @@
 			<var name="portletName" value="My Workflow Tasks" />
 		</execute>
 
-		<execute macro="Workflow#gotoAssignedToMyRoles" />
+		<execute macro="Navigator#gotoNavTab">
+			<var name="navTab" value="Assigned to My Roles" />
+		</execute>
 
 		<execute macro="Workflow#viewPendingTasks">
 			<var name="workflowAssetTitle" value="Kaleo Forms Process" />
@@ -2557,6 +2569,9 @@
 	</command>
 
 	<command name="CompleteProcessWithUploadedDefinition" priority="5">
+		<property name="portal.acceptance" value="pending" />
+		<property name="testray.component.names" value="Training" />
+
 		<execute macro="ProductMenu#gotoControlPanelConfiguration">
 			<var name="portlet" value="Workflow Definition" />
 		</execute>
@@ -5883,6 +5898,71 @@
 			<var name="kfAuthor" value="Test Test" />
 			<var name="kfProcessFieldData" value="Test Data" />
 			<var name="kfStatus" value="Approved" />
+		</execute>
+	</command>
+
+	<command ignore="true" name="ViewNoDuplicatesCreatedByAddFormSaveAndContinue" priority="3">
+		<description message="This is a use case for LPS-48995." />
+
+		<execute macro="Navigator#openURL" />
+
+		<execute macro="ProductMenu#gotoSitesContent">
+			<var name="portlet" value="Kaleo Forms Admin" />
+		</execute>
+
+		<execute macro="KaleoFormsAdmin#addProcess" />
+
+		<execute macro="KaleoFormsAdmin#addProcessDetails">
+			<var name="kfProcessDescription" value="Kaleo Forms Process Description" />
+			<var name="kfProcessName" value="Kaleo Forms Process" />
+		</execute>
+
+		<execute macro="KaleoFormsAdmin#next" />
+
+		<execute macro="KaleoFormsAdmin#addFieldSet">
+			<var name="kfFieldSetName" value="Field Set Data Definition" />
+			<var name="kfProcessName" value="Kaleo Forms Process" />
+		</execute>
+
+		<execute macro="DynamicDataMapping#addField">
+			<var name="field" value="Text" />
+			<var name="fieldFieldLabel" value="Text" />
+			<var name="fieldName" value="Text" />
+		</execute>
+
+		<execute macro="KaleoFormsAdmin#saveFieldSet" />
+
+		<execute macro="KaleoFormsAdmin#chooseFieldSet">
+			<var name="kfFieldSetName" value="Field Set Data Definition" />
+			<var name="kfProcessName" value="Kaleo Forms Process" />
+		</execute>
+
+		<execute macro="KaleoFormsAdmin#next" />
+
+		<execute macro="KaleoFormsAdmin#chooseWorkflow">
+			<var name="kfProcessName" value="Kaleo Forms Process" />
+			<var name="workflowDefinitionTitle" value="Single Approver" />
+		</execute>
+
+		<execute macro="KaleoFormsAdmin#next" />
+
+		<execute macro="KaleoFormsAdmin#assignForm">
+			<var name="kfProcessName" value="Kaleo Forms Process" />
+			<var name="workflowTask" value="create" />
+		</execute>
+
+		<execute macro="KaleoFormsAdmin#addForm">
+			<var name="kfFormName" value="Created Task Form" />
+		</execute>
+
+		<execute macro="KaleoFormsAdmin#saveAndContinueForm" />
+		<execute macro="KaleoFormsAdmin#saveAndContinueForm" />
+		<execute macro="KaleoFormsAdmin#saveAndContinueForm" />
+
+		<execute macro="KaleoFormsAdmin#saveForm" />
+
+		<execute macro="KaleoFormsAdmin#viewNoDuplicateForms">
+			<var name="kfFormName" value="Created Task Form" />
 		</execute>
 	</command>
 

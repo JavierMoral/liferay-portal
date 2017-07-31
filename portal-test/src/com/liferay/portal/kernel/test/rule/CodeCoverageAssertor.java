@@ -26,7 +26,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.rules.TestRule;
@@ -51,6 +51,8 @@ public class CodeCoverageAssertor implements TestRule {
 		_includes = includes;
 		_excludes = excludes;
 		_includeInnerClasses = includeInnerClasses;
+
+		_skip = Boolean.getBoolean("junit.code.coverage");
 	}
 
 	public void appendAssertClasses(List<Class<?>> assertClasses) {
@@ -59,6 +61,10 @@ public class CodeCoverageAssertor implements TestRule {
 	@Override
 	public Statement apply(
 		final Statement statement, final Description description) {
+
+		if (_skip) {
+			return statement;
+		}
 
 		if (description.getMethodName() != null) {
 			return statement;
@@ -173,8 +179,8 @@ public class CodeCoverageAssertor implements TestRule {
 			assertClasses.add(mainClass);
 
 			if (_includeInnerClasses) {
-				assertClasses.addAll(
-					Arrays.asList(mainClass.getDeclaredClasses()));
+				Collections.addAll(
+					assertClasses, mainClass.getDeclaredClasses());
 			}
 		}
 
@@ -235,5 +241,6 @@ public class CodeCoverageAssertor implements TestRule {
 	private final String[] _excludes;
 	private final boolean _includeInnerClasses;
 	private final String[] _includes;
+	private final boolean _skip;
 
 }

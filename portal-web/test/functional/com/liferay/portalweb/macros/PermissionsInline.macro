@@ -77,100 +77,11 @@
 		</for>
 	</command>
 
-	<command name="gotoBlogsCP">
-		<if>
-			<isset var="siteName" />
-			<then>
-				<execute macro="Navigator#gotoSitePage">
-					<var name="pageName" value="${pageName}" />
-					<var name="siteName" value="${siteName}" />
-				</execute>
-			</then>
-			<else>
-				<execute macro="Navigator#gotoPage">
-					<var name="pageName" value="${pageName}" />
-				</execute>
-			</else>
-		</if>
-
-		<execute macro="ProductMenu#gotoSitesContent">
-			<var name="portlet" value="Blogs" />
-		</execute>
-
-		<execute function="Click" locator1="Icon#HEADER_VERTICAL_ELLIPSIS" />
-
-		<if>
-			<isset var="entriesPermissions" />
-			<then>
-				<execute function="AssertClick" locator1="MenuItem#ENTRIES_PERMISSIONS" value1="Entries Permissions" />
-			</then>
-			<else>
-				<execute function="AssertClick" locator1="MenuItem#PERMISSIONS" value1="Permissions" />
-			</else>
-		</if>
-
-		<execute function="SelectFrame" locator1="IFrame#DIALOG" />
-	</command>
-
-	<command name="gotoBlogsEntriesCP">
-		<execute function="Click" locator1="Icon#HEADER_VERTICAL_ELLIPSIS" />
-
-		<execute function="AssertClick" locator1="MenuItem#PERMISSIONS_LEXICON" value1="Entries Permissions" />
-	</command>
-
-	<command name="gotoBlogsEntryCP">
-		<execute macro="Navigator#openURL" />
-
-		<execute macro="ProductMenu#gotoSitesContent">
-			<var name="portlet" value="Blogs" />
-		</execute>
-
-		<var name="key_rowEntry" value="${entryTitle}" />
-
-		<execute function="Click#waitForMenuToggleJSClick" locator1="Icon#ROW_VERTICAL_ELLIPSIS" />
-
-		<execute function="AssertClick" locator1="MenuItem#PERMISSIONS_LEXICON" value1="Permissions" />
-
-		<execute function="SelectFrame" locator1="IFrame#DIALOG" />
-	</command>
-
-	<command name="gotoBlogsEntryPG">
-		<execute function="Click#waitForMenuToggleJSClick" locator1="Icon#BODY_VERTICAL_ELLIPSIS" />
-
-		<execute function="AssertClick" locator1="MenuItem#PERMISSIONS_LEXICON" value1="Permissions" />
-
-		<execute function="SelectFrame" locator1="IFrame#DIALOG" />
-	</command>
-
 	<command name="gotoConfigurationPG">
 		<execute macro="Portlet#gotoPortletOptions">
 			<var name="portletName" value="${portletName}" />
 			<var name="portletOption" value="Permissions" />
 		</execute>
-
-		<execute function="SelectFrame" locator1="IFrame#DIALOG" />
-	</command>
-
-	<command name="gotoDMDocumentCP">
-		<var name="key_rowEntry" value="${dmDocumentTitle}" />
-
-		<execute function="Click#waitForMenuToggleJSClick" locator1="Icon#ROW_VERTICAL_ELLIPSIS" />
-
-		<execute function="AssertClick" locator1="MenuItem#PERMISSIONS_LEXICON" value1="Permissions" />
-
-		<execute function="SelectFrame" locator1="IFrame#DIALOG" />
-	</command>
-
-	<command name="gotoDMFolderPG">
-		<execute macro="Navigator#gotoPage">
-			<var name="pageName" value="${pageName}" />
-		</execute>
-
-		<var name="key_dmFolderName" value="${dmFolderName}" />
-
-		<execute function="Click" locator1="DocumentsAndMedia#DESCRIPTIVE_LIST_VERTICAL_ELLIPSIS" />
-
-		<execute function="AssertClick" locator1="MenuItem#PERMISSIONS" value1="Permissions" />
 
 		<execute function="SelectFrame" locator1="IFrame#DIALOG" />
 	</command>
@@ -192,7 +103,9 @@
 
 		<execute function="Click" locator1="Icon#BODY_VERTICAL_ELLIPSIS" />
 
-		<execute function="AssertClick" locator1="MenuItem#PERMISSIONS" value1="Permissions" />
+		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Permissions">
+			<var name="key_menuItem" value="Permissions" />
+		</execute>
 
 		<execute function="SelectFrame" locator1="IFrame#DIALOG" />
 	</command>
@@ -231,31 +144,23 @@
 
 		<execute function="Click" locator1="MessageBoards#THREAD_REPLY_ACTIONS" />
 
-		<execute function="AssertClick" locator1="MenuItem#PERMISSIONS_LEXICON" value1="Permissions" />
+		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Permissions">
+			<var name="key_menuItem" value="Permissions" />
+		</execute>
 
 		<execute function="SelectFrame" locator1="IFrame#DIALOG" />
 	</command>
 
 	<command name="gotoPagePG">
-		<if>
-			<condition function="IsElementPresent" locator1="SOUserBar#USER_BAR" />
-			<then>
-				<if>
-					<condition function="IsElementNotPresent" locator1="SOUserBar#VISIBLE_PAGE_CONTROLS" />
-					<then>
-						<execute function="Click" locator1="SOUserBar#TOGGLE_DOCKBAR" />
-					</then>
-				</if>
-			</then>
-		</if>
-
 		<execute macro="SitePageNavigator#gotoEditPage">
 			<var name="page" value="${pageName}" />
 		</execute>
 
 		<execute function="Click" locator1="Icon#HEADER_VERTICAL_ELLIPSIS" />
 
-		<execute function="Click" locator1="MenuItem#PERMISSIONS_LEXICON" value1="Permissions" />
+		<execute function="Click" locator1="MenuItem#ANY_MENU_ITEM" value1="Permissions">
+			<var name="key_menuItem" value="Permissions" />
+		</execute>
 
 		<execute function="SelectFrame" locator1="IFrame#DIALOG" />
 	</command>
@@ -265,7 +170,9 @@
 
 		<execute function="Click" locator1="Polls#POLLS_TABLE_ACTION" />
 
-		<execute function="AssertClick" locator1="Polls#ACTIONS_DROPDOWN_PERMISSIONS" value1="Permissions" />
+		<execute function="Click" locator1="MenuItem#ANY_MENU_ITEM" value1="Permissions">
+			<var name="key_menuItem" value="Permissions" />
+		</execute>
 
 		<execute function="SelectFrame" locator1="IFrame#DIALOG" />
 	</command>
@@ -279,7 +186,9 @@
 
 		<execute function="Click" locator1="Icon#HEADER_VERTICAL_ELLIPSIS" />
 
-		<execute function="Click" locator1="MenuItem#PERMISSIONS_LEXICON" value1="Permissions" />
+		<execute function="Click" locator1="MenuItem#ANY_MENU_ITEM" value1="Permissions">
+			<var name="key_menuItem" value="Permissions" />
+		</execute>
 
 		<execute function="SelectFrame" locator1="IFrame#DIALOG" />
 	</command>
@@ -297,7 +206,9 @@
 
 		<execute function="Click#waitForMenuToggleJSClick" locator1="Icon#ROW_VERTICAL_ELLIPSIS" />
 
-		<execute function="AssertClick" locator1="MenuItem#PERMISSIONS_LEXICON" value1="Permissions" />
+		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Permissions">
+			<var name="key_menuItem" value="Permissions" />
+		</execute>
 
 		<execute function="SelectFrame" locator1="IFrame#DIALOG" />
 	</command>
@@ -310,7 +221,9 @@
 
 		<execute function="Click" locator1="Icon#HEADER_VERTICAL_ELLIPSIS" />
 
-		<execute function="AssertClick" locator1="MenuItem#PERMISSIONS" value1="Permissions" />
+		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Permissions">
+			<var name="key_menuItem" value="Permissions" />
+		</execute>
 	</command>
 
 	<command name="gotoUserGroupSitePermissionsCP">
@@ -322,7 +235,9 @@
 
 		<execute function="Click" locator1="UserGroups#USER_GROUP_TABLE_ACTIONS" />
 
-		<execute function="AssertClick" locator1="MenuItem#USER_GROUP_PAGES_PERMISSIONS" value1="User Group Pages Permissions" />
+		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="User Group Pages Permissions">
+			<var name="key_menuItem" value="User Group Pages Permissions" />
+		</execute>
 	</command>
 
 	<command name="gotoWCArticle">
@@ -330,9 +245,15 @@
 
 		<execute function="Click#waitForMenuToggleJSClick" locator1="Icon#ROW_VERTICAL_ELLIPSIS" />
 
-		<execute function="AssertClick" locator1="MenuItem#PERMISSIONS_LEXICON" value1="Permissions" />
+		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Permissions">
+			<var name="key_menuItem" value="Permissions" />
+		</execute>
 
 		<execute macro="IFrame#selectPermissionsFrame" />
+	</command>
+
+	<command name="viewButtonInactive">
+		<execute function="AssertNotVisible" locator1="Button#${buttonName}" />
 	</command>
 
 	<command name="viewPermissionsChecked">

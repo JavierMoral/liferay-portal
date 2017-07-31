@@ -8,37 +8,19 @@
 
 		<var method="StringUtil#upperCase('${assetTypeLocator}')" name="assetTypeLocator" />
 
-		<execute function="AssertClick" locator1="MenuItem#${assetTypeLocator}" value1="${assetType}" />
-	</command>
-
-	<command name="configureFilterByCategories">
-		<execute macro="Portlet#gotoPortletOptions">
-			<var name="portletName" value="Related Assets" />
-			<var name="portletOption" value="Configuration" />
+		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="${assetType}">
+			<var name="key_menuItem" value="${assetType}" />
 		</execute>
-
-		<execute function="SelectFrame" locator1="IFrame#DIALOG" />
-
-		<execute macro="Panel#expandPanel">
-			<var name="panelHeading" value="Filter" />
-		</execute>
-
-		<execute function="Select" locator1="RelatedassetsConfiguration#FILTER_SELECT" value1="Categories" />
-
-		<execute macro="AssetCategorization#addCategory">
-			<var name="categoryName" value="${categoryName}" />
-			<var name="vocabularyName" value="${vocabularyName}" />
-		</execute>
-
-		<execute macro="PortletEntry#save" />
-
-		<execute function="SelectFrameTop" />
 	</command>
 
 	<command name="gotoBookmarksSelectionPG">
-		<execute function="Click#makeVisibleClickAt" locator1="Portlet#ICON_PLUS_SIGN" />
+		<execute macro="Portlet#clickPortletPlusIconPG">
+			<var name="portletName" value="Bookmarks" />
+		</execute>
 
-		<execute function="AssertClick" locator1="MenuItem#BOOKMARK" value1="Bookmark" />
+		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Bookmark">
+			<var name="key_menuItem" value="Bookmark" />
+		</execute>
 
 		<execute macro="Panel#expandPanel">
 			<var name="panelHeading" value="Related Assets" />

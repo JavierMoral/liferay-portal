@@ -81,10 +81,12 @@ import com.liferay.portal.util.LayoutURLUtil;
 import com.liferay.social.kernel.model.SocialActivityConstants;
 import com.liferay.subscription.service.SubscriptionLocalService;
 import com.liferay.trash.TrashHelper;
-import com.liferay.trash.kernel.exception.RestoreEntryException;
-import com.liferay.trash.kernel.exception.TrashEntryException;
-import com.liferay.trash.kernel.model.TrashEntry;
-import com.liferay.trash.kernel.model.TrashVersion;
+import com.liferay.trash.exception.RestoreEntryException;
+import com.liferay.trash.exception.TrashEntryException;
+import com.liferay.trash.model.TrashEntry;
+import com.liferay.trash.model.TrashVersion;
+import com.liferay.trash.service.TrashEntryLocalService;
+import com.liferay.trash.service.TrashVersionLocalService;
 import com.liferay.wiki.configuration.WikiGroupServiceOverriddenConfiguration;
 import com.liferay.wiki.constants.WikiConstants;
 import com.liferay.wiki.constants.WikiPortletKeys;
@@ -129,6 +131,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
@@ -1273,6 +1276,18 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 			String attachmentURLPrefix, ServiceContext serviceContext)
 		throws PortalException {
 
+		return getPageDisplay(
+			page, viewPageURL, () -> editPageURL, attachmentURLPrefix,
+			serviceContext);
+	}
+
+	@Override
+	public WikiPageDisplay getPageDisplay(
+			WikiPage page, PortletURL viewPageURL,
+			Supplier<PortletURL> editPageURLSupplier,
+			String attachmentURLPrefix, ServiceContext serviceContext)
+		throws PortalException {
+
 		HttpServletRequest request = serviceContext.getRequest();
 
 		boolean workflowAssetPreview = false;
@@ -1284,12 +1299,12 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 
 		if (!workflowAssetPreview && page.isApproved()) {
 			return wikiCacheHelper.getDisplay(
-				page.getNodeId(), page.getTitle(), viewPageURL, editPageURL,
-				attachmentURLPrefix);
+				page.getNodeId(), page.getTitle(), viewPageURL,
+				editPageURLSupplier, attachmentURLPrefix);
 		}
 
 		return getPageDisplay(
-			page, viewPageURL, editPageURL, attachmentURLPrefix);
+			page, viewPageURL, editPageURLSupplier.get(), attachmentURLPrefix);
 	}
 
 	@Override
@@ -1960,7 +1975,7 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 			assetEntry = assetEntryLocalService.updateEntry(
 				userId, page.getGroupId(), page.getCreateDate(),
 				page.getModifiedDate(), WikiPage.class.getName(),
-				page.getPrimaryKey(), page.getUuid(), 0, assetCategoryIds,
+				page.getResourcePrimKey(), page.getUuid(), 0, assetCategoryIds,
 				assetTagNames, true, false, null, null, publishDate, null,
 				ContentTypes.TEXT_HTML, page.getTitle(), null, null, null, null,
 				0, 0, priority);
@@ -3302,8 +3317,14 @@ public class WikiPageLocalServiceImpl extends WikiPageLocalServiceBaseImpl {
 	@ServiceReference(type = SubscriptionLocalService.class)
 	protected SubscriptionLocalService subscriptionLocalService;
 
+	@ServiceReference(type = TrashEntryLocalService.class)
+	protected TrashEntryLocalService trashEntryLocalService;
+
 	@ServiceReference(type = TrashHelper.class)
 	protected TrashHelper trashHelper;
+
+	@ServiceReference(type = TrashVersionLocalService.class)
+	protected TrashVersionLocalService trashVersionLocalService;
 
 	@ServiceReference(type = WikiCacheHelper.class)
 	protected WikiCacheHelper wikiCacheHelper;

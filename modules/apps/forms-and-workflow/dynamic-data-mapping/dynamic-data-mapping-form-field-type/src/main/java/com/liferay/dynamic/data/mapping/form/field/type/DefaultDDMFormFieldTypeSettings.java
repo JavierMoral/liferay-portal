@@ -37,9 +37,8 @@ import com.liferay.portal.kernel.util.StringPool;
 					{
 						@DDMFormLayoutColumn(
 							size = 12,
-							value = {
-								"label", "predefinedValue", "required", "tip"
-							}
+							value =
+								{"label", "predefinedValue", "required", "tip"}
 						)
 					}
 				)
@@ -75,7 +74,7 @@ public interface DefaultDDMFormFieldTypeSettings
 			"%not-indexable", "%indexable-keyword", "%indexable-text"
 		},
 		optionValues = {StringPool.BLANK, "keyword", "text"},
-		predefinedValue = "keyword", type = "select",
+		predefinedValue = "keyword", type = "radio",
 		visibilityExpression = "FALSE"
 	)
 	public String indexType();

@@ -508,6 +508,7 @@
 		<reference entity="ResourcePermission" package-path="com.liferay.portal" />
 		<reference entity="ResourceTypePermission" package-path="com.liferay.portal" />
 		<reference entity="Role" package-path="com.liferay.portal" />
+		<reference entity="SystemEvent" package-path="com.liferay.portal" />
 		<reference entity="Team" package-path="com.liferay.portal" />
 		<reference entity="User" package-path="com.liferay.portal" />
 		<reference entity="UserGroup" package-path="com.liferay.portal" />
@@ -933,6 +934,11 @@
 			<finder-column name="plid" />
 		</finder>
 		<finder name="L_H_P" return-type="LayoutRevision">
+			<finder-column name="layoutSetBranchId" />
+			<finder-column name="head" />
+			<finder-column name="plid" />
+		</finder>
+		<finder name="L_H_P_Collection" return-type="Collection">
 			<finder-column name="layoutSetBranchId" />
 			<finder-column name="head" />
 			<finder-column name="plid" />
@@ -1761,6 +1767,12 @@
 			<finder-column name="ownerType" />
 			<finder-column name="plid" />
 			<finder-column name="portletId" />
+		</finder>
+		<finder name="C_O_O_LikeP" return-type="Collection">
+			<finder-column name="companyId" />
+			<finder-column name="ownerId" />
+			<finder-column name="ownerType" />
+			<finder-column comparator="LIKE" name="portletId" />
 		</finder>
 		<finder name="O_O_P_P" return-type="PortletPreferences" unique="true">
 			<finder-column name="ownerId" />

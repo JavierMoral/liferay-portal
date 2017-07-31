@@ -39,7 +39,9 @@
 
 		<execute function="Click" locator1="Icon#HEADER_VERTICAL_ELLIPSIS" />
 
-		<execute function="AssertClick" locator1="MenuItem#CONFIGURATION" value1="Configuration" />
+		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Configuration">
+			<var name="key_menuItem" value="Configuration" />
+		</execute>
 	</command>
 
 	<command name="tearDownUserDeliveries">
@@ -138,7 +140,11 @@
 		<var method="StringUtil#replace('${key_contentType}',' ','-')" name="key_contentType" />
 
 		<execute function="AssertTextEquals" locator1="Notifications#NOTIFICATION_DELIVERY_TEXT_1" value1="Adds new web content in a folder you are subscribed to." />
-		<execute function="AssertTextEquals" locator1="Notifications#NOTIFICATION_DELIVERY_TEXT_2" value1="Updates web content you are subscribed to." />
+		<execute function="AssertTextEquals" locator1="Notifications#NOTIFICATION_DELIVERY_TEXT_2" value1="Moves from folder web content you are subscribed to." />
+		<execute function="AssertTextEquals" locator1="Notifications#NOTIFICATION_DELIVERY_TEXT_3" value1="Restores from trash web content you are subscribed to." />
+		<execute function="AssertTextEquals" locator1="Notifications#NOTIFICATION_DELIVERY_TEXT_4" value1="Moves to folder web content you are subscribed to." />
+		<execute function="AssertTextEquals" locator1="Notifications#NOTIFICATION_DELIVERY_TEXT_5" value1="Moves to trash web content you are subscribed to." />
+		<execute function="AssertTextEquals" locator1="Notifications#NOTIFICATION_DELIVERY_TEXT_6" value1="Updates web content you are subscribed to." />
 		<execute function="AssertTextEquals" locator1="Notifications#NOTIFICATION_DELIVERY_EMAIL_OPTION" value1="Email" />
 		<execute function="AssertTextEquals" locator1="Notifications#NOTIFICATION_DELIVERY_WEBSITE_OPTION" value1="Website" />
 

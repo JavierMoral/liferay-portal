@@ -7,7 +7,9 @@
 
 		<execute function="Click#waitForMenuToggleJSClick" locator1="Icon#ROW_VERTICAL_ELLIPSIS" />
 
-		<execute function="AssertClickNoError" locator1="MenuItem#DELETE" value1="Delete" />
+		<execute function="AssertClickNoError" locator1="MenuItem#ANY_MENU_ITEM" value1="Delete">
+			<var name="key_menuItem" value="Delete" />
+		</execute>
 
 		<execute function="Confirm" value1="Are you sure you want to delete this? It will be deleted immediately." />
 
@@ -30,10 +32,23 @@
 			<var name="fieldValue" value="${username}" />
 		</execute>
 
-		<execute macro="FormFields#editText">
-			<var name="fieldName" value="$password" />
-			<var name="fieldValue" value="${password}" />
-		</execute>
+		<var name="key_fieldName" value="$password" />
+
+		<if>
+			<condition function="IsElementPresent" locator1="FormFields#PASSWORD_FIELD" />
+			<then>
+				<execute macro="FormFields#editPassword">
+					<var name="fieldName" value="$password" />
+					<var name="fieldValue" value="${password}" />
+				</execute>
+			</then>
+			<else>
+				<execute macro="FormFields#editText">
+					<var name="fieldName" value="$password" />
+					<var name="fieldValue" value="${password}" />
+				</execute>
+			</else>
+		</if>
 
 		<execute macro="FormsAdmin#editDataProviderOutputParameter">
 			<var name="outputParameterLabel" value="${outputParameterLabel}" />
@@ -50,15 +65,7 @@
 	<command name="editDataProviderOutputParameter">
 		<execute function="Type" locator1="Form#DATA_PROVIDER_OUTPUT_PARAMETER_PATH_FIELD" value1="${outputParameterPath}" />
 
-		<toggle name="LPS-70895">
-			<on>
-				<execute function="Type" locator1="Form#DATA_PROVIDER_OUTPUT_PARAMETER_LABEL_FIELD" value1="${outputParameterLabel}" />
-			</on>
-
-			<off>
-				<execute function="Type" locator1="Form#DATA_PROVIDER_OUTPUT_PARAMETER_NAME_FIELD" value1="${outputParameterName}" />
-			</off>
-		</toggle>
+		<execute function="Type" locator1="Form#DATA_PROVIDER_OUTPUT_PARAMETER_LABEL_FIELD" value1="${outputParameterLabel}" />
 
 		<execute macro="FormFields#selectDataProviderOutputType">
 			<var name="outputParameterType" value="${outputParameterType}" />
@@ -71,15 +78,7 @@
 
 				<execute function="Type" locator1="Form#DATA_PROVIDER_OUTPUT_PARAMETER_PATH_FIELD_2" value1="${outputParameterPath2}" />
 
-				<toggle name="LPS-70895">
-					<on>
-						<execute function="Type" locator1="Form#DATA_PROVIDER_OUTPUT_PARAMETER_LABEL_FIELD_2" value1="${outputParameterLabel2}" />
-					</on>
-
-					<off>
-						<execute function="Type" locator1="Form#DATA_PROVIDER_OUTPUT_PARAMETER_NAME_FIELD_2" value1="${outputParameterName2}" />
-					</off>
-				</toggle>
+				<execute function="Type" locator1="Form#DATA_PROVIDER_OUTPUT_PARAMETER_LABEL_FIELD_2" value1="${outputParameterLabel2}" />
 
 				<execute function="Click" locator1="Form#DATA_PROVIDER_OUTPUT_PARAMETER_TYPE_FIELD_2" />
 
@@ -108,7 +107,9 @@
 			<then>
 				<execute function="Click#waitForMenuToggleJSClick" locator1="Icon#BODY_VERTICAL_ELLIPSIS" />
 
-				<execute function="AssertClickNoError" locator1="MenuItem#DELETE" value1="Delete" />
+				<execute function="AssertClickNoError" locator1="MenuItem#ANY_MENU_ITEM" value1="Delete">
+					<var name="key_menuItem" value="Delete" />
+				</execute>
 
 				<execute function="Confirm" value1="Are you sure you want to delete this? It will be deleted immediately." />
 

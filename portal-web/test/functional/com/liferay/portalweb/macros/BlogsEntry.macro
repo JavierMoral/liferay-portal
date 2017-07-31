@@ -4,7 +4,9 @@
 	<command name="addAbstractImage">
 		<execute function="Click" locator1="Button#SELECT" />
 
-		<execute function="AssertClick" locator1="MenuItem#BASIC_DOCUMENT" value1="Basic Document" />
+		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Basic Document">
+			<var name="key_menuItem" value="Basic Document" />
+		</execute>
 
 		<execute function="UploadCommonFile" locator1="TextInput#FILE" value1="${dmDocumentFile}" />
 
@@ -197,7 +199,9 @@
 	<command name="addWithWorkflowPGViaAP">
 		<execute function="Click#makeVisibleClickAt" locator1="AP#ADD_ASSET_PLUS_ICON" />
 
-		<execute function="AssertClick" locator1="MenuItem#BLOGS_ENTRY" value1="Blogs Entry" />
+		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Blogs Entry">
+			<var name="key_menuItem" value="Blogs Entry" />
+		</execute>
 
 		<execute function="SelectFrame" locator1="IFrame#DIALOG" />
 
@@ -271,7 +275,9 @@
 
 		<execute function="Click" locator1="Icon#BODY_VERTICAL_ELLIPSIS" />
 
-		<execute function="AssertElementNotPresent" locator1="MenuItem#EDIT" />
+		<execute function="AssertElementNotPresent" locator1="MenuItem#ANY_MENU_ITEM" value1="Edit">
+			<var name="key_menuItem" value="Edit" />
+		</execute>
 	</command>
 
 	<command name="editSubtitle">
@@ -326,7 +332,7 @@
 	<command name="flagPG">
 		<var name="key_entryTitle" value="${entryTitle}" />
 
-		<execute function="AssertClick" locator1="BlogsEntry#FLAG_LINK" value1="Flag" />
+		<execute function="Click" locator1="BlogsEntry#FLAG_LINK" />
 
 		<execute function="AssertElementPresent#assertVisible" locator1="BlogsEntry#FLAG_MODAL" />
 		<execute function="AssertTextEquals" locator1="ReportContent#WARNING" value1="You are about to report a violation of our Terms of Use. All reports are strictly confidential." />
@@ -346,7 +352,9 @@
 
 		<execute function="Click" locator1="Blogs#SCHEDULED_ENTRY_VERTICAL_ELLIPSIS" />
 
-		<execute function="AssertClick" locator1="MenuItem#EDIT" value1="Edit" />
+		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Edit">
+			<var name="key_menuItem" value="Edit" />
+		</execute>
 	</command>
 
 	<command name="moveToRecycleBinCP">
@@ -457,7 +465,9 @@
 
 		<execute function="Click" locator1="Icon#DESCRIPTIVE_HEADER_VERTICAL_ELLIPSIS" />
 
-		<execute function="AssertClick" locator1="MenuItem#PERMISSIONS_LEXICON" value1="Permissions" />
+		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Permissions">
+			<var name="key_menuItem" value="Permissions" />
+		</execute>
 
 		<execute macro="IFrame#selectPermissionsFrame" />
 
@@ -561,17 +571,8 @@
 
 		<execute function="AssertTextEquals" locator1="Message#INFO" value1="No entries were found that matched the keywords: ${entrySearchTerm}." />
 
-		<if>
-			<equals arg1="${soPage}" arg2="true" />
-			<then>
-				<execute function="AssertElementNotPresent" locator1="SOBlogs#SEARCH_RESULTS_ENTRY_TITLE" value1="${entryTitle}" />
-				<execute function="AssertElementNotPresent" locator1="SOBlogs#SEARCH_RESULTS_ENTRY_DESCRIPTION" value1="${entryContent}" />
-			</then>
-			<else>
-				<execute function="AssertElementNotPresent" locator1="Blogs#SEARCH_RESULTS_ENTRY_TITLE" value1="${entryTitle}" />
-				<execute function="AssertElementNotPresent" locator1="Blogs#SEARCH_RESULTS_ENTRY_DESCRIPTION" value1="${entryContent}" />
-			</else>
-		</if>
+		<execute function="AssertElementNotPresent" locator1="Blogs#SEARCH_RESULTS_ENTRY_TITLE" value1="${entryTitle}" />
+		<execute function="AssertElementNotPresent" locator1="Blogs#SEARCH_RESULTS_ENTRY_DESCRIPTION" value1="${entryContent}" />
 	</command>
 
 	<command name="searchNoResultsCP">
@@ -594,17 +595,8 @@
 		<execute function="Type" locator1="TextInput#SEARCH" value1="${entrySearchTerm}" />
 		<execute function="AssertClick" locator1="Button#SEARCH" value1="Search" />
 
-		<if>
-			<equals arg1="${soPage}" arg2="true" />
-			<then>
-				<execute function="AssertTextEquals" locator1="SOBlogs#SEARCH_RESULTS_ENTRY_TITLE" value1="${entryTitle}" />
-				<execute function="AssertTextEquals" locator1="SOBlogs#SEARCH_RESULTS_ENTRY_DESCRIPTION" value1="${entryContent}" />
-			</then>
-			<else>
-				<execute function="AssertTextEquals" locator1="Blogs#SEARCH_RESULTS_ENTRY_TITLE" value1="${entryTitle}" />
-				<execute function="AssertTextEquals" locator1="Blogs#SEARCH_RESULTS_ENTRY_DESCRIPTION" value1="${entryContent}" />
-			</else>
-		</if>
+		<execute function="AssertTextEquals" locator1="Blogs#SEARCH_RESULTS_ENTRY_TITLE" value1="${entryTitle}" />
+		<execute function="AssertTextEquals" locator1="Blogs#SEARCH_RESULTS_ENTRY_DESCRIPTION" value1="${entryContent}" />
 	</command>
 
 	<command name="subscribePG">
@@ -922,13 +914,17 @@
 	<command name="viewPermissionsNoPermissionPG">
 		<var name="key_entryTitle" value="${entryTitle}" />
 
-		<execute function="AssertElementNotPresent" locator1="MenuItem#PERMISSIONS" value1="Permissions" />
+		<execute function="AssertElementNotPresent" locator1="MenuItem#ANY_MENU_ITEM" value1="Permissions">
+			<var name="key_menuItem" value="Permissions" />
+		</execute>
 	</command>
 
 	<command name="viewPermissionsPG">
 		<execute function="Click#waitForMenuToggleJSClick" locator1="Icon#BODY_VERTICAL_ELLIPSIS" />
 
-		<execute function="AssertClick" locator1="MenuItem#PERMISSIONS_LEXICON" value1="Permissions" />
+		<execute function="AssertClick" locator1="MenuItem#ANY_MENU_ITEM" value1="Permissions">
+			<var name="key_menuItem" value="Permissions" />
+		</execute>
 
 		<execute macro="IFrame#selectPermissionsFrame" />
 

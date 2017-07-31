@@ -1728,6 +1728,8 @@ public class VerifyProperties extends VerifyProcess {
 		"com.liferay.portal.servlet.filters.monitoring.MonitoringFilter",
 		"com.liferay.portal.servlet.filters.secure.SecureFilter",
 		"com.liferay.portal.servlet.filters.validhtml.ValidHtmlFilter",
+		"com.liferay.portal.upload.UploadServletRequestImpl.max.size",
+		"com.liferay.portal.upload.UploadServletRequestImpl.temp.dir",
 		"commons.pool.enabled", "company.settings.form.configuration",
 		"company.settings.form.identification",
 		"company.settings.form.miscellaneous", "company.settings.form.social",
@@ -1784,13 +1786,14 @@ public class VerifyProperties extends VerifyProcess {
 		"hibernate.cache.use_second_level_cache",
 		"hibernate.cache.use_structured_entries", "icq.jar", "icq.login",
 		"icq.password", "index.filter.search.limit",
-		"index.portal.field.analyzer.enabled", "index.read.only",
-		"invitation.email.max.recipients", "invitation.email.message.body",
-		"invitation.email.message.subject", "javax.persistence.validation.mode",
-		"jbi.workflow.url", "json.deserializer.strict.mode",
-		"journal.article.form.add", "journal.article.form.default.values",
-		"journal.article.form.update", "journal.article.form.translate",
-		"journal.article.types", "journal.articles.page.delta.values",
+		"index.portal.field.analyzer.enabled", "index.search.highlight.enabled",
+		"index.read.only", "invitation.email.max.recipients",
+		"invitation.email.message.body", "invitation.email.message.subject",
+		"javax.persistence.validation.mode", "jbi.workflow.url",
+		"json.deserializer.strict.mode", "journal.article.form.add",
+		"journal.article.form.default.values", "journal.article.form.update",
+		"journal.article.form.translate", "journal.article.types",
+		"journal.articles.page.delta.values",
 		"journal.browse.by.structures.sorted.by.name",
 		"journal.image.extensions", "journal.image.small.max.size",
 		"journal.template.language.parser[css]",
@@ -1995,6 +1998,14 @@ public class VerifyProperties extends VerifyProcess {
 				"edit_configuration.jsp",
 			"editor.wysiwyg.portal-web.docroot.html.portlet.shopping." +
 				"configuration.jsp"
+		},
+		new String[] {
+			"ehcache.cluster.link.replicator.properties",
+			"ehcache.replicator.properties"
+		},
+		new String[] {
+			"ehcache.cluster.link.replicator.properties.default",
+			"ehcache.replicator.properties.default"
 		},
 		new String[] {
 			"field.editable.com.liferay.portal.kernel.model.User.emailAddress",

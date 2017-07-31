@@ -35,6 +35,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.LocalizedModel;
+import com.liferay.portal.kernel.model.ResourcedModel;
 import com.liferay.portal.kernel.model.StagedGroupedModel;
 import com.liferay.portal.kernel.model.StagedModel;
 import com.liferay.portal.kernel.model.TrashedModel;
@@ -143,7 +144,10 @@ public abstract class BaseStagedModelDataHandler<T extends StagedModel>
 			PortletDataException pde = new PortletDataException(t);
 
 			if (t instanceof NoSuchModelException) {
-				pde.setStagedModel(stagedModel);
+				pde.setStagedModelDisplayName(getDisplayName(stagedModel));
+				pde.setStagedModelClassName(stagedModel.getModelClassName());
+				pde.setStagedModelClassPK(
+					GetterUtil.getString(stagedModel.getPrimaryKeyObj()));
 				pde.setType(PortletDataException.MISSING_DEPENDENCY);
 			}
 
@@ -389,7 +393,10 @@ public abstract class BaseStagedModelDataHandler<T extends StagedModel>
 
 			PortletDataException pde = new PortletDataException(nsme);
 
-			pde.setStagedModel(stagedModel);
+			pde.setStagedModelDisplayName(getDisplayName(stagedModel));
+			pde.setStagedModelClassName(stagedModel.getModelClassName());
+			pde.setStagedModelClassPK(
+				GetterUtil.getString(stagedModel.getPrimaryKeyObj()));
 			pde.setType(PortletDataException.MISSING_DEPENDENCY);
 
 			throw pde;
@@ -432,7 +439,10 @@ public abstract class BaseStagedModelDataHandler<T extends StagedModel>
 		catch (Exception e) {
 			PortletDataException pde = new PortletDataException(e);
 
-			pde.setStagedModel(stagedModel);
+			pde.setStagedModelDisplayName(getDisplayName(stagedModel));
+			pde.setStagedModelClassName(stagedModel.getModelClassName());
+			pde.setStagedModelClassPK(
+				GetterUtil.getString(stagedModel.getPrimaryKeyObj()));
 
 			throw pde;
 		}
@@ -726,6 +736,14 @@ public abstract class BaseStagedModelDataHandler<T extends StagedModel>
 			PortletDataContext portletDataContext, T stagedModel)
 		throws PortalException {
 
+		if (stagedModel instanceof ResourcedModel) {
+			ResourcedModel resourcedModel = (ResourcedModel)stagedModel;
+
+			if (!resourcedModel.isResourceMain()) {
+				return;
+			}
+		}
+
 		if (!MapUtil.getBoolean(
 				portletDataContext.getParameterMap(),
 				PortletDataHandlerKeys.PORTLET_DATA_ALL) &&
@@ -760,6 +778,14 @@ public abstract class BaseStagedModelDataHandler<T extends StagedModel>
 	protected void importRatings(
 			PortletDataContext portletDataContext, T stagedModel)
 		throws PortalException {
+
+		if (stagedModel instanceof ResourcedModel) {
+			ResourcedModel resourcedModel = (ResourcedModel)stagedModel;
+
+			if (!resourcedModel.isResourceMain()) {
+				return;
+			}
+		}
 
 		if (!MapUtil.getBoolean(
 				portletDataContext.getParameterMap(),
@@ -842,7 +868,10 @@ public abstract class BaseStagedModelDataHandler<T extends StagedModel>
 				PortletDataException pde = new PortletDataException(
 					PortletDataException.STATUS_UNAVAILABLE);
 
-				pde.setStagedModel(stagedModel);
+				pde.setStagedModelDisplayName(getDisplayName(stagedModel));
+				pde.setStagedModelClassName(stagedModel.getModelClassName());
+				pde.setStagedModelClassPK(
+					GetterUtil.getString(stagedModel.getPrimaryKeyObj()));
 
 				throw pde;
 			}
@@ -855,7 +884,10 @@ public abstract class BaseStagedModelDataHandler<T extends StagedModel>
 				PortletDataException pde = new PortletDataException(
 					PortletDataException.STATUS_IN_TRASH);
 
-				pde.setStagedModel(stagedModel);
+				pde.setStagedModelDisplayName(getDisplayName(stagedModel));
+				pde.setStagedModelClassName(stagedModel.getModelClassName());
+				pde.setStagedModelClassPK(
+					GetterUtil.getString(stagedModel.getPrimaryKeyObj()));
 
 				throw pde;
 			}

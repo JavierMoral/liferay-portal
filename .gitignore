@@ -42,13 +42,15 @@
 /classes/Test.class
 /dist
 /intellij
+/jacoco
 /lib/development/activation.jar
 /lib/development/alloy-taglib.jar
 /lib/development/annotations.jar
 /lib/development/ant-apache-bsf.jar
 /lib/development/appium.jar
 /lib/development/catalina.jar
-/lib/development/cobertura.jar
+/lib/development/com.liferay.ant.bnd.jar
+/lib/development/com.liferay.util.taglib.compat.jar
 /lib/development/db2jcc.jar
 /lib/development/db2jcc_license_cu.jar
 /lib/development/deployment.jar
@@ -62,6 +64,10 @@
 /lib/development/hamcrest-library.jar
 /lib/development/hsql.jar
 /lib/development/j2h.jar
+/lib/development/jacocoagent.jar
+/lib/development/jacocoant.jar
+/lib/development/jacococore.jar
+/lib/development/jacocoreport.jar
 /lib/development/jalopy.jar
 /lib/development/jargs.jar
 /lib/development/jarjar.jar
@@ -114,6 +120,7 @@
 /lib/development/velocity-tools.jar
 /lib/development/websocket-api.jar
 /lib/development/xmlresolver.jar
+/lib/global/portlet.jar
 /lib/portal/abdera.jar
 /lib/portal/ant.jar
 /lib/portal/antlr2.jar
@@ -126,6 +133,7 @@
 /lib/portal/axiom-api.jar
 /lib/portal/axiom-impl.jar
 /lib/portal/axis-ant.jar
+/lib/portal/axis.jar
 /lib/portal/bcmail.jar
 /lib/portal/bcprov.jar
 /lib/portal/boilerpipe.jar
@@ -140,6 +148,7 @@
 /lib/portal/chemistry-opencmis-client-impl.jar
 /lib/portal/chemistry-opencmis-commons-api.jar
 /lib/portal/chemistry-opencmis-commons-impl.jar
+/lib/portal/closure-compiler.jar
 /lib/portal/commons-beanutils.jar
 /lib/portal/commons-chain.jar
 /lib/portal/commons-codec.jar
@@ -198,10 +207,12 @@
 /lib/portal/jcommon.jar
 /lib/portal/jdom.jar
 /lib/portal/jempbox.jar
+/lib/portal/jena.jar
 /lib/portal/jericho-html.jar
 /lib/portal/jfreechart.jar
 /lib/portal/jhighlight.jar
 /lib/portal/jhlabs-filters.jar
+/lib/portal/jmatio.jar
 /lib/portal/jna.jar
 /lib/portal/jodconverter.jar
 /lib/portal/jodd-bean.jar
@@ -212,6 +223,7 @@
 /lib/portal/jodd-servlet.jar
 /lib/portal/jodd-upload.jar
 /lib/portal/json-java.jar
+/lib/portal/json-schema-validator.jar
 /lib/portal/jrcs-diff.jar
 /lib/portal/jsr107cache.jar
 /lib/portal/jstl-api.jar
@@ -242,6 +254,8 @@
 /lib/portal/poi.jar
 /lib/portal/portals-bridges.jar
 /lib/portal/rdffilter.jar
+/lib/portal/rhino.jar
+/lib/portal/rome.jar
 /lib/portal/rometools.jar
 /lib/portal/saaj-api.jar
 /lib/portal/saaj-impl.jar
@@ -297,6 +311,8 @@
 /lib/portal/xstream.jar
 /lib/portal/xuggle-xuggler-noarch.jar
 /lib/portal/xz.jar
+/lib/portal/yui-compressor.jar
+/modules/private
 /nbproject/private
 /out
 /portal-client/*.ipr
@@ -411,7 +427,6 @@
 /test-results
 /test.*.properties
 /tmp
-/tools/cobertura-agent/classes
 /tools/maven/*.asc
 /tools/node*
 /tools/sdk
@@ -450,14 +465,3 @@
 /util-taglib/util-taglib*.jar
 /WEB-INF
 _sass_cache_*.css
-cobertura.ser
-
-!/.gradle
-/.gradle/*
-!/.gradle/caches
-/.gradle/caches/*
-!/.gradle/caches/modules-2
-/.gradle/caches/modules-2/*
-!/.gradle/caches/modules-2/files-2.1
-/.gradle/caches/modules-2/files-2.1/**/*-sources.jar
-/.gradle/caches/modules-2/files-2.1/com.liferay.portal/*/*-SNAPSHOT

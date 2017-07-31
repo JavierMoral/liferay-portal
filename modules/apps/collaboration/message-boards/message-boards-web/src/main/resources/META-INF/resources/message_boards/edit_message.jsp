@@ -172,7 +172,7 @@ if (portletTitleBasedNavigation) {
 		<liferay-ui:error exception="<%= MessageSubjectException.class %>" message="please-enter-a-valid-subject" />
 
 		<liferay-ui:error exception="<%= UploadRequestSizeException.class %>">
-			<liferay-ui:message arguments="<%= TextFormatter.formatStorageSize(PrefsPropsUtil.getLong(PropsKeys.UPLOAD_SERVLET_REQUEST_IMPL_MAX_SIZE), locale) %>" key="request-is-larger-than-x-and-could-not-be-processed" translateArguments="<%= false %>" />
+			<liferay-ui:message arguments="<%= TextFormatter.formatStorageSize(UploadServletRequestConfigurationHelperUtil.getMaxSize(), locale) %>" key="request-is-larger-than-x-and-could-not-be-processed" translateArguments="<%= false %>" />
 		</liferay-ui:error>
 
 		<liferay-ui:asset-categories-error />
@@ -480,7 +480,7 @@ if (portletTitleBasedNavigation) {
 			},
 			currentAction: '<%= (message == null) ? Constants.ADD : Constants.UPDATE %>',
 			namespace: '<portlet:namespace />',
-			rootNode: '#<portlet:namespace/>mbEditPageContainer'
+			rootNode: '#<portlet:namespace />mbEditPageContainer'
 		}
 	);
 </aui:script>

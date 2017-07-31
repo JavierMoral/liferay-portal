@@ -30,7 +30,6 @@ import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.Sync;
 import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
-import com.liferay.portal.kernel.test.util.SearchContextTestUtil;
 import com.liferay.portal.search.test.util.SearchMapUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.registry.Registry;
@@ -75,15 +74,12 @@ public class ScopeFacetedSearcherTest extends BaseFacetedSearcherTestCase {
 
 		String keyword = RandomTestUtil.randomString();
 
-		userSearchFixture.addUser(
-			group1, keyword + " " + RandomTestUtil.randomString());
+		addUser(group1, keyword + " " + RandomTestUtil.randomString());
 
 		final Group group2 = userSearchFixture.addGroup();
 
-		userSearchFixture.addUser(
-			group2, keyword + " " + RandomTestUtil.randomString());
-		userSearchFixture.addUser(
-			group2, keyword + " " + RandomTestUtil.randomString());
+		addUser(group2, keyword + " " + RandomTestUtil.randomString());
+		addUser(group2, keyword + " " + RandomTestUtil.randomString());
 
 		SearchContext searchContext = getSearchContext(keyword);
 
@@ -112,13 +108,13 @@ public class ScopeFacetedSearcherTest extends BaseFacetedSearcherTestCase {
 
 		String tag1 = keyword + " " + RandomTestUtil.randomString();
 
-		User user1 = userSearchFixture.addUser(group1, tag1);
+		User user1 = addUser(group1, tag1);
 
 		final Group group2 = userSearchFixture.addGroup();
 
 		String tag2 = keyword + " " + RandomTestUtil.randomString();
 
-		User user2 = userSearchFixture.addUser(group2, tag2);
+		User user2 = addUser(group2, tag2);
 
 		SearchContext searchContext = getSearchContext(keyword);
 
@@ -152,13 +148,13 @@ public class ScopeFacetedSearcherTest extends BaseFacetedSearcherTestCase {
 
 		String tag1 = keyword + " " + RandomTestUtil.randomString();
 
-		User user1 = userSearchFixture.addUser(group1, tag1);
+		User user1 = addUser(group1, tag1);
 
 		Group group2 = userSearchFixture.addGroup();
 
 		String tag2 = keyword + " " + RandomTestUtil.randomString();
 
-		userSearchFixture.addUser(group2, tag2);
+		addUser(group2, tag2);
 
 		SearchContext searchContext = getSearchContext(keyword);
 
@@ -169,7 +165,7 @@ public class ScopeFacetedSearcherTest extends BaseFacetedSearcherTestCase {
 		searchContext.setAttribute(
 			"groupId", String.valueOf(group1.getGroupId()));
 
-		BooleanClause booleanClause = new BooleanClauseImpl(
+		BooleanClause<?> booleanClause = new BooleanClauseImpl<>(
 			new TermQueryImpl(
 				Field.GROUP_ID, String.valueOf(group1.getGroupId())),
 			BooleanClauseOccur.MUST);
@@ -192,14 +188,6 @@ public class ScopeFacetedSearcherTest extends BaseFacetedSearcherTestCase {
 	protected static Map<String, Integer> toMap(Group group, Integer count) {
 		return Collections.singletonMap(
 			String.valueOf(group.getGroupId()), count);
-	}
-
-	protected SearchContext getSearchContext(String keywords) throws Exception {
-		SearchContext searchContext = SearchContextTestUtil.getSearchContext();
-
-		searchContext.setKeywords(keywords);
-
-		return searchContext;
 	}
 
 	private ScopeFacetFactory _scopeFacetFactory;

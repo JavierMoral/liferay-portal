@@ -14,9 +14,11 @@
 
 package com.liferay.asset.publisher.web.portlet;
 
+import com.liferay.asset.publisher.web.configuration.AssetPublisherPortletInstanceConfiguration;
+import com.liferay.asset.publisher.web.configuration.AssetPublisherWebConfiguration;
 import com.liferay.asset.publisher.web.constants.AssetPublisherPortletKeys;
 import com.liferay.asset.publisher.web.constants.AssetPublisherWebKeys;
-import com.liferay.asset.publisher.web.internal.configuration.AssetPublisherWebConfiguration;
+import com.liferay.asset.publisher.web.internal.action.AssetEntryActionRegistry;
 import com.liferay.asset.publisher.web.util.AssetPublisherCustomizer;
 import com.liferay.asset.publisher.web.util.AssetPublisherCustomizerRegistry;
 import com.liferay.asset.publisher.web.util.AssetPublisherUtil;
@@ -31,12 +33,13 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.PortletConstants;
+import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.SessionErrors;
+import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
@@ -75,6 +78,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Eudaldo Alonso
  */
 @Component(
+	configurationPid = "com.liferay.asset.publisher.web.configuration.AssetPublisherWebConfiguration",
 	immediate = true,
 	property = {
 		"com.liferay.portlet.add-default-resource=true",
@@ -220,7 +224,7 @@ public class AssetPublisherPortlet extends MVCPortlet {
 		try (OutputStream outputStream =
 				resourceResponse.getPortletOutputStream()) {
 
-			String rootPortletId = PortletConstants.getRootPortletId(
+			String rootPortletId = PortletIdCodec.decodePortletName(
 				portal.getPortletId(resourceRequest));
 
 			AssetPublisherCustomizer assetPublisherCustomizer =
@@ -297,7 +301,11 @@ public class AssetPublisherPortlet extends MVCPortlet {
 		throws IOException, PortletException {
 
 		try {
-			String rootPortletId = PortletConstants.getRootPortletId(
+			renderRequest.setAttribute(
+				AssetPublisherWebKeys.ASSET_ENTRY_ACTION_REGISTRY,
+				assetEntryActionRegistry);
+
+			String rootPortletId = PortletIdCodec.decodePortletName(
 				portal.getPortletId(renderRequest));
 
 			AssetPublisherCustomizer assetPublisherCustomizer =
@@ -311,6 +319,21 @@ public class AssetPublisherPortlet extends MVCPortlet {
 			renderRequest.setAttribute(
 				AssetPublisherWebKeys.ASSET_PUBLISHER_WEB_CONFIGURATION,
 				assetPublisherWebConfiguration);
+
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)renderRequest.getAttribute(WebKeys.THEME_DISPLAY);
+
+			PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
+
+			AssetPublisherPortletInstanceConfiguration
+				assetPublisherPortletInstanceConfiguration =
+					portletDisplay.getPortletInstanceConfiguration(
+						AssetPublisherPortletInstanceConfiguration.class);
+
+			renderRequest.setAttribute(
+				AssetPublisherWebKeys.
+					ASSET_PUBLISHER_PORTLET_INSTANCE_CONFIGURATION,
+				assetPublisherPortletInstanceConfiguration);
 
 			renderRequest.setAttribute(
 				WebKeys.SINGLE_PAGE_APPLICATION_CLEAR_CACHE, Boolean.TRUE);
@@ -341,6 +364,9 @@ public class AssetPublisherPortlet extends MVCPortlet {
 
 		return false;
 	}
+
+	@Reference
+	protected AssetEntryActionRegistry assetEntryActionRegistry;
 
 	@Reference
 	protected AssetPublisherCustomizerRegistry assetPublisherCustomizerRegistry;

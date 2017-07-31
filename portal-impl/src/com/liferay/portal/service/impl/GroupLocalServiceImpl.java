@@ -74,6 +74,7 @@ import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.security.permission.RolePermissions;
+import com.liferay.portal.kernel.security.permission.UserBag;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.spring.aop.Skip;
 import com.liferay.portal.kernel.transaction.Propagation;
@@ -104,6 +105,7 @@ import com.liferay.portal.kernel.util.comparator.GroupNameComparator;
 import com.liferay.portal.kernel.workflow.WorkflowHandler;
 import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
 import com.liferay.portal.model.impl.LayoutImpl;
+import com.liferay.portal.security.permission.PermissionCacheUtil;
 import com.liferay.portal.service.base.GroupLocalServiceBaseImpl;
 import com.liferay.portal.theme.ThemeLoader;
 import com.liferay.portal.theme.ThemeLoaderFactory;
@@ -742,6 +744,8 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 				}
 			}
 
+			systemEventLocalService.deleteSystemEvents(group.getGroupId());
+
 			// Themes
 
 			ThemeLoader themeLoader =
@@ -797,10 +801,6 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 				resourcePermissionLocalService.deleteResourcePermission(
 					resourcePermission);
 			}
-
-			// Trash
-
-			trashEntryLocalService.deleteEntries(group.getGroupId());
 
 			// Workflow
 
@@ -1810,17 +1810,35 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 
 	@Override
 	public List<Group> getUserSitesGroups(long userId) throws PortalException {
-		User user = userPersistence.findByPrimaryKey(userId);
+		UserBag userBag = PermissionCacheUtil.getUserBag(userId);
 
-		LinkedHashMap<String, Object> groupParams = new LinkedHashMap<>();
+		if (userBag == null) {
+			User user = userPersistence.findByPrimaryKey(userId);
 
-		groupParams.put("inherit", Boolean.TRUE);
-		groupParams.put("site", Boolean.TRUE);
-		groupParams.put("usersGroups", userId);
+			LinkedHashMap<String, Object> groupParams = new LinkedHashMap<>();
 
-		return groupFinder.findByCompanyId(
-			user.getCompanyId(), groupParams, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, new GroupNameComparator(true));
+			groupParams.put("inherit", Boolean.TRUE);
+			groupParams.put("site", Boolean.TRUE);
+			groupParams.put("usersGroups", userId);
+
+			return groupFinder.findByCompanyId(
+				user.getCompanyId(), groupParams, QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS, new GroupNameComparator(true));
+		}
+
+		Collection<Group> userGroups = userBag.getUserGroups();
+
+		List<Group> userSiteGroups = new ArrayList<>(userGroups.size());
+
+		for (Group group : userGroups) {
+			if (group.isSite()) {
+				userSiteGroups.add(group);
+			}
+		}
+
+		userSiteGroups.sort(new GroupNameComparator(true));
+
+		return userSiteGroups;
 	}
 
 	@Override
@@ -3201,6 +3219,16 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 
 		groupPersistence.update(group);
 
+		if (group.hasStagingGroup() && !group.isStagedRemotely()) {
+			Group stagingGroup = group.getStagingGroup();
+
+			stagingGroup.setParentGroupId(group.getParentGroupId());
+
+			stagingGroup.setTreePath(stagingGroup.buildTreePath());
+
+			groupPersistence.update(stagingGroup);
+		}
+
 		// Asset
 
 		if ((serviceContext == null) || !group.isSite()) {
@@ -3589,11 +3617,7 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 
 			long groupParentGroupId = group.getParentGroupId();
 
-			if ((parentGroupIdEquals &&
-				 (groupParentGroupId != parentGroupId)) ||
-				(!parentGroupIdEquals &&
-				 (groupParentGroupId == parentGroupId))) {
-
+			if (parentGroupIdEquals && (groupParentGroupId != parentGroupId)) {
 				iterator.remove();
 
 				continue;

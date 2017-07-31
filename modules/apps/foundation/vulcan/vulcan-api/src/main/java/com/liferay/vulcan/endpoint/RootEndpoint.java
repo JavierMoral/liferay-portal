@@ -14,19 +14,45 @@
 
 package com.liferay.vulcan.endpoint;
 
-import com.liferay.vulcan.resource.Resource;
+import com.liferay.vulcan.pagination.Page;
+import com.liferay.vulcan.pagination.SingleModel;
 
+import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 
 /**
+ * Declares the endpoint from which all of your APIs originate.
+ *
+ * <p>
+ * There should only be one RootEndpoint in the application.
+ * </p>
+ *
  * @author Alejandro Hernández
  * @author Carlos Sierra Andrés
  * @author Jorge Ferrer
  */
 public interface RootEndpoint {
 
-	@Path("/{path}")
-	public Resource getResource(@PathParam("path") String path);
+	/**
+	 * Returns the {@link SingleModel} for a given path.
+	 *
+	 * @param  path the path from the URL.
+	 * @return the single model at the path.
+	 */
+	@GET
+	@Path("/p/{path}/{id}")
+	public <T> SingleModel<T> getCollectionItemSingleModel(
+		@PathParam("path") String path, @PathParam("id") String id);
+
+	/**
+	 * Returns the collection {@link Page} for a given path.
+	 *
+	 * @param  path the path from the URL.
+	 * @return the collection page at the path.
+	 */
+	@GET
+	@Path("/p/{path}")
+	public <T> Page<T> getCollectionPage(@PathParam("path") String path);
 
 }

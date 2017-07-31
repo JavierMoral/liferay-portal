@@ -48,9 +48,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.Random;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.apache.commons.codec.binary.Base64;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -530,6 +533,22 @@ public class JenkinsResultsParserUtil {
 		}
 	}
 
+	public static List<JenkinsMaster> getJenkinsMasters(
+		Properties buildProperties, String prefix) {
+
+		List<JenkinsMaster> jenkinsMasters = new ArrayList<>();
+
+		for (int i = 1;
+			buildProperties.containsKey(
+				"master.slaves(" + prefix + "-" + i + ")");
+			i++) {
+
+			jenkinsMasters.add(new JenkinsMaster(prefix + "-" + i));
+		}
+
+		return jenkinsMasters;
+	}
+
 	public static String getJobVariant(JSONObject jsonObject) {
 		JSONArray actionsJSONArray = jsonObject.getJSONArray("actions");
 
@@ -624,20 +643,44 @@ public class JenkinsResultsParserUtil {
 		return localURL + localURLQueryString;
 	}
 
-	public static List<String> getMasters(
-		Properties buildProperties, String prefix) {
+	public static String getMostAvailableMasterURL(
+		String baseInvocationURL, int invokedBatchSize) {
 
-		List<String> masters = new ArrayList<>();
+		String loadBalancerServiceURL =
+			_LOAD_BALANCER_SERVICE_URL_TEMPLATE.replace(
+				"${baseInvocationURL}", baseInvocationURL);
 
-		for (int i = 1;
-			buildProperties.containsKey(
-				"master.slaves(" + prefix + "-" + i + ")");
-			i++) {
+		loadBalancerServiceURL = loadBalancerServiceURL.replace(
+			"${invokedBatchSize}", Integer.toString(invokedBatchSize));
 
-			masters.add(prefix + "-" + i);
+		try {
+			JSONObject jsonObject = toJSONObject(loadBalancerServiceURL);
+
+			return jsonObject.getString("mostAvailableMasterURL");
 		}
+		catch (IOException ioe) {
+			Properties buildProperties = null;
 
-		return masters;
+			try {
+				buildProperties = getBuildProperties();
+			}
+			catch (IOException ioe2) {
+				throw new RuntimeException(
+					"Unable to get build properties", ioe2);
+			}
+
+			List<JenkinsMaster> availableJenkinsMasters =
+				LoadBalancerUtil.getAvailableJenkinsMasters(
+					LoadBalancerUtil.getMasterPrefix(baseInvocationURL),
+					buildProperties);
+
+			Random random = new Random(System.currentTimeMillis());
+
+			JenkinsMaster randomJenkinsMaster = availableJenkinsMasters.get(
+				random.nextInt(availableJenkinsMasters.size()));
+
+			return "http://" + randomJenkinsMaster.getMasterName();
+		}
 	}
 
 	public static String getNounForm(
@@ -710,19 +753,21 @@ public class JenkinsResultsParserUtil {
 	}
 
 	public static List<String> getSlaves(
-		Properties buildProperties, String masterPatternString) {
+		Properties buildProperties, String jenkinsMasterPatternString) {
 
 		List<String> slaves = new ArrayList<>();
 
-		Pattern masterPattern = Pattern.compile(
-			"master.slaves\\(" + masterPatternString + "\\)");
+		Pattern jenkinsSlavesPropertyNamePattern = Pattern.compile(
+			"master.slaves\\(" + jenkinsMasterPatternString + "\\)");
 
-		for (Object key : buildProperties.keySet()) {
-			Matcher keyMatcher = masterPattern.matcher(key.toString());
+		for (Object propertyName : buildProperties.keySet()) {
+			Matcher jenkinsSlavesPropertyNameMatcher =
+				jenkinsSlavesPropertyNamePattern.matcher(
+					propertyName.toString());
 
-			if (keyMatcher.find()) {
+			if (jenkinsSlavesPropertyNameMatcher.find()) {
 				String slavesString = expandSlaveRange(
-					buildProperties.getProperty(key.toString()));
+					buildProperties.getProperty(propertyName.toString()));
 
 				for (String slave : slavesString.split(",")) {
 					slaves.add(slave.trim());
@@ -733,10 +778,24 @@ public class JenkinsResultsParserUtil {
 		return slaves;
 	}
 
-	public static List<String> getSlaves(String masterPatternString)
+	public static List<String> getSlaves(String jenkinsMasterPatternString)
 		throws Exception {
 
-		return getSlaves(getBuildProperties(), masterPatternString);
+		return getSlaves(getBuildProperties(), jenkinsMasterPatternString);
+	}
+
+	public static String merge(String... strings) {
+		StringBuilder sb = new StringBuilder();
+
+		for (int i = 0; i < strings.length; i++) {
+			sb.append(strings[i]);
+
+			if (i < (strings.length - 1)) {
+				sb.append(",");
+			}
+		}
+
+		return sb.toString();
 	}
 
 	public static String read(File file) throws IOException {
@@ -804,7 +863,7 @@ public class JenkinsResultsParserUtil {
 
 	public static void sendEmail(
 			String body, String from, String subject, String to)
-		throws Exception {
+		throws InterruptedException, IOException {
 
 		File file = new File("/tmp/" + body.hashCode() + ".txt");
 
@@ -1143,6 +1202,18 @@ public class JenkinsResultsParserUtil {
 			_RETRY_PERIOD_DEFAULT, _TIMEOUT_DEFAULT);
 	}
 
+	public static void turnSlavesOff(
+		String jenkinsMasterName, String... slaveNames) {
+
+		_setSlaveStatus(jenkinsMasterName, true, slaveNames);
+	}
+
+	public static void turnSlavesOn(
+		String jenkinsMasterName, String... slaveNames) {
+
+		_setSlaveStatus(jenkinsMasterName, false, slaveNames);
+	}
+
 	public static void write(File file, String content) throws IOException {
 		if (debug) {
 			System.out.println(
@@ -1217,11 +1288,87 @@ public class JenkinsResultsParserUtil {
 		return duration;
 	}
 
+	private static void _executeJenkinsScript(
+		String jenkinsMasterName, String script) {
+
+		try {
+			URL urlObject = new URL(
+				fixURL(getLocalURL("http://" + jenkinsMasterName + "/script")));
+
+			HttpURLConnection httpURLConnection =
+				(HttpURLConnection)urlObject.openConnection();
+
+			httpURLConnection.setDoOutput(true);
+			httpURLConnection.setRequestMethod("POST");
+
+			Properties buildProperties = getBuildProperties();
+
+			String authorizationString =
+				buildProperties.getProperty("jenkins.admin.user.name") + ":" +
+					buildProperties.getProperty("jenkins.admin.user.token");
+
+			String encodedAuthorizationString = Base64.encodeBase64String(
+				authorizationString.getBytes());
+
+			httpURLConnection.setRequestProperty(
+				"Authorization", "Basic " + encodedAuthorizationString);
+
+			try (OutputStream outputStream =
+					httpURLConnection.getOutputStream()) {
+
+				outputStream.write(script.getBytes("UTF-8"));
+
+				outputStream.flush();
+			}
+
+			httpURLConnection.connect();
+
+			System.out.println(
+				"Response from " + urlObject + ": " +
+					httpURLConnection.getResponseCode() + " " +
+						httpURLConnection.getResponseMessage());
+		}
+		catch (IOException ioe) {
+			System.out.println("Unable to execute Jenkins script");
+		}
+	}
+
 	private static String _getRedactTokenKey(int index) {
 		return "github.message.redact.token[" + index + "]";
 	}
 
+	private static void _setSlaveStatus(
+		String jenkinsMasterName, boolean offlineStatus, String... slaveNames) {
+
+		try {
+			String script = "script=";
+
+			Class<?> clazz = JenkinsResultsParserUtil.class;
+
+			script += readInputStream(
+				clazz.getResourceAsStream(
+					"dependencies/set-slave-status.groovy"));
+
+			script = script.replace("${slaves}", merge(slaveNames));
+			script = script.replace(
+				"${offline.status}", String.valueOf(offlineStatus));
+
+			_executeJenkinsScript(jenkinsMasterName, script);
+		}
+		catch (IOException ioe) {
+			System.out.println(
+				"Unable to set the status for slaves: " + slaveNames);
+
+			ioe.printStackTrace();
+		}
+	}
+
 	private static final long _BASH_COMMAND_TIMEOUT_DEFAULT = 1000 * 60 * 60;
+
+	private static final String _LOAD_BALANCER_SERVICE_URL_TEMPLATE = combine(
+		"http://cloud-10-0-0-31.lax.liferay.com/osb-jenkins-web/",
+		"load_balancer?baseInvocationURL=${baseInvocationURL}",
+		"&invokedJobBatchSize=${invokedBatchSize}");
 
 	private static final int _MAX_RETRIES_DEFAULT = 3;
 

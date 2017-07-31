@@ -1,6 +1,8 @@
 AUI.add(
 	'liferay-ddl-form-builder-rule-builder',
 	function(A) {
+		var Settings = Liferay.DDL.Settings;
+
 		var SoyTemplateUtil = Liferay.DDM.SoyTemplateUtil;
 
 		var MAP_ACTION_DESCRIPTIONS = {
@@ -19,32 +21,8 @@ AUI.add(
 						value: null
 					},
 
-					functionsMetadata: {
+					roles: {
 						value: []
-					},
-
-					getDataProviderInstancesURL: {
-						value: ''
-					},
-
-					getDataProviderParametersSettingsURL: {
-						value: ''
-					},
-
-					getFunctionsURL: {
-						value: ''
-					},
-
-					getRoles: {
-						value: []
-					},
-
-					getRolesURL: {
-						value: ''
-					},
-
-					portletNamespace: {
-						value: ''
 					},
 
 					rules: {
@@ -58,14 +36,17 @@ AUI.add(
 							'auto-fill': Liferay.Language.get('autofill-x-from-data-provider-x'),
 							'belongs-to': Liferay.Language.get('belongs-to'),
 							'calculate-field': Liferay.Language.get('calculate-field-x-as-x'),
+							constant: Liferay.Language.get('constant'),
 							contains: Liferay.Language.get('contains'),
 							delete: Liferay.Language.get('delete'),
 							edit: Liferay.Language.get('edit'),
 							emptyListText: Liferay.Language.get('there-are-no-rules-yet-click-on-plus-icon-below-to-add-the-first'),
 							'enable-field': Liferay.Language.get('enable-x'),
 							'equals-to': Liferay.Language.get('is-equal-to'),
+							field: Liferay.Language.get('field'),
 							'greater-than': Liferay.Language.get('is-greater-than'),
 							'greater-than-equals': Liferay.Language.get('is-greater-than-or-equal-to'),
+							if: Liferay.Language.get('if'),
 							'is-empty': Liferay.Language.get('is-empty'),
 							'jump-to-page': Liferay.Language.get('jump-to-page-x'),
 							'less-than': Liferay.Language.get('is-less-than'),
@@ -237,13 +218,9 @@ AUI.add(
 									bubbleTargets: [instance],
 									contentBox: instance.get('contentBox'),
 									fields: instance.getFields(),
-									functionsMetadata: instance.get('functionsMetadata'),
-									getDataProviderParametersSettingsURL: instance.get('getDataProviderParametersSettingsURL'),
 									getDataProviders: instance._dataProviders,
-									getFunctionsURL: instance.get('getFunctionsURL'),
-									getRoles: instance.get('getRoles'),
 									pages: instance.getPages(),
-									portletNamespace: instance.get('portletNamespace')
+									roles: instance.get('roles')
 								}
 							);
 						}
@@ -271,7 +248,7 @@ AUI.add(
 						var instance = this;
 
 						A.io.request(
-							instance.get('getDataProviderInstancesURL'),
+							Settings.getDataProviderInstancesURL,
 							{
 								method: 'GET',
 								on: {
@@ -399,7 +376,7 @@ AUI.add(
 						var instance = this;
 
 						if (fieldValue === 'user') {
-							return 'User';
+							return Liferay.Language.get('user');
 						}
 
 						var fields = instance.getFields();
@@ -436,11 +413,11 @@ AUI.add(
 					_getUserRoles: function() {
 						var instance = this;
 
-						var roles = instance.get('getRoles');
+						var roles = instance.get('roles');
 
 						if (!roles.length) {
 							A.io.request(
-								instance.get('getRolesURL'),
+								Settings.getRolesURL,
 								{
 									method: 'GET',
 									on: {
@@ -532,7 +509,7 @@ AUI.add(
 							);
 						}
 
-						instance.set('getRoles', roles);
+						instance.set('roles', roles);
 					},
 
 					_renderCards: function(rules) {

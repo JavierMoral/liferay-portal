@@ -18,6 +18,7 @@
 
 <%@ page import="com.liferay.frontend.taglib.servlet.taglib.AddMenuItem" %><%@
 page import="com.liferay.portal.kernel.dao.orm.QueryUtil" %><%@
+page import="com.liferay.portal.kernel.search.QueryConfig" %><%@
 page import="com.liferay.portal.kernel.servlet.HttpHeaders" %><%@
 page import="com.liferay.portal.kernel.servlet.taglib.ui.Menu" %><%@
 page import="com.liferay.portal.kernel.servlet.taglib.ui.URLMenuItem" %><%@
@@ -49,7 +50,7 @@ page import="com.liferay.wiki.util.WikiPageAttachmentsUtil" %><%@
 page import="com.liferay.wiki.util.WikiUtil" %><%@
 page import="com.liferay.wiki.util.comparator.PageVersionComparator" %><%@
 page import="com.liferay.wiki.validator.WikiPageTitleValidator" %><%@
-page import="com.liferay.wiki.web.configuration.WikiPortletInstanceOverriddenConfiguration" %><%@
+page import="com.liferay.wiki.web.configuration.WikiPortletInstanceConfiguration" %><%@
 page import="com.liferay.wiki.web.internal.display.context.WikiDisplayContextProvider" %><%@
 page import="com.liferay.wiki.web.internal.display.context.logic.MailTemplatesHelper" %><%@
 page import="com.liferay.wiki.web.internal.display.context.logic.WikiPortletInstanceSettingsHelper" %><%@

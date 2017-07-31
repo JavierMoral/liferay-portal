@@ -193,7 +193,10 @@
 		</execute>
 	</command>
 
-	<command name="AddDMDocumentStagingLocalLive" priority="3">
+	<command name="AddDMDocumentWCArticleStagingLocalLive" priority="5">
+		<property name="portal.acceptance" value="pending" />
+		<property name="testray.component.names" value="Training" />
+
 		<execute macro="Navigator#gotoSitePage">
 			<var name="pageName" value="Staging Test Page" />
 			<var name="siteName" value="Site Name" />
@@ -232,6 +235,39 @@
 		<execute macro="Navigator#gotoStagedSitePage">
 			<var name="pageName" value="Staging Test Page" />
 			<var name="siteName" value="Site Name" />
+		</execute>
+
+		<execute macro="ProductMenu#gotoSitesContent">
+			<var name="portlet" value="Web Content" />
+		</execute>
+
+		<execute macro="WebContentNavigator#gotoAddCP" />
+
+		<execute macro="WebContent#addCP">
+			<var name="webContentContent" value="Web Content Content" />
+			<var name="webContentTitle" value="Web Content Title" />
+		</execute>
+
+		<execute macro="PortletEntry#publish" />
+
+		<execute macro="Navigator#gotoStagedSitePage">
+			<var name="pageName" value="Staging Test Page" />
+			<var name="siteName" value="Site Name" />
+		</execute>
+
+		<execute macro="Content#addPG">
+			<var name="assetTitle" value="Web Content Title" />
+			<var name="pageName" value="Staging Test Page" />
+			<var name="webContentContent" value="Web Content Content" />
+		</execute>
+
+		<execute macro="Navigator#gotoStagedSitePage">
+			<var name="pageName" value="Staging Test Page" />
+			<var name="siteName" value="Site Name" />
+		</execute>
+
+		<execute macro="WebContent#viewPGViaWCD">
+			<var name="webContentContent" value="Web Content Content" />
 		</execute>
 
 		<execute macro="DMDocument#viewPGviaStagingLocalLive">
@@ -307,7 +343,10 @@
 		</execute>
 	</command>
 
-	<command name="AssertNoEditLink" priority="3">
+	<command name="AssertNoEditLink" priority="5">
+		<property name="portal.acceptance" value="pending" />
+		<property name="testray.component.names" value="Training" />
+
 		<execute macro="ProductMenu#gotoControlPanelSites">
 			<var name="portlet" value="Sites" />
 		</execute>
@@ -601,7 +640,60 @@
 		</execute>
 	</command>
 
+	<command name="PublishLayoutIconDeletion" priority="4">
+		<description message="This test covers LPS-72893." />
+
+		<execute macro="Navigator#openSiteURL">
+			<var name="siteName" value="Site Name" />
+		</execute>
+
+		<execute macro="ProductMenu#gotoSitesPublishing">
+			<var name="portlet" value="Staging" />
+		</execute>
+
+		<execute macro="Staging#activateStagingCP">
+			<var name="siteName" value="Site Name" />
+		</execute>
+
+		<execute macro="Navigator#openSiteURL">
+			<var name="siteName" value="Site Name" />
+		</execute>
+
+		<execute macro="Navigator#gotoStagedView" />
+
+		<execute macro="Page#changeLogoViaPageCP">
+			<var name="logoFile" value="Document_3.png" />
+			<var name="page" value="Staging Test Page" />
+		</execute>
+
+		<execute macro="Staging#gotoPublishToLive" />
+
+		<execute macro="Staging#publishToLive" />
+
+		<execute macro="Page#viewLayoutLogoPG">
+			<var name="assertLayoutLogoPresent" value="true" />
+		</execute>
+
+		<execute macro="ProductMenu#gotoStagingSite" />
+
+		<execute macro="Page#deleteLogoPG">
+			<var name="page" value="Staging Test Page" />
+		</execute>
+
+		<execute macro="Staging#gotoPublishToLive" />
+
+		<execute macro="Staging#publishToLive" />
+
+		<execute macro="Navigator#openSiteURL">
+			<var name="siteName" value="Site Name" />
+		</execute>
+
+		<execute macro="Page#viewLayoutLogoPG" />
+	</command>
+
 	<command name="PublishPrivatePage" priority="5">
+		<property name="testray.component.names" value="Training" />
+
 		<execute macro="Navigator#openSiteURL">
 			<var name="siteName" value="Site Name" />
 		</execute>
@@ -615,6 +707,7 @@
 		</execute>
 
 		<execute macro="Staging#activateStagingCP">
+			<var name="pageVersioningEnabled" value="true" />
 			<var name="siteName" value="Site Name" />
 		</execute>
 
@@ -929,6 +1022,7 @@
 
 	<command name="StagingPublishPortlet" priority="5">
 		<property name="portal.acceptance" value="true" />
+		<property name="testray.component.names" value="Training" />
 
 		<execute macro="Navigator#openSiteURL">
 			<var name="siteName" value="Site Name" />

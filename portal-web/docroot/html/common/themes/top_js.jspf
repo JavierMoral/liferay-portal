@@ -138,14 +138,32 @@
 		Liferay.PropsValues = {
 			JAVASCRIPT_SINGLE_PAGE_APPLICATION_TIMEOUT: <%= PrefsPropsUtil.getInteger(themeDisplay.getCompanyId(), PropsKeys.JAVASCRIPT_SINGLE_PAGE_APPLICATION_TIMEOUT, PropsValues.JAVASCRIPT_SINGLE_PAGE_APPLICATION_TIMEOUT) %>,
 			NTLM_AUTH_ENABLED: <%= PrefsPropsUtil.getBoolean(themeDisplay.getCompanyId(), PropsKeys.NTLM_AUTH_ENABLED, PropsValues.NTLM_AUTH_ENABLED) %>,
-			UPLOAD_SERVLET_REQUEST_IMPL_MAX_SIZE: <%= PrefsPropsUtil.getLong(PropsKeys.UPLOAD_SERVLET_REQUEST_IMPL_MAX_SIZE, PropsValues.UPLOAD_SERVLET_REQUEST_IMPL_MAX_SIZE) %>
+			UPLOAD_SERVLET_REQUEST_IMPL_MAX_SIZE: <%= UploadServletRequestConfigurationHelperUtil.getMaxSize() %>
 		};
 
 		Liferay.ThemeDisplay = {
+
+			<%
+			Group scopeGroup = themeDisplay.getScopeGroup();
+
+			Group liveGroup = StagingUtil.getLiveGroup(scopeGroup);
+			%>
+
 			<c:if test="<%= layout != null %>">
 				getLayoutId: function() {
 					return '<%= layout.getLayoutId() %>';
 				},
+
+				<%
+				Layout controlPanelLayout = themeDisplay.getControlPanelLayout();
+				%>
+
+				<c:if test="<%= controlPanelLayout.getGroupId() != scopeGroup.getGroupId() %>">
+					getLayoutRelativeControlPanelURL: function() {
+						return '<%= PortalUtil.getLayoutRelativeURL(new VirtualLayout(controlPanelLayout, scopeGroup), themeDisplay) %>';
+					},
+				</c:if>
+
 				getLayoutRelativeURL: function() {
 					return '<%= PortalUtil.getLayoutRelativeURL(layout, themeDisplay) %>';
 				},
@@ -220,13 +238,6 @@
 			getPortalURL: function() {
 				return '<%= themeDisplay.getPortalURL() %>';
 			},
-
-			<%
-			Group scopeGroup = themeDisplay.getScopeGroup();
-
-			Group liveGroup = StagingUtil.getLiveGroup(scopeGroup);
-			%>
-
 			getScopeGroupId: function() {
 				return '<%= scopeGroup.getGroupId() %>';
 			},
@@ -237,7 +248,7 @@
 				return '<%= PropsValues.SESSION_ENABLE_URL_WITH_SESSION_ID ? session.getId() : StringPool.BLANK %>';
 			},
 			getSiteAdminURL: function() {
-				return '<%= PortalUtil.getSiteAdminURL(themeDisplay.getCompany(), themeDisplay.getScopeGroup(), StringPool.BLANK, null) %>';
+				return '<%= PortalUtil.getSiteAdminURL(themeDisplay, StringPool.BLANK, null) %>';
 			},
 			getSiteGroupId: function() {
 				return '<%= themeDisplay.getSiteGroupId() %>';

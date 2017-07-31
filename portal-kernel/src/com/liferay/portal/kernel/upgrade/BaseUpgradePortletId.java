@@ -15,16 +15,15 @@
 package com.liferay.portal.kernel.upgrade;
 
 import com.liferay.exportimport.kernel.staging.StagingUtil;
+import com.liferay.layouts.admin.kernel.model.LayoutTypePortletConstants;
 import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.LayoutTypePortletConstants;
 import com.liferay.portal.kernel.model.PortletConstants;
-import com.liferay.portal.kernel.model.PortletInstance;
 import com.liferay.portal.kernel.model.ResourceConstants;
+import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
@@ -36,9 +35,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 /**
  * @author Brian Wing Shun Chan
@@ -83,17 +81,18 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 
 		typeSettingsProperties.fastLoad(typeSettings);
 
-		List<String> columnIds = _getLayoutColumnIds(typeSettingsProperties);
+		for (Map.Entry<String, String> entry :
+				typeSettingsProperties.entrySet()) {
 
-		columnIds.addAll(_getNestedPortletColumnIds(typeSettingsProperties));
+			String typeSettingId = entry.getKey();
 
-		for (String columnId : columnIds) {
-			if (!typeSettingsProperties.containsKey(columnId)) {
+			if (!LayoutTypePortletConstants.isLayoutTemplateColumnName(
+					typeSettingId)) {
+
 				continue;
 			}
 
-			String[] portletIds = StringUtil.split(
-				typeSettingsProperties.getProperty(columnId));
+			String[] portletIds = StringUtil.split(entry.getValue());
 
 			for (int j = 0; j < portletIds.length; j++) {
 				String portletId = portletIds[j];
@@ -106,23 +105,24 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 					continue;
 				}
 
-				String rootPortletId = PortletConstants.getRootPortletId(
+				String rootPortletId = PortletIdCodec.decodePortletName(
 					portletId);
 
 				if (!rootPortletId.equals(oldRootPortletId)) {
 					continue;
 				}
 
-				long userId = PortletConstants.getUserId(portletId);
-				String instanceId = PortletConstants.getInstanceId(portletId);
+				long userId = PortletIdCodec.decodeUserId(portletId);
+				String instanceId = PortletIdCodec.decodeInstanceId(portletId);
 
-				portletIds[j] = PortletConstants.assemblePortletId(
+				portletIds[j] = PortletIdCodec.encode(
 					newRootPortletId, userId, instanceId);
 			}
 
+			String portletIdsString = StringUtil.merge(portletIds);
+
 			typeSettingsProperties.setProperty(
-				columnId,
-				StringUtil.merge(portletIds).concat(StringPool.COMMA));
+				typeSettingId, portletIdsString.concat(StringPool.COMMA));
 		}
 
 		return typeSettingsProperties.toString();
@@ -414,7 +414,7 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 		List<String> actionIds = new ArrayList<>();
 
 		try (PreparedStatement ps = connection.prepareStatement(
-				"select actionId from ResourceAction where name = '" + oldName +
+				"select actionId from ResourceAction where name = '" + newName +
 					"'");
 			ResultSet rs = ps.executeQuery()) {
 
@@ -488,11 +488,11 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 					String portletId = oldPrimKey.substring(
 						pos + PortletConstants.LAYOUT_SEPARATOR.length());
 
-					String instanceId = PortletConstants.getInstanceId(
+					String instanceId = PortletIdCodec.decodeInstanceId(
 						portletId);
-					long userId = PortletConstants.getUserId(portletId);
+					long userId = PortletIdCodec.decodeUserId(portletId);
 
-					String newPortletId = PortletConstants.assemblePortletId(
+					String newPortletId = PortletIdCodec.encode(
 						newRootPortletId, userId, instanceId);
 
 					String newPrimKey = PortletPermissionUtil.getPrimaryKey(
@@ -573,10 +573,7 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 			String[] uninstanceablePortletIds = getUninstanceablePortletIds();
 
 			for (String portletId : uninstanceablePortletIds) {
-				PortletInstance portletInstance =
-					PortletInstance.fromPortletInstanceKey(portletId);
-
-				if (portletInstance.hasInstanceId()) {
+				if (PortletIdCodec.hasInstanceId(portletId)) {
 					if (_log.isWarnEnabled()) {
 						_log.warn(
 							"Portlet " + portletId +
@@ -586,11 +583,9 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 					continue;
 				}
 
-				PortletInstance newPortletInstance = new PortletInstance(
-					portletId);
+				PortletIdCodec.validatePortletName(portletId);
 
-				String newPortletInstanceKey =
-					newPortletInstance.getPortletInstanceKey();
+				String newPortletInstanceKey = PortletIdCodec.encode(portletId);
 
 				updateGroup(portletId, newPortletInstanceKey);
 				updateInstanceablePortletPreferences(
@@ -601,37 +596,6 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 				updateLayouts(portletId, newPortletInstanceKey, true);
 			}
 		}
-	}
-
-	private List<String> _getLayoutColumnIds(
-		UnicodeProperties typeSettingsProperties) {
-
-		List<String> columnIds = new ArrayList<>();
-
-		Set<String> keys = typeSettingsProperties.keySet();
-
-		for (String key : keys) {
-			if (StringUtil.startsWith(
-					key, LayoutTypePortletConstants.COLUMN_PREFIX)) {
-
-				columnIds.add(key);
-			}
-		}
-
-		return columnIds;
-	}
-
-	private List<String> _getNestedPortletColumnIds(
-		UnicodeProperties typeSettingsProperties) {
-
-		if (!typeSettingsProperties.containsKey("nested-column-ids")) {
-			return Collections.emptyList();
-		}
-
-		String[] nestedPortletColumnIds = StringUtil.split(
-			typeSettingsProperties.getProperty("nested-column-ids"));
-
-		return ListUtil.fromArray(nestedPortletColumnIds);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

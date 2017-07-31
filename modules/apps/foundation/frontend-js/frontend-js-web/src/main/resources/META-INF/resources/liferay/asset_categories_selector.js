@@ -272,6 +272,7 @@ AUI.add(
 						var data = {};
 
 						data.p_auth = Liferay.authToken;
+						data.scopeGroupId = themeDisplay.getScopeGroupId();
 
 						var assetId = instance._getTreeNodeAssetId(treeNode);
 						var assetType = instance._getTreeNodeAssetType(treeNode);

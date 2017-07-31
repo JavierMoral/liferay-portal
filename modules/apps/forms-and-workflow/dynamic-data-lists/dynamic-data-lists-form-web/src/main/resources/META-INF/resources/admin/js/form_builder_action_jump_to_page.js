@@ -43,8 +43,8 @@ AUI.add(
 						var instance = this;
 
 						return {
-							source: instance._sourceField.getValue(),
-							target: instance._targetField.getValue()
+							source: instance._sourceField.getValue()[0] || '',
+							target: instance._targetField.getValue()[0] || ''
 						};
 					},
 
@@ -62,24 +62,23 @@ AUI.add(
 					_createSourceField: function() {
 						var instance = this;
 
-						var value;
+						var value = [];
 
 						var action = instance.get('action');
 
 						if (action && action.source) {
 							if (action.source.value) {
-								value = action.source.value;
+								value = [action.source.value];
 							}
 							else {
 								var options = instance.get('options');
 
-								value = options[action.source].value;
+								value = [options[action.source].value];
 							}
 						}
 
-						instance._sourceField = new Liferay.DDM.Field.Select(
+						instance._sourceField = instance.createSelectField(
 							{
-								bubbleTargets: [instance],
 								fieldName: instance.get('index') + '-action',
 								label: Liferay.Language.get('the'),
 								options: instance.get('options'),
@@ -97,24 +96,23 @@ AUI.add(
 					_createTargetField: function() {
 						var instance = this;
 
-						var value;
+						var value = [];
 
 						var action = instance.get('action');
 
 						if (action && action.target) {
 							if (action.target.value) {
-								value = action.target.value;
+								value = [action.target.value];
 							}
 							else {
 								var options = instance.get('options');
 
-								value = options[action.target].value;
+								value = [options[action.target].value];
 							}
 						}
 
-						instance._targetField = new Liferay.DDM.Field.Select(
+						instance._targetField = instance.createSelectField(
 							{
-								bubbleTargets: [instance],
 								fieldName: instance.get('index') + '-action',
 								label: Liferay.Language.get('the'),
 								options: instance.get('options'),
@@ -132,7 +130,7 @@ AUI.add(
 					_setSourcePage: function(pageIndex) {
 						var instance = this;
 
-						instance._sourceField.setValue(String(pageIndex));
+						instance._sourceField.setValue([String(pageIndex)]);
 					},
 
 					_setTargetOptions: function(pages) {

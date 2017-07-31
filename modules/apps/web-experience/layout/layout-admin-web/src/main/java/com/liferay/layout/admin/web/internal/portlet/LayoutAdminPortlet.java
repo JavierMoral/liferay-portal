@@ -18,8 +18,10 @@ import com.liferay.application.list.GroupProvider;
 import com.liferay.application.list.constants.ApplicationListWebKeys;
 import com.liferay.asset.kernel.exception.AssetCategoryException;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
-import com.liferay.exportimport.kernel.staging.StagingUtil;
+import com.liferay.exportimport.kernel.staging.Staging;
+import com.liferay.item.selector.ItemSelector;
 import com.liferay.layout.admin.web.internal.constants.LayoutAdminPortletKeys;
+import com.liferay.layout.admin.web.internal.constants.LayoutAdminWebKeys;
 import com.liferay.mobile.device.rules.model.MDRAction;
 import com.liferay.mobile.device.rules.model.MDRRuleGroupInstance;
 import com.liferay.mobile.device.rules.service.MDRActionLocalService;
@@ -35,6 +37,7 @@ import com.liferay.portal.kernel.exception.LayoutParentLayoutIdException;
 import com.liferay.portal.kernel.exception.LayoutSetVirtualHostException;
 import com.liferay.portal.kernel.exception.LayoutTypeException;
 import com.liferay.portal.kernel.exception.NoSuchGroupException;
+import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.RequiredLayoutException;
 import com.liferay.portal.kernel.exception.SitemapChangeFrequencyException;
@@ -310,14 +313,18 @@ public class LayoutAdminPortlet extends MVCPortlet {
 			stagingGroupId, privateLayout, layout.getLayoutId(),
 			layout.getTypeSettingsProperties());
 
+		String portletResource = ParamUtil.getString(
+			uploadPortletRequest, "portletResource");
+
+		MultiSessionMessages.add(
+			actionRequest, portletResource + "layoutAdded", layout);
+
 		String redirect = portal.getLayoutFullURL(layout, themeDisplay);
 
 		if (layout.isTypeURL()) {
 			redirect = portal.getGroupFriendlyURL(
 				layout.getLayoutSet(), themeDisplay);
 		}
-
-		MultiSessionMessages.add(actionRequest, "layoutAdded", layout);
 
 		actionRequest.setAttribute(WebKeys.REDIRECT, redirect);
 	}
@@ -476,6 +483,8 @@ public class LayoutAdminPortlet extends MVCPortlet {
 			groupId, privateLayout, layoutId, layout.getParentLayoutId(),
 			nameMap, titleMap, descriptionMap, keywordsMap, robotsMap, type,
 			hidden, friendlyURLMap, !deleteLogo, iconBytes, serviceContext);
+
+		themeDisplay.clearLayoutFriendlyURL(layout);
 
 		UnicodeProperties layoutTypeSettingsProperties =
 			layout.getTypeSettingsProperties();
@@ -737,7 +746,7 @@ public class LayoutAdminPortlet extends MVCPortlet {
 		LayoutSetBranch layoutSetBranch =
 			layoutSetBranchLocalService.getLayoutSetBranch(layoutSetBranchId);
 
-		StagingUtil.setRecentLayoutSetBranchId(
+		staging.setRecentLayoutSetBranchId(
 			request, layoutSet.getLayoutSetId(),
 			layoutSetBranch.getLayoutSetBranchId());
 
@@ -781,9 +790,11 @@ public class LayoutAdminPortlet extends MVCPortlet {
 
 		try {
 			getGroup(renderRequest);
+			getLayout(renderRequest);
 		}
 		catch (Exception e) {
 			if (e instanceof NoSuchGroupException ||
+				e instanceof NoSuchLayoutException ||
 				e instanceof PrincipalException) {
 
 				SessionErrors.add(renderRequest, e.getClass());
@@ -797,6 +808,22 @@ public class LayoutAdminPortlet extends MVCPortlet {
 				renderRequest, NoSuchGroupException.class.getName()) ||
 			SessionErrors.contains(
 				renderRequest, PrincipalException.getNestedClasses())) {
+
+			include("/error.jsp", renderRequest, renderResponse);
+		}
+		else if (SessionErrors.contains(
+					renderRequest, NoSuchLayoutException.class.getName())) {
+
+			PortletURL redirectURL = portal.getControlPanelPortletURL(
+				renderRequest, LayoutAdminPortletKeys.GROUP_PAGES,
+				PortletRequest.RENDER_PHASE);
+
+			redirectURL.setParameter("mvcPath", "/view.jsp");
+			redirectURL.setParameter(
+				"selPlid", String.valueOf(LayoutConstants.DEFAULT_PLID));
+
+			renderRequest.setAttribute(
+				WebKeys.REDIRECT, redirectURL.toString());
 
 			include("/error.jsp", renderRequest, renderResponse);
 		}
@@ -815,6 +842,9 @@ public class LayoutAdminPortlet extends MVCPortlet {
 
 			renderRequest.setAttribute(
 				ApplicationListWebKeys.GROUP_PROVIDER, groupProvider);
+
+			renderRequest.setAttribute(
+				LayoutAdminWebKeys.ITEM_SELECTOR, itemSelector);
 
 			super.doDispatch(renderRequest, renderResponse);
 		}
@@ -880,6 +910,17 @@ public class LayoutAdminPortlet extends MVCPortlet {
 		}
 
 		return new byte[0];
+	}
+
+	protected Layout getLayout(PortletRequest portletRequest) throws Exception {
+		long selPlid = ParamUtil.getLong(
+			portletRequest, "selPlid", LayoutConstants.DEFAULT_PLID);
+
+		if (selPlid != LayoutConstants.DEFAULT_PLID) {
+			return layoutLocalService.getLayout(selPlid);
+		}
+
+		return null;
 	}
 
 	protected long getNewPlid(Layout layout) {
@@ -1402,6 +1443,10 @@ public class LayoutAdminPortlet extends MVCPortlet {
 	protected GroupLocalService groupLocalService;
 	protected GroupProvider groupProvider;
 	protected GroupService groupService;
+
+	@Reference
+	protected ItemSelector itemSelector;
+
 	protected LayoutLocalService layoutLocalService;
 	protected LayoutPrototypeLocalService layoutPrototypeLocalService;
 	protected LayoutPrototypeService layoutPrototypeService;
@@ -1420,6 +1465,10 @@ public class LayoutAdminPortlet extends MVCPortlet {
 
 	protected PortletLocalService portletLocalService;
 	protected PortletPreferencesLocalService portletPreferencesLocalService;
+
+	@Reference
+	protected Staging staging;
+
 	protected ThemeLocalService themeLocalService;
 
 	private static final Log _log = LogFactoryUtil.getLog(

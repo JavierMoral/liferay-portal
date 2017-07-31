@@ -51,7 +51,6 @@ import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.util.PropsValues;
-import com.liferay.portlet.trash.model.impl.TrashEntryImpl;
 import com.liferay.trash.kernel.model.TrashEntry;
 import com.liferay.trash.kernel.model.TrashVersion;
 import com.liferay.trash.kernel.service.TrashEntryLocalServiceUtil;
@@ -224,7 +223,7 @@ public class TrashImpl implements Trash {
 
 					Date removedDate = document.getDate(Field.REMOVED_DATE);
 
-					entry = new TrashEntryImpl();
+					entry = TrashEntryLocalServiceUtil.createTrashEntry(0);
 
 					entry.setUserName(userName);
 					entry.setCreateDate(removedDate);
@@ -332,17 +331,19 @@ public class TrashImpl implements Trash {
 			trashRenderer = trashHandler.getTrashRenderer(classPK);
 		}
 
-		Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(
-			themeDisplay.getLocale(), themeDisplay.getTimeZone());
-
 		StringBundler sb = new StringBundler(3);
 
 		sb.append(StringPool.OPEN_PARENTHESIS);
+
+		Format format = FastDateFormatFactoryUtil.getDateTime(
+			themeDisplay.getLocale(), themeDisplay.getTimeZone());
+
 		sb.append(
 			StringUtil.replace(
-				dateFormatDateTime.format(new Date()),
+				format.format(new Date()),
 				new char[] {CharPool.SLASH, CharPool.COLON},
 				new char[] {CharPool.PERIOD, CharPool.PERIOD}));
+
 		sb.append(StringPool.CLOSE_PARENTHESIS);
 
 		if (trashRenderer != null) {

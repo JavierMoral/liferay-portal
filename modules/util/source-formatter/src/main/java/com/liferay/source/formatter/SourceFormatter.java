@@ -182,30 +182,35 @@ public class SourceFormatter {
 
 	public SourceFormatter(SourceFormatterArgs sourceFormatterArgs) {
 		_sourceFormatterArgs = sourceFormatterArgs;
+
+		if (sourceFormatterArgs.isShowDocumentation()) {
+			System.setProperty("java.awt.headless", "false");
+		}
+		else {
+			System.setProperty("java.awt.headless", "true");
+		}
 	}
 
 	public void format() throws Exception {
 		if (_isPortalSource()) {
 			_populatePortalImplProperties();
-
-			_addDefaultExcludes();
-
-			_populateAllFileNames();
-
-			_populateModulesProperties();
 		}
 		else {
 			_populateProperties();
-
-			_addDefaultExcludes();
-
-			_populateAllFileNames();
 		}
+
+		_addDefaultExcludes();
+
+		_populateAllFileNames();
+
+		_populateModulesProperties();
 
 		List<SourceProcessor> sourceProcessors = new ArrayList<>();
 
 		sourceProcessors.add(new BNDSourceProcessor());
+		sourceProcessors.add(new CQLSourceProcessor());
 		sourceProcessors.add(new CSSSourceProcessor());
+		sourceProcessors.add(new DockerfileSourceProcessor());
 		sourceProcessors.add(new FTLSourceProcessor());
 		sourceProcessors.add(new GradleSourceProcessor());
 		sourceProcessors.add(new GroovySourceProcessor());
@@ -220,6 +225,7 @@ public class SourceFormatter {
 		sourceProcessors.add(new SQLSourceProcessor());
 		sourceProcessors.add(new TLDSourceProcessor());
 		sourceProcessors.add(new XMLSourceProcessor());
+		sourceProcessors.add(new YMLSourceProcessor());
 
 		ExecutorService executorService = Executors.newFixedThreadPool(
 			sourceProcessors.size());
@@ -342,7 +348,7 @@ public class SourceFormatter {
 		_allFileNames = SourceFormatterUtil.scanForFiles(
 			_sourceFormatterArgs.getBaseDirName(),
 			excludesList.toArray(new String[excludesList.size()]),
-			new String[] {"**/*.*"},
+			new String[] {"**/*.*", "**/Dockerfile"},
 			_sourceFormatterArgs.isIncludeSubrepositories());
 	}
 
@@ -353,9 +359,9 @@ public class SourceFormatter {
 
 		// Find properties files in any parent directory
 
-		String parentDirName = _sourceFormatterArgs.getBaseDirName() + "../";
+		String parentDirName = _sourceFormatterArgs.getBaseDirName();
 
-		for (int i = 0; i < ToolsUtil.PORTAL_MAX_DIR_LEVEL - 1; i++) {
+		for (int i = 0; i < ToolsUtil.PORTAL_MAX_DIR_LEVEL; i++) {
 			try {
 				InputStream inputStream = new FileInputStream(
 					parentDirName + _PROPERTIES_FILE_NAME);
@@ -489,8 +495,8 @@ public class SourceFormatter {
 	private static final List<String> _defaultExcludes = Arrays.asList(
 		"**/.git/**", "**/.gradle/**", "**/bin/**", "**/build/**",
 		"**/classes/**", "**/node_modules/**", "**/npm-shrinkwrap.json",
-		"**/test-classes/**", "**/test-coverage/**", "**/test-results/**",
-		"**/tmp/**");
+		"**/package-lock.json", "**/test-classes/**", "**/test-coverage/**",
+		"**/test-results/**", "**/tmp/**");
 
 	private List<String> _allFileNames;
 	private volatile SourceMismatchException _firstSourceMismatchException;

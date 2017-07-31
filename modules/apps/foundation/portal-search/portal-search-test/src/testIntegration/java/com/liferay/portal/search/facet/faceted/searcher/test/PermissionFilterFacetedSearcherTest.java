@@ -38,7 +38,6 @@ import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.rule.Sync;
 import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
-import com.liferay.portal.kernel.test.util.SearchContextTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -119,7 +118,7 @@ public class PermissionFilterFacetedSearcherTest
 	public void testDecrementFrequencyCount() throws Exception {
 		Group group = userSearchFixture.addGroup();
 
-		User user1 = userSearchFixture.addUser(group);
+		User user1 = addUser(group);
 
 		ServiceContext serviceContext = createServiceContext(group, user1);
 
@@ -131,7 +130,7 @@ public class PermissionFilterFacetedSearcherTest
 
 		addArticle(title, user1, group, folder.getFolderId(), serviceContext);
 
-		User user2 = userSearchFixture.addUser(group);
+		User user2 = addUser(group);
 
 		PermissionThreadLocal.setPermissionChecker(
 			permissionCheckerFactory.create(user2));
@@ -148,16 +147,6 @@ public class PermissionFilterFacetedSearcherTest
 			JournalArticle.class.getName(), 1);
 
 		assertFrequencies(facet.getFieldName(), searchContext, expected);
-	}
-
-	protected static SearchContext getSearchContext(String keywords)
-		throws Exception {
-
-		SearchContext searchContext = SearchContextTestUtil.getSearchContext();
-
-		searchContext.setKeywords(keywords);
-
-		return searchContext;
 	}
 
 	protected void addArticle(

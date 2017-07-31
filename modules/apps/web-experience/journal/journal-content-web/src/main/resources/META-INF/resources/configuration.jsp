@@ -30,7 +30,6 @@ String redirect = ParamUtil.getString(request, "redirect");
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
 	<aui:input name="redirect" type="hidden" value="<%= configurationRenderURL %>" />
 	<aui:input name="preferences--assetEntryId--" type="hidden" value="<%= journalContentDisplayContext.getAssetEntryId() %>" />
-	<aui:input name="preferences--ddmTemplateKey--" type="hidden" value="<%= journalContentDisplayContext.getDDMTemplateKey() %>" />
 
 	<div class="portlet-configuration-body-content">
 		<div class="container-fluid-1280">
@@ -53,14 +52,10 @@ String redirect = ParamUtil.getString(request, "redirect");
 	</aui:button-row>
 </aui:form>
 
-<aui:script sandbox="<%= true %>" use="aui-io-request,aui-parse-content">
+<aui:script sandbox="<%= true %>" use="aui-base">
 	var form = A.one('#<portlet:namespace />fm');
 
 	var articlePreview = A.one('#<portlet:namespace />articlePreview');
-
-	removeWebContentHandler();
-
-	articlePreview.plug(A.Plugin.ParseContent);
 
 	articlePreview.delegate(
 		'click',
@@ -92,57 +87,31 @@ String redirect = ParamUtil.getString(request, "redirect");
 					eventName: 'selectContent',
 					id: 'selectContent',
 					title: '<liferay-ui:message key="select-web-content" />',
-					uri: baseSelectWebContentURI.replace(encodeURIComponent('[$ARTICLE_REFERER_ASSET_ENTRY_ID$]'), form.attr('<portlet:namespace/>assetEntryId').val())
+					uri: baseSelectWebContentURI.replace(encodeURIComponent('[$ARTICLE_REFERER_ASSET_ENTRY_ID$]'), form.attr('<portlet:namespace />assetEntryId').val())
 				},
 				function(event) {
-					retrieveWebContent(event.entityid, event.assetclasspk);
+					retrieveWebContent(event.assetclasspk);
 				}
 			);
 		},
 		'.web-content-selector'
 	);
 
-	function removeWebContentHandler() {
-		articlePreview.delegate(
-			'click',
-			function(event) {
-				event.preventDefault();
+	articlePreview.delegate(
+		'click',
+		function(event) {
+			event.preventDefault();
 
-				retrieveWebContent('', 0);
-			},
-			'.selector-button'
-		);
-	}
+			retrieveWebContent(-1);
+		},
+		'.selector-button'
+	);
 
-	function retrieveWebContent(entityId, assetClassPK) {
-		form.attr('<portlet:namespace/>assetEntryId').val(entityId);
+	function retrieveWebContent(assetClassPK) {
+		var uri = '<%= configurationRenderURL %>';
 
-		articlePreview.html('<div class="loading-animation"></div>');
+		uri = Liferay.Util.addParams('<portlet:namespace />articleResourcePrimKey=' + assetClassPK, uri);
 
-		var data = Liferay.Util.ns(
-			'<%= PortalUtil.getPortletNamespace(JournalContentPortletKeys.JOURNAL_CONTENT) %>',
-			{
-				articleResourcePrimKey: assetClassPK
-			}
-		);
-
-		A.io.request(
-			'<liferay-portlet:resourceURL portletName="<%= JournalContentPortletKeys.JOURNAL_CONTENT %>" windowState="<%= LiferayWindowState.EXCLUSIVE.toString() %>"><portlet:param name="mvcPath" value="/journal_resources.jsp" /><portlet:param name="refererPortletName" value="<%= renderResponse.getNamespace() %>" /></liferay-portlet:resourceURL>',
-			{
-				data: data,
-				on: {
-					failure: function() {
-						articlePreview.html('<div class="alert alert-danger hidden"><liferay-ui:message key="an-unexpected-error-occurred" /></div>');
-					},
-					success: function(event, id, obj) {
-						var responseData = this.get('responseData');
-
-						articlePreview.setContent(responseData);
-
-						removeWebContentHandler();
-					}
-				}
-			}
-		);
+		location.href = uri;
 	}
 </aui:script>

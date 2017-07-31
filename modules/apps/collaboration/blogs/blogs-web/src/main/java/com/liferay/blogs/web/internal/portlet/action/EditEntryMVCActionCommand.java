@@ -64,7 +64,7 @@ import com.liferay.portal.kernel.upload.LiferayFileItemException;
 import com.liferay.portal.kernel.upload.UploadException;
 import com.liferay.portal.kernel.upload.UploadRequestSizeException;
 import com.liferay.portal.kernel.util.Constants;
-import com.liferay.portal.kernel.util.HttpUtil;
+import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -74,7 +74,7 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portlet.blogs.BlogsEntryAttachmentFileEntryReference;
-import com.liferay.trash.kernel.service.TrashEntryService;
+import com.liferay.trash.service.TrashEntryService;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -210,7 +210,7 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 
 			String redirect = ParamUtil.getString(actionRequest, "redirect");
 
-			String portletId = HttpUtil.getParameter(redirect, "p_p_id", false);
+			String portletId = _http.getParameter(redirect, "p_p_id", false);
 
 			int workflowAction = ParamUtil.getInteger(
 				actionRequest, "workflowAction",
@@ -258,10 +258,10 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 							String namespace = _portal.getPortletNamespace(
 								portletId);
 
-							redirect = HttpUtil.addParameter(
+							redirect = _http.addParameter(
 								redirect, namespace + "className",
 								BlogsEntry.class.getName());
-							redirect = HttpUtil.addParameter(
+							redirect = _http.addParameter(
 								redirect, namespace + "classPK",
 								entry.getEntryId());
 						}
@@ -614,6 +614,9 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 		_blogsEntryAttachmentContentUpdater;
 	private BlogsEntryLocalService _blogsEntryLocalService;
 	private BlogsEntryService _blogsEntryService;
+
+	@Reference
+	private Http _http;
 
 	@Reference
 	private Portal _portal;

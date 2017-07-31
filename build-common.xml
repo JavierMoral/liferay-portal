@@ -6,6 +6,7 @@
 	xmlns:artifact="antlib:org.apache.maven.artifact.ant"
 	xmlns:if="ant:if"
 	xmlns:ivy="antlib:org.apache.ivy.ant"
+	xmlns:jacoco="antlib:org.jacoco.ant"
 	xmlns:sonar="antlib:org.sonar.ant"
 	xmlns:unless="ant:unless"
 >
@@ -80,13 +81,13 @@
 	<taskdef classpathref="lib.classpath" resource="ise/antelope/tasks/antlib.xml" uri="antlib:ise.antelope.tasks" />
 	<taskdef classpathref="lib.classpath" resource="net/sf/antcontrib/antlib.xml" />
 	<typedef classpathref="lib.classpath" resource="org/apache/maven/artifact/ant/antlib.xml" uri="antlib:org.apache.maven.artifact.ant" />
+	<taskdef classpathref="lib.classpath" resource="org/jacoco/ant/antlib.xml" uri="antlib:org.jacoco.ant" />
 	<taskdef classpathref="lib.classpath" resource="tasks.properties" />
 
 	<taskdef classname="com.liferay.ant.beanshell.BeanShellTask" classpathref="lib.classpath" name="beanshell" />
-	<taskdef classname="com.liferay.ant.bnd.BaselineJarTask" classpathref="lib.classpath" name="baseline-jar" />
-	<taskdef classname="com.liferay.ant.bnd.ReleaseToRepoTask" classpathref="lib.classpath" name="release-to-repo" />
 	<taskdef classname="com.liferay.ant.build.logger.LiferayBuildLoggerInstallerTask" classpath="${project.dir}/lib/development/com.liferay.ant.build.logger.jar" name="liferay-build-logger-installer" />
 	<taskdef classname="com.liferay.ant.mirrors.get.MirrorsGetTask" classpathref="lib.classpath" name="mirrors-get" />
+	<taskdef classname="com.liferay.ant.sync.dir.SyncDirTask" classpathref="lib.classpath" name="sync-dir" />
 
 	<liferay-build-logger-installer />
 
@@ -106,6 +107,7 @@
 	<property name="aspectj.configuration" value="com/liferay/aspectj/aop.xml" />
 	<property name="definitions.dir" value="${project.dir}/definitions" />
 	<property name="doc.dir" value="${project.dir}/api" />
+	<property name="jacoco.agent.configuration" value="=destfile=${jacoco.dump.file},excludes=${jacoco.excludes},includes=${jacoco.includes},output=file,append=true" />
 
 	<tempfile deleteonexit="true" destdir="${project.dir}" property="app.server.tmp.properties" suffix=".properties" />
 
@@ -194,10 +196,10 @@
 	</fail>
 
 	<condition property="correct.ant.version">
-		<antversion atleast="1.7.0" />
+		<antversion atleast="1.9.3" />
 	</condition>
 
-	<fail message="Please use Ant 1.7.0 or above.">
+	<fail message="Please use Ant 1.9.3 or above.">
 		<condition>
 			<not>
 				<istrue value="${correct.ant.version}" />
@@ -244,7 +246,7 @@ Error-Prone was automatically installed. Please rerun your task.
 		</then>
 	</if>
 
-	<fail message=".${line.separator}Please set the environment variable ANT_OPTS to the recommended value of${line.separator}&quot;-Xmx2048m -XX:MaxPermSize=512m&quot;.">
+	<fail message=".${line.separator}Please set the environment variable ANT_OPTS to the recommended value of${line.separator}&quot;-Xmx2048m&quot;.">
 		<condition>
 			<not>
 				<isset property="env.ANT_OPTS" />
@@ -560,6 +562,7 @@ information.
 	</macrodef>
 
 	<macrodef name="gradle-execute">
+		<attribute default="false" name="checktask" />
 		<attribute default="${basedir}" name="dir" />
 		<attribute default="true" name="failonerror" />
 		<attribute default="true" name="forcedcacheenabled" />
@@ -568,6 +571,8 @@ information.
 		<element implicit="true" name="args" optional="true" />
 
 		<sequential>
+			<setup-binaries-cache unless:true="${setup.binaries.cache.executed}" />
+
 			<if>
 				<os family="unix" />
 				<then>
@@ -580,18 +585,81 @@ information.
 				</else>
 			</if>
 
-			<exec dir="@{dir}" executable="${project.dir}/gradlew${gradlew.suffix}" failonerror="@{failonerror}">
-				<args />
-				<arg value="--no-daemon" />
-				<arg value="--project-cache-dir=${project.dir}/.gradle" />
-				<arg value="--stacktrace" />
-				<arg value="-Dapp.server.parent.dir=${app.server.parent.dir}" />
-				<arg value="-Dforced.cache.enabled=@{forcedcacheenabled}" />
-				<arg value="-Dliferay.home=${liferay.home}" />
-				<arg value="@{task}" />
-				<env key="GRADLE_OPTS" value="${env.ANT_OPTS}" />
-				<redirector errorproperty="@{outputproperty}.error" outputproperty="@{outputproperty}" unless:blank="@{outputproperty}" />
-			</exec>
+			<local name="task.available" />
+
+			<if>
+				<equals arg1="@{checktask}" arg2="true" />
+				<then>
+					<local name="tasks.output" />
+
+					<exec dir="@{dir}" executable="${project.dir}/gradlew${gradlew.suffix}" failonerror="@{failonerror}">
+						<arg value="--no-daemon" />
+						<arg value="--project-cache-dir=${project.dir}/.gradle" />
+						<arg value="--stacktrace" />
+						<arg value="-Dapp.server.parent.dir=${app.server.parent.dir}" />
+						<arg value="-Dforced.cache.enabled=@{forcedcacheenabled}" />
+						<arg value="-Dliferay.home=${liferay.home}" />
+						<arg value="tasks" />
+						<arg value="--all" />
+						<env key="GRADLE_OPTS" value="${env.ANT_OPTS}" />
+						<redirector errorproperty="@{outputproperty}.error" outputproperty="tasks.output" unless:blank="tasks.output" />
+					</exec>
+
+					<condition else="false" property="task.available" value="true">
+						<contains string="${tasks.output}" substring="@{task} -" />
+					</condition>
+
+					<local name="task.error" />
+
+					<propertycopy from="@{outputproperty}.error" name="task.error" />
+
+					<if>
+						<equals arg1="${task.error}" arg2="" />
+						<then>
+							<var name="@{outputproperty}.error" unset="true" />
+						</then>
+					</if>
+				</then>
+			</if>
+
+			<property name="task.available" value="true" />
+
+			<if>
+				<equals arg1="${task.available}" arg2="true" />
+				<then>
+					<trycatch>
+						<try>
+							<exec dir="@{dir}" executable="${project.dir}/gradlew${gradlew.suffix}" failonerror="@{failonerror}">
+								<args />
+								<arg value="--no-daemon" />
+								<arg value="--project-cache-dir=${project.dir}/.gradle" />
+								<arg value="--stacktrace" />
+								<arg value="-Dapp.server.parent.dir=${app.server.parent.dir}" />
+								<arg value="-Dforced.cache.enabled=@{forcedcacheenabled}" />
+								<arg value="-Dliferay.home=${liferay.home}" />
+								<arg value="@{task}" />
+								<env key="GRADLE_OPTS" value="${env.ANT_OPTS}" />
+								<redirector errorproperty="@{outputproperty}.error" outputproperty="@{outputproperty}" unless:blank="@{outputproperty}" />
+							</exec>
+						</try>
+						<finally>
+							<if>
+								<isset property="@{outputproperty}" />
+								<then>
+									<local name="outputproperty" />
+
+									<propertycopy from="@{outputproperty}" name="outputproperty" />
+
+									<echo message="${outputproperty}" />
+								</then>
+							</if>
+						</finally>
+					</trycatch>
+				</then>
+				<else>
+					<echo>Skipped unavailable task: @{task}.</echo>
+				</else>
+			</if>
 		</sequential>
 	</macrodef>
 
@@ -628,6 +696,37 @@ information.
 			<propertyfile file="../.gradle/gradle.properties">
 				<entry key="com.liferay.${processed.artifact.name}.version" value="${artifact.version}${snapshot.version.suffix}" />
 			</propertyfile>
+		</sequential>
+	</macrodef>
+
+	<macrodef name="jacoco-report">
+		<attribute name="exec.file" />
+		<element name="class.files" />
+
+		<sequential>
+			<delete dir="${jacoco.report.folder}" />
+			<mkdir dir="${jacoco.report.folder}" />
+
+			<jacoco:report>
+				<executiondata>
+					<file file="@{exec.file}" />
+				</executiondata>
+
+				<structure name="Liferay JaCoCo Report">
+					<classfiles>
+						<class.files />
+					</classfiles>
+
+					<sourcefiles if:true="${jacoco.report.include.source.file}">
+						<dirset dir="${project.dir}">
+							<include name="**/src" />
+							<include name="**/src/main/java" />
+						</dirset>
+					</sourcefiles>
+				</structure>
+
+				<html destdir="${jacoco.report.folder}" />
+			</jacoco:report>
 		</sequential>
 	</macrodef>
 
@@ -672,12 +771,14 @@ information.
 				<sysproperty key="junit.code.coverage" value="${junit.code.coverage}" />
 				<sysproperty if:true="${jvm.debug}" key="jvm.debug" value="true" />
 				<sysproperty key="liferay.lib.portal.dir" value="${app.server.tomcat.lib.portal.dir}" />
+				<sysproperty key="liferay.temp.dir" value="${app.server.tomcat.temp.dir}" />
 				<sysproperty if:true="${aspectj.weaver.enabled}" key="org.aspectj.weaver.loadtime.configuration" value="${aspectj.configuration}" />
 				<sysproperty key="whip.agent" value="${whip.agent}" />
 				<sysproperty file="test-coverage/@{test.type}/whip.dat" key="whip.datafile" />
 				<sysproperty key="whip.instrument.dump" value="${whip.instrument.dump}" />
-				<jvmarg if:true="${aspectj.weaver.enabled}" line="${aspectj.agent}" />
 				<jvmarg if:true="${jvm.debug}" line="${jpda.settings}" />
+				<jvmarg if:true="${junit.code.coverage}" line="-javaagent:${jacoco.agent.jar}${jacoco.agent.configuration}" />
+				<jvmarg if:true="${aspectj.weaver.enabled}" line="${aspectj.agent}" />
 				<jvmarg line="${junit.java.gc}" />
 				<jvmarg line="${whip.agent}" />
 				<jvmarg value="-Xss2m" />
@@ -689,6 +790,8 @@ information.
 				<jvmarg value="-Dliferay.mode=test" />
 				<jvmarg value="-Dosgi.state.dir=${liferay.home}/osgi/state" />
 				<jvmarg value="-Drelease.versions.test.other.dir=${release.versions.test.other.dir}" />
+				<jvmarg value="-DsocksProxyHost=127.0.0.1" />
+				<jvmarg value="-DsocksProxyPort=8888" />
 				<jvmarg value="-Dsun.zip.disableMemoryMapping=true" />
 				<misc />
 				<jvmarg value="-Duser.timezone=GMT" />
@@ -810,6 +913,17 @@ information.
 		<element implicit="true" name="attach-files" optional="true" />
 
 		<sequential>
+			<fail message="Please run this target from a release branch instead.">
+				<condition>
+					<not>
+						<or>
+							<available file="${project.dir}/modules/.releng" type="dir" />
+							<istrue value="@{snapshot}" />
+						</or>
+					</not>
+				</condition>
+			</fail>
+
 			<condition else="${sonatype.release.password}" property="remote.repository.password" value="${sonatype.snapshot.password}">
 				<istrue value="@{snapshot}" />
 			</condition>
@@ -890,43 +1004,6 @@ information.
 		</sequential>
 	</macrodef>
 
-	<macrodef name="report-test-coverage">
-		<attribute name="test.type" />
-
-		<sequential>
-			<if>
-				<equals arg1="${junit.code.coverage}" arg2="true" />
-				<then>
-					<mkdir dir="test-coverage/@{test.type}" />
-
-					<if>
-						<available file="test-coverage/@{test.type}/cobertura.ser" type="file" />
-						<then>
-							<cobertura-report
-								datafile="test-coverage/@{test.type}/cobertura.ser"
-								destdir="test-coverage/@{test.type}"
-								format="${junit.cobertura.report.format}"
-							>
-								<fileset dir="${project.dir}/portal-impl/src">
-									<include name="**/*.java" />
-								</fileset>
-								<fileset dir="${project.dir}/portal-kernel/src">
-									<include name="**/*.java" />
-								</fileset>
-								<fileset dir="${project.dir}/util-java/src">
-									<include name="**/*.java" />
-								</fileset>
-								<fileset dir="${project.dir}/util-taglib/src">
-									<include name="**/*.java" />
-								</fileset>
-							</cobertura-report>
-						</then>
-					</if>
-				</then>
-			</if>
-		</sequential>
-	</macrodef>
-
 	<macrodef name="set-test-type">
 		<sequential>
 			<if>
@@ -956,6 +1033,39 @@ information.
 					<fail>Test class ${test.class} cannot be found.</fail>
 				</else>
 			</if>
+		</sequential>
+	</macrodef>
+
+	<macrodef name="setup-binaries-cache">
+		<sequential>
+			<if>
+				<and>
+					<not>
+						<equals arg1="${build.binaries.cache.dir}" arg2="" />
+					</not>
+					<available file="${project.dir}/${build.binaries.cache.dir}" type="dir" />
+				</and>
+				<then>
+					<if>
+						<not>
+							<isset property="env.JENKINS_HOME" />
+						</not>
+						<then>
+							<exec dir="${project.dir}/${build.binaries.cache.dir}" executable="git" failonerror="true">
+								<arg value="pull" />
+								<arg value="--rebase" />
+							</exec>
+						</then>
+					</if>
+
+					<sync-dir
+						dir="${project.dir}/${build.binaries.cache.dir}/.gradle/caches/modules-2/files-2.1"
+						toDir="${project.dir}/.gradle/caches/modules-2/files-2.1"
+					/>
+				</then>
+			</if>
+
+			<property name="setup.binaries.cache.executed" value="true" />
 		</sequential>
 	</macrodef>
 
@@ -1232,11 +1342,16 @@ rerun your task.
 			<echoproperties destfile="${gradle.properties.file}" >
 				<propertyset>
 					<propertyref name="app.server.type" />
+					<propertyref name="aspectj.agent" />
+					<propertyref name="aspectj.configuration" />
 					<propertyref name="baseline.jar.report.level" />
 					<propertyref name="baseline.jar.report.only.dirty.packages" />
 					<propertyref name="git.working.branch.name" />
+					<propertyref name="jacoco.agent.configuration" />
+					<propertyref name="jacoco.agent.jar" />
 					<propertyref name="jsp.precompile.enabled" />
 					<propertyref name="jsp.precompile.from.source" />
+					<propertyref name="junit.code.coverage" />
 					<propertyref name="junit.java.integration.gc" />
 					<propertyref name="junit.java.unit.gc" />
 					<propertyref name="liferay.home" />
@@ -1244,10 +1359,12 @@ rerun your task.
 					<propertyref name="liferay.releng.product.display.name" />
 					<propertyref name="liferay.releng.public" />
 					<propertyref name="liferay.releng.supported" />
+					<propertyref name="org.gradle.daemon" />
 					<propertyref name="release.versions.test.other.dir" />
 					<propertyref name="sass.compiler.class.name" />
 					<propertyref name="sass.generate.source.map" />
 					<propertyref name="sass.precision" />
+					<propertyref name="sdk.dir" />
 					<propertyref name="source.formatter.include.subrepositories" />
 					<propertyref name="source.formatter.max.line.length" />
 					<propertyref name="source.formatter.processor.thread.count" />
@@ -1413,6 +1530,54 @@ rerun your task.
 		</java>
 	</target>
 
+	<target name="generate-code-coverage-report">
+		<var name="exec.file" unset="true" />
+
+		<if>
+			<available file="${jacoco.dump.file}" type="file" />
+			<then>
+				<var name="exec.file" value="${jacoco.dump.file}" />
+			</then>
+			<elseif>
+				<available file="${jacoco.dump.file}" type="dir" />
+				<then>
+					<var name="exec.file" value="${jacoco.dump.file}/liferay-jacoco-merged.exec" />
+
+					<jacoco:merge destfile="${exec.file}">
+						<fileset dir="${jacoco.dump.file}" includes="*.exec" />
+					</jacoco:merge>
+				</then>
+			</elseif>
+			<else>
+				<fail message="Unable to find JaCoCo session file ${jacoco.dump.file}. Please run tests with code coverage before generating reports." />
+			</else>
+		</if>
+
+		<if>
+			<isset property="jacoco.merged.jar" />
+			<then>
+				<jacoco-report
+					exec.file="${exec.file}"
+				>
+					<class.files>
+						<file file="${jacoco.merged.jar}" />
+					</class.files>
+				</jacoco-report>
+			</then>
+			<else>
+				<jacoco-report
+					exec.file="${exec.file}"
+				>
+					<class.files>
+						<fileset dir="${project.dir}">
+							<include name="**/classes/com/liferay/**/*.class" />
+						</fileset>
+					</class.files>
+				</jacoco-report>
+			</else>
+		</if>
+	</target>
+
 	<target name="print-properties">
 		<echoproperties />
 	</target>
@@ -1434,44 +1599,8 @@ rerun your task.
 	</target>
 
 	<target name="sonar">
-		<cobertura-merge datafile="${sonar.cobertura.reportPath}">
-			<fileset dir="${project.dir}">
-				<include name="**/cobertura.ser" />
-			</fileset>
-		</cobertura-merge>
-
 		<for delimiter="," list="${sonar.modules}" param="sonar.module">
 			<sequential>
-				<if>
-					<available file="@{sonar.module}/${sonar.cobertura.itReportPath}/cobertura.ser" />
-					<then>
-						<cobertura-report
-							datafile="@{sonar.module}/${sonar.cobertura.itReportPath}/cobertura.ser"
-							destdir="@{sonar.module}/${sonar.cobertura.itReportPath}"
-							format="${junit.cobertura.report.format}"
-						>
-							<fileset dir="@{sonar.module}/src">
-								<include name="**/*.java" />
-							</fileset>
-						</cobertura-report>
-					</then>
-				</if>
-
-				<if>
-					<available file="@{sonar.module}/${sonar.cobertura.reportPath}/cobertura.ser" />
-					<then>
-						<cobertura-report
-							datafile="@{sonar.module}/${sonar.cobertura.reportPath}/cobertura.ser"
-							destdir="@{sonar.module}/${sonar.cobertura.reportPath}"
-							format="${junit.cobertura.report.format}"
-						>
-							<fileset dir="@{sonar.module}/src">
-								<include name="**/*.java" />
-							</fileset>
-						</cobertura-report>
-					</then>
-				</if>
-
 				<if>
 					<available file="@{sonar.module}/test-results/integration" type="dir" />
 					<then>
@@ -1506,7 +1635,6 @@ rerun your task.
 
 		<for delimiter="," list="${sonar.modules}" param="sonar.module">
 			<sequential>
-				<delete dir="@{sonar.module}/${sonar.cobertura.report.folder}" />
 				<delete dir="@{sonar.module}/${sonar.junit.reportsPath}" />
 			</sequential>
 		</for>
@@ -1538,10 +1666,6 @@ rerun your task.
 			test.includes="**/${test.class}.class"
 			test.type="${test.type}"
 		/>
-
-		<report-test-coverage
-			test.type="${test.type}"
-		/>
 	</target>
 
 	<target depends="compile,compile-test" name="test-class-group">
@@ -1571,10 +1695,6 @@ rerun your task.
 					test.includes="${test.classes}"
 					test.type="unit"
 				/>
-
-				<report-test-coverage
-					test.type="unit"
-				/>
 			</then>
 		</if>
 
@@ -1591,10 +1711,6 @@ rerun your task.
 					test.includes="${test.classes}"
 					test.type="integration"
 				/>
-
-				<report-test-coverage
-					test.type="integration"
-				/>
 			</then>
 		</if>
 	</target>
@@ -1605,10 +1721,6 @@ rerun your task.
 		<test-cmd
 			junit.forkmode="once"
 			test.includes="**/*Test.class"
-			test.type="integration"
-		/>
-
-		<report-test-coverage
 			test.type="integration"
 		/>
 	</target>
@@ -1720,17 +1832,9 @@ rerun your task.
 			test.type="integration"
 		/>
 
-		<report-test-coverage
-			test.type="integration"
-		/>
-
 		<test-cmd
 			junit.forkmode="perTest"
 			test.includes="**/${test.package.dir}/*Test.class"
-			test.type="unit"
-		/>
-
-		<report-test-coverage
 			test.type="unit"
 		/>
 	</target>
@@ -1743,10 +1847,6 @@ rerun your task.
 		<test-cmd
 			junit.forkmode="perTest"
 			test.includes="**/*Test.class"
-			test.type="unit"
-		/>
-
-		<report-test-coverage
 			test.type="unit"
 		/>
 	</target>

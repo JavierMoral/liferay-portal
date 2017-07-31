@@ -29,6 +29,8 @@ import com.liferay.portal.kernel.model.PortletPreferences;
 import com.liferay.portal.kernel.model.PortletPreferencesIds;
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
+import com.liferay.portal.kernel.settings.PortletInstanceSettingsLocator;
+import com.liferay.portal.kernel.settings.Settings;
 import com.liferay.portal.kernel.spring.aop.Property;
 import com.liferay.portal.kernel.spring.aop.Retry;
 import com.liferay.portal.kernel.spring.aop.Skip;
@@ -168,6 +170,12 @@ public interface PortletPreferencesLocalService extends BaseLocalService,
 		long plid, java.lang.String portletId,
 		javax.portlet.PortletPreferences portletPreferences);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public Settings getPortletInstanceSettings(long companyId, long groupId,
+		java.lang.String portletId,
+		PortletInstanceSettingsLocator portletInstanceSettingsLocator,
+		Settings portalPreferencesSettings);
+
 	/**
 	* Returns the number of portlet preferenceses.
 	*
@@ -233,6 +241,11 @@ public interface PortletPreferencesLocalService extends BaseLocalService,
 	public List<PortletPreferences> getPortletPreferences(long companyId,
 		long groupId, long ownerId, int ownerType, java.lang.String portletId,
 		boolean privateLayout);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<PortletPreferences> getPortletPreferences(long companyId,
+		long ownerId, int ownerType, java.lang.String portletId)
+		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<PortletPreferences> getPortletPreferences(long ownerId,

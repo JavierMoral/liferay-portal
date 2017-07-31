@@ -212,6 +212,7 @@ jdbc.default.password=${database.password}
 
 // HikariCP
 
+jdbc.default.connectionTimeout=600000
 jdbc.default.maximumPoolSize=20
 jdbc.default.minimumIdle=0
 
@@ -1396,10 +1397,12 @@ war.path=${app.server.weblogic.portal.dir}/</echo>
 		<attribute name="task" />
 
 		<sequential>
+			<update-gradle-properties />
+
 			<if>
 				<equals arg1="${test.poshi.runner.local.release}" arg2="true" />
 				<then>
-					<gradle-execute dir="modules/test/poshi-runner" task="deploy" />
+					<gradle-execute dir="modules/test/poshi-runner/poshi-runner" task="deploy" />
 				</then>
 			</if>
 
@@ -1407,6 +1410,7 @@ war.path=${app.server.weblogic.portal.dir}/</echo>
 				<arg value="--build-file=portal-web/build-test.gradle" />
 				<arg value="-Plocal=${test.poshi.runner.local.release}" />
 				<arg value="-PposhiRunnerExtProperties=${test.ext.properties.file}" />
+				<arg value="-Ptmp.maven.repository.dir=../.m2-tmp" />
 			</gradle-execute>
 		</sequential>
 	</macrodef>
@@ -1454,6 +1458,28 @@ war.path=${app.server.weblogic.portal.dir}/</echo>
 								<include name="*.sh" />
 							</fileset>
 						</chmod>
+
+						<local name="jmx.remote.port.overwrite" />
+
+						<math
+							datatype="int"
+							operand1="${app.server.bundle.index}"
+							operand2="${jmx.remote.port}"
+							operation="+"
+							result="jmx.remote.port.overwrite"
+						/>
+
+						<replace
+							file="${test.app.server.bin.dir}/setenv.sh"
+							token="-Dcom.sun.management.jmxremote.port=${jmx.remote.port}"
+							value="-Dcom.sun.management.jmxremote.port=${jmx.remote.port.overwrite}"
+						/>
+
+						<replace
+							file="${test.app.server.bin.dir}/setenv.bat"
+							token="-Dcom.sun.management.jmxremote.port=${jmx.remote.port}"
+							value="-Dcom.sun.management.jmxremote.port=${jmx.remote.port.overwrite}"
+						/>
 
 						<replaceregexp
 							file="${test.app.server.dir}/conf/server.xml"
@@ -2102,14 +2128,12 @@ tell application "Safari" to quit
 						</then>
 						<else>
 							<ant antfile="build-dist.xml" inheritAll="false" target="build-dist-tomcat" />
-
-							<setup-testable-tomcat />
 						</else>
 					</if>
 				</else>
 			</if>
 
-			<prepare-tomcat-setenv />
+			<setup-testable-tomcat />
 
 			<antcall inheritAll="false" target="prepare-test-build-tomcat-dependents" />
 
@@ -2254,9 +2278,26 @@ tell application "Safari" to quit
 		</sequential>
 	</macrodef>
 
-	<macrodef name="prepare-tomcat-setenv">
+	<macrodef name="prepare-test-ext-properties">
 		<sequential>
-			<replace file="${app.server.tomcat.bin.dir}/setenv${file.suffix.bat}" token="${app.server.tomcat.setenv.gc.old}" value="${app.server.tomcat.setenv.gc.new}" />
+			<if>
+				<equals arg1="${app.server.type}" arg2="tcserver" />
+				<then>
+					<replace file="${app.server.tcserver.dir}/liferay/conf/catalina.properties">
+						<replacetoken><![CDATA[common.loader=${catalina.base}/lib,${catalina.base}/lib/*.jar,${catalina.home}/lib,${catalina.home}/lib/*.jar]]></replacetoken>
+						<replacevalue><![CDATA[common.loader=${catalina.base}/lib,${catalina.base}/lib/*.jar,${catalina.home}/lib,${catalina.home}/lib/*.jar,${catalina.home}/lib/ext/global,${catalina.home}/lib/ext/global/*.jar,${catalina.home}/lib/ext,${catalina.home}/lib/ext/*.jar]]></replacevalue>
+					</replace>
+				</then>
+				<elseif>
+					<equals arg1="${app.server.type}" arg2="tomcat" />
+					<then>
+						<replace file="${app.server.tomcat.dir}/conf/catalina.properties">
+							<replacetoken><![CDATA[common.loader="${catalina.base}/lib","${catalina.base}/lib/*.jar","${catalina.home}/lib","${catalina.home}/lib/*.jar"]]></replacetoken>
+							<replacevalue><![CDATA[common.loader="${catalina.base}/lib","${catalina.base}/lib/*.jar","${catalina.home}/lib","${catalina.home}/lib/*.jar","${catalina.home}/lib/ext/global","${catalina.home}/lib/ext/global/*.jar","${catalina.home}/lib/ext","${catalina.home}/lib/ext/*.jar"]]></replacevalue>
+						</replace>
+					</then>
+				</elseif>
+			</if>
 		</sequential>
 	</macrodef>
 
@@ -2691,7 +2732,7 @@ ${tomcat-gc-log}
 									<unzip dest="${tstamp.value}" src="${war.path}">
 										<flattenmapper />
 										<patternset>
-											<include name="WEB-INF/src/dfc.properties" />
+											<include name="WEB-INF/classes/dfc.properties" />
 										</patternset>
 									</unzip>
 
@@ -2700,7 +2741,7 @@ ${tomcat-gc-log}
 									</propertyfile>
 
 									<war destfile="${war.path}" update="true">
-										<zipfileset file="${tstamp.value}/dfc.properties" fullpath="WEB-INF/src/dfc.properties" />
+										<zipfileset file="${tstamp.value}/dfc.properties" fullpath="WEB-INF/classes/dfc.properties" />
 									</war>
 
 									<delete file="${tstamp.value}/dfc.properties" />
@@ -2937,6 +2978,7 @@ go</echo>
 				</elseif>
 				<elseif>
 					<or>
+						<equals arg1="@{liferay.portal.bundle}" arg2="6.2.0" />
 						<equals arg1="@{liferay.portal.bundle}" arg2="6.2.1" />
 						<equals arg1="@{liferay.portal.bundle}" arg2="6.2.2" />
 						<equals arg1="@{liferay.portal.bundle}" arg2="6.2.3" />
@@ -2960,7 +3002,9 @@ go</echo>
 				</elseif>
 				<elseif>
 					<or>
+						<equals arg1="@{liferay.portal.bundle}" arg2="6.2.4" />
 						<equals arg1="@{liferay.portal.bundle}" arg2="6.2.5" />
+						<equals arg1="@{liferay.portal.bundle}" arg2="6.2.10.14" />
 						<equals arg1="@{liferay.portal.bundle}" arg2="6.2.10.15" />
 					</or>
 					<then>
@@ -2984,15 +3028,11 @@ go</echo>
 		<sequential>
 			<setup-testable-tomcat-logging />
 
-			<setup-testable-tomcat-aspectj-agent />
-
-			<setup-testable-tomcat-jmx />
-
-			<setup-testable-tomcat-jpda-address />
-
 			<setup-testable-tomcat-manager />
 
 			<setup-testable-tomcat-osgi-modules />
+
+			<setup-testable-tomcat-setenv />
 		</sequential>
 	</macrodef>
 
@@ -3006,6 +3046,41 @@ go</echo>
 					<echo append="true" file="${app.server.tomcat.dir}/bin/setenv.sh">
 						<![CDATA[
 							CATALINA_OPTS="${CATALINA_OPTS} ${aspectj.agent} -Dorg.aspectj.weaver.loadtime.configuration=${aspectj.configuration}"
+						]]>
+					</echo>
+				</then>
+			</if>
+		</sequential>
+	</macrodef>
+
+	<macrodef name="setup-testable-tomcat-jacoco-agent">
+		<sequential>
+			<if>
+				<not>
+					<available file="${app.server.tomcat.dir}/bin/jacocoagent.jar" />
+				</not>
+				<then>
+					<copy file="${jacoco.agent.jar}" todir="${app.server.tomcat.dir}/bin" />
+				</then>
+			</if>
+
+			<var name="jacoco.agent" value="-javaagent:${app.server.tomcat.dir}/bin/jacocoagent.jar${jacoco.agent.configuration}" />
+
+			<if>
+				<not>
+					<resourcecontains resource="${app.server.tomcat.dir}/bin/setenv.sh" substring="${jacoco.agent}" />
+				</not>
+				<then>
+					<echo append="true" file="${app.server.tomcat.dir}/bin/setenv.sh">
+						<![CDATA[
+							if [ "$1" = "jacoco" ]
+							then
+								JACOCO_OPTS="${jacoco.agent}"
+
+								CATALINA_OPTS="${CATALINA_OPTS} ${JACOCO_OPTS}"
+
+								shift
+							fi
 						]]>
 					</echo>
 				</then>
@@ -3216,6 +3291,18 @@ org.apache.catalina.startup.ClassLoaderFactory.level=INFO]]>
 		</sequential>
 	</macrodef>
 
+	<macrodef name="setup-testable-tomcat-setenv">
+		<sequential>
+			<setup-testable-tomcat-jacoco-agent />
+
+			<setup-testable-tomcat-aspectj-agent />
+
+			<setup-testable-tomcat-jmx />
+
+			<setup-testable-tomcat-jpda-address />
+		</sequential>
+	</macrodef>
+
 	<macrodef name="start-android-device">
 		<sequential>
 			<fail message="Please set the property ${mobile.android.home}." unless="mobile.android.home" />
@@ -3398,10 +3485,20 @@ org.apache.catalina.startup.ClassLoaderFactory.level=INFO]]>
 							<wait-for-app-server app.server.bin.dir="@{app.server.bin.dir}" app.server.bundle.index="@{app.server.bundle.index}" />
 						</then>
 						<else>
+							<get-testcase-property property.name="ext.plugins.includes" />
+
 							<parallel>
-								<sequential>
-									<wait-for-app-server app.server.bin.dir="@{app.server.bin.dir}" app.server.bundle.index="@{app.server.bundle.index}" />
-								</sequential>
+								<if>
+									<not>
+										<isset property="ext.plugins.includes" />
+									</not>
+									<then>
+										<sequential>
+											<wait-for-app-server app.server.bin.dir="@{app.server.bin.dir}" app.server.bundle.index="@{app.server.bundle.index}" />
+										</sequential>
+									</then>
+								</if>
+
 								<daemons>
 									<exec dir="${test.app.server.bin.dir}" executable="${app.server.start.executable}" failonerror="true" resolveexecutable="true">
 										<arg line="${app.server.start.executable.arg.line}" />
@@ -4188,10 +4285,10 @@ go]]></replacevalue>
 			<![CDATA[
 				<properties>
 					<property name="testray.case.defect" value="${testray.case.defect}" />
+					<property name="testray.case.type.name" value="Automated Functional Test" />
 					<property name="testray.component.names" value="${testray.component.names}" />
 					<property name="testray.main.component.name" value="${testray.main.component.name}" />
 					<property name="testray.team.name" value="${testray.team.name}" />
-					<property name="testray.case.type.name" value="Automated Functional Test" />
 					<property name="testray.testcase.description" value="${testray.testcase.description}" />
 					<property name="testray.testcase.name" value="${testray.testcase.name}" />
 					<property name="testray.testcase.priority" value="${testray.testcase.priority}" />
@@ -5101,6 +5198,23 @@ go]]></replacevalue>
 									<else>
 										<echo>Deploying all relevant modules that make up ${Liferay-Releng-App-Title}.lpkg.</echo>
 
+										<for param="module.dir.path">
+											<path>
+												<dirset dir="@{app.dir}">
+													<include name="*" />
+												</dirset>
+											</path>
+											<sequential>
+												<basename file="@{module.dir.path}" property="module.war.name" />
+
+												<delete failonerror="false" verbose="true">
+													<fileset dir="${liferay.home}/deploy">
+														<include name="${module.war.name}*" />
+													</fileset>
+												</delete>
+											</sequential>
+										</for>
+
 										<gradle-execute dir="@{app.dir}" task="deploy">
 											<arg value="clean" />
 										</gradle-execute>
@@ -5852,6 +5966,9 @@ go]]></replacevalue>
 				<fileset dir="util-java/test-results" erroronmissingdir="false">
 					<include name="**/TEST-*.xml" />
 				</fileset>
+				<fileset dir="${blade.samples.dir}/liferay-workspace/tests" erroronmissingdir="false">
+					<include name="**/TEST-*.xml" />
+				</fileset>
 				<report format="frames" todir="test-results/html" />
 			</junitreport>
 		</parallel>
@@ -6165,6 +6282,7 @@ jdbc.default.password=${database.password}
 
 // HikariCP
 
+jdbc.default.connectionTimeout=600000
 jdbc.default.maximumPoolSize=20
 jdbc.default.minimumIdle=0
 
@@ -8153,6 +8271,74 @@ ANT_OPTS=${env.ANT_OPTS}</echo>
 				</if>
 			</then>
 		</if>
+
+		<if>
+			<equals arg1="${app.server.type}" arg2="tomcat" />
+			<then>
+				<antcall target="prepare-tomcat-ext-environment" />
+			</then>
+		</if>
+	</target>
+
+	<target name="prepare-tomcat-ext-environment">
+		<if>
+			<and>
+				<matches pattern="https?://" string="${test.build.bundle.zip.url}" />
+				<matches pattern="https?://" string="${test.build.fix.pack.zip.url}" />
+				<not>
+					<resourcecontains resource="${app.server.dir}/conf/Catalina/localhost/ROOT.xml" substring="ExtResourceSet" />
+				</not>
+			</and>
+			<then>
+				<local name="enable.ext.environment" />
+
+				<get-patch-requirements patch.file.zip.url="${test.build.fix.pack.zip.url}" />
+
+				<beanshell>
+					<![CDATA[
+						import java.util.regex.Matcher;
+						import java.util.regex.Pattern;
+
+						int fixpackVersion = -1;
+
+						String fixPackZipURL = project.getProperty("test.build.fix.pack.zip.url");
+						String patchRequirements = project.getProperty("patch.requirements");
+
+						Pattern pattern = Pattern.compile("https?://.*/liferay-fix-pack-de-(\\d+)-\\d{4}[^/]*.zip");
+
+						Matcher matcher = pattern.matcher(fixPackZipURL);
+
+						if (matcher.find()) {
+							fixpackVersion = Integer.valueOf(matcher.group(1));
+						}
+						else if ((patchRequirements != null) && patchRequirements.startsWith("de-")) {
+							fixpackVersion = Integer.valueOf(patchRequirements.substring(3));
+						}
+
+						if (fixpackVersion >= 16) {
+							project.setProperty("enable.ext.environment", "true");
+						}
+					]]>
+				</beanshell>
+
+				<if>
+					<equals arg1="${enable.ext.environment}" arg2="true" />
+					<then>
+						<replace file="${app.server.dir}/conf/Catalina/localhost/ROOT.xml">
+							<replacetoken><![CDATA[</Context>]]></replacetoken>
+							<replacevalue><![CDATA[	<Resources>
+		<PreResources
+			className="com.liferay.support.tomcat.webresources.ExtResourceSet"
+			base="${catalina.base}/lib/ext/portal"
+			webAppMount="/WEB-INF/lib"
+		/>
+	</Resources>
+</Context>]]></replacevalue>
+						</replace>
+					</then>
+				</if>
+			</then>
+		</if>
 	</target>
 
 	<target name="prepare-virtual-host-name-properties">
@@ -9389,6 +9575,15 @@ jdbc.default.password=${database.mysql.password}</echo>
 			<equals arg1="${cluster.enabled}" arg2="true" />
 			<then>
 				<prepare-test-cluster-properties />
+			</then>
+		</if>
+
+		<get-testcase-property property.name="ext.plugins.includes" />
+
+		<if>
+			<isset property="ext.plugins.includes" />
+			<then>
+				<prepare-test-ext-properties />
 			</then>
 		</if>
 
