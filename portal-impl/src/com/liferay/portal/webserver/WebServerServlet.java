@@ -1139,6 +1139,8 @@ public class WebServerServlet extends HttpServlet {
 			fileName = FileUtil.stripExtension(fileName) + ".swf";
 		}
 
+		
+		InputStream baseInputStream = inputStream;
 		inputStream = flashMagicBytesUtilResult.getInputStream();
 
 		// Determine proper content type
@@ -1160,7 +1162,7 @@ public class WebServerServlet extends HttpServlet {
 
 		if (isSupportsRangeHeader(contentType)) {
 			ServletResponseUtil.sendFileWithRangeHeader(
-				request, response, fileName, inputStream, contentLength,
+				request, response, fileName, baseInputStream, contentLength,
 				contentType);
 		}
 		else {
