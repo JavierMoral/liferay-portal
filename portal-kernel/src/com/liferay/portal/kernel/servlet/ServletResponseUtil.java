@@ -38,7 +38,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
+import java.io.PushbackInputStream;
 import java.net.SocketException;
 
 import java.nio.ByteBuffer;
@@ -604,6 +604,18 @@ public class ServletResponseUtil {
 			StreamUtil.transfer(byteArrayInputStream, outputStream, length);
 
 			return byteArrayInputStream;
+		}
+		else if (inputStream instanceof PushbackInputStream) {
+			PushbackInputStream pushBackInputStream =
+				(PushbackInputStream)inputStream;
+			
+			pushBackInputStream.skip(start);
+			
+			StreamUtil.transfer(
+				pushBackInputStream, outputStream, StreamUtil.BUFFER_SIZE,
+				false, length);
+			
+			return pushBackInputStream;
 		}
 		else if (inputStream instanceof RandomAccessInputStream) {
 			RandomAccessInputStream randomAccessInputStream =
