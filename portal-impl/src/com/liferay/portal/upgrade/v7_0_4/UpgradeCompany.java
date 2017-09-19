@@ -12,10 +12,20 @@
  * details.
  */
 
-package com.liferay.source.formatter.hello.world;
+package com.liferay.portal.upgrade.v7_0_4;
+
+import com.liferay.portal.kernel.upgrade.UpgradeProcess;
+import com.liferay.portal.upgrade.v7_0_4.util.CompanyTable;
 
 /**
- * @author Hugo Huijser
+ * @author Jose A. Jimenez Campoy
  */
-public class PackagePath {
+public class UpgradeCompany extends UpgradeProcess {
+
+	@Override
+	protected void doUpgrade() throws Exception {
+		alter(
+			CompanyTable.class, new AlterColumnType("mx", "VARCHAR(200) null"));
+	}
+
 }
