@@ -281,8 +281,8 @@ public class ServletResponseUtil {
 				setHeaders(
 					request, response, fileName, contentType, null, fullRange);
 
-				copyOffsetRange(
-					inputStream, outputStream, fullRange.getStart(), true,
+				copyRange(
+					fullRange.getStart(), inputStream, outputStream, true,
 					fullRange.getLength());
 			}
 			else if (ranges.size() == 1) {
@@ -299,8 +299,8 @@ public class ServletResponseUtil {
 
 				response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT);
 
-				copyOffsetRange(
-					inputStream, outputStream, range.getStart(), true,
+				copyRange(
+					range.getStart(), inputStream, outputStream, true,
 					range.getLength());
 			}
 			else if (ranges.size() > 1) {
@@ -578,18 +578,6 @@ public class ServletResponseUtil {
 		}
 	}
 
-	protected static InputStream copyOffsetRange(
-			InputStream inputStream, OutputStream outputStream, long offset,
-			boolean cleanUp, long length)
-		throws IOException {
-
-		inputStream.skip(offset);
-		StreamUtil.transfer(
-			inputStream, outputStream, StreamUtil.BUFFER_SIZE, cleanUp, length);
-
-		return inputStream;
-	}
-
 	protected static InputStream copyRange(
 			InputStream inputStream, OutputStream outputStream, long start,
 			long length)
@@ -633,6 +621,18 @@ public class ServletResponseUtil {
 		return copyRange(
 			new RandomAccessInputStream(inputStream), outputStream, start,
 			length);
+	}
+	
+	protected static InputStream copyRange(
+			long offset, InputStream inputStream, OutputStream outputStream,
+			boolean cleanUp, long length)
+		throws IOException {
+
+		inputStream.skip(offset);
+		StreamUtil.transfer(
+			inputStream, outputStream, StreamUtil.BUFFER_SIZE, cleanUp, length);
+
+		return inputStream;
 	}
 
 	protected static void setContentLength(
