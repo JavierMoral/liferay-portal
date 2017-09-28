@@ -2039,7 +2039,7 @@ to version 2.0.44.
 - [LPS-73124]: Update the [Liferay Portal Tools DB Support] dependency to
 version 1.0.5.
 - [LPS-73855]: Update the [Liferay Gradle Plugins Javadoc Formatter] dependency
-to version 1.0.14.
+to version 1.0.15.
 - [LPS-73855]: Update the [Liferay Javadoc Formatter] dependency to version
 1.0.21.
 
@@ -2467,6 +2467,53 @@ to version 2.2.8.
 - [LPS-74544]: Update the [Liferay Source Formatter] dependency to version
 1.0.466.
 
+## 3.4.67 - 2017-09-19
+
+### Changed
+- [LPS-74738]: Update the [Liferay Gradle Plugins Source Formatter] dependency
+to version 2.2.9.
+- [LPS-74738]: Update the [Liferay Source Formatter] dependency to version
+1.0.467.
+
+## 3.4.68 - 2017-09-21
+
+### Changed
+- [LPS-71117]: Update the [Liferay Gradle Plugins Test Integration] dependency
+to version 2.1.1.
+- [LPS-73070]: Set the default Node.js version to 8.4.0.
+- [LPS-74503]: Update the [Liferay Gradle Plugins Javadoc Formatter] dependency
+to version 1.0.16.
+- [LPS-74503]: Update the [Liferay Javadoc Formatter] dependency to version
+1.0.22.
+- [LPS-74657]: Update the [Liferay Gradle Plugins Source Formatter] dependency
+to version 2.2.10.
+- [LPS-74657]: Update the [Liferay Source Formatter] dependency to version
+1.0.468.
+- [LPS-74824]: Update the [Liferay Gradle Plugins Service Builder] dependency
+to version 1.0.52.
+- [LPS-74824]: Update the [Liferay Portal Tools Service Builder] dependency to
+version 1.0.168.
+
+## 3.4.69 - 2017-09-23
+
+### Changed
+- [LPS-71117]: Update the [Liferay Gradle Plugins Test Integration] dependency
+to version 2.1.2.
+
+## 3.4.70 - 2017-09-25
+
+### Added
+- [LPS-74884]: Exclude `node_modules` directory in Idea's `.iml` file to speed
+up indexing.
+
+## 3.4.71 - 2017-09-26
+
+### Changed
+- [LPS-74749]: Update the [Liferay Gradle Plugins Source Formatter] dependency
+to version 2.2.11.
+- [LPS-74749]: Update the [Liferay Source Formatter] dependency to version
+1.0.469.
+
 [Gradle Bundle Plugin]: https://github.com/TomDmitriev/gradle-bundle-plugin
 [Liferay Alloy Taglib]: https://github.com/liferay/alloy-taglibs
 [Liferay Ant BND]: https://github.com/liferay/liferay-portal/tree/master/modules/sdk/ant-bnd
@@ -2594,6 +2641,7 @@ to version 2.2.8.
 [LPS-70941]: https://issues.liferay.com/browse/LPS-70941
 [LPS-71005]: https://issues.liferay.com/browse/LPS-71005
 [LPS-71048]: https://issues.liferay.com/browse/LPS-71048
+[LPS-71117]: https://issues.liferay.com/browse/LPS-71117
 [LPS-71118]: https://issues.liferay.com/browse/LPS-71118
 [LPS-71164]: https://issues.liferay.com/browse/LPS-71164
 [LPS-71222]: https://issues.liferay.com/browse/LPS-71222
@@ -2630,6 +2678,7 @@ to version 2.2.8.
 [LPS-72868]: https://issues.liferay.com/browse/LPS-72868
 [LPS-72914]: https://issues.liferay.com/browse/LPS-72914
 [LPS-73058]: https://issues.liferay.com/browse/LPS-73058
+[LPS-73070]: https://issues.liferay.com/browse/LPS-73070
 [LPS-73124]: https://issues.liferay.com/browse/LPS-73124
 [LPS-73147]: https://issues.liferay.com/browse/LPS-73147
 [LPS-73148]: https://issues.liferay.com/browse/LPS-73148
@@ -2675,12 +2724,17 @@ to version 2.2.8.
 [LPS-74433]: https://issues.liferay.com/browse/LPS-74433
 [LPS-74475]: https://issues.liferay.com/browse/LPS-74475
 [LPS-74490]: https://issues.liferay.com/browse/LPS-74490
+[LPS-74503]: https://issues.liferay.com/browse/LPS-74503
 [LPS-74538]: https://issues.liferay.com/browse/LPS-74538
 [LPS-74544]: https://issues.liferay.com/browse/LPS-74544
 [LPS-74614]: https://issues.liferay.com/browse/LPS-74614
 [LPS-74637]: https://issues.liferay.com/browse/LPS-74637
 [LPS-74657]: https://issues.liferay.com/browse/LPS-74657
+[LPS-74738]: https://issues.liferay.com/browse/LPS-74738
+[LPS-74749]: https://issues.liferay.com/browse/LPS-74749
 [LPS-74752]: https://issues.liferay.com/browse/LPS-74752
 [LPS-74770]: https://issues.liferay.com/browse/LPS-74770
 [LPS-74789]: https://issues.liferay.com/browse/LPS-74789
+[LPS-74824]: https://issues.liferay.com/browse/LPS-74824
+[LPS-74884]: https://issues.liferay.com/browse/LPS-74884
 [LRDOCS-3023]: https://issues.liferay.com/browse/LRDOCS-3023
