@@ -348,6 +348,7 @@ public class DDMStructureStagedModelDataHandler
 
 		if (structureGroupId == portletDataContext.getSourceCompanyGroupId() &&
 			groupIds.get(portletDataContext.getCompanyGroupId()) != groupId) {
+
 			groupId = portletDataContext.getCompanyGroupId();
 		}
 
