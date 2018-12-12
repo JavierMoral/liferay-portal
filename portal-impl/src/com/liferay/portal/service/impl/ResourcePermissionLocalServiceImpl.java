@@ -1252,6 +1252,7 @@ public class ResourcePermissionLocalServiceImpl
 		for (ResourcePermission resourcePermission : resourcePermissions) {
 			if (resourcePermission.getRoleId() == roleId &&
 				resourcePermission.hasAction(resourceAction)) {
+
 				return true;
 			}
 		}
