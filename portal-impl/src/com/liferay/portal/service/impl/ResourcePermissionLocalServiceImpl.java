@@ -1250,7 +1250,8 @@ public class ResourcePermissionLocalServiceImpl
 			resourcePermissionPersistence.findByC_N_S(companyId, name, scope);
 
 		for (ResourcePermission resourcePermission : resourcePermissions) {
-			if (resourcePermission.hasAction(resourceAction)) {
+			if (resourcePermission.getRoleId() == roleId &&
+				resourcePermission.hasAction(resourceAction)) {
 				return true;
 			}
 		}
