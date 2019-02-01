@@ -128,6 +128,7 @@ public class PortletSharedSearchRequestImpl
 		searchContext.setCompanyId(themeDisplay.getCompanyId());
 		searchContext.setLayout(themeDisplay.getLayout());
 		searchContext.setLocale(themeDisplay.getLocale());
+		searchContext.setGroupIds(new long[] {themeDisplay.getScopeGroupId()});
 		searchContext.setTimeZone(themeDisplay.getTimeZone());
 		searchContext.setUserId(themeDisplay.getUserId());
 
