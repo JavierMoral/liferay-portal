@@ -100,8 +100,8 @@ public class JournalArticleFinderImpl
 	public static final String FIND_BY_G_ST_L =
 		JournalArticleFinder.class.getName() + ".findByG_ST_L";
 
-	public static final String FIND_BY_G_F_L =
-		JournalArticleFinder.class.getName() + ".findByG_F_L";
+	public static final String FIND_BY_G_U_F_L =
+		JournalArticleFinder.class.getName() + ".findByG_U_F_L";
 
 	public static final String FIND_BY_G_C_S =
 		JournalArticleFinder.class.getName() + ".findByG_C_S";
@@ -1413,22 +1413,28 @@ public class JournalArticleFinderImpl
 			session = openSession();
 
 			String sql = _customSQL.get(
-				getClass(), FIND_BY_G_F_L, queryDefinition, "JournalArticle");
+				getClass(), FIND_BY_G_U_F_L, queryDefinition, "JournalArticle");
 
 			sql = replaceStatusJoin(sql, queryDefinition);
 
 			sql = _customSQL.replaceOrderBy(
 				sql, queryDefinition.getOrderByComparator());
 
+			if (folderIds.isEmpty()) {
+				sql = StringUtil.replace(
+					sql, "([$FOLDER_ID$]) AND", StringPool.BLANK);
+			}
+			else {
+				sql = StringUtil.replace(
+					sql, "[$FOLDER_ID$]",
+					getFolderIds(folderIds, JournalArticleImpl.TABLE_NAME));
+			}
+
 			if (inlineSQLHelper) {
 				sql = InlineSQLHelperUtil.replacePermissionCheck(
 					sql, JournalArticle.class.getName(),
 					"JournalArticle.resourcePrimKey", groupId);
 			}
-
-			sql = StringUtil.replace(
-				sql, "[$FOLDER_ID$]",
-				getFolderIds(folderIds, JournalArticleImpl.TABLE_NAME));
 
 			SQLQuery q = session.createSynchronizedSQLQuery(sql);
 
@@ -1440,11 +1446,20 @@ public class JournalArticleFinderImpl
 			qPos.add(LocaleUtil.toLanguageId(locale));
 
 			qPos.add(groupId);
-			qPos.add(queryDefinition.getStatus());
+
+			if (queryDefinition.getOwnerUserId() > 0) {
+				qPos.add(queryDefinition.getOwnerUserId());
+
+				if (queryDefinition.isIncludeOwner()) {
+					qPos.add(WorkflowConstants.STATUS_IN_TRASH);
+				}
+			}
 
 			for (Long folderId : folderIds) {
 				qPos.add(folderId);
 			}
+
+			qPos.add(queryDefinition.getStatus());
 
 			return (List<JournalArticle>)QueryUtil.list(
 				q, getDialect(), queryDefinition.getStart(),
