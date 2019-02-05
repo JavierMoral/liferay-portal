@@ -1297,9 +1297,10 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 		QueryDefinition<JournalArticle> queryDefinition = new QueryDefinition<>(
 			status, userId, includeOwner, start, end, orderByComparator);
 
-		return journalArticleFinder.filterFindByG_F_C(
-			groupId, folderIds, JournalArticleConstants.CLASSNAME_ID_DEFAULT,
-			queryDefinition);
+		Locale locale = LocaleUtil.getMostRelevantLocale();
+
+		return journalArticleFinder.filterFindByG_F_L(
+			groupId, folderIds, locale,	queryDefinition);
 	}
 
 	/**
