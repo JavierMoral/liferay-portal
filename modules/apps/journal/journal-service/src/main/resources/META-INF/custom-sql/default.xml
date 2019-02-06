@@ -264,7 +264,7 @@
 				JournalArticle.id_ ASC
 		]]>
 	</sql>
-	<sql id="com.liferay.journal.service.persistence.JournalArticleFinder.findByG_F_L">
+	<sql id="com.liferay.journal.service.persistence.JournalArticleFinder.findByG_U_F_L">
 		<![CDATA[
 			SELECT
 				JournalArticle.*
@@ -290,8 +290,8 @@
 					(JournalArticleLocalization.languageId = ?)
 			WHERE
 				(JournalArticle.groupId = ?) AND
-				([$STATUS$]) AND
-				[$FOLDER_ID$] AND
+				([$FOLDER_ID$]) AND
+				([$OWNER_USER_ID$] [$OWNER_USER_ID_AND_OR_CONNECTOR$] [$STATUS$]) AND
 				(tempJournalArticle.id_ IS NULL)
 			ORDER BY
 				JournalArticle.id_ ASC
