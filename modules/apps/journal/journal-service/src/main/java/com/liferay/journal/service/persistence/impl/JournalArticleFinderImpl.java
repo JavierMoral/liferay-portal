@@ -427,19 +427,19 @@ public class JournalArticleFinderImpl
 	}
 
 	@Override
-	public List<JournalArticle> filterFindByG_ST_L(
-		long groupId, int status, Locale locale,
-		QueryDefinition<JournalArticle> queryDefinition) {
-
-		return doFindByG_ST_L(groupId, status, locale, queryDefinition, true);
-	}
-
-	@Override
 	public List<JournalArticle> filterFindByG_F_L(
 		long groupId, List<Long> folderIds, Locale locale,
 		QueryDefinition<JournalArticle> queryDefinition) {
 
 		return doFindByG_F_L(groupId, folderIds, locale, queryDefinition, true);
+	}
+
+	@Override
+	public List<JournalArticle> filterFindByG_ST_L(
+		long groupId, int status, Locale locale,
+		QueryDefinition<JournalArticle> queryDefinition) {
+
+		return doFindByG_ST_L(groupId, status, locale, queryDefinition, true);
 	}
 
 	@Override
@@ -757,20 +757,20 @@ public class JournalArticleFinderImpl
 	}
 
 	@Override
-	public List<JournalArticle> findByG_ST_L(
-		long groupId, int status, Locale locale,
-		QueryDefinition<JournalArticle> queryDefinition) {
-
-		return doFindByG_ST_L(groupId, status, locale, queryDefinition, false);
-	}
-
-	@Override
 	public List<JournalArticle> findByG_F_L(
 		long groupId, List<Long> folderIds, Locale locale,
 		QueryDefinition<JournalArticle> queryDefinition) {
 
 		return doFindByG_F_L(
 			groupId, folderIds, locale, queryDefinition, false);
+	}
+
+	@Override
+	public List<JournalArticle> findByG_ST_L(
+		long groupId, int status, Locale locale,
+		QueryDefinition<JournalArticle> queryDefinition) {
+
+		return doFindByG_ST_L(groupId, status, locale, queryDefinition, false);
 	}
 
 	@Override
@@ -1357,51 +1357,6 @@ public class JournalArticleFinderImpl
 		}
 	}
 
-	protected List<JournalArticle> doFindByG_ST_L(
-		long groupId, int status, Locale locale,
-		QueryDefinition<JournalArticle> queryDefinition,
-		boolean inlineSQLHelper) {
-
-		Session session = null;
-
-		try {
-			session = openSession();
-
-			String sql = _customSQL.get(
-				getClass(), FIND_BY_G_ST_L, queryDefinition, "JournalArticle");
-
-			sql = _customSQL.replaceOrderBy(
-				sql, queryDefinition.getOrderByComparator());
-
-			if (inlineSQLHelper) {
-				sql = InlineSQLHelperUtil.replacePermissionCheck(
-					sql, JournalArticle.class.getName(),
-					"JournalArticle.resourcePrimKey", groupId);
-			}
-
-			SQLQuery q = session.createSynchronizedSQLQuery(sql);
-
-			q.addEntity(
-				JournalArticleImpl.TABLE_NAME, JournalArticleImpl.class);
-
-			QueryPos qPos = QueryPos.getInstance(q);
-
-			qPos.add(LocaleUtil.toLanguageId(locale));
-			qPos.add(groupId);
-			qPos.add(status);
-
-			return (List<JournalArticle>)QueryUtil.list(
-				q, getDialect(), queryDefinition.getStart(),
-				queryDefinition.getEnd());
-		}
-		catch (Exception e) {
-			throw new SystemException(e);
-		}
-		finally {
-			closeSession(session);
-		}
-	}
-
 	protected List<JournalArticle> doFindByG_F_L(
 		long groupId, List<Long> folderIds, Locale locale,
 		QueryDefinition<JournalArticle> queryDefinition,
@@ -1460,6 +1415,51 @@ public class JournalArticleFinderImpl
 			}
 
 			qPos.add(queryDefinition.getStatus());
+
+			return (List<JournalArticle>)QueryUtil.list(
+				q, getDialect(), queryDefinition.getStart(),
+				queryDefinition.getEnd());
+		}
+		catch (Exception e) {
+			throw new SystemException(e);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	protected List<JournalArticle> doFindByG_ST_L(
+		long groupId, int status, Locale locale,
+		QueryDefinition<JournalArticle> queryDefinition,
+		boolean inlineSQLHelper) {
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			String sql = _customSQL.get(
+				getClass(), FIND_BY_G_ST_L, queryDefinition, "JournalArticle");
+
+			sql = _customSQL.replaceOrderBy(
+				sql, queryDefinition.getOrderByComparator());
+
+			if (inlineSQLHelper) {
+				sql = InlineSQLHelperUtil.replacePermissionCheck(
+					sql, JournalArticle.class.getName(),
+					"JournalArticle.resourcePrimKey", groupId);
+			}
+
+			SQLQuery q = session.createSynchronizedSQLQuery(sql);
+
+			q.addEntity(
+				JournalArticleImpl.TABLE_NAME, JournalArticleImpl.class);
+
+			QueryPos qPos = QueryPos.getInstance(q);
+
+			qPos.add(LocaleUtil.toLanguageId(locale));
+			qPos.add(groupId);
+			qPos.add(status);
 
 			return (List<JournalArticle>)QueryUtil.list(
 				q, getDialect(), queryDefinition.getStart(),
