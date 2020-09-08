@@ -400,7 +400,9 @@ public class LayoutPermissionImpl
 						permissionChecker, group, ActionKeys.MANAGE_LAYOUTS) ||
 					UserPermissionUtil.contains(
 						permissionChecker, groupUserId,
-						groupUser.getOrganizationIds(), ActionKeys.UPDATE)) {
+						groupUser.getOrganizationIds(), ActionKeys.UPDATE) ||
+					GroupPermissionUtil.contains(
+						permissionChecker, group, ActionKeys.UPDATE)) {
 
 					return true;
 				}
