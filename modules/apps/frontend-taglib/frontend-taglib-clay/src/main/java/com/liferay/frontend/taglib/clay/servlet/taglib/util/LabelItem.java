@@ -14,6 +14,8 @@
 
 package com.liferay.frontend.taglib.clay.servlet.taglib.util;
 
+import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.util.HashMap;
@@ -65,7 +67,9 @@ public class LabelItem extends HashMap<String, Object> {
 	}
 
 	public void setLabel(String label) {
-		put("label", label);
+		put(
+			"label",
+			LanguageUtil.get(LocaleUtil.getMostRelevantLocale(), label));
 	}
 
 	public void setLarge(boolean large) {
