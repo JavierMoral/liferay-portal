@@ -4963,9 +4963,11 @@ public class GroupLocalServiceImpl extends GroupLocalServiceBaseImpl {
 
 		String[] languageIdsArray = StringUtil.split(languageIds);
 
+		Group group = groupPersistence.fetchByPrimaryKey(groupId);
+
 		for (String languageId : languageIdsArray) {
-			if (!LanguageUtil.isAvailableLocale(
-					groupId, LocaleUtil.fromLanguageId(languageId))) {
+			if (!LanguageUtil.isAvailableCompanyLocale(
+					group.getCompanyId(), languageId)) {
 
 				LocaleException localeException = new LocaleException(
 					LocaleException.TYPE_DISPLAY_SETTINGS);
