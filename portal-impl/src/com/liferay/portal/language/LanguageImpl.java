@@ -1494,6 +1494,26 @@ public class LanguageImpl implements Language, Serializable {
 	}
 
 	/**
+	 * Returns <code>true</code> if the language ID is configured to be
+	 * available in the company.
+	 *
+	 * @param  companyId the primary key of the group
+	 * @param  languageId the language ID to search for
+	 * @return <code>true</code> if the language ID is configured to be
+	 *         available in the company; <code>false</code> otherwise
+	 */
+	@Override
+	public boolean isAvailableCompanyLocale(long companyId, String languageId) {
+		if (companyId <= 0) {
+			return isAvailableLocale(languageId);
+		}
+
+		CompanyLocalesBag companyLocalesBag = _getCompanyLocalesBag(companyId);
+
+		return companyLocalesBag.containsLanguageId(languageId);
+	}
+
+	/**
 	 * Returns <code>true</code> if the language code is configured to be
 	 * available. Locales can be configured in <code>portal.properties</code>
 	 * using the <code>locales</code> and <code>locales.enabled</code> keys.

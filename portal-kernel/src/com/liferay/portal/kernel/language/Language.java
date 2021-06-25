@@ -176,6 +176,8 @@ public interface Language {
 
 	public void init();
 
+	public boolean isAvailableCompanyLocale(long companyId, String languageId);
+
 	public boolean isAvailableLanguageCode(String languageCode);
 
 	public boolean isAvailableLocale(Locale locale);

@@ -316,6 +316,12 @@ public class LanguageUtil {
 		_language.init();
 	}
 
+	public static boolean isAvailableCompanyLocale(
+		long companyId, String languageId) {
+
+		return _language.isAvailableCompanyLocale(companyId, languageId);
+	}
+
 	public static boolean isAvailableLanguageCode(String languageCode) {
 		return _language.isAvailableLanguageCode(languageCode);
 	}
