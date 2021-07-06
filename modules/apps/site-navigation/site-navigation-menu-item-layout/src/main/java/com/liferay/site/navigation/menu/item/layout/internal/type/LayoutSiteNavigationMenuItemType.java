@@ -22,9 +22,6 @@ import com.liferay.item.selector.ItemSelector;
 import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.dao.orm.DynamicQuery;
-import com.liferay.portal.kernel.dao.orm.Property;
-import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -401,39 +398,17 @@ public class LayoutSiteNavigationMenuItemType
 			return false;
 		}
 
-		DynamicQuery dynamicQuery =
-			_siteNavigationMenuItemLocalService.dynamicQuery();
+		List<SiteNavigationMenuItem> siteNavigationMenuIems =
+			_siteNavigationMenuItemLocalService.getSiteNavigationMenuItems(
+				siteNavigationMenuItem.getSiteNavigationMenuId());
 
-		StringBundler sb = new StringBundler(5);
+		for (SiteNavigationMenuItem item : siteNavigationMenuIems) {
+			if (_isAncestor(siteNavigationMenuItem, item)) {
+				Layout descendantLayout = _fetchLayout(item);
 
-		sb.append(StringPool.PERCENT);
-		sb.append("layoutUuid");
-		sb.append(StringPool.EQUAL);
-		sb.append(curLayout.getUuid());
-		sb.append(StringPool.PERCENT);
-
-		Property typeSettingsProperty = PropertyFactoryUtil.forName(
-			"typeSettings");
-
-		dynamicQuery.add(typeSettingsProperty.like(sb.toString()));
-
-		Property siteNavigationMenuIdProperty = PropertyFactoryUtil.forName(
-			"siteNavigationMenuId");
-
-		dynamicQuery.add(
-			siteNavigationMenuIdProperty.eq(
-				siteNavigationMenuItem.getSiteNavigationMenuId()));
-
-		List<SiteNavigationMenuItem> siteNavigationMenuItems =
-			_siteNavigationMenuItemLocalService.dynamicQuery(dynamicQuery);
-
-		for (SiteNavigationMenuItem curSiteNavigationMenuItem :
-				siteNavigationMenuItems) {
-
-			if (_isAncestor(
-					siteNavigationMenuItem, curSiteNavigationMenuItem)) {
-
-				return true;
+				if (descendantLayout.getPlid() == curLayout.getPlid()) {
+					return true;
+				}
 			}
 		}
 
