@@ -94,19 +94,21 @@ public class RoleFinderImpl extends RoleFinderBaseImpl implements RoleFinder {
 		LinkedHashMap<String, Object> params) {
 
 		String[] names = null;
+		String[] titles = null;
 		String[] descriptions = null;
 		boolean andOperator = false;
 
 		if (Validator.isNotNull(keywords)) {
 			names = CustomSQLUtil.keywords(keywords);
+			titles = CustomSQLUtil.keywords(keywords);
 			descriptions = CustomSQLUtil.keywords(keywords);
 		}
 		else {
 			andOperator = true;
 		}
 
-		return countByC_N_D_T(
-			companyId, names, descriptions, types, params, andOperator);
+		return countByC_N_T_D_T(
+			companyId, names, titles, descriptions, types, params, andOperator);
 	}
 
 	@Override
@@ -170,19 +172,21 @@ public class RoleFinderImpl extends RoleFinderBaseImpl implements RoleFinder {
 		LinkedHashMap<String, Object> params) {
 
 		String[] names = null;
+		String[] titles = null;
 		String[] descriptions = null;
 		boolean andOperator = false;
 
 		if (Validator.isNotNull(keywords)) {
 			names = CustomSQLUtil.keywords(keywords);
+			titles = CustomSQLUtil.keywords(keywords);
 			descriptions = CustomSQLUtil.keywords(keywords);
 		}
 		else {
 			andOperator = true;
 		}
 
-		return filterCountByC_N_D_T(
-			companyId, names, descriptions, types, params, andOperator);
+		return filterCountByC_N_T_D_T(
+			companyId, names, titles, descriptions, types, params, andOperator);
 	}
 
 	@Override
@@ -249,20 +253,22 @@ public class RoleFinderImpl extends RoleFinderBaseImpl implements RoleFinder {
 		OrderByComparator<Role> orderByComparator) {
 
 		String[] names = null;
+		String[] titles = null;
 		String[] descriptions = null;
 		boolean andOperator = false;
 
 		if (Validator.isNotNull(keywords)) {
 			names = CustomSQLUtil.keywords(keywords);
+			titles = CustomSQLUtil.keywords(keywords);
 			descriptions = CustomSQLUtil.keywords(keywords);
 		}
 		else {
 			andOperator = true;
 		}
 
-		return filterFindByC_N_D_T(
-			companyId, names, descriptions, types, params, andOperator, start,
-			end, orderByComparator);
+		return filterFindByC_N_T_D_T(
+			companyId, names, titles, descriptions, types, params, andOperator,
+			start, end, orderByComparator);
 	}
 
 	@Override
@@ -346,20 +352,22 @@ public class RoleFinderImpl extends RoleFinderBaseImpl implements RoleFinder {
 		OrderByComparator<Role> orderByComparator) {
 
 		String[] names = null;
+		String[] titles = null;
 		String[] descriptions = null;
 		boolean andOperator = false;
 
 		if (Validator.isNotNull(keywords)) {
 			names = CustomSQLUtil.keywords(keywords);
+			titles = CustomSQLUtil.keywords(keywords);
 			descriptions = CustomSQLUtil.keywords(keywords);
 		}
 		else {
 			andOperator = true;
 		}
 
-		return findByC_N_D_T(
-			companyId, names, descriptions, types, params, andOperator, start,
-			end, orderByComparator);
+		return findByC_N_T_D_T(
+			companyId, names, titles, descriptions, types, params, andOperator,
+			start, end, orderByComparator);
 	}
 
 	@Override
