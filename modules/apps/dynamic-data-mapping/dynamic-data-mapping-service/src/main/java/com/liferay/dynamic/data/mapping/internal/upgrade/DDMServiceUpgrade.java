@@ -75,6 +75,7 @@ import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.upgrade.BaseSQLServerDatetimeUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.CTModelUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.DummyUpgradeStep;
@@ -489,6 +490,12 @@ public class DDMServiceUpgrade implements UpgradeStepRegistrator {
 			"5.1.3", "5.1.4",
 			new com.liferay.dynamic.data.mapping.internal.upgrade.v5_1_4.
 				PollsPortletIdToDDMPortletIdUpgradeProcess());
+
+		registry.register(
+			"5.1.4", "5.1.5",
+			new com.liferay.dynamic.data.mapping.internal.upgrade.v5_1_5.
+				DDMFormInstanceUpgradeProcess(
+					_resourcePermissionLocalService, _roleLocalService));
 	}
 
 	@Activate
@@ -578,6 +585,9 @@ public class DDMServiceUpgrade implements UpgradeStepRegistrator {
 
 	@Reference
 	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Reference
+	private RoleLocalService _roleLocalService;
 
 	@Reference(target = "(dl.store.impl.enabled=true)")
 	private StoreFactory _storeFactory;
