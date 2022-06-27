@@ -62,6 +62,7 @@ import com.liferay.dynamic.data.mapping.io.DDMFormLayoutSerializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormSerializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesSerializer;
+import com.liferay.dynamic.data.mapping.service.DDMFormInstanceLocalService;
 import com.liferay.dynamic.data.mapping.util.DDM;
 import com.liferay.dynamic.data.mapping.util.DDMDataDefinitionConverter;
 import com.liferay.expando.kernel.service.ExpandoRowLocalService;
@@ -75,6 +76,7 @@ import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.upgrade.BaseSQLServerDatetimeUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.CTModelUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.DummyUpgradeStep;
@@ -82,6 +84,8 @@ import com.liferay.portal.kernel.upgrade.MVCCVersionUpgradeProcess;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 import com.liferay.portlet.documentlibrary.store.StoreFactory;
 import com.liferay.view.count.service.ViewCountEntryLocalService;
+
+import jdk.nashorn.internal.ir.annotations.Reference;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Activate;
@@ -489,6 +493,13 @@ public class DDMServiceUpgrade implements UpgradeStepRegistrator {
 			"5.1.3", "5.1.4",
 			new com.liferay.dynamic.data.mapping.internal.upgrade.v5_1_4.
 				PollsPortletIdToDDMPortletIdUpgradeProcess());
+
+		registry.register(
+			"5.1.4", "5.1.5",
+			new com.liferay.dynamic.data.mapping.internal.upgrade.v5_1_5.
+				DDMFormInstanceUpgradeProcess(
+					_ddmFormInstanceLocalService,
+					_resourcePermissionLocalService, _roleLocalService));
 	}
 
 	@Activate
@@ -524,6 +535,9 @@ public class DDMServiceUpgrade implements UpgradeStepRegistrator {
 
 	@Reference
 	private DDMDataProviderTracker _ddmDataProviderTracker;
+
+	@Reference
+	private DDMFormInstanceLocalService _ddmFormInstanceLocalService;
 
 	@Reference
 	private DDMFormLayoutDeserializer _ddmFormLayoutDeserializer;
@@ -578,6 +592,9 @@ public class DDMServiceUpgrade implements UpgradeStepRegistrator {
 
 	@Reference
 	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Reference
+	private RoleLocalService _roleLocalService;
 
 	@Reference(target = "(dl.store.impl.enabled=true)")
 	private StoreFactory _storeFactory;
