@@ -75,6 +75,7 @@ import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.upgrade.BaseSQLServerDatetimeUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.CTModelUpgradeProcess;
 import com.liferay.portal.kernel.upgrade.DummyUpgradeStep;
@@ -252,8 +253,10 @@ public class DDMServiceUpgradeStepRegistrator
 
 		registry.register("2.0.10", "2.0.11", new DummyUpgradeStep());
 
+		registry.register("2.0.11", "2.0.12", new DummyUpgradeStep());
+
 		registry.register(
-			"2.0.11", "3.0.0",
+			"2.0.12", "3.0.0",
 			new BaseSQLServerDatetimeUpgradeProcess(
 				new Class<?>[] {
 					DDMContentTable.class, DDMDataProviderInstanceTable.class,
@@ -320,8 +323,10 @@ public class DDMServiceUpgradeStepRegistrator
 
 		registry.register("3.2.8", "3.2.9", new DummyUpgradeStep());
 
+		registry.register("3.2.9", "3.2.10", new DummyUpgradeStep());
+
 		registry.register(
-			"3.2.9", "3.3.0",
+			"3.2.10", "3.3.0",
 			new CTModelUpgradeProcess(
 				"DDMStructure", "DDMStructureVersion", "DDMTemplate",
 				"DDMTemplateVersion"));
@@ -413,8 +418,10 @@ public class DDMServiceUpgradeStepRegistrator
 					ddmFormJSONDeserializer, _ddmFormLayoutDeserializer,
 					ddmFormLayoutSerializer, ddmFormSerializer, _jsonFactory));
 
+		registry.register("3.10.2", "3.10.3", new DummyUpgradeStep());
+
 		registry.register(
-			"3.10.2", "4.0.0",
+			"3.10.3", "4.0.0",
 			new com.liferay.dynamic.data.mapping.internal.upgrade.v4_0_0.
 				DDMStructureUpgradeProcess(_ddmDataDefinitionConverter));
 
@@ -492,6 +499,12 @@ public class DDMServiceUpgradeStepRegistrator
 			"5.1.3", "5.1.4",
 			new com.liferay.dynamic.data.mapping.internal.upgrade.v5_1_4.
 				PollsPortletIdToDDMPortletIdUpgradeProcess());
+
+		registry.register(
+			"5.1.4", "5.1.5",
+			new com.liferay.dynamic.data.mapping.internal.upgrade.v5_1_5.
+				DDMFormInstanceUpgradeProcess(
+					_resourcePermissionLocalService, _roleLocalService));
 	}
 
 	@Activate
@@ -581,6 +594,9 @@ public class DDMServiceUpgradeStepRegistrator
 
 	@Reference
 	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Reference
+	private RoleLocalService _roleLocalService;
 
 	@Reference(target = "(dl.store.impl.enabled=true)")
 	private StoreFactory _storeFactory;
