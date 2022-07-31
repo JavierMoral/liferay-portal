@@ -8051,40 +8051,6 @@ public class PortalImpl implements Portal {
 		return i18nErrorPath.concat(redirect);
 	}
 
-	private List<Portlet> _getAllNonembeddedPortlets(
-		Layout layout, LayoutTypePortlet layoutTypePortlet) {
-
-		List<Portlet> staticPortlets = layoutTypePortlet.getStaticPortlets(
-			PropsKeys.LAYOUT_STATIC_PORTLETS_ALL);
-
-		List<Portlet> explicitlyAddedPortlets = new ArrayList<>();
-
-		if (layout.isTypeAssetDisplay() || layout.isTypeContent()) {
-			List<com.liferay.portal.kernel.model.PortletPreferences>
-				portletPreferencesList =
-					PortletPreferencesLocalServiceUtil.
-						getPortletPreferencesByPlid(layout.getPlid());
-
-			for (com.liferay.portal.kernel.model.PortletPreferences
-					portletPreferences : portletPreferencesList) {
-
-				Portlet portlet = PortletLocalServiceUtil.getPortletById(
-					layout.getCompanyId(), portletPreferences.getPortletId());
-
-				if (portlet != null) {
-					explicitlyAddedPortlets.add(portlet);
-				}
-			}
-		}
-		else {
-			explicitlyAddedPortlets =
-				layoutTypePortlet.getExplicitlyAddedPortlets(false);
-		}
-
-		return layoutTypePortlet.addStaticPortlets(
-			explicitlyAddedPortlets, staticPortlets, null);
-	}
-
 	private Map<Locale, String> _getAlternateURLs(
 			String canonicalURL, ThemeDisplay themeDisplay, Layout layout,
 			Set<Locale> availableLocales)
@@ -8846,7 +8812,7 @@ public class PortalImpl implements Portal {
 			(LayoutTypePortlet)layout.getLayoutType();
 
 		for (Portlet portlet :
-				_getAllNonembeddedPortlets(layout, layoutTypePortlet)) {
+			layoutTypePortlet.getAllNonEmbeddedPortlets()) {
 
 			if (portletId.equals(portlet.getPortletId()) ||
 				portletId.equals(portlet.getRootPortletId())) {
