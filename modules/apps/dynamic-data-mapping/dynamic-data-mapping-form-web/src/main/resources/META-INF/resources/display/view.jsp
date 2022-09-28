@@ -201,9 +201,9 @@ boolean limitToOneSubmissionPerUser = DDMFormInstanceSubmissionLimitStatusUtil.i
 							<clay:container-fluid>
 								<div class="locale-actions">
 									<liferay-ui:language
-										formAction="<%= currentURL %>"
 										languageId="<%= languageId %>"
 										languageIds="<%= ddmFormDisplayContext.getAvailableLanguageIds() %>"
+										useNamespace="<%= false %>"
 									/>
 								</div>
 							</clay:container-fluid>
