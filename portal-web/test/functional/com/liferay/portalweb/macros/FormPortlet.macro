@@ -44,6 +44,14 @@ definition {
 		Click(locator1 = "Button#PREVIOUS");
 	}
 
+	macro setUserLocale {
+		Object.assertValidLocale(locale = "${locale}");
+
+		var portalURL = PropsUtil.get("portal.url");
+
+		Navigator.openSpecificURL(url = "${portalURL}/c/portal/update_language?languageId=${locale}");
+	}
+
 	macro submit {
 		if (IsElementPresent(locator1 = "FormPortlet#PORTLET_CONTENT")) {
 			Click(locator1 = "FormPortlet#PORTLET_CONTENT");
@@ -53,6 +61,18 @@ definition {
 
 		FormPortlet.clickSubmit();
 	}
+
+	macro submitLocalized {
+		if (IsElementPresent(locator1 = "FormPortlet#PORTLET_CONTENT")) {
+			Click(locator1 = "FormPortlet#PORTLET_CONTENT");
+		}
+
+		WaitForElementPresent(locator1 = "FormPortlet#SUBMIT_BUTTON");
+
+		AssertClick(
+			locator1 = "FormPortlet#SUBMIT_BUTTON",
+			value1 = "${buttonName}");
+    }
 
 	macro submitLocalizedSuccessfully {
 		AssertClick(
