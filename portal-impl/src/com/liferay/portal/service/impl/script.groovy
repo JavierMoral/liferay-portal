@@ -1,0 +1,4 @@
+import com.liferay.portal.kernel.service.CompanyLocalServiceUtil
+
+CompanyLocalServiceUtil.cre
+CompanyLocalServiceUtil.addCompanyn()
