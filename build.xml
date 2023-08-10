@@ -2,7 +2,7 @@
 
 <project basedir="." default="compile" name="portal" xmlns:antelope="antlib:ise.antelope.tasks" xmlns:artifact="antlib:org.apache.maven.artifact.ant" xmlns:if="ant:if">
 	<import file="build-common.xml" />
-
+sdcawdcadcawdcadc
 	<macrodef name="clean-liferay-home">
 		<sequential>
 			<parallel failonany="true" threadcount="${parallel.thread.count}">
