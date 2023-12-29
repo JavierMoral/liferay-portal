@@ -8,15 +8,28 @@ package com.liferay.fragment.entry.processor.portlet.internal.model.listener;
 import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.processor.PortletRegistry;
+import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
+import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
+import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.layout.service.LayoutClassedModelUsageLocalService;
 import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModelListener;
+import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.ModelListener;
 import com.liferay.portal.kernel.model.Portlet;
+import com.liferay.portal.kernel.model.PortletPreferences;
+import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.PortletLocalService;
+import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
+import com.liferay.portal.kernel.service.persistence.PortletPreferencesFinder;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.Validator;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -45,6 +58,36 @@ public class FragmentEntryLinkModelListener
 					fragmentEntryLink.getCompanyId(), portletId,
 					fragmentEntryLink.getPlid());
 
+				LayoutPageTemplateEntry layoutPageTemplateEntry =
+					_layoutPageTemplateEntryLocalService.
+						fetchLayoutPageTemplateEntryByPlid(
+							fragmentEntryLink.getPlid());
+
+				Layout layout = _layoutLocalService.fetchLayout(_portal.getClassNameId(Layout.class), fragmentEntryLink.getPlid());
+
+				List<Long> plids = new ArrayList<>();
+				plids.add(fragmentEntryLink.getPlid());
+				if (Validator.isNotNull(layout)) {
+					plids.add(layout.getPlid());
+				}
+
+				if (Validator.isNotNull(layoutPageTemplateEntry) &&
+					Objects.equals(
+						layoutPageTemplateEntry.getType(),
+						LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT)) {
+
+					List<PortletPreferences> portletPreferences =
+						_portletPreferencesFinder.findByPortletId(portletId);
+
+					for (PortletPreferences curPortletPreferences :
+							portletPreferences) {
+						if (!plids.contains(curPortletPreferences.getPlid())) {
+							_portletPreferencesLocalService.
+								deletePortletPreferences(curPortletPreferences);
+						}
+					}
+				}
+
 				_layoutClassedModelUsageLocalService.
 					deleteLayoutClassedModelUsages(
 						portletId, _portal.getClassNameId(Portlet.class),
@@ -66,10 +109,23 @@ public class FragmentEntryLinkModelListener
 		_layoutClassedModelUsageLocalService;
 
 	@Reference
+	private LayoutLocalService _layoutLocalService;
+
+	@Reference
+	private LayoutPageTemplateEntryLocalService
+		_layoutPageTemplateEntryLocalService;
+
+	@Reference
 	private Portal _portal;
 
 	@Reference
 	private PortletLocalService _portletLocalService;
+
+	@Reference
+	private PortletPreferencesFinder _portletPreferencesFinder;
+
+	@Reference
+	private PortletPreferencesLocalService _portletPreferencesLocalService;
 
 	@Reference
 	private PortletRegistry _portletRegistry;
