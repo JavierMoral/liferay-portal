@@ -106,6 +106,29 @@ public class LayoutPermissionImpl implements LayoutPermission {
 	}
 
 	@Override
+	public void checkLayoutPreviewDraftPermission(
+		PermissionChecker permissionChecker, Layout layout)
+		throws PortalException {
+
+		if (!containsLayoutPreviewDraftPermission(
+			permissionChecker, layout)) {
+
+			throw new PrincipalException.MustHavePermission(
+				permissionChecker, Layout.class.getName(), layout.getPlid(),
+				ActionKeys.UPDATE);
+		}
+	}
+
+	@Override
+	public void checkLayoutPreviewDraftPermission(
+		PermissionChecker permissionChecker, long plid)
+		throws PortalException {
+
+		checkLayoutPreviewDraftPermission(
+			permissionChecker, LayoutLocalServiceUtil.getLayout(plid));
+	}
+
+	@Override
 	public void checkLayoutRestrictedUpdatePermission(
 			PermissionChecker permissionChecker, Layout layout)
 		throws PortalException {
@@ -202,6 +225,23 @@ public class LayoutPermissionImpl implements LayoutPermission {
 		return contains(
 			permissionChecker, LayoutLocalServiceUtil.getLayout(plid),
 			actionId);
+	}
+
+	@Override
+	public boolean containsLayoutPreviewDraftPermission(
+		PermissionChecker permissionChecker, Layout layout)
+		throws PortalException {
+
+		return containsLayoutUpdatePermission(permissionChecker, layout);
+	}
+
+	@Override
+	public boolean containsLayoutPreviewDraftPermission(
+		PermissionChecker permissionChecker, long plid)
+		throws PortalException {
+
+		return containsLayoutPreviewDraftPermission(
+			permissionChecker, LayoutLocalServiceUtil.getLayout(plid));
 	}
 
 	@Override
