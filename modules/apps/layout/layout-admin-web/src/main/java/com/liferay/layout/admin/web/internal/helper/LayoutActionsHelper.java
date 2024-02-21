@@ -227,9 +227,8 @@ public class LayoutActionsHelper {
 		throws PortalException {
 
 		if (!layout.isTypeContent() ||
-			!LayoutPermissionUtil.contains(
-				_themeDisplay.getPermissionChecker(), layout,
-				ActionKeys.UPDATE)) {
+			!LayoutPermissionUtil.containsLayoutPreviewDraftPermission(
+				_themeDisplay.getPermissionChecker(), layout)) {
 
 			return false;
 		}

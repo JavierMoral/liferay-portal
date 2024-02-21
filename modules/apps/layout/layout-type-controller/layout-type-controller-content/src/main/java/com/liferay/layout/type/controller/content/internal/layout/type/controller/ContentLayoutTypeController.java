@@ -96,7 +96,9 @@ public class ContentLayoutTypeController extends BaseLayoutTypeControllerImpl {
 			hasUpdatePermissions = _hasUpdatePermissions(
 				themeDisplay.getPermissionChecker(), curLayout);
 
-			if (!hasUpdatePermissions) {
+			if (!_hasPreviewDraftPermissions(
+					themeDisplay.getPermissionChecker(), curLayout)) {
+
 				throw new PrincipalException.MustHavePermission(
 					themeDisplay.getPermissionChecker(), Layout.class.getName(),
 					layout.getLayoutId(), ActionKeys.UPDATE);
@@ -360,6 +362,26 @@ public class ContentLayoutTypeController extends BaseLayoutTypeControllerImpl {
 		}
 
 		return layoutFullURL;
+	}
+
+	private boolean _hasPreviewDraftPermissions(
+		PermissionChecker permissionChecker, Layout layout) {
+
+		try {
+			if (_hasUpdatePermissions(permissionChecker, layout) ||
+				_layoutPermission.containsLayoutPreviewDraftPermission(
+					permissionChecker, layout)) {
+
+				return true;
+			}
+		}
+		catch (PortalException portalException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(portalException);
+			}
+		}
+
+		return false;
 	}
 
 	private boolean _hasUpdatePermissions(
