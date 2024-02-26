@@ -7,8 +7,11 @@ package com.liferay.document.library.taglib.servlet.taglib;
 
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.service.DLAppServiceUtil;
+import com.liferay.document.library.restriction.provider.RepositoryMimeTypeRestrictionProvider;
 import com.liferay.document.library.taglib.internal.display.context.RepositoryBrowserTagDisplayContext;
 import com.liferay.document.library.taglib.internal.servlet.ServletContextUtil;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileShortcut;
@@ -32,6 +35,9 @@ import javax.portlet.PortletResponse;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.PageContext;
+
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 
 /**
  * @author Adolfo Pérez
@@ -111,7 +117,8 @@ public class RepositoryBrowserTag extends IncludeTag {
 				_getFolderId(), httpServletRequest,
 				PortalUtil.getLiferayPortletRequest(portletRequest),
 				PortalUtil.getLiferayPortletResponse(portletResponse),
-				portletRequest, _getRepositoryId(), getFolderId()));
+				portletRequest, _getRepositoryId(), getFolderId()),
+			_serviceTrackerMap.values());
 	}
 
 	private Set<String> _getActionsSet() {
@@ -156,6 +163,17 @@ public class RepositoryBrowserTag extends IncludeTag {
 
 	private static final Set<String> _allActions = SetUtil.fromArray(
 		"add-folder", "delete", "rename", "upload");
+	private static final ServiceTrackerMap
+		<String, RepositoryMimeTypeRestrictionProvider> _serviceTrackerMap;
+
+	static {
+		Bundle bundle = FrameworkUtil.getBundle(RepositoryBrowserTag.class);
+
+		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
+			bundle.getBundleContext(),
+			RepositoryMimeTypeRestrictionProvider.class,
+			"repository.class.name");
+	}
 
 	private String _actions = StringPool.BLANK;
 	private long _folderId = DLFolderConstants.DEFAULT_PARENT_FOLDER_ID;

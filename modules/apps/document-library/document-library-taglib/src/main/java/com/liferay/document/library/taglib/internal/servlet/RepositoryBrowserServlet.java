@@ -7,13 +7,18 @@ package com.liferay.document.library.taglib.internal.servlet;
 
 import com.liferay.document.library.kernel.exception.DuplicateFileEntryException;
 import com.liferay.document.library.kernel.exception.DuplicateFolderNameException;
+import com.liferay.document.library.kernel.exception.FileMimeTypeException;
 import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
 import com.liferay.document.library.kernel.service.DLAppService;
+import com.liferay.document.library.restriction.provider.RepositoryMimeTypeRestrictionProvider;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
+import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileShortcut;
@@ -22,12 +27,14 @@ import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactory;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.service.RepositoryService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.upload.UploadServletRequest;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -43,6 +50,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.osgi.framework.BundleContext;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -58,6 +66,13 @@ import org.osgi.service.component.annotations.Reference;
 	service = Servlet.class
 )
 public class RepositoryBrowserServlet extends HttpServlet {
+
+	@Activate
+	protected void activate(BundleContext bundleContext) {
+		_serviceTrackerMap = ServiceTrackerMapFactory.openSingleValueMap(
+			bundleContext, RepositoryMimeTypeRestrictionProvider.class,
+			"repository.class.name");
+	}
 
 	@Override
 	protected void doDelete(
@@ -186,6 +201,25 @@ public class RepositoryBrowserServlet extends HttpServlet {
 			File file = uploadServletRequest.getFile("file");
 
 			if (file != null) {
+				String contentType = uploadServletRequest.getContentType(
+					"file");
+
+				try {
+					_validateRepositoryMimeTypeRestrictions(
+						repositoryId, contentType);
+				}
+				catch (Exception exception) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(exception);
+					}
+
+					_sendResponse(
+						httpServletResponse,
+						HttpServletResponse.SC_BAD_REQUEST);
+
+					return;
+				}
+
 				long parentFolderId = ParamUtil.getLong(
 					httpServletRequest, "parentFolderId");
 
@@ -338,6 +372,25 @@ public class RepositoryBrowserServlet extends HttpServlet {
 			).toString());
 	}
 
+	private void _validateRepositoryMimeTypeRestrictions(
+			long repositoryId, String contentType)
+		throws Exception {
+
+		Repository repository = _repositoryService.getRepository(repositoryId);
+
+		RepositoryMimeTypeRestrictionProvider
+			repositoryMimeTypeRestrictionProvider =
+				_serviceTrackerMap.getService(repository.getClassName());
+
+		if (!ArrayUtil.contains(
+				repositoryMimeTypeRestrictionProvider.
+					getRepositorySupportedMimeTypes(repository),
+				contentType)) {
+
+			throw new FileMimeTypeException();
+		}
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		RepositoryBrowserServlet.class);
 
@@ -349,5 +402,11 @@ public class RepositoryBrowserServlet extends HttpServlet {
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private RepositoryService _repositoryService;
+
+	private ServiceTrackerMap<String, RepositoryMimeTypeRestrictionProvider>
+		_serviceTrackerMap;
 
 }
