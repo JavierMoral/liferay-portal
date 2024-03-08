@@ -97,15 +97,20 @@ public class ContentLayoutTypeController extends BaseLayoutTypeControllerImpl {
 				curLayout = layout;
 			}
 
+			if (FeatureFlagManagerUtil.isEnabled("LPD-11070") &&
+				layoutMode.equals(Constants.PREVIEW) &&
+				!_layoutPermission.containsLayoutPreviewDraftPermission(
+					themeDisplay.getPermissionChecker(), curLayout)) {
+
+				throw new PrincipalException.MustHavePermission(
+					themeDisplay.getPermissionChecker(), Layout.class.getName(),
+					layout.getLayoutId(), ActionKeys.UPDATE);
+			}
+
 			hasUpdatePermissions = _hasUpdatePermissions(
 				themeDisplay.getPermissionChecker(), curLayout);
 
-			if (!hasUpdatePermissions &&
-				(!layoutMode.equals(Constants.PREVIEW) ||
-				 !FeatureFlagManagerUtil.isEnabled("LPD-11070") ||
-				 !_layoutPermission.containsLayoutPreviewDraftPermission(
-					 themeDisplay.getPermissionChecker(), curLayout))) {
-
+			if (!hasUpdatePermissions) {
 				throw new PrincipalException.MustHavePermission(
 					themeDisplay.getPermissionChecker(), Layout.class.getName(),
 					layout.getLayoutId(), ActionKeys.UPDATE);
