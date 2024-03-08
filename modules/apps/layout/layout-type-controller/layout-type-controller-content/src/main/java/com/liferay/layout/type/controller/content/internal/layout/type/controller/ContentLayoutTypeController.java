@@ -376,7 +376,10 @@ public class ContentLayoutTypeController extends BaseLayoutTypeControllerImpl {
 			Layout layout, ThemeDisplay themeDisplay)
 		throws Exception {
 
-		if (!FeatureFlagManagerUtil.isEnabled("LPD-11070")) {
+		if (!FeatureFlagManagerUtil.isEnabled("LPD-11070") ||
+			(_fetchLayoutPageTemplateEntry(layout) != null) ||
+			(_fetchLayoutUtilityPageEntry(layout) != null)) {
+
 			return true;
 		}
 
