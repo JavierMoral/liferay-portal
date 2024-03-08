@@ -79,6 +79,9 @@ public class CollectionPageLayoutTypeController
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
+		String layoutMode = ParamUtil.getString(
+			httpServletRequest, "p_l_mode", Constants.VIEW);
+
 		if (layout.isDraftLayout()) {
 			Layout curLayout = _layoutLocalService.fetchLayout(
 				layout.getClassPK());
@@ -87,34 +90,20 @@ public class CollectionPageLayoutTypeController
 				curLayout = layout;
 			}
 
-			if (FeatureFlagManagerUtil.isEnabled("LPD-11070")) {
-				if (!_hasUpdatePermissions(
-						themeDisplay.getPermissionChecker(), curLayout) &&
-					!_layoutPermission.containsLayoutPreviewDraftPermission(
-						themeDisplay.getPermissionChecker(), curLayout)) {
+			if ((FeatureFlagManagerUtil.isEnabled("LPD-11070") &&
+				 layoutMode.equals(Constants.PREVIEW) &&
+				 !_layoutPermission.containsLayoutPreviewDraftPermission(
+					 themeDisplay.getPermissionChecker(), curLayout)) ||
+				!_hasUpdatePermissions(
+					themeDisplay.getPermissionChecker(), curLayout)) {
 
-					throw new PrincipalException.MustHavePermission(
-						themeDisplay.getPermissionChecker(),
-						Layout.class.getName(), layout.getLayoutId(),
-						ActionKeys.PREVIEW_DRAFT);
-				}
-			}
-			else {
-				if (!_hasUpdatePermissions(
-						themeDisplay.getPermissionChecker(), curLayout)) {
-
-					throw new PrincipalException.MustHavePermission(
-						themeDisplay.getPermissionChecker(),
-						Layout.class.getName(), layout.getLayoutId(),
-						ActionKeys.UPDATE);
-				}
+				throw new PrincipalException.MustHavePermission(
+					themeDisplay.getPermissionChecker(), Layout.class.getName(),
+					layout.getLayoutId(), ActionKeys.UPDATE);
 			}
 		}
 
 		String redirect = StringPool.BLANK;
-
-		String layoutMode = ParamUtil.getString(
-			httpServletRequest, "p_l_mode", Constants.VIEW);
 
 		if (layoutMode.equals(Constants.EDIT)) {
 			if (!_hasUpdatePermissions(
