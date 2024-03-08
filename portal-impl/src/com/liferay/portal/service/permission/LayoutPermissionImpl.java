@@ -210,17 +210,13 @@ public class LayoutPermissionImpl implements LayoutPermission {
 			PermissionChecker permissionChecker, Layout layout)
 		throws PortalException {
 
-		if (FeatureFlagManagerUtil.isEnabled("LPD-11070")) {
-			if ((layout.isTypeAssetDisplay() || layout.isTypeContent()) &&
-				(contains(
-					permissionChecker, layout, ActionKeys.PREVIEW_DRAFT) ||
-				 containsLayoutUpdatePermission(permissionChecker, layout))) {
-
-				return true;
-			}
+		if (!layout.isTypeAssetDisplay() && !layout.isTypeContent()) {
+			return false;
 		}
-		else if ((layout.isTypeAssetDisplay() || layout.isTypeContent()) &&
-				 containsLayoutUpdatePermission(permissionChecker, layout)) {
+
+		if (containsLayoutUpdatePermission(permissionChecker, layout) ||
+			(FeatureFlagManagerUtil.isEnabled("LPD-11070") &&
+			 contains(permissionChecker, layout, ActionKeys.PREVIEW_DRAFT))) {
 
 			return true;
 		}
