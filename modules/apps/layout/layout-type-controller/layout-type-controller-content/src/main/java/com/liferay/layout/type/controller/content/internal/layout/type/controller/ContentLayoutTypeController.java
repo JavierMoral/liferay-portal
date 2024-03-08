@@ -97,10 +97,8 @@ public class ContentLayoutTypeController extends BaseLayoutTypeControllerImpl {
 				curLayout = layout;
 			}
 
-			if (FeatureFlagManagerUtil.isEnabled("LPD-11070") &&
-				layoutMode.equals(Constants.PREVIEW) &&
-				!_layoutPermission.containsLayoutPreviewDraftPermission(
-					themeDisplay.getPermissionChecker(), curLayout)) {
+			if (layoutMode.equals(Constants.PREVIEW) &&
+				!_hasPreviewPermission(curLayout, themeDisplay)) {
 
 				throw new PrincipalException.MustHavePermission(
 					themeDisplay.getPermissionChecker(), Layout.class.getName(),
@@ -372,6 +370,18 @@ public class ContentLayoutTypeController extends BaseLayoutTypeControllerImpl {
 		}
 
 		return layoutFullURL;
+	}
+
+	private boolean _hasPreviewPermission(
+			Layout layout, ThemeDisplay themeDisplay)
+		throws Exception {
+
+		if (!FeatureFlagManagerUtil.isEnabled("LPD-11070")) {
+			return true;
+		}
+
+		return _layoutPermission.containsLayoutPreviewDraftPermission(
+			themeDisplay.getPermissionChecker(), layout);
 	}
 
 	private boolean _hasUpdatePermissions(
