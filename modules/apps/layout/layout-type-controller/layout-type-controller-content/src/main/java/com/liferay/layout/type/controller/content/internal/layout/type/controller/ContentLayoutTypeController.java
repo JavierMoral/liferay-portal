@@ -86,6 +86,9 @@ public class ContentLayoutTypeController extends BaseLayoutTypeControllerImpl {
 
 		Boolean hasUpdatePermissions = null;
 
+		String layoutMode = ParamUtil.getString(
+			httpServletRequest, "p_l_mode", Constants.VIEW);
+
 		if (layout.isDraftLayout()) {
 			Layout curLayout = _layoutLocalService.fetchLayout(
 				layout.getClassPK());
@@ -98,7 +101,8 @@ public class ContentLayoutTypeController extends BaseLayoutTypeControllerImpl {
 				themeDisplay.getPermissionChecker(), curLayout);
 
 			if (!hasUpdatePermissions &&
-				(!FeatureFlagManagerUtil.isEnabled("LPD-11070") ||
+				(!layoutMode.equals(Constants.PREVIEW) ||
+				 !FeatureFlagManagerUtil.isEnabled("LPD-11070") ||
 				 !_layoutPermission.containsLayoutPreviewDraftPermission(
 					 themeDisplay.getPermissionChecker(), curLayout))) {
 
@@ -108,8 +112,6 @@ public class ContentLayoutTypeController extends BaseLayoutTypeControllerImpl {
 			}
 		}
 
-		String layoutMode = ParamUtil.getString(
-			httpServletRequest, "p_l_mode", Constants.VIEW);
 		String redirect = StringPool.BLANK;
 
 		if (layoutMode.equals(Constants.EDIT)) {
