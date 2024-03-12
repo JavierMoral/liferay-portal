@@ -46,6 +46,7 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowInstance;
 import com.liferay.portal.kernel.workflow.WorkflowInstanceManagerUtil;
+import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -79,6 +80,81 @@ public class LayoutPermissionTest {
 	@Before
 	public void setUp() throws Exception {
 		_group = GroupTestUtil.addGroup();
+	}
+
+	@FeatureFlags("LPD-11070")
+	@Test
+	public void testContainsPreviewDraftPermissionOnPortletTypeLayoutWithPreviewDraftPermission()
+		throws Exception {
+
+		PermissionChecker permissionChecker = _getPermissionChecker(
+			ActionKeys.UPDATE);
+
+		Layout layout = LayoutTestUtil.addTypePortletLayout(_group);
+
+		Assert.assertFalse(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				permissionChecker, layout));
+	}
+
+	@FeatureFlags("LPD-11070")
+	@Test
+	public void testContainsPreviewDraftPermissionOnPortletTypeLayoutWithUpdatePermission()
+		throws Exception {
+
+		PermissionChecker permissionChecker = _getPermissionChecker(
+			ActionKeys.UPDATE);
+
+		Layout layout = LayoutTestUtil.addTypePortletLayout(_group);
+
+		Assert.assertFalse(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				permissionChecker, layout));
+	}
+
+	@FeatureFlags("LPD-11070")
+	@Test
+	public void testContainsPreviewDraftPermissionWithPreviewDraftPermission()
+		throws Exception {
+
+		PermissionChecker permissionChecker = _getPermissionChecker(
+			ActionKeys.PREVIEW_DRAFT);
+
+		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
+
+		Assert.assertTrue(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				permissionChecker, layout));
+	}
+
+	@FeatureFlags("LPD-11070")
+	@Test
+	public void testContainsPreviewDraftPermissionWithUpdatePermission()
+		throws Exception {
+
+		PermissionChecker permissionChecker = _getPermissionChecker(
+			ActionKeys.UPDATE);
+
+		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
+
+		Assert.assertTrue(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				permissionChecker, layout));
+	}
+
+	@FeatureFlags("LPD-11070")
+	@Test
+	public void testContainsPreviewDraftPermissionWithViewPermission()
+		throws Exception {
+
+		PermissionChecker permissionChecker = _getPermissionChecker(
+			ActionKeys.VIEW);
+
+		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
+
+		Assert.assertFalse(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				permissionChecker, layout));
 	}
 
 	@Test
