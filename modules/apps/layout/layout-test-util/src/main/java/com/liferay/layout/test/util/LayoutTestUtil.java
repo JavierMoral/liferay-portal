@@ -6,6 +6,16 @@
 package com.liferay.layout.test.util;
 
 import com.liferay.layout.constants.LayoutTypeSettingsConstants;
+import com.liferay.layout.page.template.constants.LayoutPageTemplateCollectionTypeConstants;
+import com.liferay.layout.page.template.constants.LayoutPageTemplateConstants;
+import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
+import com.liferay.layout.page.template.model.LayoutPageTemplateCollection;
+import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
+import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionServiceUtil;
+import com.liferay.layout.page.template.service.LayoutPageTemplateEntryServiceUtil;
+import com.liferay.layout.utility.page.kernel.constants.LayoutUtilityPageEntryConstants;
+import com.liferay.layout.utility.page.model.LayoutUtilityPageEntry;
+import com.liferay.layout.utility.page.service.LayoutUtilityPageEntryLocalServiceUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.log.Log;
@@ -37,6 +47,7 @@ import com.liferay.portal.kernel.util.FriendlyURLNormalizerUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -133,6 +144,16 @@ public class LayoutTestUtil {
 		portletPreferences.store();
 
 		return newPortletId;
+	}
+
+	public static Layout addTypeCollectionLayout(Group group) throws Exception {
+		return LayoutLocalServiceUtil.addLayout(
+			TestPropsValues.getUserId(), group.getGroupId(), false,
+			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
+			RandomTestUtil.randomString(), StringPool.BLANK, StringPool.BLANK,
+			LayoutConstants.TYPE_COLLECTION, false, StringPool.BLANK,
+			ServiceContextTestUtil.getServiceContext(
+				TestPropsValues.getGroupId(), TestPropsValues.getUserId()));
 	}
 
 	public static Layout addTypeContentLayout(Group group) throws Exception {
@@ -285,6 +306,34 @@ public class LayoutTestUtil {
 		layout.setType(LayoutConstants.TYPE_URL);
 
 		return LayoutLocalServiceUtil.updateLayout(layout);
+	}
+
+	public static Layout addTypePageTemplateEntryLayout(Group group)
+		throws Exception {
+
+		LayoutPageTemplateCollection layoutPageTemplateCollection =
+			LayoutPageTemplateCollectionServiceUtil.
+				addLayoutPageTemplateCollection(
+					group.getGroupId(),
+					LayoutPageTemplateConstants.
+						PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
+					RandomTestUtil.randomString(),
+					RandomTestUtil.randomString(),
+					LayoutPageTemplateCollectionTypeConstants.BASIC,
+					ServiceContextTestUtil.getServiceContext());
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			LayoutPageTemplateEntryServiceUtil.addLayoutPageTemplateEntry(
+				group.getGroupId(),
+				layoutPageTemplateCollection.
+					getLayoutPageTemplateCollectionId(),
+				RandomTestUtil.randomString(),
+				LayoutPageTemplateEntryTypeConstants.BASIC, 0,
+				WorkflowConstants.STATUS_DRAFT,
+				ServiceContextTestUtil.getServiceContext());
+
+		return LayoutLocalServiceUtil.getLayout(
+			layoutPageTemplateEntry.getPlid());
 	}
 
 	public static Layout addTypePortletLayout(Group group) throws Exception {
@@ -470,6 +519,20 @@ public class LayoutTestUtil {
 			layout.getPlid(), parentLayoutPlid);
 
 		return LayoutLocalServiceUtil.fetchLayout(layout.getPlid());
+	}
+
+	public static Layout addTypeUtilityPageEntryLayout(Group group)
+		throws Exception {
+
+		LayoutUtilityPageEntry layoutUtilityPageEntry =
+			LayoutUtilityPageEntryLocalServiceUtil.addLayoutUtilityPageEntry(
+				null, TestPropsValues.getUserId(), group.getGroupId(), 0, 0,
+				false, RandomTestUtil.randomString(),
+				LayoutUtilityPageEntryConstants.TYPE_SC_NOT_FOUND, 0,
+				ServiceContextTestUtil.getServiceContext());
+
+		return LayoutLocalServiceUtil.getLayout(
+			layoutUtilityPageEntry.getPlid());
 	}
 
 	public static String getLayoutTemplateId(Layout layout) {
