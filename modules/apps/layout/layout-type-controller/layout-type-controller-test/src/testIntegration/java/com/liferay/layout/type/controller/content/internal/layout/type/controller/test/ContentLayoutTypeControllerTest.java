@@ -74,6 +74,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 /**
  * @author Lourdes Fernández Besada
  */
+@FeatureFlags("LPD-11070")
 @RunWith(Arquillian.class)
 public class ContentLayoutTypeControllerTest {
 
@@ -98,7 +99,6 @@ public class ContentLayoutTypeControllerTest {
 		ServiceContextThreadLocal.popServiceContext();
 	}
 
-	@FeatureFlags("LPD-11070")
 	@Test(expected = PrincipalException.class)
 	public void testContentLayoutTypeControllerDraftEditWithPreviewDraftPermission()
 		throws Exception {
@@ -111,7 +111,6 @@ public class ContentLayoutTypeControllerTest {
 			ActionKeys.PREVIEW_DRAFT, draftLayout, Constants.EDIT);
 	}
 
-	@FeatureFlags("LPD-11070")
 	@Test
 	public void testContentLayoutTypeControllerDraftPreviewWithPreviewDraftPermission()
 		throws Exception {
@@ -125,7 +124,6 @@ public class ContentLayoutTypeControllerTest {
 				ActionKeys.PREVIEW_DRAFT, draftLayout, Constants.PREVIEW));
 	}
 
-	@FeatureFlags("LPD-11070")
 	@Test
 	public void testContentLayoutTypeControllerDraftPreviewWithUpdatePermission()
 		throws Exception {
@@ -139,7 +137,6 @@ public class ContentLayoutTypeControllerTest {
 				ActionKeys.UPDATE, draftLayout, Constants.PREVIEW));
 	}
 
-	@FeatureFlags("LPD-11070")
 	@Test(expected = PrincipalException.class)
 	public void testContentLayoutTypeControllerDraftPreviewWithViewPermission()
 		throws Exception {
@@ -152,7 +149,6 @@ public class ContentLayoutTypeControllerTest {
 			ActionKeys.VIEW, draftLayout, Constants.PREVIEW);
 	}
 
-	@FeatureFlags("LPD-11070")
 	@Test
 	public void testContentLayoutTypeControllerDraftViewWithPreviewDraftPermission()
 		throws Exception {
@@ -196,7 +192,6 @@ public class ContentLayoutTypeControllerTest {
 				LayoutTestUtil.addTypeContentLayout(_group)));
 	}
 
-	@FeatureFlags("LPD-11070")
 	@Test(expected = PrincipalException.class)
 	public void testContentLayoutTypeControllerPageTemplateDraftPreviewWithPreviewDraftPermission()
 		throws Exception {
@@ -209,7 +204,6 @@ public class ContentLayoutTypeControllerTest {
 			ActionKeys.PREVIEW_DRAFT, draftLayout, Constants.PREVIEW);
 	}
 
-	@FeatureFlags("LPD-11070")
 	@Test
 	public void testContentLayoutTypeControllerPageTemplateDraftPreviewWithUpdatePermission()
 		throws Exception {
@@ -223,7 +217,6 @@ public class ContentLayoutTypeControllerTest {
 				ActionKeys.UPDATE, draftLayout, Constants.PREVIEW));
 	}
 
-	@FeatureFlags("LPD-11070")
 	@Test(expected = PrincipalException.class)
 	public void testContentLayoutTypeControllerPageTemplateDraftPreviewWithViewPermission()
 		throws Exception {
@@ -296,7 +289,6 @@ public class ContentLayoutTypeControllerTest {
 				new MockHttpServletResponse(), layout));
 	}
 
-	@FeatureFlags("LPD-11070")
 	@Test(expected = PrincipalException.class)
 	public void testContentLayoutTypeControllerUtilityPageDraftPreviewWithPreviewDraftPermission()
 		throws Exception {
@@ -309,7 +301,6 @@ public class ContentLayoutTypeControllerTest {
 			ActionKeys.PREVIEW_DRAFT, draftLayout, Constants.PREVIEW);
 	}
 
-	@FeatureFlags("LPD-11070")
 	@Test
 	public void testContentLayoutTypeControllerUtilityPageDraftPreviewWithUpdatePermission()
 		throws Exception {
@@ -323,7 +314,6 @@ public class ContentLayoutTypeControllerTest {
 				ActionKeys.UPDATE, draftLayout, Constants.PREVIEW));
 	}
 
-	@FeatureFlags("LPD-11070")
 	@Test(expected = PrincipalException.class)
 	public void testContentLayoutTypeControllerUtilityPageDraftPreviewWithViewPermission()
 		throws Exception {

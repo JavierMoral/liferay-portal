@@ -63,6 +63,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 /**
  * @author Javier Moral Gonzalez
  */
+@FeatureFlags("LPD-11070")
 @RunWith(Arquillian.class)
 public class CollectionPageLayoutTypeControllerTest {
 
@@ -87,7 +88,6 @@ public class CollectionPageLayoutTypeControllerTest {
 		ServiceContextThreadLocal.popServiceContext();
 	}
 
-	@FeatureFlags("LPD-11070")
 	@Test(expected = PrincipalException.class)
 	public void testCollectionPageDraftEditWithPreviewDraftPermission()
 		throws Exception {
@@ -96,7 +96,6 @@ public class CollectionPageLayoutTypeControllerTest {
 			ActionKeys.PREVIEW_DRAFT, Constants.EDIT);
 	}
 
-	@FeatureFlags("LPD-11070")
 	@Test
 	public void testCollectionPageDraftPreviewWithPreviewDraftPermission()
 		throws Exception {
@@ -106,7 +105,6 @@ public class CollectionPageLayoutTypeControllerTest {
 				ActionKeys.PREVIEW_DRAFT, Constants.PREVIEW));
 	}
 
-	@FeatureFlags("LPD-11070")
 	@Test
 	public void testCollectionPageDraftPreviewWithUpdatePermission()
 		throws Exception {
@@ -116,7 +114,6 @@ public class CollectionPageLayoutTypeControllerTest {
 				ActionKeys.UPDATE, Constants.PREVIEW));
 	}
 
-	@FeatureFlags("LPD-11070")
 	@Test(expected = PrincipalException.class)
 	public void testCollectionPageDraftPreviewWithViewPermission()
 		throws Exception {
@@ -125,7 +122,6 @@ public class CollectionPageLayoutTypeControllerTest {
 			ActionKeys.VIEW, Constants.PREVIEW);
 	}
 
-	@FeatureFlags("LPD-11070")
 	@Test
 	public void testCollectionPageDraftViewWithPreviewDraftPermission()
 		throws Exception {

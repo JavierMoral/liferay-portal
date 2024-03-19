@@ -68,6 +68,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 /**
  * @author Lourdes Fernández Besada
  */
+@FeatureFlags("LPD-11070")
 @RunWith(Arquillian.class)
 public class LayoutPermissionTest {
 
@@ -83,7 +84,6 @@ public class LayoutPermissionTest {
 		_group = GroupTestUtil.addGroup();
 	}
 
-	@FeatureFlags("LPD-11070")
 	@Test
 	public void testContainsPreviewDraftPermissionOnAssetDisplayLayoutWithPreviewDraftPermission()
 		throws Exception {
@@ -98,7 +98,6 @@ public class LayoutPermissionTest {
 				permissionChecker, layout));
 	}
 
-	@FeatureFlags("LPD-11070")
 	@Test
 	public void testContainsPreviewDraftPermissionOnAssetDisplayLayoutWithUpdatePermission()
 		throws Exception {
@@ -113,7 +112,6 @@ public class LayoutPermissionTest {
 				permissionChecker, layout));
 	}
 
-	@FeatureFlags("LPD-11070")
 	@Test
 	public void testContainsPreviewDraftPermissionOnAssetDisplayLayoutWithViewPermission()
 		throws Exception {
@@ -128,7 +126,6 @@ public class LayoutPermissionTest {
 				permissionChecker, layout));
 	}
 
-	@FeatureFlags("LPD-11070")
 	@Test
 	public void testContainsPreviewDraftPermissionOnPortletTypeLayoutWithPreviewDraftPermission()
 		throws Exception {
@@ -143,7 +140,6 @@ public class LayoutPermissionTest {
 				permissionChecker, layout));
 	}
 
-	@FeatureFlags("LPD-11070")
 	@Test
 	public void testContainsPreviewDraftPermissionOnPortletTypeLayoutWithUpdatePermission()
 		throws Exception {
@@ -158,7 +154,6 @@ public class LayoutPermissionTest {
 				permissionChecker, layout));
 	}
 
-	@FeatureFlags("LPD-11070")
 	@Test
 	public void testContainsPreviewDraftPermissionWithPreviewDraftPermission()
 		throws Exception {
@@ -173,7 +168,6 @@ public class LayoutPermissionTest {
 				permissionChecker, layout));
 	}
 
-	@FeatureFlags("LPD-11070")
 	@Test
 	public void testContainsPreviewDraftPermissionWithUpdatePermission()
 		throws Exception {
@@ -188,7 +182,6 @@ public class LayoutPermissionTest {
 				permissionChecker, layout));
 	}
 
-	@FeatureFlags("LPD-11070")
 	@Test
 	public void testContainsPreviewDraftPermissionWithViewPermission()
 		throws Exception {
