@@ -91,112 +91,80 @@ public class LayoutPermissionTest {
 	public void testContainsPreviewDraftPermissionOnAssetDisplayLayoutWithPreviewDraftPermission()
 		throws Exception {
 
-		PermissionChecker permissionChecker = _getPermissionChecker(
-			ActionKeys.PREVIEW_DRAFT);
-
-		Layout layout = _addTypeAssetDisplayLayout();
-
 		Assert.assertTrue(
 			_layoutPermission.containsLayoutPreviewDraftPermission(
-				permissionChecker, layout));
+				_getPermissionChecker(ActionKeys.PREVIEW_DRAFT),
+				_addTypeAssetDisplayLayout()));
 	}
 
 	@Test
 	public void testContainsPreviewDraftPermissionOnAssetDisplayLayoutWithUpdatePermission()
 		throws Exception {
 
-		PermissionChecker permissionChecker = _getPermissionChecker(
-			ActionKeys.UPDATE);
-
-		Layout layout = _addTypeAssetDisplayLayout();
-
 		Assert.assertTrue(
 			_layoutPermission.containsLayoutPreviewDraftPermission(
-				permissionChecker, layout));
+				_getPermissionChecker(ActionKeys.UPDATE),
+				_addTypeAssetDisplayLayout()));
 	}
 
 	@Test
 	public void testContainsPreviewDraftPermissionOnAssetDisplayLayoutWithViewPermission()
 		throws Exception {
 
-		PermissionChecker permissionChecker = _getPermissionChecker(
-			ActionKeys.VIEW);
-
-		Layout layout = _addTypeAssetDisplayLayout();
-
 		Assert.assertFalse(
 			_layoutPermission.containsLayoutPreviewDraftPermission(
-				permissionChecker, layout));
+				_getPermissionChecker(ActionKeys.VIEW),
+				_addTypeAssetDisplayLayout()));
 	}
 
 	@Test
 	public void testContainsPreviewDraftPermissionOnPortletTypeLayoutWithPreviewDraftPermission()
 		throws Exception {
 
-		PermissionChecker permissionChecker = _getPermissionChecker(
-			ActionKeys.PREVIEW_DRAFT);
-
-		Layout layout = LayoutTestUtil.addTypePortletLayout(_group);
-
 		Assert.assertFalse(
 			_layoutPermission.containsLayoutPreviewDraftPermission(
-				permissionChecker, layout));
+				_getPermissionChecker(ActionKeys.PREVIEW_DRAFT),
+				LayoutTestUtil.addTypePortletLayout(_group)));
 	}
 
 	@Test
 	public void testContainsPreviewDraftPermissionOnPortletTypeLayoutWithUpdatePermission()
 		throws Exception {
 
-		PermissionChecker permissionChecker = _getPermissionChecker(
-			ActionKeys.UPDATE);
-
-		Layout layout = LayoutTestUtil.addTypePortletLayout(_group);
-
 		Assert.assertFalse(
 			_layoutPermission.containsLayoutPreviewDraftPermission(
-				permissionChecker, layout));
+				_getPermissionChecker(ActionKeys.UPDATE),
+				LayoutTestUtil.addTypePortletLayout(_group)));
 	}
 
 	@Test
 	public void testContainsPreviewDraftPermissionWithPreviewDraftPermission()
 		throws Exception {
 
-		PermissionChecker permissionChecker = _getPermissionChecker(
-			ActionKeys.PREVIEW_DRAFT);
-
-		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
-
 		Assert.assertTrue(
 			_layoutPermission.containsLayoutPreviewDraftPermission(
-				permissionChecker, layout));
+				_getPermissionChecker(ActionKeys.PREVIEW_DRAFT),
+				LayoutTestUtil.addTypeContentLayout(_group)));
 	}
 
 	@Test
 	public void testContainsPreviewDraftPermissionWithUpdatePermission()
 		throws Exception {
 
-		PermissionChecker permissionChecker = _getPermissionChecker(
-			ActionKeys.UPDATE);
-
-		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
-
 		Assert.assertTrue(
 			_layoutPermission.containsLayoutPreviewDraftPermission(
-				permissionChecker, layout));
+				_getPermissionChecker(ActionKeys.UPDATE),
+				LayoutTestUtil.addTypeContentLayout(_group)));
 	}
 
 	@Test
 	public void testContainsPreviewDraftPermissionWithViewPermission()
 		throws Exception {
 
-		PermissionChecker permissionChecker = _getPermissionChecker(
-			ActionKeys.VIEW);
-
-		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
-
 		Assert.assertFalse(
 			_layoutPermission.containsLayoutPreviewDraftPermission(
-				permissionChecker, layout));
+				_getPermissionChecker(ActionKeys.VIEW),
+				LayoutTestUtil.addTypeContentLayout(_group)));
 	}
 
 	@Test
