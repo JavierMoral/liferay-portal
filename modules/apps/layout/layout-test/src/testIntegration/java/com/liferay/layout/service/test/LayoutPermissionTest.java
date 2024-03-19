@@ -6,8 +6,10 @@
 package com.liferay.layout.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.publisher.constants.AssetPublisherPortletKeys;
-import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
+import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
+import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
 import com.liferay.layout.test.util.ContentLayoutTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.string.StringPool;
@@ -43,6 +45,7 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowInstance;
@@ -91,7 +94,7 @@ public class LayoutPermissionTest {
 		PermissionChecker permissionChecker = _getPermissionChecker(
 			ActionKeys.PREVIEW_DRAFT);
 
-		Layout layout = _addTypeAssetDisplayLayout(true);
+		Layout layout = _addTypeAssetDisplayLayout();
 
 		Assert.assertTrue(
 			_layoutPermission.containsLayoutPreviewDraftPermission(
@@ -105,7 +108,7 @@ public class LayoutPermissionTest {
 		PermissionChecker permissionChecker = _getPermissionChecker(
 			ActionKeys.UPDATE);
 
-		Layout layout = _addTypeAssetDisplayLayout(true);
+		Layout layout = _addTypeAssetDisplayLayout();
 
 		Assert.assertTrue(
 			_layoutPermission.containsLayoutPreviewDraftPermission(
@@ -119,7 +122,7 @@ public class LayoutPermissionTest {
 		PermissionChecker permissionChecker = _getPermissionChecker(
 			ActionKeys.VIEW);
 
-		Layout layout = _addTypeAssetDisplayLayout(true);
+		Layout layout = _addTypeAssetDisplayLayout();
 
 		Assert.assertFalse(
 			_layoutPermission.containsLayoutPreviewDraftPermission(
@@ -421,21 +424,28 @@ public class LayoutPermissionTest {
 		return layout;
 	}
 
-	private Layout _addTypeAssetDisplayLayout(boolean publish)
-		throws Exception {
-
+	private Layout _addTypeAssetDisplayLayout() throws Exception {
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(
 				_group, TestPropsValues.getUserId());
 
-		serviceContext.setAttribute(
-			"layout.instanceable.allowed", Boolean.TRUE);
-		serviceContext.setAttribute(
-			"layout.page.template.entry.type",
-			LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE);
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_layoutPageTemplateEntryService.addLayoutPageTemplateEntry(
+				_group.getGroupId(), 0,
+				_portal.getClassNameId(AssetCategory.class.getName()), 0,
+				RandomTestUtil.randomString(), 0,
+				WorkflowConstants.STATUS_DRAFT, serviceContext);
 
-		return _addLayout(
-			serviceContext, publish, LayoutConstants.TYPE_ASSET_DISPLAY);
+		Layout layout = _layoutLocalService.getLayout(
+			layoutPageTemplateEntry.getPlid());
+
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		Assert.assertNotNull(draftLayout);
+
+		ContentLayoutTestUtil.publishLayout(draftLayout, layout);
+
+		return _layoutLocalService.getLayout(layout.getPlid());
 	}
 
 	private Layout _addTypeContentLayout(boolean publish) throws Exception {
@@ -553,7 +563,13 @@ public class LayoutPermissionTest {
 	private LayoutLocalService _layoutLocalService;
 
 	@Inject
+	private LayoutPageTemplateEntryService _layoutPageTemplateEntryService;
+
+	@Inject
 	private LayoutPermission _layoutPermission;
+
+	@Inject
+	private Portal _portal;
 
 	@Inject
 	private ResourcePermissionLocalService _resourcePermissionLocalService;
