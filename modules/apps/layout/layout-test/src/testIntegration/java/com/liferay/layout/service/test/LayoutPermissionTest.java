@@ -94,7 +94,7 @@ public class LayoutPermissionTest {
 		Assert.assertTrue(
 			_layoutPermission.containsLayoutPreviewDraftPermission(
 				_getPermissionChecker(ActionKeys.PREVIEW_DRAFT),
-				_addTypeAssetDisplayLayout()));
+				_addDisplayPageTemplateLayout()));
 	}
 
 	@Test
@@ -104,7 +104,7 @@ public class LayoutPermissionTest {
 		Assert.assertTrue(
 			_layoutPermission.containsLayoutPreviewDraftPermission(
 				_getPermissionChecker(ActionKeys.UPDATE),
-				_addTypeAssetDisplayLayout()));
+				_addDisplayPageTemplateLayout()));
 	}
 
 	@Test
@@ -114,7 +114,7 @@ public class LayoutPermissionTest {
 		Assert.assertFalse(
 			_layoutPermission.containsLayoutPreviewDraftPermission(
 				_getPermissionChecker(ActionKeys.VIEW),
-				_addTypeAssetDisplayLayout()));
+				_addDisplayPageTemplateLayout()));
 	}
 
 	@Test
@@ -392,7 +392,7 @@ public class LayoutPermissionTest {
 		return layout;
 	}
 
-	private Layout _addTypeAssetDisplayLayout() throws Exception {
+	private Layout _addDisplayPageTemplateLayout() throws Exception {
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(
 				_group, TestPropsValues.getUserId());
