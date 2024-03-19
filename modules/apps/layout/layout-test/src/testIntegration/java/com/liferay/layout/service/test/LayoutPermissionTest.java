@@ -359,39 +359,6 @@ public class LayoutPermissionTest {
 		}
 	}
 
-	private Layout _addLayout(
-			ServiceContext serviceContext, boolean publish, String type)
-		throws Exception {
-
-		if (serviceContext == null) {
-			serviceContext = ServiceContextTestUtil.getServiceContext(
-				_group, TestPropsValues.getUserId());
-		}
-
-		Layout layout = _layoutLocalService.addLayout(
-			TestPropsValues.getUserId(), _group.getGroupId(), false,
-			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
-			RandomTestUtil.randomString(), StringPool.BLANK, StringPool.BLANK,
-			type, false, StringPool.BLANK, serviceContext);
-
-		if (publish) {
-			Layout draftLayout = layout.fetchDraftLayout();
-
-			Assert.assertNotNull(draftLayout);
-
-			ContentLayoutTestUtil.publishLayout(draftLayout, layout);
-
-			layout = _layoutLocalService.getLayout(layout.getPlid());
-
-			Assert.assertTrue(layout.isPublished());
-		}
-		else {
-			Assert.assertFalse(layout.isPublished());
-		}
-
-		return layout;
-	}
-
 	private Layout _addDisplayPageTemplateLayout() throws Exception {
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(
@@ -417,7 +384,33 @@ public class LayoutPermissionTest {
 	}
 
 	private Layout _addTypeContentLayout(boolean publish) throws Exception {
-		return _addLayout(null, publish, LayoutConstants.TYPE_CONTENT);
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				_group, TestPropsValues.getUserId());
+
+		Layout layout = _layoutLocalService.addLayout(
+			TestPropsValues.getUserId(), _group.getGroupId(), false,
+			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
+			RandomTestUtil.randomString(), StringPool.BLANK, StringPool.BLANK,
+			LayoutConstants.TYPE_CONTENT, false, StringPool.BLANK,
+			serviceContext);
+
+		if (publish) {
+			Layout draftLayout = layout.fetchDraftLayout();
+
+			Assert.assertNotNull(draftLayout);
+
+			ContentLayoutTestUtil.publishLayout(draftLayout, layout);
+
+			layout = _layoutLocalService.getLayout(layout.getPlid());
+
+			Assert.assertTrue(layout.isPublished());
+		}
+		else {
+			Assert.assertFalse(layout.isPublished());
+		}
+
+		return layout;
 	}
 
 	private PermissionChecker _getGuestPermissionChecker() throws Exception {
