@@ -92,8 +92,7 @@ public class CollectionPageLayoutTypeControllerTest {
 	public void testCollectionPageDraftEditWithPreviewDraftPermission()
 		throws Exception {
 
-		_includeDraftLayoutContentWithNonadminUser(
-			ActionKeys.PREVIEW_DRAFT, Constants.EDIT);
+		_includeDraftLayoutContent(ActionKeys.PREVIEW_DRAFT, Constants.EDIT);
 	}
 
 	@Test
@@ -101,7 +100,7 @@ public class CollectionPageLayoutTypeControllerTest {
 		throws Exception {
 
 		Assert.assertFalse(
-			_includeDraftLayoutContentWithNonadminUser(
+			_includeDraftLayoutContent(
 				ActionKeys.PREVIEW_DRAFT, Constants.PREVIEW));
 	}
 
@@ -110,16 +109,14 @@ public class CollectionPageLayoutTypeControllerTest {
 		throws Exception {
 
 		Assert.assertFalse(
-			_includeDraftLayoutContentWithNonadminUser(
-				ActionKeys.UPDATE, Constants.PREVIEW));
+			_includeDraftLayoutContent(ActionKeys.UPDATE, Constants.PREVIEW));
 	}
 
 	@Test(expected = PrincipalException.class)
 	public void testCollectionPageDraftPreviewWithViewPermission()
 		throws Exception {
 
-		_includeDraftLayoutContentWithNonadminUser(
-			ActionKeys.VIEW, Constants.PREVIEW);
+		_includeDraftLayoutContent(ActionKeys.VIEW, Constants.PREVIEW);
 	}
 
 	@Test
@@ -127,7 +124,7 @@ public class CollectionPageLayoutTypeControllerTest {
 		throws Exception {
 
 		Assert.assertFalse(
-			_includeDraftLayoutContentWithNonadminUser(
+			_includeDraftLayoutContent(
 				ActionKeys.PREVIEW_DRAFT, Constants.VIEW));
 	}
 
@@ -164,24 +161,6 @@ public class CollectionPageLayoutTypeControllerTest {
 		return mockHttpServletRequest;
 	}
 
-	private User _getNonadminUserWithPermission(String actionKey)
-		throws Exception {
-
-		Role role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
-
-		RoleTestUtil.addResourcePermission(
-			role, Layout.class.getName(), ResourceConstants.SCOPE_COMPANY,
-			String.valueOf(_group.getCompanyId()), actionKey);
-
-		User user = UserTestUtil.addUser();
-
-		_roleLocalService.clearUserRoles(user.getUserId());
-
-		_roleLocalService.addUserRole(user.getUserId(), role);
-
-		return user;
-	}
-
 	private ThemeDisplay _getThemeDisplay(
 			User user, HttpServletRequest mockHttpServletRequest)
 		throws Exception {
@@ -213,11 +192,27 @@ public class CollectionPageLayoutTypeControllerTest {
 		return themeDisplay;
 	}
 
-	private boolean _includeDraftLayoutContentWithNonadminUser(
-			String actionKey, String layoutMode)
+	private User _getUser(String actionId) throws Exception {
+		Role role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
+
+		RoleTestUtil.addResourcePermission(
+			role, Layout.class.getName(), ResourceConstants.SCOPE_COMPANY,
+			String.valueOf(_group.getCompanyId()), actionId);
+
+		User user = UserTestUtil.addUser();
+
+		_roleLocalService.clearUserRoles(user.getUserId());
+
+		_roleLocalService.addUserRole(user.getUserId(), role);
+
+		return user;
+	}
+
+	private boolean _includeDraftLayoutContent(
+			String actionId, String layoutMode)
 		throws Exception {
 
-		User user = _getNonadminUserWithPermission(actionKey);
+		User user = _getUser(actionId);
 
 		LayoutTypeController layoutTypeController =
 			LayoutTypeControllerTracker.getLayoutTypeController(

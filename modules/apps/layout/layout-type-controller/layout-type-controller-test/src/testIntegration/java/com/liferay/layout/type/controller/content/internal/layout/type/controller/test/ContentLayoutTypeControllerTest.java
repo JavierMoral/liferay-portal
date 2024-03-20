@@ -107,7 +107,7 @@ public class ContentLayoutTypeControllerTest {
 
 		Layout draftLayout = layout.fetchDraftLayout();
 
-		_includeLayoutContentWithNonadminUser(
+		_includeLayoutContent(
 			ActionKeys.PREVIEW_DRAFT, draftLayout, Constants.EDIT);
 	}
 
@@ -120,7 +120,7 @@ public class ContentLayoutTypeControllerTest {
 		Layout draftLayout = layout.fetchDraftLayout();
 
 		Assert.assertFalse(
-			_includeLayoutContentWithNonadminUser(
+			_includeLayoutContent(
 				ActionKeys.PREVIEW_DRAFT, draftLayout, Constants.PREVIEW));
 	}
 
@@ -133,7 +133,7 @@ public class ContentLayoutTypeControllerTest {
 		Layout draftLayout = layout.fetchDraftLayout();
 
 		Assert.assertFalse(
-			_includeLayoutContentWithNonadminUser(
+			_includeLayoutContent(
 				ActionKeys.UPDATE, draftLayout, Constants.PREVIEW));
 	}
 
@@ -145,8 +145,7 @@ public class ContentLayoutTypeControllerTest {
 
 		Layout draftLayout = layout.fetchDraftLayout();
 
-		_includeLayoutContentWithNonadminUser(
-			ActionKeys.VIEW, draftLayout, Constants.PREVIEW);
+		_includeLayoutContent(ActionKeys.VIEW, draftLayout, Constants.PREVIEW);
 	}
 
 	@Test
@@ -158,7 +157,7 @@ public class ContentLayoutTypeControllerTest {
 		Layout draftLayout = layout.fetchDraftLayout();
 
 		Assert.assertFalse(
-			_includeLayoutContentWithNonadminUser(
+			_includeLayoutContent(
 				ActionKeys.PREVIEW_DRAFT, draftLayout, Constants.VIEW));
 	}
 
@@ -200,7 +199,7 @@ public class ContentLayoutTypeControllerTest {
 
 		Layout draftLayout = layout.fetchDraftLayout();
 
-		_includeLayoutContentWithNonadminUser(
+		_includeLayoutContent(
 			ActionKeys.PREVIEW_DRAFT, draftLayout, Constants.PREVIEW);
 	}
 
@@ -213,7 +212,7 @@ public class ContentLayoutTypeControllerTest {
 		Layout draftLayout = layout.fetchDraftLayout();
 
 		Assert.assertFalse(
-			_includeLayoutContentWithNonadminUser(
+			_includeLayoutContent(
 				ActionKeys.UPDATE, draftLayout, Constants.PREVIEW));
 	}
 
@@ -225,8 +224,7 @@ public class ContentLayoutTypeControllerTest {
 
 		Layout draftLayout = layout.fetchDraftLayout();
 
-		_includeLayoutContentWithNonadminUser(
-			ActionKeys.VIEW, draftLayout, Constants.PREVIEW);
+		_includeLayoutContent(ActionKeys.VIEW, draftLayout, Constants.PREVIEW);
 	}
 
 	@Test
@@ -297,7 +295,7 @@ public class ContentLayoutTypeControllerTest {
 
 		Layout draftLayout = layout.fetchDraftLayout();
 
-		_includeLayoutContentWithNonadminUser(
+		_includeLayoutContent(
 			ActionKeys.PREVIEW_DRAFT, draftLayout, Constants.PREVIEW);
 	}
 
@@ -310,7 +308,7 @@ public class ContentLayoutTypeControllerTest {
 		Layout draftLayout = layout.fetchDraftLayout();
 
 		Assert.assertFalse(
-			_includeLayoutContentWithNonadminUser(
+			_includeLayoutContent(
 				ActionKeys.UPDATE, draftLayout, Constants.PREVIEW));
 	}
 
@@ -322,8 +320,7 @@ public class ContentLayoutTypeControllerTest {
 
 		Layout draftLayout = layout.fetchDraftLayout();
 
-		_includeLayoutContentWithNonadminUser(
-			ActionKeys.VIEW, draftLayout, Constants.PREVIEW);
+		_includeLayoutContent(ActionKeys.VIEW, draftLayout, Constants.PREVIEW);
 	}
 
 	private Layout _addTypePageTemplateEntryLayout() throws Exception {
@@ -393,24 +390,6 @@ public class ContentLayoutTypeControllerTest {
 		return _getHttpServletRequest(null, user);
 	}
 
-	private User _getNonadminUserWithPermission(String actionKey)
-		throws Exception {
-
-		Role role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
-
-		RoleTestUtil.addResourcePermission(
-			role, Layout.class.getName(), ResourceConstants.SCOPE_COMPANY,
-			String.valueOf(_group.getCompanyId()), actionKey);
-
-		User user = UserTestUtil.addUser();
-
-		_roleLocalService.clearUserRoles(user.getUserId());
-
-		_roleLocalService.addUserRole(user.getUserId(), role);
-
-		return user;
-	}
-
 	private ThemeDisplay _getThemeDisplay(
 			User user, HttpServletRequest mockHttpServletRequest)
 		throws Exception {
@@ -442,11 +421,27 @@ public class ContentLayoutTypeControllerTest {
 		return themeDisplay;
 	}
 
-	private boolean _includeLayoutContentWithNonadminUser(
-			String actionKey, Layout layout, String layoutMode)
+	private User _getUser(String actionId) throws Exception {
+		Role role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
+
+		RoleTestUtil.addResourcePermission(
+			role, Layout.class.getName(), ResourceConstants.SCOPE_COMPANY,
+			String.valueOf(_group.getCompanyId()), actionId);
+
+		User user = UserTestUtil.addUser();
+
+		_roleLocalService.clearUserRoles(user.getUserId());
+
+		_roleLocalService.addUserRole(user.getUserId(), role);
+
+		return user;
+	}
+
+	private boolean _includeLayoutContent(
+			String actionId, Layout layout, String layoutMode)
 		throws Exception {
 
-		User user = _getNonadminUserWithPermission(actionKey);
+		User user = _getUser(actionId);
 
 		LayoutTypeController layoutTypeController =
 			LayoutTypeControllerTracker.getLayoutTypeController(
