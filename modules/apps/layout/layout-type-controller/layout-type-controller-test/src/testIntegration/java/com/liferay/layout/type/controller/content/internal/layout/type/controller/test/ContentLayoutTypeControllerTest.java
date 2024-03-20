@@ -159,7 +159,7 @@ public class ContentLayoutTypeControllerTest {
 
 		layoutTypeController.includeLayoutContent(
 			_getHttpServletRequest(
-				_userLocalService.getGuestUser(_group.getCompanyId())),
+				null, _userLocalService.getGuestUser(_group.getCompanyId())),
 			new MockHttpServletResponse(),
 			LayoutTestUtil.addTypeContentLayout(_group));
 	}
@@ -174,7 +174,7 @@ public class ContentLayoutTypeControllerTest {
 
 		Assert.assertFalse(
 			layoutTypeController.includeLayoutContent(
-				_getHttpServletRequest(TestPropsValues.getUser()),
+				_getHttpServletRequest(null, TestPropsValues.getUser()),
 				new MockHttpServletResponse(),
 				LayoutTestUtil.addTypeContentLayout(_group)));
 	}
@@ -231,6 +231,7 @@ public class ContentLayoutTypeControllerTest {
 		Assert.assertFalse(
 			layoutTypeController.includeLayoutContent(
 				_getHttpServletRequest(
+					null,
 					_userLocalService.getGuestUser(_group.getCompanyId())),
 				new MockHttpServletResponse(), layout));
 	}
@@ -256,7 +257,7 @@ public class ContentLayoutTypeControllerTest {
 
 		Assert.assertFalse(
 			layoutTypeController.includeLayoutContent(
-				_getHttpServletRequest(TestPropsValues.getUser()),
+				_getHttpServletRequest(null, TestPropsValues.getUser()),
 				new MockHttpServletResponse(), layout));
 	}
 
@@ -347,12 +348,6 @@ public class ContentLayoutTypeControllerTest {
 		}
 
 		return mockHttpServletRequest;
-	}
-
-	private HttpServletRequest _getHttpServletRequest(User user)
-		throws Exception {
-
-		return _getHttpServletRequest(null, user);
 	}
 
 	private ThemeDisplay _getThemeDisplay(
