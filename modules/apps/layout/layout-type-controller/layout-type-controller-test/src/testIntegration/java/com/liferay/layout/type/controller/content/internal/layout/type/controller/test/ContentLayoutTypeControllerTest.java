@@ -101,52 +101,49 @@ public class ContentLayoutTypeControllerTest {
 	public void testContentLayoutTypeControllerDraftEditWithPreviewDraftPermission()
 		throws Exception {
 
-		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
-
 		_includeDraftLayoutContent(
-			ActionKeys.PREVIEW_DRAFT, layout, Constants.EDIT);
+			ActionKeys.PREVIEW_DRAFT,
+			LayoutTestUtil.addTypeContentLayout(_group), Constants.EDIT);
 	}
 
 	@Test
 	public void testContentLayoutTypeControllerDraftPreviewWithPreviewDraftPermission()
 		throws Exception {
 
-		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
-
 		Assert.assertFalse(
 			_includeDraftLayoutContent(
-				ActionKeys.PREVIEW_DRAFT, layout, Constants.PREVIEW));
+				ActionKeys.PREVIEW_DRAFT,
+				LayoutTestUtil.addTypeContentLayout(_group),
+				Constants.PREVIEW));
 	}
 
 	@Test
 	public void testContentLayoutTypeControllerDraftPreviewWithUpdatePermission()
 		throws Exception {
 
-		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
-
 		Assert.assertFalse(
 			_includeDraftLayoutContent(
-				ActionKeys.UPDATE, layout, Constants.PREVIEW));
+				ActionKeys.UPDATE, LayoutTestUtil.addTypeContentLayout(_group),
+				Constants.PREVIEW));
 	}
 
 	@Test(expected = PrincipalException.class)
 	public void testContentLayoutTypeControllerDraftPreviewWithViewPermission()
 		throws Exception {
 
-		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
-
-		_includeDraftLayoutContent(ActionKeys.VIEW, layout, Constants.PREVIEW);
+		_includeDraftLayoutContent(
+			ActionKeys.VIEW, LayoutTestUtil.addTypeContentLayout(_group),
+			Constants.PREVIEW);
 	}
 
 	@Test
 	public void testContentLayoutTypeControllerDraftViewWithPreviewDraftPermission()
 		throws Exception {
 
-		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
-
 		Assert.assertFalse(
 			_includeDraftLayoutContent(
-				ActionKeys.PREVIEW_DRAFT, layout, Constants.VIEW));
+				ActionKeys.PREVIEW_DRAFT,
+				LayoutTestUtil.addTypeContentLayout(_group), Constants.VIEW));
 	}
 
 	@Test(expected = NoSuchLayoutException.class)
@@ -183,30 +180,28 @@ public class ContentLayoutTypeControllerTest {
 	public void testContentLayoutTypeControllerPageTemplateDraftPreviewWithPreviewDraftPermission()
 		throws Exception {
 
-		Layout layout = _addTypePageTemplateEntryLayout();
-
 		_includeDraftLayoutContent(
-			ActionKeys.PREVIEW_DRAFT, layout, Constants.PREVIEW);
+			ActionKeys.PREVIEW_DRAFT, _addTypePageTemplateEntryLayout(),
+			Constants.PREVIEW);
 	}
 
 	@Test
 	public void testContentLayoutTypeControllerPageTemplateDraftPreviewWithUpdatePermission()
 		throws Exception {
 
-		Layout layout = _addTypePageTemplateEntryLayout();
-
 		Assert.assertFalse(
 			_includeDraftLayoutContent(
-				ActionKeys.UPDATE, layout, Constants.PREVIEW));
+				ActionKeys.UPDATE, _addTypePageTemplateEntryLayout(),
+				Constants.PREVIEW));
 	}
 
 	@Test(expected = PrincipalException.class)
 	public void testContentLayoutTypeControllerPageTemplateDraftPreviewWithViewPermission()
 		throws Exception {
 
-		Layout layout = _addTypePageTemplateEntryLayout();
-
-		_includeDraftLayoutContent(ActionKeys.VIEW, layout, Constants.PREVIEW);
+		_includeDraftLayoutContent(
+			ActionKeys.VIEW, _addTypePageTemplateEntryLayout(),
+			Constants.PREVIEW);
 	}
 
 	@Test
@@ -265,30 +260,28 @@ public class ContentLayoutTypeControllerTest {
 	public void testContentLayoutTypeControllerUtilityPageDraftPreviewWithPreviewDraftPermission()
 		throws Exception {
 
-		Layout layout = _addTypeUtilityPageEntryLayout();
-
 		_includeDraftLayoutContent(
-			ActionKeys.PREVIEW_DRAFT, layout, Constants.PREVIEW);
+			ActionKeys.PREVIEW_DRAFT, _addTypeUtilityPageEntryLayout(),
+			Constants.PREVIEW);
 	}
 
 	@Test
 	public void testContentLayoutTypeControllerUtilityPageDraftPreviewWithUpdatePermission()
 		throws Exception {
 
-		Layout layout = _addTypeUtilityPageEntryLayout();
-
 		Assert.assertFalse(
 			_includeDraftLayoutContent(
-				ActionKeys.UPDATE, layout, Constants.PREVIEW));
+				ActionKeys.UPDATE, _addTypeUtilityPageEntryLayout(),
+				Constants.PREVIEW));
 	}
 
 	@Test(expected = PrincipalException.class)
 	public void testContentLayoutTypeControllerUtilityPageDraftPreviewWithViewPermission()
 		throws Exception {
 
-		Layout layout = _addTypeUtilityPageEntryLayout();
-
-		_includeDraftLayoutContent(ActionKeys.VIEW, layout, Constants.PREVIEW);
+		_includeDraftLayoutContent(
+			ActionKeys.VIEW, _addTypeUtilityPageEntryLayout(),
+			Constants.PREVIEW);
 	}
 
 	private Layout _addTypePageTemplateEntryLayout() throws Exception {
@@ -401,14 +394,12 @@ public class ContentLayoutTypeControllerTest {
 			String actionId, Layout layout, String layoutMode)
 		throws Exception {
 
-		User user = _getUser(actionId);
-
 		LayoutTypeController layoutTypeController =
 			LayoutTypeControllerTracker.getLayoutTypeController(
 				LayoutConstants.TYPE_CONTENT);
 
 		return layoutTypeController.includeLayoutContent(
-			_getHttpServletRequest(layoutMode, user),
+			_getHttpServletRequest(layoutMode, _getUser(actionId)),
 			new MockHttpServletResponse(), layout.fetchDraftLayout());
 	}
 
