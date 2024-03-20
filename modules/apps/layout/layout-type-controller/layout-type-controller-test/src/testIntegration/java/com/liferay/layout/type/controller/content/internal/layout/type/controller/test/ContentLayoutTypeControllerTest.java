@@ -103,10 +103,8 @@ public class ContentLayoutTypeControllerTest {
 
 		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
 
-		Layout draftLayout = layout.fetchDraftLayout();
-
-		_includeLayoutContent(
-			ActionKeys.PREVIEW_DRAFT, draftLayout, Constants.EDIT);
+		_includeDraftLayoutContent(
+			ActionKeys.PREVIEW_DRAFT, layout, Constants.EDIT);
 	}
 
 	@Test
@@ -115,11 +113,9 @@ public class ContentLayoutTypeControllerTest {
 
 		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
 
-		Layout draftLayout = layout.fetchDraftLayout();
-
 		Assert.assertFalse(
-			_includeLayoutContent(
-				ActionKeys.PREVIEW_DRAFT, draftLayout, Constants.PREVIEW));
+			_includeDraftLayoutContent(
+				ActionKeys.PREVIEW_DRAFT, layout, Constants.PREVIEW));
 	}
 
 	@Test
@@ -128,11 +124,9 @@ public class ContentLayoutTypeControllerTest {
 
 		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
 
-		Layout draftLayout = layout.fetchDraftLayout();
-
 		Assert.assertFalse(
-			_includeLayoutContent(
-				ActionKeys.UPDATE, draftLayout, Constants.PREVIEW));
+			_includeDraftLayoutContent(
+				ActionKeys.UPDATE, layout, Constants.PREVIEW));
 	}
 
 	@Test(expected = PrincipalException.class)
@@ -141,9 +135,7 @@ public class ContentLayoutTypeControllerTest {
 
 		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
 
-		Layout draftLayout = layout.fetchDraftLayout();
-
-		_includeLayoutContent(ActionKeys.VIEW, draftLayout, Constants.PREVIEW);
+		_includeDraftLayoutContent(ActionKeys.VIEW, layout, Constants.PREVIEW);
 	}
 
 	@Test
@@ -152,11 +144,9 @@ public class ContentLayoutTypeControllerTest {
 
 		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
 
-		Layout draftLayout = layout.fetchDraftLayout();
-
 		Assert.assertFalse(
-			_includeLayoutContent(
-				ActionKeys.PREVIEW_DRAFT, draftLayout, Constants.VIEW));
+			_includeDraftLayoutContent(
+				ActionKeys.PREVIEW_DRAFT, layout, Constants.VIEW));
 	}
 
 	@Test(expected = NoSuchLayoutException.class)
@@ -195,10 +185,8 @@ public class ContentLayoutTypeControllerTest {
 
 		Layout layout = _addTypePageTemplateEntryLayout();
 
-		Layout draftLayout = layout.fetchDraftLayout();
-
-		_includeLayoutContent(
-			ActionKeys.PREVIEW_DRAFT, draftLayout, Constants.PREVIEW);
+		_includeDraftLayoutContent(
+			ActionKeys.PREVIEW_DRAFT, layout, Constants.PREVIEW);
 	}
 
 	@Test
@@ -207,11 +195,9 @@ public class ContentLayoutTypeControllerTest {
 
 		Layout layout = _addTypePageTemplateEntryLayout();
 
-		Layout draftLayout = layout.fetchDraftLayout();
-
 		Assert.assertFalse(
-			_includeLayoutContent(
-				ActionKeys.UPDATE, draftLayout, Constants.PREVIEW));
+			_includeDraftLayoutContent(
+				ActionKeys.UPDATE, layout, Constants.PREVIEW));
 	}
 
 	@Test(expected = PrincipalException.class)
@@ -220,9 +206,7 @@ public class ContentLayoutTypeControllerTest {
 
 		Layout layout = _addTypePageTemplateEntryLayout();
 
-		Layout draftLayout = layout.fetchDraftLayout();
-
-		_includeLayoutContent(ActionKeys.VIEW, draftLayout, Constants.PREVIEW);
+		_includeDraftLayoutContent(ActionKeys.VIEW, layout, Constants.PREVIEW);
 	}
 
 	@Test
@@ -282,10 +266,8 @@ public class ContentLayoutTypeControllerTest {
 
 		Layout layout = _addTypeUtilityPageEntryLayout();
 
-		Layout draftLayout = layout.fetchDraftLayout();
-
-		_includeLayoutContent(
-			ActionKeys.PREVIEW_DRAFT, draftLayout, Constants.PREVIEW);
+		_includeDraftLayoutContent(
+			ActionKeys.PREVIEW_DRAFT, layout, Constants.PREVIEW);
 	}
 
 	@Test
@@ -294,11 +276,9 @@ public class ContentLayoutTypeControllerTest {
 
 		Layout layout = _addTypeUtilityPageEntryLayout();
 
-		Layout draftLayout = layout.fetchDraftLayout();
-
 		Assert.assertFalse(
-			_includeLayoutContent(
-				ActionKeys.UPDATE, draftLayout, Constants.PREVIEW));
+			_includeDraftLayoutContent(
+				ActionKeys.UPDATE, layout, Constants.PREVIEW));
 	}
 
 	@Test(expected = PrincipalException.class)
@@ -307,9 +287,7 @@ public class ContentLayoutTypeControllerTest {
 
 		Layout layout = _addTypeUtilityPageEntryLayout();
 
-		Layout draftLayout = layout.fetchDraftLayout();
-
-		_includeLayoutContent(ActionKeys.VIEW, draftLayout, Constants.PREVIEW);
+		_includeDraftLayoutContent(ActionKeys.VIEW, layout, Constants.PREVIEW);
 	}
 
 	private Layout _addTypePageTemplateEntryLayout() throws Exception {
@@ -424,7 +402,7 @@ public class ContentLayoutTypeControllerTest {
 		return user;
 	}
 
-	private boolean _includeLayoutContent(
+	private boolean _includeDraftLayoutContent(
 			String actionId, Layout layout, String layoutMode)
 		throws Exception {
 
@@ -436,7 +414,7 @@ public class ContentLayoutTypeControllerTest {
 
 		return layoutTypeController.includeLayoutContent(
 			_getHttpServletRequest(layoutMode, user),
-			new MockHttpServletResponse(), layout);
+			new MockHttpServletResponse(), layout.fetchDraftLayout());
 	}
 
 	@Inject
