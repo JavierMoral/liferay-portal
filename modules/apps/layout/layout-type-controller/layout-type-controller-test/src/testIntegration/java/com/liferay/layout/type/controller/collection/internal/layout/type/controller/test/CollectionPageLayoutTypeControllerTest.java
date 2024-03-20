@@ -20,9 +20,8 @@ import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
-import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
-import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -129,7 +128,7 @@ public class CollectionPageLayoutTypeControllerTest {
 	}
 
 	private Layout _addTypeCollectionLayout() throws Exception {
-		return LayoutLocalServiceUtil.addLayout(
+		return _layoutLocalService.addLayout(
 			TestPropsValues.getUserId(), _group.getGroupId(), false,
 			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
 			RandomTestUtil.randomString(), StringPool.BLANK, StringPool.BLANK,
@@ -167,7 +166,7 @@ public class CollectionPageLayoutTypeControllerTest {
 
 		ThemeDisplay themeDisplay = new ThemeDisplay();
 
-		Company company = CompanyLocalServiceUtil.getCompany(
+		Company company = _companyLocalService.getCompany(
 			_group.getCompanyId());
 
 		themeDisplay.setCompany(company);
@@ -235,6 +234,9 @@ public class CollectionPageLayoutTypeControllerTest {
 		return layoutTypeController.includeLayoutContent(
 			httpServletRequest, new MockHttpServletResponse(), draftLayout);
 	}
+
+	@Inject
+	private CompanyLocalService _companyLocalService;
 
 	@DeleteAfterTestRun
 	private Group _group;

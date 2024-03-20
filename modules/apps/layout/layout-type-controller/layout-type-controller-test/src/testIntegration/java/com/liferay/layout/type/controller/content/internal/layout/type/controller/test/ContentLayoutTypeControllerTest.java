@@ -11,12 +11,12 @@ import com.liferay.layout.page.template.constants.LayoutPageTemplateConstants;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateCollection;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
-import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionServiceUtil;
-import com.liferay.layout.page.template.service.LayoutPageTemplateEntryServiceUtil;
+import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionService;
+import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.layout.utility.page.kernel.constants.LayoutUtilityPageEntryConstants;
 import com.liferay.layout.utility.page.model.LayoutUtilityPageEntry;
-import com.liferay.layout.utility.page.service.LayoutUtilityPageEntryLocalServiceUtil;
+import com.liferay.layout.utility.page.service.LayoutUtilityPageEntryLocalService;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
@@ -30,9 +30,8 @@ import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
-import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
+import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
-import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -325,7 +324,7 @@ public class ContentLayoutTypeControllerTest {
 
 	private Layout _addTypePageTemplateEntryLayout() throws Exception {
 		LayoutPageTemplateCollection layoutPageTemplateCollection =
-			LayoutPageTemplateCollectionServiceUtil.
+			_layoutPageTemplateCollectionService.
 				addLayoutPageTemplateCollection(
 					_group.getGroupId(),
 					LayoutPageTemplateConstants.
@@ -336,7 +335,7 @@ public class ContentLayoutTypeControllerTest {
 					ServiceContextTestUtil.getServiceContext());
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			LayoutPageTemplateEntryServiceUtil.addLayoutPageTemplateEntry(
+			_layoutPageTemplateEntryService.addLayoutPageTemplateEntry(
 				_group.getGroupId(),
 				layoutPageTemplateCollection.
 					getLayoutPageTemplateCollectionId(),
@@ -345,20 +344,18 @@ public class ContentLayoutTypeControllerTest {
 				WorkflowConstants.STATUS_DRAFT,
 				ServiceContextTestUtil.getServiceContext());
 
-		return LayoutLocalServiceUtil.getLayout(
-			layoutPageTemplateEntry.getPlid());
+		return _layoutLocalService.getLayout(layoutPageTemplateEntry.getPlid());
 	}
 
 	private Layout _addTypeUtilityPageEntryLayout() throws Exception {
 		LayoutUtilityPageEntry layoutUtilityPageEntry =
-			LayoutUtilityPageEntryLocalServiceUtil.addLayoutUtilityPageEntry(
+			_layoutUtilityPageEntryLocalService.addLayoutUtilityPageEntry(
 				null, TestPropsValues.getUserId(), _group.getGroupId(), 0, 0,
 				false, RandomTestUtil.randomString(),
 				LayoutUtilityPageEntryConstants.TYPE_SC_NOT_FOUND, 0,
 				ServiceContextTestUtil.getServiceContext());
 
-		return LayoutLocalServiceUtil.getLayout(
-			layoutUtilityPageEntry.getPlid());
+		return _layoutLocalService.getLayout(layoutUtilityPageEntry.getPlid());
 	}
 
 	private HttpServletRequest _getHttpServletRequest(
@@ -396,7 +393,7 @@ public class ContentLayoutTypeControllerTest {
 
 		ThemeDisplay themeDisplay = new ThemeDisplay();
 
-		Company company = CompanyLocalServiceUtil.getCompany(
+		Company company = _companyLocalService.getCompany(
 			_group.getCompanyId());
 
 		themeDisplay.setCompany(company);
@@ -452,6 +449,9 @@ public class ContentLayoutTypeControllerTest {
 			new MockHttpServletResponse(), layout);
 	}
 
+	@Inject
+	private CompanyLocalService _companyLocalService;
+
 	@DeleteAfterTestRun
 	private Group _group;
 
@@ -459,7 +459,18 @@ public class ContentLayoutTypeControllerTest {
 	private LayoutLocalService _layoutLocalService;
 
 	@Inject
+	private LayoutPageTemplateCollectionService
+		_layoutPageTemplateCollectionService;
+
+	@Inject
+	private LayoutPageTemplateEntryService _layoutPageTemplateEntryService;
+
+	@Inject
 	private LayoutSetLocalService _layoutSetLocalService;
+
+	@Inject
+	private LayoutUtilityPageEntryLocalService
+		_layoutUtilityPageEntryLocalService;
 
 	@Inject
 	private RoleLocalService _roleLocalService;
