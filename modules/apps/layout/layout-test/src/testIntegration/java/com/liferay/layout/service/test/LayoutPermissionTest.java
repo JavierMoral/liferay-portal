@@ -98,6 +98,27 @@ public class LayoutPermissionTest {
 	}
 
 	@Test
+	public void testContainsPreviewDraftPermissionOnAssetDisplayLayoutWithRestrictedUpdatePermission()
+		throws Exception {
+
+		Layout layout = _addDisplayPageTemplateLayout();
+
+		Assert.assertTrue(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				_getPermissionChecker(ActionKeys.UPDATE_LAYOUT_BASIC), layout));
+
+		Assert.assertTrue(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				_getPermissionChecker(ActionKeys.UPDATE_LAYOUT_CONTENT),
+				layout));
+
+		Assert.assertTrue(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				_getPermissionChecker(ActionKeys.UPDATE_LAYOUT_LIMITED),
+				layout));
+	}
+
+	@Test
 	public void testContainsPreviewDraftPermissionOnAssetDisplayLayoutWithUpdatePermission()
 		throws Exception {
 
@@ -128,6 +149,27 @@ public class LayoutPermissionTest {
 	}
 
 	@Test
+	public void testContainsPreviewDraftPermissionOnPortletTypeLayoutWithRestrictedUpdatePermission()
+		throws Exception {
+
+		Layout layout = LayoutTestUtil.addTypePortletLayout(_group);
+
+		Assert.assertFalse(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				_getPermissionChecker(ActionKeys.UPDATE_LAYOUT_BASIC), layout));
+
+		Assert.assertFalse(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				_getPermissionChecker(ActionKeys.UPDATE_LAYOUT_CONTENT),
+				layout));
+
+		Assert.assertFalse(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				_getPermissionChecker(ActionKeys.UPDATE_LAYOUT_LIMITED),
+				layout));
+	}
+
+	@Test
 	public void testContainsPreviewDraftPermissionOnPortletTypeLayoutWithUpdatePermission()
 		throws Exception {
 
@@ -145,6 +187,27 @@ public class LayoutPermissionTest {
 			_layoutPermission.containsLayoutPreviewDraftPermission(
 				_getPermissionChecker(ActionKeys.PREVIEW_DRAFT),
 				LayoutTestUtil.addTypeContentLayout(_group)));
+	}
+
+	@Test
+	public void testContainsPreviewDraftPermissionWithRestrictedUpdatePermission()
+		throws Exception {
+
+		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
+
+		Assert.assertTrue(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				_getPermissionChecker(ActionKeys.UPDATE_LAYOUT_BASIC), layout));
+
+		Assert.assertTrue(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				_getPermissionChecker(ActionKeys.UPDATE_LAYOUT_CONTENT),
+				layout));
+
+		Assert.assertTrue(
+			_layoutPermission.containsLayoutPreviewDraftPermission(
+				_getPermissionChecker(ActionKeys.UPDATE_LAYOUT_LIMITED),
+				layout));
 	}
 
 	@Test
