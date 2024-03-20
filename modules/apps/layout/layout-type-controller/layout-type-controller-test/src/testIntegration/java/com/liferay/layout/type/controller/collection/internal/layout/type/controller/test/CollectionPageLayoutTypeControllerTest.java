@@ -25,7 +25,6 @@ import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
-import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
@@ -219,15 +218,8 @@ public class CollectionPageLayoutTypeControllerTest {
 
 		Layout draftLayout = layout.fetchDraftLayout();
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(
-				_group.getCompanyId(), _group.getGroupId(),
-				TestPropsValues.getUserId());
-
 		HttpServletRequest httpServletRequest = _getHttpServletRequest(
 			layoutMode, user);
-
-		serviceContext.setRequest(httpServletRequest);
 
 		return layoutTypeController.includeLayoutContent(
 			httpServletRequest, new MockHttpServletResponse(), draftLayout);
@@ -247,8 +239,5 @@ public class CollectionPageLayoutTypeControllerTest {
 
 	@Inject
 	private RoleLocalService _roleLocalService;
-
-	@Inject
-	private UserLocalService _userLocalService;
 
 }
