@@ -208,21 +208,15 @@ public class CollectionPageLayoutTypeControllerTest {
 			String actionId, String layoutMode)
 		throws Exception {
 
-		User user = _getUser(actionId);
-
 		LayoutTypeController layoutTypeController =
 			LayoutTypeControllerTracker.getLayoutTypeController(
 				LayoutConstants.TYPE_COLLECTION);
 
 		Layout layout = _addTypeCollectionLayout();
 
-		Layout draftLayout = layout.fetchDraftLayout();
-
-		HttpServletRequest httpServletRequest = _getHttpServletRequest(
-			layoutMode, user);
-
 		return layoutTypeController.includeLayoutContent(
-			httpServletRequest, new MockHttpServletResponse(), draftLayout);
+			_getHttpServletRequest(layoutMode, _getUser(actionId)),
+			new MockHttpServletResponse(), layout.fetchDraftLayout());
 	}
 
 	@Inject
