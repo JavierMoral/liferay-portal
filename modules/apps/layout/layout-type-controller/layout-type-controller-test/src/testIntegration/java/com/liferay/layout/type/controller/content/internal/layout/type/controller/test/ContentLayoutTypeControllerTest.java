@@ -34,7 +34,6 @@ import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
-import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -240,17 +239,10 @@ public class ContentLayoutTypeControllerTest {
 
 		Assert.assertNotNull(draftLayout);
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(
-				_group.getCompanyId(), _group.getGroupId(),
-				TestPropsValues.getUserId());
-
-		serviceContext.setRequest(
-			_getHttpServletRequest(TestPropsValues.getUser()));
-
 		_layoutLocalService.updateStatus(
 			TestPropsValues.getUserId(), draftLayout.getPlid(),
-			WorkflowConstants.STATUS_APPROVED, serviceContext);
+			WorkflowConstants.STATUS_APPROVED,
+			ServiceContextThreadLocal.getServiceContext());
 
 		Assert.assertFalse(
 			layoutTypeController.includeLayoutContent(
@@ -276,9 +268,7 @@ public class ContentLayoutTypeControllerTest {
 		_layoutLocalService.updateStatus(
 			TestPropsValues.getUserId(), draftLayout.getPlid(),
 			WorkflowConstants.STATUS_APPROVED,
-			ServiceContextTestUtil.getServiceContext(
-				_group.getCompanyId(), _group.getGroupId(),
-				TestPropsValues.getUserId()));
+			ServiceContextThreadLocal.getServiceContext());
 
 		Assert.assertFalse(
 			layoutTypeController.includeLayoutContent(
@@ -332,7 +322,7 @@ public class ContentLayoutTypeControllerTest {
 					RandomTestUtil.randomString(),
 					RandomTestUtil.randomString(),
 					LayoutPageTemplateCollectionTypeConstants.BASIC,
-					ServiceContextTestUtil.getServiceContext());
+					ServiceContextThreadLocal.getServiceContext());
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryService.addLayoutPageTemplateEntry(
@@ -342,7 +332,7 @@ public class ContentLayoutTypeControllerTest {
 				RandomTestUtil.randomString(),
 				LayoutPageTemplateEntryTypeConstants.BASIC, 0,
 				WorkflowConstants.STATUS_DRAFT,
-				ServiceContextTestUtil.getServiceContext());
+				ServiceContextThreadLocal.getServiceContext());
 
 		return _layoutLocalService.getLayout(layoutPageTemplateEntry.getPlid());
 	}
@@ -353,7 +343,7 @@ public class ContentLayoutTypeControllerTest {
 				null, TestPropsValues.getUserId(), _group.getGroupId(), 0, 0,
 				false, RandomTestUtil.randomString(),
 				LayoutUtilityPageEntryConstants.TYPE_SC_NOT_FOUND, 0,
-				ServiceContextTestUtil.getServiceContext());
+				ServiceContextThreadLocal.getServiceContext());
 
 		return _layoutLocalService.getLayout(layoutUtilityPageEntry.getPlid());
 	}
