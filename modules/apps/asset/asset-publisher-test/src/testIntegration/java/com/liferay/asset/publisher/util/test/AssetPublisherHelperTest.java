@@ -528,6 +528,9 @@ public class AssetPublisherHelperTest {
 		portletPreferences.setValue("orderByColumn1", "viewCount");
 		portletPreferences.setValue("orderByType1", "DESC");
 
+		portletPreferences.setValue("orderByColumn2", "title");
+		portletPreferences.setValue("orderByType2", "ASC");
+
 		AssetEntryQuery assetEntryQuery =
 			_assetPublisherHelper.getAssetEntryQuery(
 				portletPreferences, _group1.getGroupId(), layout, new long[0],
