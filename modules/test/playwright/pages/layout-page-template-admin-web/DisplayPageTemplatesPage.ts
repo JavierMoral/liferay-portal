@@ -5,6 +5,7 @@
 
 import {Locator, Page} from '@playwright/test';
 
+import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
 import {PORTLET_URLS} from '../../utils/portletUrls';
 import {waitForSuccessAlert} from '../../utils/waitForSuccessAlert';
 
@@ -25,6 +26,39 @@ export class DisplayPageTemplatesPage {
 		await this.page.goto(
 			`/group${siteUrl || '/guest'}${PORTLET_URLS.displayPageTemplates}`
 		);
+	}
+
+	async goToDisplayPageTemplateAction(action: string, cardNum: string) {
+		const card = await this.page.locator(
+			`[id="_com_liferay_layout_page_template_admin_web_portlet_LayoutPageTemplatesPortlet_displayPages_${cardNum}"]`
+		);
+		await card.getByLabel('More actions').waitFor();
+
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: this.page.getByRole('menuitem', {
+				exact: true,
+				name: action,
+			}),
+			trigger: card.getByLabel('More actions', {
+				exact: true,
+			}),
+		});
+	}
+
+	async goToAssetDisplayEntryAction(action: string) {
+		await this.page.getByRole('button', {name: 'Actions'}).waitFor();
+
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: this.page.getByRole('menuitem', {
+				exact: true,
+				name: action,
+			}),
+			trigger: this.page.getByLabel('Actions', {
+				exact: true,
+			}),
+		});
 	}
 
 	async publishNewTemplate({
