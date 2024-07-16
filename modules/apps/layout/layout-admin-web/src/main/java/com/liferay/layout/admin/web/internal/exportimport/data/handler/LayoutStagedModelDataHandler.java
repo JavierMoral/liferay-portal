@@ -563,31 +563,6 @@ public class LayoutStagedModelDataHandler
 
 				return;
 			}
-
-			LayoutFriendlyURL layoutFriendlyURL =
-				_layoutFriendlyURLLocalService.fetchFirstLayoutFriendlyURL(
-					groupId, privateLayout, friendlyURL);
-
-			if ((layoutFriendlyURL != null) && (existingLayout == null)) {
-				Layout mergeFailFriendlyURLLayout =
-					_layoutLocalService.getLayout(layoutFriendlyURL.getPlid());
-
-				_addMergeFailFriendlyURLLayout(mergeFailFriendlyURLLayout);
-
-				if (!_log.isWarnEnabled()) {
-					return;
-				}
-
-				_log.warn(
-					StringBundler.concat(
-						"Layout with layout ID ", layout.getLayoutId(),
-						" cannot be propagated because the friendly URL ",
-						"conflicts with the friendly URL of layout with ",
-						"layout ID ",
-						mergeFailFriendlyURLLayout.getLayoutId()));
-
-				return;
-			}
 		}
 		else {
 
