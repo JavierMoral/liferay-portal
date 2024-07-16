@@ -8,6 +8,7 @@ import {expect, mergeTests} from '@playwright/test';
 import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
 import {isolatedSiteTest} from '../../fixtures/isolatedSiteTest';
 import {loginTest} from '../../fixtures/loginTest';
+import {pageEditorPagesTest} from '../../fixtures/pageEditorPagesTest';
 import {pageSelectorPagesTest} from '../../fixtures/pageSelectorPagesTest';
 import {pagesAdminPagesTest} from '../../fixtures/pagesAdminPagesTest';
 import {checkAccessibility} from '../../utils/checkAccessibility';
@@ -19,6 +20,7 @@ const test = mergeTests(
 	apiHelpersTest,
 	isolatedSiteTest,
 	loginTest(),
+	pageEditorPagesTest,
 	pageSelectorPagesTest,
 	pagesAdminPagesTest,
 	pagesPagesTest
@@ -236,3 +238,40 @@ test('Can edit the page name and layout template via pages administration', asyn
 
 	await expect(page.locator('#layout-column_column-1')).toBeAttached();
 });
+
+test(
+	'Asserts the Utility Pages configuration view',
+	{
+		tag: '@LPD-4459',
+	},
+	async ({
+		page,
+		pageEditorPage,
+		site,
+		utilityPageConfigurationPage,
+		utilityPagesPage,
+	}) => {
+		await page.goto('/');
+
+		// The configuration action must be available from the card
+		// The configuration view should only allow setting the htmlTitle and htmlDescription SEO fields
+
+		await utilityPagesPage.goto(site.friendlyUrlPath);
+		await utilityPageConfigurationPage.setUtilityPageConfiguration(
+			getRandomString(),
+			getRandomString(),
+			'404 Error'
+		);
+
+		// During editing the "More Page Design Options" link should not be available
+
+		await utilityPagesPage.goto(site.friendlyUrlPath);
+		await utilityPagesPage.goToEdit('404 Error');
+		await pageEditorPage.goToSidebarTab('Page Design Options');
+
+		await expect(page.getByText('Master', {exact: true})).toBeVisible();
+		expect(
+			await page.getByTitle('More Page Design Options').count()
+		).toEqual(0);
+	}
+);
