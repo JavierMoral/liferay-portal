@@ -7,7 +7,9 @@ package com.liferay.site.navigation.taglib.servlet.taglib;
 
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.theme.NavItem;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Validator;
@@ -31,16 +33,16 @@ import javax.servlet.jsp.PageContext;
  */
 public class NavigationMenuTag extends IncludeTag {
 
-	public long getDdmTemplateGroupId() {
-		return _ddmTemplateGroupId;
-	}
-
 	public String getDdmTemplateKey() {
 		return _ddmTemplateKey;
 	}
 
 	public int getDisplayDepth() {
 		return _displayDepth;
+	}
+
+	public String getDisplayStyleGroupKey() {
+		return _displayStyleGroupKey;
 	}
 
 	public String getExpandedLevels() {
@@ -104,16 +106,16 @@ public class NavigationMenuTag extends IncludeTag {
 		return EVAL_PAGE;
 	}
 
-	public void setDdmTemplateGroupId(long ddmTemplateGroupId) {
-		_ddmTemplateGroupId = ddmTemplateGroupId;
-	}
-
 	public void setDdmTemplateKey(String ddmTemplateKey) {
 		_ddmTemplateKey = ddmTemplateKey;
 	}
 
 	public void setDisplayDepth(int displayDepth) {
 		_displayDepth = displayDepth;
+	}
+
+	public void setDisplayStyleGroupKey(String displayStyleGroupKey) {
+		_displayStyleGroupKey = displayStyleGroupKey;
 	}
 
 	public void setExpandedLevels(String expandedLevels) {
@@ -155,9 +157,9 @@ public class NavigationMenuTag extends IncludeTag {
 	protected void cleanUp() {
 		super.cleanUp();
 
-		_ddmTemplateGroupId = 0;
 		_ddmTemplateKey = null;
 		_displayDepth = 0;
+		_displayStyleGroupKey = null;
 		_expandedLevels = "auto";
 		_navigationMenuMode = NavigationMenuMode.DEFAULT;
 		_preview = false;
@@ -179,15 +181,20 @@ public class NavigationMenuTag extends IncludeTag {
 	}
 
 	protected long getDisplayStyleGroupId() {
-		if (_ddmTemplateGroupId > 0) {
-			return _ddmTemplateGroupId;
-		}
-
 		HttpServletRequest httpServletRequest = getRequest();
 
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
+
+		if (Validator.isNotNull(_displayStyleGroupKey)) {
+			Group group = GroupLocalServiceUtil.fetchGroup(
+				themeDisplay.getCompanyId(), _displayStyleGroupKey);
+
+			if (group != null) {
+				return group.getGroupId();
+			}
+		}
 
 		return themeDisplay.getScopeGroupId();
 	}
@@ -203,9 +210,9 @@ public class NavigationMenuTag extends IncludeTag {
 
 	private static final String _PAGE = "/navigation/page.jsp";
 
-	private long _ddmTemplateGroupId;
 	private String _ddmTemplateKey;
 	private int _displayDepth;
+	private String _displayStyleGroupKey;
 	private String _expandedLevels = "auto";
 	private NavigationMenuMode _navigationMenuMode = NavigationMenuMode.DEFAULT;
 	private boolean _preview;
