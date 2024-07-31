@@ -76,7 +76,7 @@ SiteNavigationMenuConfigurationDisplayContext siteNavigationMenuConfigurationDis
 						<liferay-template:template-selector
 							className="<%= NavItem.class.getName() %>"
 							displayStyle="<%= siteNavigationMenuDisplayContext.getDisplayStyle() %>"
-							displayStyleGroupId="<%= siteNavigationMenuDisplayContext.getDisplayStyleGroupId() %>"
+							displayStyleGroupKey="<%= siteNavigationMenuDisplayContext.getDisplayStyleGroupKey() %>"
 							refreshURL="<%= configurationRenderURL %>"
 						/>
 					</div>

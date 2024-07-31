@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HtmlUtil;
@@ -131,21 +132,37 @@ public class SiteNavigationMenuDisplayContext {
 		return _displayStyle;
 	}
 
-	public long getDisplayStyleGroupId() {
-		if (_displayStyleGroupId != 0) {
-			return _displayStyleGroupId;
+	public String getDisplayStyleGroupKey() {
+		if (Validator.isNotNull(_displayStyleGroupKey)) {
+			return _displayStyleGroupKey;
 		}
 
-		_displayStyleGroupId = ParamUtil.getLong(
+		String displayStyleGroupKey =
+			_siteNavigationMenuPortletInstanceConfiguration.
+				displayStyleGroupKey();
+
+		if (Validator.isNotNull(displayStyleGroupKey)) {
+			_displayStyleGroupKey = displayStyleGroupKey;
+
+			return _displayStyleGroupKey;
+		}
+
+		long displayStyleGroupId = ParamUtil.getLong(
 			_httpServletRequest, "displayStyleGroupId",
 			_siteNavigationMenuPortletInstanceConfiguration.
 				displayStyleGroupId());
 
-		if (_displayStyleGroupId <= 0) {
-			_displayStyleGroupId = _themeDisplay.getSiteGroupId();
+		if (displayStyleGroupId <= 0) {
+			displayStyleGroupId = _themeDisplay.getSiteGroupId();
 		}
 
-		return _displayStyleGroupId;
+		Group group = GroupLocalServiceUtil.fetchGroup(displayStyleGroupId);
+
+		if (group != null) {
+			_displayStyleGroupKey = group.getGroupKey();
+		}
+
+		return _displayStyleGroupKey;
 	}
 
 	public String getExpandedLevels() {
@@ -571,7 +588,7 @@ public class SiteNavigationMenuDisplayContext {
 	private String _ddmTemplateKey;
 	private int _displayDepth = -1;
 	private String _displayStyle;
-	private long _displayStyleGroupId;
+	private String _displayStyleGroupKey;
 	private String _expandedLevels;
 	private final HttpServletRequest _httpServletRequest;
 	private NavigationMenuMode _navigationMenuMode;

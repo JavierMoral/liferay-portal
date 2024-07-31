@@ -17,9 +17,9 @@
 		<c:choose>
 			<c:when test="<%= siteNavigationMenu != null %>">
 				<liferay-site-navigation:navigation-menu
-					ddmTemplateGroupId="<%= siteNavigationMenuDisplayContext.getDisplayStyleGroupId() %>"
 					ddmTemplateKey="<%= siteNavigationMenuDisplayContext.getDDMTemplateKey() %>"
 					displayDepth="<%= siteNavigationMenuDisplayContext.getDisplayDepth() %>"
+					displayStyleGroupKey="<%= siteNavigationMenuDisplayContext.getDisplayStyleGroupKey() %>"
 					expandedLevels="<%= siteNavigationMenuDisplayContext.getExpandedLevels() %>"
 					preview="<%= siteNavigationMenuDisplayContext.isPreview() %>"
 					rootItemId="<%= siteNavigationMenuDisplayContext.getRootMenuItemId() %>"
@@ -50,9 +50,9 @@
 		</c:if>
 
 		<liferay-site-navigation:navigation-menu
-			ddmTemplateGroupId="<%= siteNavigationMenuDisplayContext.getDisplayStyleGroupId() %>"
 			ddmTemplateKey="<%= siteNavigationMenuDisplayContext.getDDMTemplateKey() %>"
 			displayDepth="<%= siteNavigationMenuDisplayContext.getDisplayDepth() %>"
+			displayStyleGroupKey="<%= siteNavigationMenuDisplayContext.getDisplayStyleGroupKey() %>"
 			expandedLevels="<%= siteNavigationMenuDisplayContext.getExpandedLevels() %>"
 			navigationMenuMode="<%= siteNavigationMenuDisplayContext.getNavigationMenuMode() %>"
 			preview="<%= siteNavigationMenuDisplayContext.isPreview() %>"
@@ -71,9 +71,9 @@
 		<c:choose>
 			<c:when test="<%= siteNavigationMenu != null %>">
 				<liferay-site-navigation:navigation-menu
-					ddmTemplateGroupId="<%= siteNavigationMenuDisplayContext.getDisplayStyleGroupId() %>"
 					ddmTemplateKey="<%= siteNavigationMenuDisplayContext.getDDMTemplateKey() %>"
 					displayDepth="<%= siteNavigationMenuDisplayContext.getDisplayDepth() %>"
+					displayStyleGroupKey="<%= siteNavigationMenuDisplayContext.getDisplayStyleGroupKey() %>"
 					expandedLevels="<%= siteNavigationMenuDisplayContext.getExpandedLevels() %>"
 					preview="<%= siteNavigationMenuDisplayContext.isPreview() %>"
 					rootItemId="<%= siteNavigationMenuDisplayContext.getRootMenuItemId() %>"

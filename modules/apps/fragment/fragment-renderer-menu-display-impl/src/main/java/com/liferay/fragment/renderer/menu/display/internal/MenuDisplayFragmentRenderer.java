@@ -143,10 +143,14 @@ public class MenuDisplayFragmentRenderer implements FragmentRenderer {
 				configuration, editableValues,
 				LocaleUtil.getMostRelevantLocale(), "displayStyle"));
 
-		DDMTemplate ddmTemplate = _getTagDDMTemplate(companyId, displayStyle);
+		Group companyGroup = _groupLocalService.getCompanyGroup(companyId);
+
+		navigationMenuTag.setDisplayStyleGroupKey(companyGroup.getGroupKey());
+
+		DDMTemplate ddmTemplate = _getTagDDMTemplate(
+			companyGroup.getGroupId(), displayStyle);
 
 		if (ddmTemplate != null) {
-			navigationMenuTag.setDdmTemplateGroupId(ddmTemplate.getGroupId());
 			navigationMenuTag.setDdmTemplateKey(ddmTemplate.getTemplateKey());
 		}
 
@@ -180,11 +184,7 @@ public class MenuDisplayFragmentRenderer implements FragmentRenderer {
 		return navigationMenuTag;
 	}
 
-	private DDMTemplate _getTagDDMTemplate(long companyId, String displayStyle)
-		throws PortalException {
-
-		Group companyGroup = _groupLocalService.getCompanyGroup(companyId);
-
+	private DDMTemplate _getTagDDMTemplate(long groupId, String displayStyle) {
 		String ddmTemplateKey = "NAVBAR-BLANK-FTL";
 
 		if (Objects.equals(displayStyle, "stacked")) {
@@ -192,8 +192,7 @@ public class MenuDisplayFragmentRenderer implements FragmentRenderer {
 		}
 
 		return _ddmTemplateLocalService.fetchTemplate(
-			companyGroup.getGroupId(), _portal.getClassNameId(NavItem.class),
-			ddmTemplateKey);
+			groupId, _portal.getClassNameId(NavItem.class), ddmTemplateKey);
 	}
 
 	private void _writeCss(
