@@ -73,12 +73,24 @@ SiteNavigationMenuConfigurationDisplayContext siteNavigationMenuConfigurationDis
 					<aui:button disabled="<%= !siteNavigationMenuDisplayContext.isSiteNavigationMenuSelected() %>" name="chooseSiteNavigationMenu" value="select" />
 
 					<div class="c-mt-4 display-template">
-						<liferay-template:template-selector
-							className="<%= NavItem.class.getName() %>"
-							displayStyle="<%= siteNavigationMenuDisplayContext.getDisplayStyle() %>"
-							displayStyleGroupId="<%= siteNavigationMenuDisplayContext.getDisplayStyleGroupId() %>"
-							refreshURL="<%= configurationRenderURL %>"
-						/>
+						<c:choose>
+							<c:when test='<%= FeatureFlagManagerUtil.isEnabled(themeDisplay.getCompanyId(), "LPD-23048") %>'>
+								<liferay-template:template-selector
+									className="<%= NavItem.class.getName() %>"
+									displayStyle="<%= siteNavigationMenuDisplayContext.getDisplayStyle() %>"
+									displayStyleGroupKey="<%= siteNavigationMenuDisplayContext.getDisplayStyleGroupKey() %>"
+									refreshURL="<%= configurationRenderURL %>"
+								/>
+							</c:when>
+							<c:otherwise>
+								<liferay-template:template-selector
+									className="<%= NavItem.class.getName() %>"
+									displayStyle="<%= siteNavigationMenuDisplayContext.getDisplayStyle() %>"
+									displayStyleGroupId="<%= siteNavigationMenuDisplayContext.getDisplayStyleGroupId() %>"
+									refreshURL="<%= configurationRenderURL %>"
+								/>
+							</c:otherwise>
+						</c:choose>
 					</div>
 				</liferay-frontend:fieldset>
 

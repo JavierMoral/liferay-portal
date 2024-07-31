@@ -13,11 +13,13 @@ import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HtmlUtil;
@@ -136,16 +138,58 @@ public class SiteNavigationMenuDisplayContext {
 			return _displayStyleGroupId;
 		}
 
-		_displayStyleGroupId = ParamUtil.getLong(
-			_httpServletRequest, "displayStyleGroupId",
-			_siteNavigationMenuPortletInstanceConfiguration.
-				displayStyleGroupId());
+		if (!FeatureFlagManagerUtil.isEnabled("LPD-23048")) {
+			String displayStyleGroupKey = getDisplayStyleGroupKey();
 
-		if (_displayStyleGroupId <= 0) {
-			_displayStyleGroupId = _themeDisplay.getSiteGroupId();
+			if (Validator.isNotNull(displayStyleGroupKey)) {
+				Group group = GroupLocalServiceUtil.fetchGroup(
+					_themeDisplay.getCompanyId(), displayStyleGroupKey);
+
+				if (group != null) {
+					_displayStyleGroupId = group.getGroupId();
+				}
+			}
+
+			_displayStyleGroupId = _themeDisplay.getScopeGroupId();
+		}
+		else {
+			_displayStyleGroupId = ParamUtil.getLong(
+				_httpServletRequest, "displayStyleGroupId",
+				_siteNavigationMenuPortletInstanceConfiguration.
+					displayStyleGroupId());
+
+			if (_displayStyleGroupId <= 0) {
+				_displayStyleGroupId = _themeDisplay.getSiteGroupId();
+			}
 		}
 
 		return _displayStyleGroupId;
+	}
+
+	public String getDisplayStyleGroupKey() {
+		if (Validator.isNotNull(_displayStyleGroupKey)) {
+			return _displayStyleGroupKey;
+		}
+
+		String displayStyleGroupKey =
+			_siteNavigationMenuPortletInstanceConfiguration.
+				displayStyleGroupKey();
+
+		if (Validator.isNotNull(displayStyleGroupKey)) {
+			_displayStyleGroupKey = displayStyleGroupKey;
+
+			return _displayStyleGroupKey;
+		}
+
+		long displayStyleGroupId = _themeDisplay.getScopeGroupId();
+
+		Group group = GroupLocalServiceUtil.fetchGroup(displayStyleGroupId);
+
+		if (group != null) {
+			_displayStyleGroupKey = group.getGroupKey();
+		}
+
+		return _displayStyleGroupKey;
 	}
 
 	public String getExpandedLevels() {
@@ -572,6 +616,7 @@ public class SiteNavigationMenuDisplayContext {
 	private int _displayDepth = -1;
 	private String _displayStyle;
 	private long _displayStyleGroupId;
+	private String _displayStyleGroupKey;
 	private String _expandedLevels;
 	private final HttpServletRequest _httpServletRequest;
 	private NavigationMenuMode _navigationMenuMode;
