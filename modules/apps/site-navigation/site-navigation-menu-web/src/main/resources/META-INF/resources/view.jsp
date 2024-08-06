@@ -11,7 +11,7 @@
 	<c:when test="<%= siteNavigationMenuDisplayContext.getSelectSiteNavigationMenuId() > 0 %>">
 
 		<%
-		SiteNavigationMenu siteNavigationMenu = SiteNavigationMenuLocalServiceUtil.fetchSiteNavigationMenu(siteNavigationMenuDisplayContext.getSelectSiteNavigationMenuId());
+		SiteNavigationMenu siteNavigationMenu = siteNavigationMenuDisplayContext.getSiteNavigationMenu();
 		%>
 
 		<c:choose>
@@ -25,7 +25,7 @@
 					rootItemId="<%= siteNavigationMenuDisplayContext.getRootMenuItemId() %>"
 					rootItemLevel="<%= siteNavigationMenuDisplayContext.getRootMenuItemLevel() %>"
 					rootItemType="<%= siteNavigationMenuDisplayContext.getRootMenuItemType() %>"
-					siteNavigationMenuId="<%= siteNavigationMenu.getSiteNavigationMenuId() %>"
+					siteNavigationMenuExternalReferenceCode="<%= siteNavigationMenu.getExternalReferenceCode() %>"
 				/>
 			</c:when>
 			<c:otherwise>
@@ -59,7 +59,7 @@
 			rootItemId="<%= siteNavigationMenuDisplayContext.getRootMenuItemId() %>"
 			rootItemLevel="<%= siteNavigationMenuDisplayContext.getRootMenuItemLevel() %>"
 			rootItemType="<%= siteNavigationMenuDisplayContext.getRootMenuItemType() %>"
-			siteNavigationMenuId="<%= 0 %>"
+			siteNavigationMenuExternalReferenceCode="<%= null %>"
 		/>
 	</c:when>
 	<c:when test="<%= (siteNavigationMenuDisplayContext.getSelectSiteNavigationMenuType() == SiteNavigationConstants.TYPE_PRIMARY) || (siteNavigationMenuDisplayContext.getSelectSiteNavigationMenuType() == SiteNavigationConstants.TYPE_SECONDARY) || (siteNavigationMenuDisplayContext.getSelectSiteNavigationMenuType() == SiteNavigationConstants.TYPE_SOCIAL) %>">
@@ -79,7 +79,7 @@
 					rootItemId="<%= siteNavigationMenuDisplayContext.getRootMenuItemId() %>"
 					rootItemLevel="<%= siteNavigationMenuDisplayContext.getRootMenuItemLevel() %>"
 					rootItemType="<%= siteNavigationMenuDisplayContext.getRootMenuItemType() %>"
-					siteNavigationMenuId="<%= siteNavigationMenu.getSiteNavigationMenuId() %>"
+					siteNavigationMenuExternalReferenceCode="<%= siteNavigationMenu.getExternalReferenceCode() %>"
 				/>
 			</c:when>
 			<c:otherwise>
