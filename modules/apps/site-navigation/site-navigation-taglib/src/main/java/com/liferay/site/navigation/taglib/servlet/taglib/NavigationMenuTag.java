@@ -17,6 +17,8 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.display.template.PortletDisplayTemplate;
 import com.liferay.portlet.display.template.util.PortletDisplayTemplateUtil;
 import com.liferay.site.navigation.model.SiteNavigationMenu;
+import com.liferay.site.navigation.model.SiteNavigationMenuItem;
+import com.liferay.site.navigation.service.SiteNavigationMenuItemLocalServiceUtil;
 import com.liferay.site.navigation.service.SiteNavigationMenuLocalServiceUtil;
 import com.liferay.site.navigation.taglib.internal.servlet.ServletContextUtil;
 import com.liferay.site.navigation.taglib.servlet.taglib.util.NavItemUtil;
@@ -55,8 +57,33 @@ public class NavigationMenuTag extends IncludeTag {
 		return _navigationMenuMode;
 	}
 
+	public String getRootItemExternalReferenceCode() {
+		return _rootItemExternalReferenceCode;
+	}
+
 	public String getRootItemId() {
-		return _rootItemId;
+		if (Validator.isNull(_rootItemExternalReferenceCode)) {
+			return _rootItemId;
+		}
+
+		HttpServletRequest httpServletRequest = getRequest();
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		SiteNavigationMenuItem siteNavigationMenuItem =
+			SiteNavigationMenuItemLocalServiceUtil.
+				fetchSiteNavigationMenuItemByExternalReferenceCode(
+					_rootItemExternalReferenceCode,
+					themeDisplay.getScopeGroupId());
+
+		if (siteNavigationMenuItem == null) {
+			return null;
+		}
+
+		return String.valueOf(
+			siteNavigationMenuItem.getSiteNavigationMenuItemId());
 	}
 
 	public int getRootItemLevel() {
@@ -118,7 +145,7 @@ public class NavigationMenuTag extends IncludeTag {
 		Map<String, Object> navigationMenuContext =
 			NavItemUtil.getNavigationMenuContext(
 				_displayDepth, _expandedLevels, httpServletRequest,
-				_navigationMenuMode, _preview, _rootItemId, _rootItemLevel,
+				_navigationMenuMode, _preview, getRootItemId(), _rootItemLevel,
 				_rootItemType, getSiteNavigationMenuId());
 
 		jspWriter.write(
@@ -163,6 +190,12 @@ public class NavigationMenuTag extends IncludeTag {
 		_preview = preview;
 	}
 
+	public void setRootItemExternalReferenceCode(
+		String rootItemExternalReferenceCode) {
+
+		_rootItemExternalReferenceCode = rootItemExternalReferenceCode;
+	}
+
 	public void setRootItemId(String rootItemId) {
 		_rootItemId = rootItemId;
 	}
@@ -196,6 +229,7 @@ public class NavigationMenuTag extends IncludeTag {
 		_expandedLevels = "auto";
 		_navigationMenuMode = NavigationMenuMode.DEFAULT;
 		_preview = false;
+		_rootItemExternalReferenceCode = null;
 		_rootItemId = null;
 		_rootItemLevel = 1;
 		_rootItemType = "absolute";
@@ -250,6 +284,7 @@ public class NavigationMenuTag extends IncludeTag {
 	private String _expandedLevels = "auto";
 	private NavigationMenuMode _navigationMenuMode = NavigationMenuMode.DEFAULT;
 	private boolean _preview;
+	private String _rootItemExternalReferenceCode;
 	private String _rootItemId;
 	private int _rootItemLevel = 1;
 	private String _rootItemType = "absolute";

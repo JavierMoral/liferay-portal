@@ -176,8 +176,8 @@
 			<type>boolean</type>
 		</attribute>
 		<attribute>
-			<description>The ID of the root menu item to be used in the navigation menu.</description>
-			<name>rootItemId</name>
+			<description>The external reference code of the root menu item to be used in the navigation menu.</description>
+			<name>rootItemExternalReferenceCode</name>
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
