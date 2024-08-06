@@ -16,6 +16,8 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.display.template.PortletDisplayTemplate;
 import com.liferay.portlet.display.template.util.PortletDisplayTemplateUtil;
+import com.liferay.site.navigation.model.SiteNavigationMenu;
+import com.liferay.site.navigation.service.SiteNavigationMenuLocalServiceUtil;
 import com.liferay.site.navigation.taglib.internal.servlet.ServletContextUtil;
 import com.liferay.site.navigation.taglib.servlet.taglib.util.NavItemUtil;
 import com.liferay.taglib.util.IncludeTag;
@@ -65,8 +67,32 @@ public class NavigationMenuTag extends IncludeTag {
 		return _rootItemType;
 	}
 
+	public String getSiteNavigationMenuExternalReferenceCode() {
+		return _siteNavigationMenuExternalReferenceCode;
+	}
+
 	public long getSiteNavigationMenuId() {
-		return _siteNavigationMenuId;
+		if (Validator.isNull(_siteNavigationMenuExternalReferenceCode)) {
+			return _siteNavigationMenuId;
+		}
+
+		HttpServletRequest httpServletRequest = getRequest();
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		SiteNavigationMenu siteNavigationMenu =
+			SiteNavigationMenuLocalServiceUtil.
+				fetchSiteNavigationMenuByExternalReferenceCode(
+					_siteNavigationMenuExternalReferenceCode,
+					themeDisplay.getScopeGroupId());
+
+		if (siteNavigationMenu == null) {
+			return 0;
+		}
+
+		return siteNavigationMenu.getSiteNavigationMenuId();
 	}
 
 	public boolean isPreview() {
@@ -93,7 +119,7 @@ public class NavigationMenuTag extends IncludeTag {
 			NavItemUtil.getNavigationMenuContext(
 				_displayDepth, _expandedLevels, httpServletRequest,
 				_navigationMenuMode, _preview, _rootItemId, _rootItemLevel,
-				_rootItemType, _siteNavigationMenuId);
+				_rootItemType, getSiteNavigationMenuId());
 
 		jspWriter.write(
 			PortletDisplayTemplateUtil.renderDDMTemplate(
@@ -149,6 +175,13 @@ public class NavigationMenuTag extends IncludeTag {
 		_rootItemType = rootItemType;
 	}
 
+	public void setSiteNavigationMenuExternalReferenceCode(
+		String siteNavigationMenuExternalReferenceCode) {
+
+		_siteNavigationMenuExternalReferenceCode =
+			siteNavigationMenuExternalReferenceCode;
+	}
+
 	public void setSiteNavigationMenuId(long siteNavigationMenuId) {
 		_siteNavigationMenuId = siteNavigationMenuId;
 	}
@@ -166,6 +199,7 @@ public class NavigationMenuTag extends IncludeTag {
 		_rootItemId = null;
 		_rootItemLevel = 1;
 		_rootItemType = "absolute";
+		_siteNavigationMenuExternalReferenceCode = null;
 		_siteNavigationMenuId = 0;
 	}
 
@@ -219,6 +253,7 @@ public class NavigationMenuTag extends IncludeTag {
 	private String _rootItemId;
 	private int _rootItemLevel = 1;
 	private String _rootItemType = "absolute";
+	private String _siteNavigationMenuExternalReferenceCode;
 	private long _siteNavigationMenuId;
 
 }

@@ -194,11 +194,10 @@
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
-			<description>The ID of the Site Navigation Menu to render.</description>
-			<name>siteNavigationMenuId</name>
+			<description>The external reference code of the Site Navigation Menu to render.</description>
+			<name>siteNavigationMenuExternalReferenceCode</name>
 			<required>true</required>
 			<rtexprvalue>true</rtexprvalue>
-			<type>long</type>
 		</attribute>
 	</tag>
 </taglib>
