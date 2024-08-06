@@ -38,6 +38,10 @@ export function NavigationMenuConfiguration({
 			'rootMenuItemLevel'
 		);
 		const rootMenuItemTypeSelect = getFormElement(form, 'rootMenuItemType');
+		const siteNavigationMenuExternalReferenceCodeInput = getFormElement(
+			form,
+			'siteNavigationMenuExternalReferenceCode'
+		);
 		const siteNavigationMenuIdInput = getFormElement(
 			form,
 			'siteNavigationMenuId'
@@ -58,6 +62,7 @@ export function NavigationMenuConfiguration({
 			rootMenuItemIdInput &&
 			rootMenuItemLevelSelect &&
 			rootMenuItemTypeSelect &&
+			siteNavigationMenuExternalReferenceCodeInput &&
 			siteNavigationMenuIdInput &&
 			siteNavigationMenuTypeInput
 		) {
@@ -67,7 +72,13 @@ export function NavigationMenuConfiguration({
 			data.rootMenuItemLevel = rootMenuItemLevelSelect.value;
 			data.rootMenuItemType = rootMenuItemTypeSelect.value;
 			data.rootMenuItemId = rootMenuItemIdInput.value;
-			data.siteNavigationMenuId = siteNavigationMenuIdInput.value;
+			if (Liferay.FeatureFlags['LPD-23048']) {
+				data.siteNavigationMenuExternalReferenceCode =
+					siteNavigationMenuExternalReferenceCodeInput.value;
+			}
+			else {
+				data.siteNavigationMenuId = siteNavigationMenuIdInput.value;
+			}
 			data.siteNavigationMenuType = siteNavigationMenuTypeInput.value;
 		}
 
@@ -93,6 +104,10 @@ export function NavigationMenuConfiguration({
 	const selectSiteNavigationMenuTypeSelect = document.getElementById(
 		`${namespace}selectSiteNavigationMenuType`
 	);
+	const siteNavigationMenuExternalReferenceCodeInput =
+		document.getElementById(
+			`${namespace}siteNavigationMenuExternalReferenceCode`
+		);
 	const siteNavigationMenuIdInput = document.getElementById(
 		`${namespace}siteNavigationMenuId`
 	);
@@ -102,6 +117,7 @@ export function NavigationMenuConfiguration({
 		rootMenuItemIdInput &&
 		rootMenuItemNameSpan &&
 		selectSiteNavigationMenuTypeSelect &&
+		siteNavigationMenuExternalReferenceCodeInput &&
 		siteNavigationMenuIdInput
 	) {
 		chooseRootMenuItemButton.addEventListener('click', (event) => {
@@ -113,10 +129,19 @@ export function NavigationMenuConfiguration({
 				`${itemSelectorNamespace}siteNavigationMenuType=${selectSiteNavigationMenuTypeSelect.value}`,
 				uri
 			);
-			uri = addParams(
-				`${itemSelectorNamespace}siteNavigationMenuId=${siteNavigationMenuIdInput.value}`,
-				uri
-			);
+
+			if (Liferay.FeatureFlags['LPD-23048']) {
+				uri = addParams(
+					`${itemSelectorNamespace}siteNavigationMenuExternalReferenceCode=${siteNavigationMenuExternalReferenceCodeInput.value}`,
+					uri
+				);
+			}
+			else {
+				uri = addParams(
+					`${itemSelectorNamespace}siteNavigationMenuId=${siteNavigationMenuIdInput.value}`,
+					uri
+				);
+			}
 
 			openSelectionModal({
 				height: '70vh',
@@ -153,6 +178,7 @@ export function NavigationMenuConfiguration({
 			removeSiteNavigationMenu &&
 			rootMenuItemIdInput &&
 			rootMenuItemNameSpan &&
+			siteNavigationMenuExternalReferenceCodeInput &&
 			siteNavigationMenuIdInput
 		) {
 			chooseSiteNavigationMenuButton.addEventListener('click', () => {
@@ -165,7 +191,13 @@ export function NavigationMenuConfiguration({
 							navigationMenuName.innerText = itemValue.name;
 							rootMenuItemIdInput.value = '0';
 							rootMenuItemNameSpan.innerText = itemValue.name;
-							siteNavigationMenuIdInput.value = itemValue.id;
+							if (Liferay.FeatureFlags['LPD-23048']) {
+								siteNavigationMenuExternalReferenceCodeInput.value =
+									itemValue.externalReferenceCode;
+							}
+							else {
+								siteNavigationMenuIdInput.value = itemValue.id;
+							}
 
 							removeSiteNavigationMenu.classList.toggle('hide');
 
@@ -189,12 +221,14 @@ export function NavigationMenuConfiguration({
 			removeSiteNavigationMenuButton &&
 			rootMenuItemIdInput &&
 			rootMenuItemNameSpan &&
+			siteNavigationMenuExternalReferenceCodeInput &&
 			siteNavigationMenuIdInput
 		) {
 			removeSiteNavigationMenuButton.addEventListener('click', () => {
 				navigationMenuName.innerText = '';
 				rootMenuItemIdInput.value = '0';
 				rootMenuItemNameSpan.innerText = '';
+				siteNavigationMenuExternalReferenceCodeInput.value = '';
 				siteNavigationMenuIdInput.value = '0';
 
 				removeSiteNavigationMenu.classList.toggle('hide');
@@ -255,6 +289,7 @@ export function NavigationMenuConfiguration({
 			chooseSiteNavigationMenu &&
 			navigationMenuName &&
 			removeSiteNavigationMenu &&
+			siteNavigationMenuExternalReferenceCodeInput &&
 			siteNavigationMenuIdInput &&
 			siteNavigationMenuType
 		) {
@@ -276,6 +311,7 @@ export function NavigationMenuConfiguration({
 					);
 
 					navigationMenuName.innerText = '';
+					siteNavigationMenuExternalReferenceCodeInput.value = '';
 					siteNavigationMenuIdInput.value = 0;
 					siteNavigationMenuType.value = -1;
 

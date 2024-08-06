@@ -34,6 +34,7 @@ SiteNavigationMenuConfigurationDisplayContext siteNavigationMenuConfigurationDis
 					cssClass="c-p-3"
 					label="navigation-menu"
 				>
+					<aui:input id="siteNavigationMenuExternalReferenceCode" name="preferences--siteNavigationMenuExternalReferenceCode--" type="hidden" value="<%= siteNavigationMenuDisplayContext.getSiteNavigationMenuExternalReferenceCode() %>" />
 					<aui:input id="siteNavigationMenuId" name="preferences--siteNavigationMenuId--" type="hidden" value="<%= siteNavigationMenuDisplayContext.getSiteNavigationMenuId() %>" />
 					<aui:input id="siteNavigationMenuType" name="preferences--siteNavigationMenuType--" type="hidden" value="<%= siteNavigationMenuDisplayContext.getSiteNavigationMenuType() %>" />
 
