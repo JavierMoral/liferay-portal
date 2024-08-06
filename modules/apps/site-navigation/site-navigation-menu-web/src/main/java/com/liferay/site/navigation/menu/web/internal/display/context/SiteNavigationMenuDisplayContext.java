@@ -300,34 +300,26 @@ public class SiteNavigationMenuDisplayContext {
 	public long getSelectSiteNavigationMenuId() {
 		int siteNavigationMenuType = getSiteNavigationMenuType();
 
-		long siteNavigationMenuId = getSiteNavigationMenuId();
+		SiteNavigationMenu siteNavigationMenu = getSiteNavigationMenu();
 
-		if ((siteNavigationMenuType == -1) && (siteNavigationMenuId <= 0)) {
-			SiteNavigationMenu siteNavigationMenu =
+		if ((siteNavigationMenuType == -1) && (siteNavigationMenu == null)) {
+			siteNavigationMenu =
 				SiteNavigationMenuLocalServiceUtil.fetchSiteNavigationMenu(
 					_themeDisplay.getScopeGroupId(),
 					_getDefaultSelectSiteNavigationMenuType());
-
-			if (siteNavigationMenu != null) {
-				return siteNavigationMenu.getSiteNavigationMenuId();
-			}
-
-			return 0;
 		}
 
 		if (siteNavigationMenuType > 0) {
-			SiteNavigationMenu siteNavigationMenu =
+			siteNavigationMenu =
 				SiteNavigationMenuLocalServiceUtil.fetchSiteNavigationMenu(
 					_themeDisplay.getScopeGroupId(), siteNavigationMenuType);
+		}
 
-			if (siteNavigationMenu != null) {
-				return siteNavigationMenu.getSiteNavigationMenuId();
-			}
-
+		if (siteNavigationMenu == null) {
 			return 0;
 		}
 
-		return siteNavigationMenuId;
+		return siteNavigationMenu.getSiteNavigationMenuId();
 	}
 
 	public int getSelectSiteNavigationMenuType() {
@@ -376,9 +368,18 @@ public class SiteNavigationMenuDisplayContext {
 			return _siteNavigationMenu;
 		}
 
-		_siteNavigationMenu =
-			SiteNavigationMenuLocalServiceUtil.fetchSiteNavigationMenu(
-				getSiteNavigationMenuId());
+		if (FeatureFlagManagerUtil.isEnabled("LPD-23048")) {
+			_siteNavigationMenu =
+				SiteNavigationMenuLocalServiceUtil.
+					fetchSiteNavigationMenuByExternalReferenceCode(
+						getSiteNavigationMenuExternalReferenceCode(),
+						_themeDisplay.getScopeGroupId());
+		}
+		else {
+			_siteNavigationMenu =
+				SiteNavigationMenuLocalServiceUtil.fetchSiteNavigationMenu(
+					getSiteNavigationMenuId());
+		}
 
 		return _siteNavigationMenu;
 	}
@@ -389,7 +390,44 @@ public class SiteNavigationMenuDisplayContext {
 		return portletDisplay.getNamespace() + "selectSiteNavigationMenu";
 	}
 
+	public String getSiteNavigationMenuExternalReferenceCode() {
+		if (!FeatureFlagManagerUtil.isEnabled("LPD-23048")) {
+			return null;
+		}
+
+		if (_siteNavigationMenuExternalReferenceCode != null) {
+			return _siteNavigationMenuExternalReferenceCode;
+		}
+
+		String siteNavigationMenuExternalReferenceCode = ParamUtil.getString(
+			_httpServletRequest, "siteNavigationMenuExternalReferenceCode",
+			_siteNavigationMenuPortletInstanceConfiguration.
+				siteNavigationMenuExternalReferenceCode());
+
+		if (Validator.isNotNull(siteNavigationMenuExternalReferenceCode)) {
+			_siteNavigationMenuExternalReferenceCode =
+				siteNavigationMenuExternalReferenceCode;
+
+			return _siteNavigationMenuExternalReferenceCode;
+		}
+
+		SiteNavigationMenu siteNavigationMenu =
+			SiteNavigationMenuLocalServiceUtil.fetchSiteNavigationMenuByName(
+				_themeDisplay.getScopeGroupId(), _getSiteNavigationMenuName());
+
+		if (siteNavigationMenu != null) {
+			_siteNavigationMenuExternalReferenceCode =
+				siteNavigationMenu.getExternalReferenceCode();
+		}
+
+		return _siteNavigationMenuExternalReferenceCode;
+	}
+
 	public long getSiteNavigationMenuId() {
+		if (FeatureFlagManagerUtil.isEnabled("LPD-23048")) {
+			return 0;
+		}
+
 		if (_siteNavigationMenuId != null) {
 			return _siteNavigationMenuId;
 		}
@@ -504,9 +542,6 @@ public class SiteNavigationMenuDisplayContext {
 	}
 
 	public boolean isSiteNavigationMenuSelected() {
-		long siteNavigationMenuId =
-			_siteNavigationMenuPortletInstanceConfiguration.
-				siteNavigationMenuId();
 		String siteNavigationMenuName =
 			_siteNavigationMenuPortletInstanceConfiguration.
 				siteNavigationMenuName();
@@ -514,11 +549,29 @@ public class SiteNavigationMenuDisplayContext {
 			_siteNavigationMenuPortletInstanceConfiguration.
 				siteNavigationMenuType();
 
-		if (((siteNavigationMenuId > 0) ||
-			 Validator.isNotNull(siteNavigationMenuName)) &&
-			(siteNavigationMenuType == -1)) {
+		if (FeatureFlagManagerUtil.isEnabled("LPD-23048")) {
+			String siteNavigationMenuExternalReferenceCode =
+				_siteNavigationMenuPortletInstanceConfiguration.
+					siteNavigationMenuExternalReferenceCode();
 
-			return true;
+			if ((Validator.isNotNull(siteNavigationMenuExternalReferenceCode) ||
+				 Validator.isNotNull(siteNavigationMenuName)) &&
+				(siteNavigationMenuType == -1)) {
+
+				return true;
+			}
+		}
+		else {
+			long siteNavigationMenuId =
+				_siteNavigationMenuPortletInstanceConfiguration.
+					siteNavigationMenuId();
+
+			if (((siteNavigationMenuId > 0) ||
+				 Validator.isNotNull(siteNavigationMenuName)) &&
+				(siteNavigationMenuType == -1)) {
+
+				return true;
+			}
 		}
 
 		return false;
@@ -626,6 +679,7 @@ public class SiteNavigationMenuDisplayContext {
 	private Integer _rootMenuItemLevel;
 	private String _rootMenuItemType;
 	private SiteNavigationMenu _siteNavigationMenu;
+	private String _siteNavigationMenuExternalReferenceCode;
 	private Long _siteNavigationMenuId;
 	private String _siteNavigationMenuName;
 	private final SiteNavigationMenuPortletInstanceConfiguration
