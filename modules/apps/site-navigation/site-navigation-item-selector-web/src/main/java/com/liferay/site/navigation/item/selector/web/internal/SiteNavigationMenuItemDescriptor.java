@@ -55,6 +55,9 @@ public class SiteNavigationMenuItemDescriptor
 	@Override
 	public String getPayload() {
 		return JSONUtil.put(
+			"externalReferenceCode",
+			_siteNavigationMenu.getExternalReferenceCode()
+		).put(
 			"id", _siteNavigationMenu.getSiteNavigationMenuId()
 		).put(
 			"name", _getName()

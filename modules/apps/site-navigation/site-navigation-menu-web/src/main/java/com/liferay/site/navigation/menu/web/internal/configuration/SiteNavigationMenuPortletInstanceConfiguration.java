@@ -23,8 +23,10 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
 )
 public interface SiteNavigationMenuPortletInstanceConfiguration {
 
-	@Meta.AD(name = "site-navigation-menu-id", required = false)
-	public long siteNavigationMenuId();
+	@Meta.AD(
+		name = "site-navigation-menu-external-reference-code", required = false
+	)
+	public String siteNavigationMenuExternalReferenceCode();
 
 	@Meta.AD(name = "site-navigation-menu-name", required = false)
 	public String siteNavigationMenuName();
