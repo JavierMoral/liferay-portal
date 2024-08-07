@@ -32,6 +32,10 @@ export function NavigationMenuConfiguration({
 		const displayDepthSelect = getFormElement(form, 'displayDepth');
 		const displayStyleValue = option || displayStyle.value;
 		const expandedLevelsSelect = getFormElement(form, 'expandedLevels');
+		const rootMenuItemExternalReferenceCodeInput = getFormElement(
+			form,
+			'rootMenuItemExternalReferenceCode'
+		);
 		const rootMenuItemIdInput = getFormElement(form, 'rootMenuItemId');
 		const rootMenuItemLevelSelect = getFormElement(
 			form,
@@ -59,6 +63,7 @@ export function NavigationMenuConfiguration({
 			displayDepthSelect &&
 			displayStyle &&
 			expandedLevelsSelect &&
+			rootMenuItemExternalReferenceCodeInput &&
 			rootMenuItemIdInput &&
 			rootMenuItemLevelSelect &&
 			rootMenuItemTypeSelect &&
@@ -71,7 +76,13 @@ export function NavigationMenuConfiguration({
 			data.expandedLevels = expandedLevelsSelect.value;
 			data.rootMenuItemLevel = rootMenuItemLevelSelect.value;
 			data.rootMenuItemType = rootMenuItemTypeSelect.value;
-			data.rootMenuItemId = rootMenuItemIdInput.value;
+			if (Liferay.FeatureFlags['LPD-23048']) {
+				data.rootMenuItemExternalReferenceCode =
+					rootMenuItemExternalReferenceCodeInput.value;
+			}
+			else {
+				data.rootMenuItemId = rootMenuItemIdInput.value;
+			}
 			if (Liferay.FeatureFlags['LPD-23048']) {
 				data.siteNavigationMenuExternalReferenceCode =
 					siteNavigationMenuExternalReferenceCodeInput.value;
@@ -95,6 +106,9 @@ export function NavigationMenuConfiguration({
 	const chooseRootMenuItemButton = document.getElementById(
 		`${namespace}chooseRootMenuItem`
 	);
+	const rootMenuItemExternalReferenceCodeInput = document.getElementById(
+		`${namespace}rootMenuItemExternalReferenceCode`
+	);
 	const rootMenuItemIdInput = document.getElementById(
 		`${namespace}rootMenuItemId`
 	);
@@ -114,6 +128,7 @@ export function NavigationMenuConfiguration({
 
 	if (
 		chooseRootMenuItemButton &&
+		rootMenuItemExternalReferenceCodeInput &&
 		rootMenuItemIdInput &&
 		rootMenuItemNameSpan &&
 		selectSiteNavigationMenuTypeSelect &&
@@ -147,8 +162,14 @@ export function NavigationMenuConfiguration({
 				height: '70vh',
 				onSelect(selectedItem) {
 					if (selectedItem) {
-						rootMenuItemIdInput.value =
-							selectedItem.selectSiteNavigationMenuItemId;
+						if (Liferay.FeatureFlags['LPD-23048']) {
+							rootMenuItemExternalReferenceCodeInput.value =
+								selectedItem.selectSiteNavigationMenuItemExternalReferenceCode;
+						}
+						else {
+							rootMenuItemIdInput.value =
+								selectedItem.selectSiteNavigationMenuItemId;
+						}
 						rootMenuItemNameSpan.innerText =
 							selectedItem.selectSiteNavigationMenuItemName;
 
@@ -176,6 +197,7 @@ export function NavigationMenuConfiguration({
 			chooseSiteNavigationMenuButton &&
 			navigationMenuName &&
 			removeSiteNavigationMenu &&
+			rootMenuItemExternalReferenceCodeInput &&
 			rootMenuItemIdInput &&
 			rootMenuItemNameSpan &&
 			siteNavigationMenuExternalReferenceCodeInput &&
@@ -189,6 +211,7 @@ export function NavigationMenuConfiguration({
 
 						if (itemValue) {
 							navigationMenuName.innerText = itemValue.name;
+							rootMenuItemExternalReferenceCodeInput.value = '';
 							rootMenuItemIdInput.value = '0';
 							rootMenuItemNameSpan.innerText = itemValue.name;
 							if (Liferay.FeatureFlags['LPD-23048']) {
@@ -219,6 +242,7 @@ export function NavigationMenuConfiguration({
 			navigationMenuName &&
 			removeSiteNavigationMenu &&
 			removeSiteNavigationMenuButton &&
+			rootMenuItemExternalReferenceCodeInput &&
 			rootMenuItemIdInput &&
 			rootMenuItemNameSpan &&
 			siteNavigationMenuExternalReferenceCodeInput &&
@@ -226,6 +250,7 @@ export function NavigationMenuConfiguration({
 		) {
 			removeSiteNavigationMenuButton.addEventListener('click', () => {
 				navigationMenuName.innerText = '';
+				rootMenuItemExternalReferenceCodeInput.value = '';
 				rootMenuItemIdInput.value = '0';
 				rootMenuItemNameSpan.innerText = '';
 				siteNavigationMenuExternalReferenceCodeInput.value = '';
@@ -240,7 +265,7 @@ export function NavigationMenuConfiguration({
 		toggleSelectBox(
 			`${namespace}rootMenuItemType`,
 			'select',
-			`${namespace}rootMenuItemIdPanel`
+			`${namespace}rootMenuItemPanel`
 		);
 
 		toggleSelectBox(

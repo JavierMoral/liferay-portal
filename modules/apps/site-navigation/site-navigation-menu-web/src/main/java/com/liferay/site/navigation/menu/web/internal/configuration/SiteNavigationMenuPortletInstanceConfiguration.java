@@ -52,6 +52,9 @@ public interface SiteNavigationMenuPortletInstanceConfiguration {
 	@Meta.AD(deflt = "0", name = "root-menu-item-level", required = false)
 	public int rootMenuItemLevel();
 
+	@Meta.AD(name = "root-menu-item-external-reference-code", required = false)
+	public String rootMenuItemExternalReferenceCode();
+
 	@Meta.AD(name = "root-menu-item-id", required = false)
 	public String rootMenuItemId();
 

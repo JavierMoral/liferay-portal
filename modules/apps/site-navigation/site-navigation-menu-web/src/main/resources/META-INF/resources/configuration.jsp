@@ -136,13 +136,21 @@ SiteNavigationMenuConfigurationDisplayContext siteNavigationMenuConfigurationDis
 							<clay:col
 								md="10"
 							>
-								<div class="c-mb-3 <%= rootMenuItemType.equals("select") ? StringPool.BLANK : "hide" %>" id="<portlet:namespace />rootMenuItemIdPanel">
+								<div class="c-mb-3 <%= rootMenuItemType.equals("select") ? StringPool.BLANK : "hide" %>" id="<portlet:namespace />rootMenuItemPanel">
+									<aui:input id="rootMenuItemExternalReferenceCode" ignoreRequestValue="<%= true %>" name="preferences--rootMenuItemExternalReferenceCode--" type="hidden" value="<%= siteNavigationMenuDisplayContext.getRootMenuItemExternalReferenceCode() %>" />
 									<aui:input id="rootMenuItemId" ignoreRequestValue="<%= true %>" name="preferences--rootMenuItemId--" type="hidden" value="<%= siteNavigationMenuDisplayContext.getRootMenuItemId() %>" />
 
 									<%
 									String rootMenuItemName = siteNavigationMenuDisplayContext.getSiteNavigationMenuName();
 
-									SiteNavigationMenuItem siteNavigationMenuItem = SiteNavigationMenuItemLocalServiceUtil.fetchSiteNavigationMenuItem(GetterUtil.getLong(siteNavigationMenuDisplayContext.getRootMenuItemId()));
+									SiteNavigationMenuItem siteNavigationMenuItem;
+
+									if (FeatureFlagManagerUtil.isEnabled("LPD-23048")) {
+										siteNavigationMenuItem = SiteNavigationMenuItemLocalServiceUtil.fetchSiteNavigationMenuItemByExternalReferenceCode(GetterUtil.getString(siteNavigationMenuDisplayContext.getRootMenuItemExternalReferenceCode()), themeDisplay.getScopeGroupId());
+									}
+									else {
+										siteNavigationMenuItem = SiteNavigationMenuItemLocalServiceUtil.fetchSiteNavigationMenuItem(GetterUtil.getLong(siteNavigationMenuDisplayContext.getRootMenuItemId()));
+									}
 
 									if (siteNavigationMenuItem != null) {
 										SiteNavigationMenuItemTypeRegistry siteNavigationMenuItemTypeRegistry = (SiteNavigationMenuItemTypeRegistry)request.getAttribute(SiteNavigationMenuWebKeys.SITE_NAVIGATION_MENU_ITEM_TYPE_REGISTRY);
