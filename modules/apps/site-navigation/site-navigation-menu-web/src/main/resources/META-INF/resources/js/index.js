@@ -32,7 +32,10 @@ export function NavigationMenuConfiguration({
 		const displayDepthSelect = getFormElement(form, 'displayDepth');
 		const displayStyleValue = option || displayStyle.value;
 		const expandedLevelsSelect = getFormElement(form, 'expandedLevels');
-		const rootMenuItemIdInput = getFormElement(form, 'rootMenuItemId');
+		const rootMenuItemExternalReferenceCodeInput = getFormElement(
+			form,
+			'rootMenuItemExternalReferenceCode'
+		);
 		const rootMenuItemLevelSelect = getFormElement(
 			form,
 			'rootMenuItemLevel'
@@ -55,7 +58,7 @@ export function NavigationMenuConfiguration({
 			displayDepthSelect &&
 			displayStyle &&
 			expandedLevelsSelect &&
-			rootMenuItemIdInput &&
+			rootMenuItemExternalReferenceCodeInput &&
 			rootMenuItemLevelSelect &&
 			rootMenuItemTypeSelect &&
 			siteNavigationMenuExternalReferenceCodeInput &&
@@ -66,8 +69,10 @@ export function NavigationMenuConfiguration({
 			data.expandedLevels = expandedLevelsSelect.value;
 			data.rootMenuItemLevel = rootMenuItemLevelSelect.value;
 			data.rootMenuItemType = rootMenuItemTypeSelect.value;
-			data.rootMenuItemId = rootMenuItemIdInput.value;
-			data.siteNavigationMenuExternalReferenceCode = siteNavigationMenuExternalReferenceCodeInput.value;
+			data.rootMenuItemExternalReferenceCode =
+				rootMenuItemExternalReferenceCodeInput.value;
+			data.siteNavigationMenuExternalReferenceCode =
+				siteNavigationMenuExternalReferenceCodeInput.value;
 			data.siteNavigationMenuType = siteNavigationMenuTypeInput.value;
 		}
 
@@ -84,8 +89,8 @@ export function NavigationMenuConfiguration({
 	const chooseRootMenuItemButton = document.getElementById(
 		`${namespace}chooseRootMenuItem`
 	);
-	const rootMenuItemIdInput = document.getElementById(
-		`${namespace}rootMenuItemId`
+	const rootMenuItemExternalReferenceCodeInput = document.getElementById(
+		`${namespace}rootMenuItemExternalReferenceCode`
 	);
 	const rootMenuItemNameSpan = document.getElementById(
 		`${namespace}rootMenuItemName`
@@ -93,13 +98,14 @@ export function NavigationMenuConfiguration({
 	const selectSiteNavigationMenuTypeSelect = document.getElementById(
 		`${namespace}selectSiteNavigationMenuType`
 	);
-	const siteNavigationMenuExternalReferenceCodeInput = document.getElementById(
-		`${namespace}siteNavigationMenuExternalReferenceCode`
-	);
+	const siteNavigationMenuExternalReferenceCodeInput =
+		document.getElementById(
+			`${namespace}siteNavigationMenuExternalReferenceCode`
+		);
 
 	if (
 		chooseRootMenuItemButton &&
-		rootMenuItemIdInput &&
+		rootMenuItemExternalReferenceCodeInput &&
 		rootMenuItemNameSpan &&
 		selectSiteNavigationMenuTypeSelect &&
 		siteNavigationMenuExternalReferenceCodeInput
@@ -114,7 +120,7 @@ export function NavigationMenuConfiguration({
 				uri
 			);
 			uri = addParams(
-				`${itemSelectorNamespace}siteNavigationMenuId=${siteNavigationMenuIdInput.value}`,
+				`${itemSelectorNamespace}siteNavigationMenuExternalReferenceCode=${siteNavigationMenuExternalReferenceCodeInput.value}`,
 				uri
 			);
 
@@ -122,8 +128,8 @@ export function NavigationMenuConfiguration({
 				height: '70vh',
 				onSelect(selectedItem) {
 					if (selectedItem) {
-						rootMenuItemIdInput.value =
-							selectedItem.selectSiteNavigationMenuItemId;
+						rootMenuItemExternalReferenceCodeInput.value =
+							selectedItem.selectSiteNavigationMenuItemExternalReferenceCode;
 						rootMenuItemNameSpan.innerText =
 							selectedItem.selectSiteNavigationMenuItemName;
 
@@ -151,7 +157,7 @@ export function NavigationMenuConfiguration({
 			chooseSiteNavigationMenuButton &&
 			navigationMenuName &&
 			removeSiteNavigationMenu &&
-			rootMenuItemIdInput &&
+			rootMenuItemExternalReferenceCodeInput &&
 			rootMenuItemNameSpan &&
 			siteNavigationMenuExternalReferenceCodeInput
 		) {
@@ -163,9 +169,10 @@ export function NavigationMenuConfiguration({
 
 						if (itemValue) {
 							navigationMenuName.innerText = itemValue.name;
-							rootMenuItemIdInput.value = '0';
+							rootMenuItemExternalReferenceCodeInput.value = '';
 							rootMenuItemNameSpan.innerText = itemValue.name;
-							siteNavigationMenuExternalReferenceCodeInput.value = itemValue.externalReferenceCode;
+							siteNavigationMenuExternalReferenceCodeInput.value =
+								itemValue.externalReferenceCode;
 
 							removeSiteNavigationMenu.classList.toggle('hide');
 
@@ -187,13 +194,13 @@ export function NavigationMenuConfiguration({
 			navigationMenuName &&
 			removeSiteNavigationMenu &&
 			removeSiteNavigationMenuButton &&
-			rootMenuItemIdInput &&
+			rootMenuItemExternalReferenceCodeInput &&
 			rootMenuItemNameSpan &&
 			siteNavigationMenuExternalReferenceCodeInput
 		) {
 			removeSiteNavigationMenuButton.addEventListener('click', () => {
 				navigationMenuName.innerText = '';
-				rootMenuItemIdInput.value = '0';
+				rootMenuItemExternalReferenceCodeInput.value = '';
 				rootMenuItemNameSpan.innerText = '';
 				siteNavigationMenuExternalReferenceCodeInput.value = '';
 
@@ -206,7 +213,7 @@ export function NavigationMenuConfiguration({
 		toggleSelectBox(
 			`${namespace}rootMenuItemType`,
 			'select',
-			`${namespace}rootMenuItemIdPanel`
+			`${namespace}rootMenuItemExternalReferenceCodePanel`
 		);
 
 		toggleSelectBox(

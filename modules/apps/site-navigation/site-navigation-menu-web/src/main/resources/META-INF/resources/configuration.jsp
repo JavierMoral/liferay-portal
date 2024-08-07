@@ -123,13 +123,13 @@ SiteNavigationMenuConfigurationDisplayContext siteNavigationMenuConfigurationDis
 							<clay:col
 								md="10"
 							>
-								<div class="c-mb-3 <%= rootMenuItemType.equals("select") ? StringPool.BLANK : "hide" %>" id="<portlet:namespace />rootMenuItemIdPanel">
-									<aui:input id="rootMenuItemId" ignoreRequestValue="<%= true %>" name="preferences--rootMenuItemId--" type="hidden" value="<%= siteNavigationMenuDisplayContext.getRootMenuItemId() %>" />
+								<div class="c-mb-3 <%= rootMenuItemType.equals("select") ? StringPool.BLANK : "hide" %>" id="<portlet:namespace />rootMenuItemExternalReferenceCodePanel">
+									<aui:input id="rootMenuItemExternalReferenceCode" ignoreRequestValue="<%= true %>" name="preferences--rootMenuItemExternalReferenceCode--" type="hidden" value="<%= siteNavigationMenuDisplayContext.getRootMenuItemExternalReferenceCode() %>" />
 
 									<%
 									String rootMenuItemName = siteNavigationMenuDisplayContext.getSiteNavigationMenuName();
 
-									SiteNavigationMenuItem siteNavigationMenuItem = SiteNavigationMenuItemLocalServiceUtil.fetchSiteNavigationMenuItem(GetterUtil.getLong(siteNavigationMenuDisplayContext.getRootMenuItemId()));
+									SiteNavigationMenuItem siteNavigationMenuItem = SiteNavigationMenuItemLocalServiceUtil.fetchSiteNavigationMenuItemByExternalReferenceCode(GetterUtil.getString(siteNavigationMenuDisplayContext.getRootMenuItemExternalReferenceCode()), themeDisplay.getScopeGroupId());
 
 									if (siteNavigationMenuItem != null) {
 										SiteNavigationMenuItemTypeRegistry siteNavigationMenuItemTypeRegistry = (SiteNavigationMenuItemTypeRegistry)request.getAttribute(SiteNavigationMenuWebKeys.SITE_NAVIGATION_MENU_ITEM_TYPE_REGISTRY);
