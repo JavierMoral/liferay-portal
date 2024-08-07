@@ -33,6 +33,8 @@ import com.liferay.site.navigation.item.selector.criterion.SiteNavigationMenuIte
 import com.liferay.site.navigation.menu.web.internal.configuration.SiteNavigationMenuPortletInstanceConfiguration;
 import com.liferay.site.navigation.menu.web.internal.constants.SiteNavigationMenuWebKeys;
 import com.liferay.site.navigation.model.SiteNavigationMenu;
+import com.liferay.site.navigation.model.SiteNavigationMenuItem;
+import com.liferay.site.navigation.service.SiteNavigationMenuItemLocalServiceUtil;
 import com.liferay.site.navigation.service.SiteNavigationMenuLocalServiceUtil;
 import com.liferay.site.navigation.taglib.servlet.taglib.NavigationMenuMode;
 
@@ -236,16 +238,52 @@ public class SiteNavigationMenuDisplayContext {
 		return portletDisplay.getNamespace() + "selectRootMenuItem";
 	}
 
+	public String getRootMenuItemExternalReferenceCode() {
+		if (_rootMenuItemExternalReferenceCode != null) {
+			return _rootMenuItemExternalReferenceCode;
+		}
+
+		String defaultRootMenuItemExternalReferenceCode =
+			_siteNavigationMenuPortletInstanceConfiguration.
+				rootMenuItemExternalReferenceCode();
+
+		_rootMenuItemExternalReferenceCode = ParamUtil.getString(
+			_httpServletRequest, "rootMenuItemExternalReferenceCode",
+			defaultRootMenuItemExternalReferenceCode);
+
+		return _rootMenuItemExternalReferenceCode;
+	}
+
 	public String getRootMenuItemId() {
-		if (_rootMenuItemId != null) {
+		if (Validator.isNotNull(_rootMenuItemId)) {
 			return _rootMenuItemId;
 		}
 
-		String defaultRootMenuItemId =
-			_siteNavigationMenuPortletInstanceConfiguration.rootMenuItemId();
+		if (FeatureFlagManagerUtil.isEnabled("LPD-23048")) {
+			String rootMenuItemExternalReferenceCode =
+				getRootMenuItemExternalReferenceCode();
 
-		_rootMenuItemId = ParamUtil.getString(
-			_httpServletRequest, "rootMenuItemId", defaultRootMenuItemId);
+			if (Validator.isNotNull(rootMenuItemExternalReferenceCode)) {
+				SiteNavigationMenuItem siteNavigationMenuItem =
+					SiteNavigationMenuItemLocalServiceUtil.
+						fetchSiteNavigationMenuItemByExternalReferenceCode(
+							rootMenuItemExternalReferenceCode,
+							_themeDisplay.getScopeGroupId());
+
+				if (siteNavigationMenuItem != null) {
+					_rootMenuItemId = String.valueOf(
+						siteNavigationMenuItem.getSiteNavigationMenuItemId());
+				}
+			}
+		}
+		else {
+			String defaultRootMenuItemId =
+				_siteNavigationMenuPortletInstanceConfiguration.
+					rootMenuItemId();
+
+			_rootMenuItemId = ParamUtil.getString(
+				_httpServletRequest, "rootMenuItemId", defaultRootMenuItemId);
+		}
 
 		return _rootMenuItemId;
 	}
@@ -675,6 +713,7 @@ public class SiteNavigationMenuDisplayContext {
 	private NavigationMenuMode _navigationMenuMode;
 	private Integer _navigationMenuType;
 	private Boolean _preview;
+	private String _rootMenuItemExternalReferenceCode;
 	private String _rootMenuItemId;
 	private Integer _rootMenuItemLevel;
 	private String _rootMenuItemType;
