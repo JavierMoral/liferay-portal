@@ -209,18 +209,20 @@ public class SiteNavigationMenuDisplayContext {
 		return portletDisplay.getNamespace() + "selectRootMenuItem";
 	}
 
-	public String getRootMenuItemId() {
-		if (_rootMenuItemId != null) {
-			return _rootMenuItemId;
+	public String getRootMenuItemExternalReferenceCode() {
+		if (_rootMenuItemExternalReferenceCode != null) {
+			return _rootMenuItemExternalReferenceCode;
 		}
 
-		String defaultRootMenuItemId =
-			_siteNavigationMenuPortletInstanceConfiguration.rootMenuItemId();
+		String defaultRootMenuItemExternalReferenceCode =
+			_siteNavigationMenuPortletInstanceConfiguration.
+				rootMenuItemExternalReferenceCode();
 
-		_rootMenuItemId = ParamUtil.getString(
-			_httpServletRequest, "rootMenuItemId", defaultRootMenuItemId);
+		_rootMenuItemExternalReferenceCode = ParamUtil.getString(
+			_httpServletRequest, "rootMenuItemExternalReferenceCode",
+			defaultRootMenuItemExternalReferenceCode);
 
-		return _rootMenuItemId;
+		return _rootMenuItemExternalReferenceCode;
 	}
 
 	public int getRootMenuItemLevel() {
@@ -585,7 +587,7 @@ public class SiteNavigationMenuDisplayContext {
 	private NavigationMenuMode _navigationMenuMode;
 	private Integer _navigationMenuType;
 	private Boolean _preview;
-	private String _rootMenuItemId;
+	private String _rootMenuItemExternalReferenceCode;
 	private Integer _rootMenuItemLevel;
 	private String _rootMenuItemType;
 	private SiteNavigationMenu _siteNavigationMenu;
