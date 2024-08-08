@@ -11,6 +11,7 @@ import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServ
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProviderUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
@@ -145,6 +146,53 @@ public class SiteNavigationMenuDisplayContextTest {
 			siteNavigationMenuDisplayContext.getAlertKey());
 	}
 
+	@Test
+	public void testGetDisplayStyleGroupKeyWithConfiguration()
+		throws Exception {
+
+		_setUpSiteNavigationMenuPortletInstanceConfiguration(
+			GroupConstants.CONTROL_PANEL, null, null, 0);
+
+		SiteNavigationMenuDisplayContext siteNavigationMenuDisplayContext =
+			new SiteNavigationMenuDisplayContext(_httpServletRequest);
+
+		Assert.assertEquals(
+			GroupConstants.CONTROL_PANEL,
+			siteNavigationMenuDisplayContext.getDisplayStyleGroupKey());
+	}
+
+	@Test
+	public void testGetRootItemExternalReferenceCodeWithConfiguration()
+		throws Exception {
+
+		_setUpSiteNavigationMenuPortletInstanceConfiguration(
+			null, _ROOTMENUITEMEXTERNALREFERENCECODE, null, 0);
+
+		SiteNavigationMenuDisplayContext siteNavigationMenuDisplayContext =
+			new SiteNavigationMenuDisplayContext(_httpServletRequest);
+
+		Assert.assertEquals(
+			_ROOTMENUITEMEXTERNALREFERENCECODE,
+			siteNavigationMenuDisplayContext.
+				getRootMenuItemExternalReferenceCode());
+	}
+
+	@Test
+	public void testGetSiteNavigationMenuExternalReferenceCodeWithConfiguration()
+		throws Exception {
+
+		_setUpSiteNavigationMenuPortletInstanceConfiguration(
+			null, null, _SITENAVIGATIONMENUEXTERNALREFERENCECODE, 0);
+
+		SiteNavigationMenuDisplayContext siteNavigationMenuDisplayContext =
+			new SiteNavigationMenuDisplayContext(_httpServletRequest);
+
+		Assert.assertEquals(
+			_SITENAVIGATIONMENUEXTERNALREFERENCECODE,
+			siteNavigationMenuDisplayContext.
+				getSiteNavigationMenuExternalReferenceCode());
+	}
+
 	private void _setUpConfigurationProviderUtil() {
 		_configurationProviderUtilMockedStatic.when(
 			() -> ConfigurationProviderUtil.getPortletInstanceConfiguration(
@@ -216,6 +264,36 @@ public class SiteNavigationMenuDisplayContextTest {
 	private void _setUpSiteNavigationMenuPortletInstanceConfiguration(
 		int siteNavigationMenuType) {
 
+		_setUpSiteNavigationMenuPortletInstanceConfiguration(
+			null, null, null, siteNavigationMenuType);
+	}
+
+	private void _setUpSiteNavigationMenuPortletInstanceConfiguration(
+		String displayStyleGroupKey, String rootMenuItemExternalReferenceCode,
+		String siteNavigationMenuExternalReferenceCode,
+		int siteNavigationMenuType) {
+
+		Mockito.when(
+			_siteNavigationMenuPortletInstanceConfiguration.
+				displayStyleGroupKey()
+		).thenReturn(
+			displayStyleGroupKey
+		);
+
+		Mockito.when(
+			_siteNavigationMenuPortletInstanceConfiguration.
+				rootMenuItemExternalReferenceCode()
+		).thenReturn(
+			rootMenuItemExternalReferenceCode
+		);
+
+		Mockito.when(
+			_siteNavigationMenuPortletInstanceConfiguration.
+				siteNavigationMenuExternalReferenceCode()
+		).thenReturn(
+			siteNavigationMenuExternalReferenceCode
+		);
+
 		Mockito.when(
 			_siteNavigationMenuPortletInstanceConfiguration.
 				siteNavigationMenuType()
@@ -237,6 +315,11 @@ public class SiteNavigationMenuDisplayContextTest {
 			_layout
 		);
 	}
+
+	private static final String _ROOTMENUITEMEXTERNALREFERENCECODE = "5678";
+
+	private static final String _SITENAVIGATIONMENUEXTERNALREFERENCECODE =
+		"1234";
 
 	private static MockedStatic<ConfigurationProviderUtil>
 		_configurationProviderUtilMockedStatic;
