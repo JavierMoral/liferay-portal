@@ -67,6 +67,11 @@ public interface SiteNavigationMenuItemService extends BaseService {
 	public void deleteSiteNavigationMenuItems(long siteNavigationMenuId)
 		throws PortalException;
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public SiteNavigationMenuItem fetchSiteNavigationMenuItem(
+			long siteNavigationMenuItemId)
+		throws PortalException;
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *

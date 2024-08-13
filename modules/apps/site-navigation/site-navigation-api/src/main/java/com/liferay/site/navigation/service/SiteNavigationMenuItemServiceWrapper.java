@@ -77,6 +77,15 @@ public class SiteNavigationMenuItemServiceWrapper
 			siteNavigationMenuId);
 	}
 
+	@Override
+	public SiteNavigationMenuItem fetchSiteNavigationMenuItem(
+			long siteNavigationMenuItemId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _siteNavigationMenuItemService.fetchSiteNavigationMenuItem(
+			siteNavigationMenuItemId);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *

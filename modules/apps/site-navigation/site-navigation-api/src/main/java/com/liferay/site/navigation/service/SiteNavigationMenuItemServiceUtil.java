@@ -73,6 +73,14 @@ public class SiteNavigationMenuItemServiceUtil {
 		getService().deleteSiteNavigationMenuItems(siteNavigationMenuId);
 	}
 
+	public static SiteNavigationMenuItem fetchSiteNavigationMenuItem(
+			long siteNavigationMenuItemId)
+		throws PortalException {
+
+		return getService().fetchSiteNavigationMenuItem(
+			siteNavigationMenuItemId);
+	}
+
 	/**
 	 * Returns the OSGi service identifier.
 	 *
