@@ -91,9 +91,9 @@ public class SiteNavigationMenuConfigurationAction
 			modifiableSettings.reset("rootMenuItemId");
 		}
 
-		_updateDisplayStyleGroupPreferences(modifiableSettings, portletRequest);
-		_updateSiteNavigationMenuPreferences(modifiableSettings);
-		_updateRootMenuItemPreferences(modifiableSettings);
+		updateDisplayStyleGroupPreferences(modifiableSettings, portletRequest);
+		updateSiteNavigationMenuPreferences(modifiableSettings);
+		updateRootMenuItemPreferences(modifiableSettings);
 	}
 
 	@Override
@@ -107,7 +107,7 @@ public class SiteNavigationMenuConfigurationAction
 		super.doDispatch(renderRequest, renderResponse);
 	}
 
-	private void _updateDisplayStyleGroupPreferences(
+	protected void updateDisplayStyleGroupPreferences(
 		ModifiableSettings modifiableSettings, PortletRequest portletRequest) {
 
 		if (!FeatureFlagManagerUtil.isEnabled("LPD-23048")) {
@@ -134,7 +134,7 @@ public class SiteNavigationMenuConfigurationAction
 		modifiableSettings.reset("displayStyleGroupKey");
 	}
 
-	private void _updateRootMenuItemPreferences(
+	protected void updateRootMenuItemPreferences(
 			ModifiableSettings modifiableSettings)
 		throws PortalException {
 
@@ -150,7 +150,7 @@ public class SiteNavigationMenuConfigurationAction
 		}
 
 		SiteNavigationMenuItem siteNavigationMenuItem =
-			_siteNavigationMenuItemService.fetchSiteNavigationMenuItem(
+			siteNavigationMenuItemService.fetchSiteNavigationMenuItem(
 				rootMenuItemId);
 
 		if (siteNavigationMenuItem != null) {
@@ -162,7 +162,7 @@ public class SiteNavigationMenuConfigurationAction
 		modifiableSettings.reset("rootMenuItemId");
 	}
 
-	private void _updateSiteNavigationMenuPreferences(
+	protected void updateSiteNavigationMenuPreferences(
 			ModifiableSettings modifiableSettings)
 		throws PortalException {
 
@@ -178,7 +178,7 @@ public class SiteNavigationMenuConfigurationAction
 		}
 
 		SiteNavigationMenu siteNavigationMenu =
-			_siteNavigationMenuService.fetchSiteNavigationMenu(
+			siteNavigationMenuService.fetchSiteNavigationMenu(
 				siteNavigationMenuId);
 
 		if (siteNavigationMenu != null) {
@@ -191,19 +191,19 @@ public class SiteNavigationMenuConfigurationAction
 	}
 
 	@Reference
+	protected SiteNavigationMenuItemService siteNavigationMenuItemService;
+
+	@Reference
+	protected SiteNavigationMenuService siteNavigationMenuService;
+
+	@Reference
 	private ItemSelector _itemSelector;
 
 	@Reference
 	private PortletDisplayTemplate _portletDisplayTemplate;
 
 	@Reference
-	private SiteNavigationMenuItemService _siteNavigationMenuItemService;
-
-	@Reference
 	private SiteNavigationMenuItemTypeRegistry
 		_siteNavigationMenuItemTypeRegistry;
-
-	@Reference
-	private SiteNavigationMenuService _siteNavigationMenuService;
 
 }
