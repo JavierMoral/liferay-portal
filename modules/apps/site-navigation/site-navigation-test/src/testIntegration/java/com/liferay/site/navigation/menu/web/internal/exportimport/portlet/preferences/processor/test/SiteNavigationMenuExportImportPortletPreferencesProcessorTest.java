@@ -81,7 +81,6 @@ public class SiteNavigationMenuExportImportPortletPreferencesProcessorTest {
 				_siteNavigationMenu);
 	}
 
-	@FeatureFlags("LPD-23048")
 	@Test
 	public void testExportImport() throws Exception {
 		String portletId = LayoutTestUtil.addPortletToLayout(
@@ -123,7 +122,6 @@ public class SiteNavigationMenuExportImportPortletPreferencesProcessorTest {
 				"rootMenuItemExternalReferenceCode", StringPool.BLANK));
 	}
 
-	@FeatureFlags("LPD-23048")
 	@Test
 	public void testExportImportEmptyPortletPreferences() throws Exception {
 		String portletId = LayoutTestUtil.addPortletToLayout(
