@@ -40,9 +40,11 @@ import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
@@ -167,7 +169,10 @@ public class DisplayPageTemplateResourceTest
 		_testGetSiteSiteByExternalReferenceCodeDisplayPageTemplateWithNestedFields(
 			displayPageTemplate);
 
-		ContentLayoutTestUtil.publishLayout(layout.fetchDraftLayout(), layout);
+		ReflectionTestUtil.invoke(
+			_mvcActionCommand, "_publishLayoutPageTemplateEntry",
+			new Class<?>[] {Layout.class, Layout.class},
+			layout.fetchDraftLayout(), layout);
 
 		Assert.assertTrue(_isPublished(layout));
 
@@ -1164,6 +1169,11 @@ public class DisplayPageTemplateResourceTest
 	@Inject
 	private LayoutPageTemplateEntryLocalService
 		_layoutPageTemplateEntryLocalService;
+
+	@Inject(
+		filter = "mvc.command.name=/layout_content_page_editor/publish_layout_page_template_entry"
+	)
+	private MVCActionCommand _mvcActionCommand;
 
 	@Inject
 	private Portal _portal;
