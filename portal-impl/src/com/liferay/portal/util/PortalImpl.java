@@ -3970,7 +3970,7 @@ public class PortalImpl implements Portal {
 				groupId, privateLayout,
 				layoutQueryStringComposite.getFriendlyURL());
 
-			if (Validator.isNotNull(layout.getSourcePrototypeLayoutUuid())) {
+			if (Validator.isNotNull(layout.getLayoutSetPrototypeLayoutERC())) {
 				layout = LayoutLocalServiceUtil.getLayout(layout.getPlid());
 			}
 		}
