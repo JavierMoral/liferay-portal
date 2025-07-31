@@ -22,12 +22,15 @@ import com.liferay.petra.string.CharPool;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 
 /**
@@ -113,6 +116,13 @@ public class ObjectEntryLayoutDisplayPageProvider
 				userId = PrincipalThreadLocal.getUserId();
 			}
 
+			String scopeKey = null;
+
+			if (Validator.isNotNull(ercInfoItemIdentifier.getScopeExternalReferenceCode())) {
+				Group group = GroupLocalServiceUtil.getGroupByExternalReferenceCode(ercInfoItemIdentifier.getScopeExternalReferenceCode(),serviceContext.getCompanyId());
+				scopeKey = group.getGroupKey();
+			}
+
 			com.liferay.object.rest.dto.v1_0.ObjectEntry objectEntry =
 				_objectEntryManager.getObjectEntry(
 					serviceContext.getCompanyId(),
@@ -121,7 +131,7 @@ public class ObjectEntryLayoutDisplayPageProvider
 						serviceContext.getLocale(), null,
 						_userLocalService.fetchUser(userId)),
 					ercInfoItemIdentifier.getExternalReferenceCode(),
-					_objectDefinition, null);
+					_objectDefinition, scopeKey);
 
 			if (objectEntry != null) {
 				return new ObjectEntryLayoutDisplayPageObjectProvider(

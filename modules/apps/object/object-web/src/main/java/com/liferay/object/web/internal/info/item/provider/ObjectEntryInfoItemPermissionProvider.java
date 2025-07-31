@@ -20,10 +20,13 @@ import com.liferay.object.web.internal.util.ObjectEntryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 
 /**
@@ -83,6 +86,13 @@ public class ObjectEntryInfoItemPermissionProvider
 				return false;
 			}
 
+			String scopeKey = null;
+
+			if (Validator.isNotNull(ercInfoItemIdentifier.getScopeExternalReferenceCode())) {
+				Group group = GroupLocalServiceUtil.getGroupByExternalReferenceCode(ercInfoItemIdentifier.getScopeExternalReferenceCode(),serviceContext.getCompanyId());
+				scopeKey = group.getGroupKey();
+			}
+
 			com.liferay.object.rest.dto.v1_0.ObjectEntry objectEntry =
 				_objectEntryManager.getObjectEntry(
 					themeDisplay.getCompanyId(),
@@ -90,7 +100,7 @@ public class ObjectEntryInfoItemPermissionProvider
 						false, null, null, null, null, themeDisplay.getLocale(),
 						null, themeDisplay.getUser()),
 					ercInfoItemIdentifier.getExternalReferenceCode(),
-					_objectDefinition, null);
+					_objectDefinition, scopeKey);
 
 			if (objectEntry != null) {
 				hasPermission(

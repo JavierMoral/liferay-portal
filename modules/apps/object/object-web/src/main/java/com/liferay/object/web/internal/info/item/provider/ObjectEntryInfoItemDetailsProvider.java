@@ -13,6 +13,9 @@ import com.liferay.info.item.provider.InfoItemDetailsProvider;
 import com.liferay.info.localized.InfoLocalizedValue;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 
 /**
@@ -38,6 +41,25 @@ public class ObjectEntryInfoItemDetailsProvider
 			).values(
 				_objectDefinition.getLabelMap()
 			).build());
+	}
+
+	@Override
+	public InfoItemDetails getInfoItemDetails(
+		long groupId,
+		ObjectEntry objectEntry) throws PortalException {
+
+		if (groupId > 0 && groupId != objectEntry.getGroupId() && !_objectDefinition.isDefaultStorageType()) {
+			Group group = GroupLocalServiceUtil.getGroup(groupId);
+
+			return new InfoItemDetails(
+				getInfoItemClassDetails(),
+				new InfoItemReference(
+					_objectDefinition.getClassName(),
+					new ERCInfoItemIdentifier(
+						objectEntry.getExternalReferenceCode(),group.getExternalReferenceCode())));
+		}
+
+		return getInfoItemDetails(objectEntry);
 	}
 
 	@Override
