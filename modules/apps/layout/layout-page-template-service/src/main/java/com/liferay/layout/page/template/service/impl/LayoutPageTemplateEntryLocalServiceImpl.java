@@ -871,7 +871,7 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 			draftLayout.getKeywordsMap(), draftLayout.getRobotsMap(),
 			draftLayout.getType(), draftLayout.isHidden(),
 			draftLayout.getFriendlyURLMap(), draftLayout.getIconImage(), null,
-			draftLayout.getStyleBookEntryId(),
+			draftLayout.getStyleBookEntryERC(),
 			draftLayout.getFaviconFileEntryId(),
 			draftLayout.getMasterLayoutPlid(), serviceContext);
 
@@ -884,7 +884,7 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 			layout.getDescriptionMap(), layout.getKeywordsMap(),
 			layout.getRobotsMap(), layout.getType(), layout.isHidden(),
 			layout.getFriendlyURLMap(), layout.getIconImage(), null,
-			layout.getStyleBookEntryId(), layout.getFaviconFileEntryId(),
+			layout.getStyleBookEntryERC(), layout.getFaviconFileEntryId(),
 			layout.getMasterLayoutPlid(), serviceContext);
 
 		return layoutPageTemplateEntry;
