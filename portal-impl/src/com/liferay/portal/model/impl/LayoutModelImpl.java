@@ -13,6 +13,7 @@ import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.exception.LocaleException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSON;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutModel;
@@ -2198,13 +2199,15 @@ public class LayoutModelImpl
 	public String[] getAvailableLanguageIds() {
 		Set<String> availableLanguageIds = new TreeSet<String>();
 
+		Set<Locale> availableLocales = LanguageUtil.getAvailableLocales(getGroupId());
+
 		Map<Locale, String> nameMap = getNameMap();
 
 		for (Map.Entry<Locale, String> entry : nameMap.entrySet()) {
 			Locale locale = entry.getKey();
 			String value = entry.getValue();
 
-			if (Validator.isNotNull(value)) {
+			if (Validator.isNotNull(value) && availableLocales.contains(locale)) {
 				availableLanguageIds.add(LocaleUtil.toLanguageId(locale));
 			}
 		}
@@ -2215,7 +2218,7 @@ public class LayoutModelImpl
 			Locale locale = entry.getKey();
 			String value = entry.getValue();
 
-			if (Validator.isNotNull(value)) {
+			if (Validator.isNotNull(value) && availableLocales.contains(locale)) {
 				availableLanguageIds.add(LocaleUtil.toLanguageId(locale));
 			}
 		}
@@ -2226,7 +2229,7 @@ public class LayoutModelImpl
 			Locale locale = entry.getKey();
 			String value = entry.getValue();
 
-			if (Validator.isNotNull(value)) {
+			if (Validator.isNotNull(value) && availableLocales.contains(locale)) {
 				availableLanguageIds.add(LocaleUtil.toLanguageId(locale));
 			}
 		}
@@ -2237,7 +2240,7 @@ public class LayoutModelImpl
 			Locale locale = entry.getKey();
 			String value = entry.getValue();
 
-			if (Validator.isNotNull(value)) {
+			if (Validator.isNotNull(value) && availableLocales.contains(locale)) {
 				availableLanguageIds.add(LocaleUtil.toLanguageId(locale));
 			}
 		}
@@ -2248,7 +2251,7 @@ public class LayoutModelImpl
 			Locale locale = entry.getKey();
 			String value = entry.getValue();
 
-			if (Validator.isNotNull(value)) {
+			if (Validator.isNotNull(value) && availableLocales.contains(locale)) {
 				availableLanguageIds.add(LocaleUtil.toLanguageId(locale));
 			}
 		}
