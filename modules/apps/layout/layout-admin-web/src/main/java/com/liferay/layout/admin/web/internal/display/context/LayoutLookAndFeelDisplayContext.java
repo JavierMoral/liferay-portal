@@ -286,7 +286,7 @@ public class LayoutLookAndFeelDisplayContext {
 			styleBookEntry = DefaultStyleBookEntryUtil.getDefaultStyleBookEntry(
 				selLayout);
 		}
-		else if (Validator.isNull(selLayout.getStyleBookEntryERC())) {
+		else if (Validator.isNotNull(selLayout.getStyleBookEntryERC())) {
 			try {
 				styleBookEntry =
 					StyleBookEntryServiceUtil.
