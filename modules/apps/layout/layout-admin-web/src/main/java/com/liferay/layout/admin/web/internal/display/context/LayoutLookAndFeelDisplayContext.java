@@ -265,7 +265,7 @@ public class LayoutLookAndFeelDisplayContext {
 				}
 
 				if (styleBookEntry == null) {
-					return null;
+					return "0";
 				}
 
 				return String.valueOf(styleBookEntry.getStyleBookEntryId());
