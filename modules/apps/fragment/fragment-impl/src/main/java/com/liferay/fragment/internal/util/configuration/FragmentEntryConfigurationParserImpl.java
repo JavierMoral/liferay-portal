@@ -750,9 +750,12 @@ public class FragmentEntryConfigurationParserImpl
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
+		ThemeDisplay themeDisplay = serviceContext.getThemeDisplay();
+
 		FragmentEntryMenuDisplayConfiguration
 			fragmentEntryMenuDisplayConfiguration =
-				new FragmentEntryMenuDisplayConfiguration(value);
+				new FragmentEntryMenuDisplayConfiguration(
+					themeDisplay.getScopeGroupId(), value);
 
 		return NavItemUtil.getNavigationMenuContext(
 			1, "auto", serviceContext.getRequest(),

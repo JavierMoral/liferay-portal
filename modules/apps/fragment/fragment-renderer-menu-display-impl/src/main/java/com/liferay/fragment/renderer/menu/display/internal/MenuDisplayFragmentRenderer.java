@@ -122,7 +122,8 @@ public class MenuDisplayFragmentRenderer implements FragmentRenderer {
 
 			NavigationMenuTag navigationMenuTag = _getNavigationMenuTag(
 				themeDisplay.getCompanyId(), configurationJSONObject,
-				fragmentEntryLink.getEditableValuesJSONObject());
+				fragmentEntryLink.getEditableValuesJSONObject(),
+				themeDisplay.getScopeGroupId());
 
 			navigationMenuTag.doTag(httpServletRequest, httpServletResponse);
 
@@ -135,7 +136,7 @@ public class MenuDisplayFragmentRenderer implements FragmentRenderer {
 
 	private NavigationMenuTag _getNavigationMenuTag(
 			long companyId, JSONObject configurationJSONObject,
-			JSONObject editableValuesJSONObject)
+			JSONObject editableValuesJSONObject, long groupId)
 		throws PortalException {
 
 		NavigationMenuTag navigationMenuTag = new NavigationMenuTag();
@@ -166,7 +167,7 @@ public class MenuDisplayFragmentRenderer implements FragmentRenderer {
 
 		FragmentEntryMenuDisplayConfiguration
 			fragmentEntryMenuDisplayConfiguration =
-				new FragmentEntryMenuDisplayConfiguration(source);
+				new FragmentEntryMenuDisplayConfiguration(groupId, source);
 
 		navigationMenuTag.setNavigationMenuMode(
 			fragmentEntryMenuDisplayConfiguration.getNavigationMenuMode());
