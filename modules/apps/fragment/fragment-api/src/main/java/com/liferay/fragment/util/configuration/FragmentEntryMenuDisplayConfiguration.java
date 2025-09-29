@@ -11,8 +11,15 @@ import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
+import com.liferay.portal.kernel.util.Validator;
+import com.liferay.site.navigation.model.SiteNavigationMenu;
+import com.liferay.site.navigation.model.SiteNavigationMenuItem;
+import com.liferay.site.navigation.service.SiteNavigationMenuItemLocalServiceUtil;
+import com.liferay.site.navigation.service.SiteNavigationMenuLocalServiceUtil;
 import com.liferay.site.navigation.taglib.servlet.taglib.NavigationMenuMode;
 
 import java.util.Objects;
@@ -22,7 +29,7 @@ import java.util.Objects;
  */
 public class FragmentEntryMenuDisplayConfiguration {
 
-	public FragmentEntryMenuDisplayConfiguration(String json) {
+	public FragmentEntryMenuDisplayConfiguration(long groupId, String json) {
 		Source source = _DEFAULT_SOURCE;
 
 		if (JSONUtil.isJSONObject(json)) {
@@ -32,11 +39,78 @@ public class FragmentEntryMenuDisplayConfiguration {
 				source = ContextualMenu.parse(
 					jsonObject.getString("contextualMenu"));
 			}
-			else if (jsonObject.has("siteNavigationMenuId")) {
-				source = new SiteNavigationMenuSource(
-					jsonObject.getLong("parentSiteNavigationMenuItemId"),
-					jsonObject.getBoolean("privateLayout"),
-					jsonObject.getLong("siteNavigationMenuId"));
+
+			if ((source == _DEFAULT_SOURCE) &&
+				jsonObject.has("siteNavigationMenuId")) {
+
+				long siteNavigationMenuId = jsonObject.getLong(
+					"siteNavigationMenuId");
+
+				SiteNavigationMenu siteNavigationMenu =
+					SiteNavigationMenuLocalServiceUtil.fetchSiteNavigationMenu(
+						siteNavigationMenuId);
+
+				if (siteNavigationMenu != null) {
+					source = new SiteNavigationMenuSource(
+						jsonObject.getLong("parentSiteNavigationMenuItemId"),
+						jsonObject.getBoolean("privateLayout"),
+						siteNavigationMenuId);
+				}
+			}
+
+			if ((source == _DEFAULT_SOURCE) &&
+				jsonObject.has("siteNavigationMenuERC")) {
+
+				String siteNavigationMenuScopeERC = jsonObject.getString(
+					"siteNavigationMenuScopeERC");
+				Group scopeGroup = GroupLocalServiceUtil.fetchGroup(groupId);
+
+				if (Validator.isNotNull(siteNavigationMenuScopeERC) &&
+					(scopeGroup != null) &&
+					!Objects.equals(
+						siteNavigationMenuScopeERC,
+						scopeGroup.getExternalReferenceCode())) {
+
+					scopeGroup =
+						GroupLocalServiceUtil.fetchGroupByExternalReferenceCode(
+							siteNavigationMenuScopeERC,
+							scopeGroup.getCompanyId());
+				}
+
+				if (scopeGroup != null) {
+					SiteNavigationMenuItem siteNavigationMenuItem =
+						SiteNavigationMenuItemLocalServiceUtil.
+							fetchSiteNavigationMenuItemByExternalReferenceCode(
+								jsonObject.getString(
+									"parentSiteNavigationMenuItemERC"),
+								scopeGroup.getGroupId());
+
+					long siteNavigationMenuItemId = 0;
+
+					if (siteNavigationMenuItem != null) {
+						siteNavigationMenuItemId =
+							siteNavigationMenuItem.
+								getSiteNavigationMenuItemId();
+					}
+
+					SiteNavigationMenu siteNavigationMenu =
+						SiteNavigationMenuLocalServiceUtil.
+							fetchSiteNavigationMenuByExternalReferenceCode(
+								jsonObject.getString("siteNavigationMenuERC"),
+								scopeGroup.getGroupId());
+
+					long siteNavigationMenuId = 0;
+
+					if (siteNavigationMenu != null) {
+						siteNavigationMenuId =
+							siteNavigationMenu.getSiteNavigationMenuId();
+					}
+
+					source = new SiteNavigationMenuSource(
+						siteNavigationMenuItemId,
+						jsonObject.getBoolean("privateLayout"),
+						siteNavigationMenuId);
+				}
 			}
 		}
 
