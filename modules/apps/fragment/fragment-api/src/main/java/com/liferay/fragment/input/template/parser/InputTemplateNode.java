@@ -146,11 +146,19 @@ public class InputTemplateNode extends LinkedHashMap<String, Object> {
 		).put(
 			"type", _type
 		).put(
-			"value", _value
+			"value", HtmlUtil.escapeJS(_value)
 		).put(
-			"valueI18n",
-			JSONFactoryUtil.createJSONObject(
-				LocalizedMapUtil.getLanguageIdMap(_valueI18n))
+			"valueI18n", () -> {
+				Map<String, String> valueI18n = LocalizedMapUtil.getLanguageIdMap(_valueI18n);
+
+				JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
+
+				for (Map.Entry<String, String> entry : valueI18n.entrySet()) {
+					jsonObject.put(entry.getKey(), HtmlUtil.escapeJS(entry.getValue()));
+				}
+
+				return jsonObject;
+			}
 		);
 	}
 
