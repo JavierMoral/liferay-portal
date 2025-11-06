@@ -30,14 +30,18 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.impl.DefaultLayoutTypeAccessPolicyImpl;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.util.WebKeys;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -179,8 +183,38 @@ public class FragmentEntryProcessorRegistryImpl
 		throws PortalException {
 
 		if (fragmentEntryLink.isTypePortlet()) {
-			return _renderWidgetHTML(
-				fragmentEntryLink, fragmentEntryProcessorContext);
+			HttpServletRequest httpServletRequest =
+				fragmentEntryProcessorContext.getHttpServletRequest();
+
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
+
+			if ((themeDisplay == null) ||
+				(fragmentEntryLink.getPlid() == themeDisplay.getPlid())) {
+
+				return _renderWidgetHTML(
+					fragmentEntryLink, fragmentEntryProcessorContext);
+			}
+
+			Layout originalLayout = themeDisplay.getLayout();
+
+			try {
+				Layout layout = _layoutLocalService.fetchLayout(
+					fragmentEntryLink.getPlid());
+
+				if (layout != null) {
+					themeDisplay.setLayout(layout);
+					themeDisplay.setPlid(layout.getPlid());
+				}
+
+				return _renderWidgetHTML(
+					fragmentEntryLink, fragmentEntryProcessorContext);
+			}
+			finally {
+				themeDisplay.setLayout(originalLayout);
+				themeDisplay.setPlid(originalLayout.getPlid());
+			}
 		}
 
 		String html = fragmentEntryLink.getHtml();
@@ -388,5 +422,8 @@ public class FragmentEntryProcessorRegistryImpl
 
 	@Reference
 	private JSONFactory _jsonFactory;
+
+	@Reference
+	private LayoutLocalService _layoutLocalService;
 
 }
