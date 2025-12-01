@@ -19,9 +19,12 @@ import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.util.configuration.FragmentConfigurationField;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.StagedModel;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.xml.Element;
 
 import java.util.List;
@@ -102,25 +105,22 @@ public class
 			boolean exportReferencedContent)
 		throws Exception {
 
-		long assetCategoryTreeNodeId = GetterUtil.getLong(
-			configurationValueJSONObject.getString("categoryTreeNodeId"));
+		String assetCategoryTreeNodeType =
+			configurationValueJSONObject.getString("categoryTreeNodeType");
 
-		if (assetCategoryTreeNodeId == 0) {
+		if (Validator.isNull(assetCategoryTreeNodeType)) {
 			return;
 		}
 
 		StagedModel stagedModel = null;
 
-		String assetCategoryTreeNodeType =
-			configurationValueJSONObject.getString("categoryTreeNodeType");
-
 		if (assetCategoryTreeNodeType.equals("Vocabulary")) {
-			stagedModel = _assetVocabularyLocalService.fetchAssetVocabulary(
-				assetCategoryTreeNodeId);
+			stagedModel = _fetchAssetVocabulary(
+				portletDataContext, configurationValueJSONObject);
 		}
 		else if (assetCategoryTreeNodeType.equals("Category")) {
-			stagedModel = _assetCategoryLocalService.fetchAssetCategory(
-				assetCategoryTreeNodeId);
+			stagedModel = _fetchAssetCategory(
+				portletDataContext, configurationValueJSONObject);
 		}
 
 		if (stagedModel == null) {
@@ -179,6 +179,74 @@ public class
 		}
 	}
 
+	private AssetCategory _fetchAssetCategory(
+		PortletDataContext portletDataContext,
+		JSONObject configurationValueJSONObject) {
+
+		if (configurationValueJSONObject.has("categoryTreeNodeId")) {
+			long assetCategoryTreeNodeId = configurationValueJSONObject.getLong(
+				"categoryTreeNodeId");
+
+			return _assetCategoryLocalService.fetchCategory(
+				assetCategoryTreeNodeId);
+		}
+		else if (configurationValueJSONObject.has("externalReferenceCode")) {
+			return _assetCategoryLocalService.
+				fetchAssetCategoryByExternalReferenceCode(
+					configurationValueJSONObject.getString(
+						"externalReferenceCode"),
+					_getScopeGroupId(
+						portletDataContext,
+						configurationValueJSONObject.getString(
+							"scopeExternalReferenceCode")));
+		}
+
+		return null;
+	}
+
+	private AssetVocabulary _fetchAssetVocabulary(
+		PortletDataContext portletDataContext,
+		JSONObject configurationValueJSONObject) {
+
+		if (configurationValueJSONObject.has("categoryTreeNodeId")) {
+			long assetCategoryTreeNodeId = configurationValueJSONObject.getLong(
+				"categoryTreeNodeId");
+
+			return _assetVocabularyLocalService.fetchAssetVocabulary(
+				assetCategoryTreeNodeId);
+		}
+		else if (configurationValueJSONObject.has("externalReferenceCode")) {
+			return _assetVocabularyLocalService.
+				fetchAssetVocabularyByExternalReferenceCode(
+					configurationValueJSONObject.getString(
+						"externalReferenceCode"),
+					_getScopeGroupId(
+						portletDataContext,
+						configurationValueJSONObject.getString(
+							"scopeExternalReferenceCode")));
+		}
+
+		return null;
+	}
+
+	private long _getScopeGroupId(
+		PortletDataContext portletDataContext,
+		String scopeExternalReferenceCode) {
+
+		if (Validator.isNull(scopeExternalReferenceCode)) {
+			return portletDataContext.getScopeGroupId();
+		}
+
+		Group group = _groupLocalService.fetchGroupByExternalReferenceCode(
+			scopeExternalReferenceCode, portletDataContext.getCompanyId());
+
+		if (group != null) {
+			return group.getGroupId();
+		}
+
+		return portletDataContext.getScopeGroupId();
+	}
+
 	@Reference
 	private AssetCategoryLocalService _assetCategoryLocalService;
 
@@ -190,5 +258,8 @@ public class
 
 	@Reference
 	private FragmentEntryConfigurationParser _fragmentEntryConfigurationParser;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 }
