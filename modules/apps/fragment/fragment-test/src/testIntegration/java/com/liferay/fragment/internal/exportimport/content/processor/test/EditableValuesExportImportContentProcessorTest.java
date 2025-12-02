@@ -10,6 +10,9 @@ import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetVocabularyLocalService;
+import com.liferay.asset.list.constants.AssetListEntryTypeConstants;
+import com.liferay.asset.list.model.AssetListEntry;
+import com.liferay.asset.list.service.AssetListEntryLocalService;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
@@ -327,6 +330,157 @@ public class EditableValuesExportImportContentProcessorTest {
 
 		_assertCategoryTreeNodeSelectorEditableValues(
 			"Category", 0, assetCategory.getExternalReferenceCode(),
+			group.getExternalReferenceCode(),
+			_fragmentEntryLinkLocalService.getFragmentEntryLinkByUuidAndGroupId(
+				fragmentEntryLink.getUuid(), _liveGroup.getGroupId()));
+	}
+
+	@Test
+	@TestInfo("LPD-72840")
+	public void testCollectionSelectorEditableValues() throws Exception {
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				_stagingGroup.getGroupId(), TestPropsValues.getUserId());
+
+		AssetListEntry assetListEntry =
+			_assetListEntryLocalService.addAssetListEntry(
+				RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+				_stagingGroup.getGroupId(), RandomTestUtil.randomString(),
+				AssetListEntryTypeConstants.TYPE_DYNAMIC, serviceContext);
+
+		FragmentEntryLink fragmentEntryLink =
+			ContentLayoutTestUtil.addFragmentEntryLinkToLayout(
+				JSONUtil.put(
+					FragmentEntryProcessorConstants.
+						KEY_FREEMARKER_FRAGMENT_ENTRY_PROCESSOR,
+					JSONUtil.put(
+						"collection",
+						JSONUtil.put(
+							"className", AssetListEntry.class.getName()
+						).put(
+							"classNameId",
+							_portal.getClassNameId(AssetListEntry.class)
+						).put(
+							"classPK", assetListEntry.getAssetListEntryId()
+						).put(
+							"type",
+							"com.liferay.item.selector.criteria." +
+								"InfoListItemSelectorReturnType"
+						))
+				).toString(),
+				StringPool.BLANK,
+				JSONUtil.put(
+					"fieldSets",
+					JSONUtil.put(
+						JSONUtil.put(
+							"fields",
+							JSONUtil.put(
+								JSONUtil.put(
+									"name", "collection"
+								).put(
+									"type", "collectionSelector"
+								))
+						).put(
+							"label", "Collection"
+						))
+				).toString(),
+				null, null, StringPool.BLANK, StringPool.BLANK, _draftLayout,
+				StringPool.BLANK,
+				_segmentsExperienceLocalService.
+					fetchDefaultSegmentsExperienceId(_draftLayout.getPlid()),
+				FragmentConstants.TYPE_COMPONENT);
+
+		ContentLayoutTestUtil.publishLayout(_draftLayout, _layout);
+
+		_publishLayouts();
+
+		assetListEntry =
+			_assetListEntryLocalService.getAssetListEntryByUuidAndGroupId(
+				assetListEntry.getUuid(), _liveGroup.getGroupId());
+
+		_assertCollectionSelectorEditableValues(
+			assetListEntry.getAssetListEntryId(), null, null,
+			_fragmentEntryLinkLocalService.getFragmentEntryLinkByUuidAndGroupId(
+				fragmentEntryLink.getUuid(), _liveGroup.getGroupId()));
+
+		assetListEntry = _assetListEntryLocalService.addAssetListEntry(
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+			_stagingGroup.getGroupId(), RandomTestUtil.randomString(),
+			AssetListEntryTypeConstants.TYPE_DYNAMIC, serviceContext);
+
+		fragmentEntryLink = _setEditableValues(
+			JSONUtil.put(
+				FragmentEntryProcessorConstants.
+					KEY_FREEMARKER_FRAGMENT_ENTRY_PROCESSOR,
+				JSONUtil.put(
+					"collection",
+					JSONUtil.put(
+						"className", AssetListEntry.class.getName()
+					).put(
+						"classNameId",
+						_portal.getClassNameId(AssetListEntry.class)
+					).put(
+						"externalReferenceCode",
+						assetListEntry.getExternalReferenceCode()
+					).put(
+						"type",
+						"com.liferay.item.selector.criteria." +
+							"InfoListItemSelectorReturnType"
+					))
+			).toString(),
+			fragmentEntryLink);
+
+		_publishLayouts();
+
+		assetListEntry =
+			_assetListEntryLocalService.getAssetListEntryByUuidAndGroupId(
+				assetListEntry.getUuid(), _liveGroup.getGroupId());
+
+		_assertCollectionSelectorEditableValues(
+			0, assetListEntry.getExternalReferenceCode(), null,
+			_fragmentEntryLinkLocalService.getFragmentEntryLinkByUuidAndGroupId(
+				fragmentEntryLink.getUuid(), _liveGroup.getGroupId()));
+
+		Group group = _groupLocalService.getGroup(TestPropsValues.getGroupId());
+
+		ServiceContext groupServiceContext =
+			ServiceContextTestUtil.getServiceContext(
+				group.getGroupId(), TestPropsValues.getUserId());
+
+		assetListEntry = _assetListEntryLocalService.addAssetListEntry(
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+			group.getGroupId(), RandomTestUtil.randomString(),
+			AssetListEntryTypeConstants.TYPE_DYNAMIC, groupServiceContext);
+
+		fragmentEntryLink = _setEditableValues(
+			JSONUtil.put(
+				FragmentEntryProcessorConstants.
+					KEY_FREEMARKER_FRAGMENT_ENTRY_PROCESSOR,
+				JSONUtil.put(
+					"collection",
+					JSONUtil.put(
+						"className", AssetListEntry.class.getName()
+					).put(
+						"classNameId",
+						_portal.getClassNameId(AssetListEntry.class)
+					).put(
+						"externalReferenceCode",
+						assetListEntry.getExternalReferenceCode()
+					).put(
+						"scopeExternalReferenceCode",
+						group.getExternalReferenceCode()
+					).put(
+						"type",
+						"com.liferay.item.selector.criteria." +
+							"InfoListItemSelectorReturnType"
+					))
+			).toString(),
+			fragmentEntryLink);
+
+		_publishLayouts();
+
+		_assertCollectionSelectorEditableValues(
+			0, assetListEntry.getExternalReferenceCode(),
 			group.getExternalReferenceCode(),
 			_fragmentEntryLinkLocalService.getFragmentEntryLinkByUuidAndGroupId(
 				fragmentEntryLink.getUuid(), _liveGroup.getGroupId()));
@@ -985,7 +1139,6 @@ public class EditableValuesExportImportContentProcessorTest {
 			_stagingGroup.getGroupId(), 0);
 
 		fragmentEntryLink = _setEditableValues(
-			fragmentEntryLink,
 			JSONUtil.put(
 				FragmentEntryProcessorConstants.
 					KEY_FREEMARKER_FRAGMENT_ENTRY_PROCESSOR,
@@ -1000,7 +1153,8 @@ public class EditableValuesExportImportContentProcessorTest {
 						"externalReferenceCode",
 						journalArticle.getExternalReferenceCode()
 					))
-			).toString());
+			).toString(),
+			fragmentEntryLink);
 
 		_publishLayouts();
 
@@ -1018,7 +1172,6 @@ public class EditableValuesExportImportContentProcessorTest {
 		journalArticle = JournalTestUtil.addArticle(group.getGroupId(), 0);
 
 		fragmentEntryLink = _setEditableValues(
-			fragmentEntryLink,
 			JSONUtil.put(
 				FragmentEntryProcessorConstants.
 					KEY_FREEMARKER_FRAGMENT_ENTRY_PROCESSOR,
@@ -1036,7 +1189,8 @@ public class EditableValuesExportImportContentProcessorTest {
 						"scopeExternalReferenceCode",
 						group.getExternalReferenceCode()
 					))
-			).toString());
+			).toString(),
+			fragmentEntryLink);
 
 		_publishLayouts();
 
@@ -1235,6 +1389,47 @@ public class EditableValuesExportImportContentProcessorTest {
 		}
 	}
 
+	private void _assertCollectionSelectorEditableValues(
+		long classPK, String externalReferenceCode,
+		String scopeExternalReferenceCode,
+		FragmentEntryLink fragmentEntryLink) {
+
+		JSONObject editableValuesJSONObject =
+			fragmentEntryLink.getEditableValuesJSONObject();
+
+		JSONObject freeMarkerJSONObject =
+			editableValuesJSONObject.getJSONObject(
+				FragmentEntryProcessorConstants.
+					KEY_FREEMARKER_FRAGMENT_ENTRY_PROCESSOR);
+
+		JSONObject collectionJSONObject = freeMarkerJSONObject.getJSONObject(
+			"collection");
+
+		Assert.assertEquals(
+			AssetListEntry.class.getName(),
+			collectionJSONObject.getString("className"));
+		Assert.assertEquals(
+			_portal.getClassNameId(AssetListEntry.class),
+			collectionJSONObject.getLong("classNameId"));
+
+		if (classPK > 0) {
+			Assert.assertEquals(
+				classPK, collectionJSONObject.getLong("classPK"));
+		}
+
+		if (Validator.isNotNull(externalReferenceCode)) {
+			Assert.assertEquals(
+				externalReferenceCode,
+				collectionJSONObject.getString("externalReferenceCode"));
+		}
+
+		if (Validator.isNotNull(scopeExternalReferenceCode)) {
+			Assert.assertEquals(
+				scopeExternalReferenceCode,
+				collectionJSONObject.getString("scopeExternalReferenceCode"));
+		}
+	}
+
 	private void _assertDeletedLayoutJSONObject(JSONObject layoutJSONObject) {
 		Assert.assertFalse(layoutJSONObject.has("groupId"));
 		Assert.assertFalse(layoutJSONObject.has("layoutId"));
@@ -1298,6 +1493,45 @@ public class EditableValuesExportImportContentProcessorTest {
 			"itemSelector");
 
 		Assert.assertEquals(classPK, itemSelectorJSONObject.getLong("classPK"));
+	}
+
+	private void _assertItemSelectorEditableValues(
+		long classPK, String externalReferenceCode,
+		String scopeExternalReferenceCode,
+		FragmentEntryLink fragmentEntryLink) {
+
+		JSONObject jsonObject = fragmentEntryLink.getEditableValuesJSONObject();
+
+		JSONObject freeMarkerJSONObject = jsonObject.getJSONObject(
+			FragmentEntryProcessorConstants.
+				KEY_FREEMARKER_FRAGMENT_ENTRY_PROCESSOR);
+
+		JSONObject itemSelectorJSONObject = freeMarkerJSONObject.getJSONObject(
+			"itemSelector");
+
+		Assert.assertEquals(
+			JournalArticle.class.getName(),
+			itemSelectorJSONObject.getString("className"));
+		Assert.assertEquals(
+			_portal.getClassNameId(JournalArticle.class),
+			itemSelectorJSONObject.getLong("classNameId"));
+
+		if (classPK > 0) {
+			Assert.assertEquals(
+				classPK, itemSelectorJSONObject.getLong("classPK"));
+		}
+
+		if (Validator.isNotNull(externalReferenceCode)) {
+			Assert.assertEquals(
+				externalReferenceCode,
+				itemSelectorJSONObject.getString("externalReferenceCode"));
+		}
+
+		if (Validator.isNotNull(scopeExternalReferenceCode)) {
+			Assert.assertEquals(
+				scopeExternalReferenceCode,
+				itemSelectorJSONObject.getString("scopeExternalReferenceCode"));
+		}
 	}
 
 	private void _assertLayoutJSONObject(
@@ -1400,6 +1634,9 @@ public class EditableValuesExportImportContentProcessorTest {
 
 	@Inject
 	private AssetCategoryLocalService _assetCategoryLocalService;
+
+	@Inject
+	private AssetListEntryLocalService _assetListEntryLocalService;
 
 	@Inject
 	private AssetVocabularyLocalService _assetVocabularyLocalService;
