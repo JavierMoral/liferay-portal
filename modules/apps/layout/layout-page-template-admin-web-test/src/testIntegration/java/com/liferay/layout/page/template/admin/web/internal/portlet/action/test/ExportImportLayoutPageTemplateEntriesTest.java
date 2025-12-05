@@ -801,13 +801,26 @@ public class ExportImportLayoutPageTemplateEntriesTest {
 
 		_addDateFragmentEntry();
 
+		Map<String, String> numberValuesMap = HashMapBuilder.put(
+			"CLASS_PK",
+			() -> {
+				JournalArticle journalArticle = _addJournalArticle(
+					_group1.getGroupId());
+
+				return String.valueOf(journalArticle.getResourcePrimKey());
+			}
+		).build();
+
+		Map<String, String> stringValuesMap = HashMapBuilder.put(
+			"SITE_KEY", _group1.getGroupKey()
+		).build();
+
 		File expectedFile = _generateZipFile(
-			"fragment/date_field/mapped/expected", null,
-			HashMapBuilder.put(
-				"SITE_KEY", _group1.getGroupKey()
-			).build());
+			"fragment/date_field/mapped/expected", numberValuesMap,
+			stringValuesMap);
 		File inputFile = _generateZipFile(
-			"fragment/date_field/mapped/input", null, null);
+			"fragment/date_field/mapped/input", numberValuesMap,
+			stringValuesMap);
 
 		_validateImportExport(expectedFile, inputFile);
 	}

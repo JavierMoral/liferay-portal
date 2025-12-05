@@ -8,6 +8,8 @@
 						"key": "BASIC_COMPONENT-date",
 						"siteKey": "£{SITE_KEY}"
 					},
+					"fragmentConfig": {
+					},
 					"fragmentFields": [
 						{
 							"id": "element-date",
@@ -16,7 +18,8 @@
 									"mapping": {
 										"fieldKey": "JournalArticle_modifiedDate",
 										"itemReference": {
-											"contextSource": "DisplayPageItem"
+											"className": "com.liferay.journal.model.JournalArticle",
+											"classPK": "${CLASS_PK}"
 										}
 									}
 								},

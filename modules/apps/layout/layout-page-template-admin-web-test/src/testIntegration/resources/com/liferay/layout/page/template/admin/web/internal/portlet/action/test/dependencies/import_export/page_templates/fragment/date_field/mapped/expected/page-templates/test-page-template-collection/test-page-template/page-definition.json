@@ -5,8 +5,9 @@
 			{
 				"definition": {
 					"fragment": {
-						"key": "BASIC_COMPONENT-date",
-						"siteKey": "£{SITE_KEY}"
+						"key": "BASIC_COMPONENT-date"
+					},
+					"fragmentConfig": {
 					},
 					"fragmentFields": [
 						{
@@ -16,7 +17,8 @@
 									"mapping": {
 										"fieldKey": "JournalArticle_modifiedDate",
 										"itemReference": {
-											"contextSource": "DisplayPageItem"
+											"className": "com.liferay.journal.model.JournalArticle",
+											"classPK": "${CLASS_PK}"
 										}
 									}
 								},
@@ -28,10 +30,11 @@
 								"fragmentLink": {}
 							}
 						}
-					]
+					],
+					"indexed": true
 				},
-				"type": "Fragment",
-				"id": "item2"
+				"id": "item2",
+				"type": "Fragment"
 			}
 		],
 		"type": "Root"
