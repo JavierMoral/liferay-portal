@@ -169,7 +169,16 @@ public class DisplayPageLayoutTypeController
 		if (!displayPageLayoutTypeControllerDisplayContext.hasInfoItem() &&
 			!themeDisplay.isSignedIn()) {
 
-			throw new NoSuchLayoutException();
+			if (AuthLoginGroupSettingsUtil.isPromptEnabled(
+					layout.getGroupId())) {
+
+				redirect = HttpComponentsUtil.setParameter(
+					themeDisplay.getURLSignIn(), "redirect",
+					themeDisplay.getURLCurrent());
+			}
+			else {
+				throw new NoSuchLayoutException();
+			}
 		}
 
 		String page = getViewPage();
