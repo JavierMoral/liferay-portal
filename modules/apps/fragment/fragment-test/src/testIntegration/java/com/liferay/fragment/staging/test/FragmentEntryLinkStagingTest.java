@@ -16,6 +16,7 @@ import com.liferay.fragment.service.FragmentEntryLocalService;
 import com.liferay.fragment.test.util.FragmentEntryTestUtil;
 import com.liferay.fragment.test.util.FragmentStagingTestUtil;
 import com.liferay.fragment.test.util.FragmentTestUtil;
+import com.liferay.layout.test.util.ContentLayoutTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
@@ -28,9 +29,11 @@ import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.segments.service.SegmentsExperienceLocalServiceUtil;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -61,34 +64,78 @@ public class FragmentEntryLinkStagingTest {
 		_layout = LayoutTestUtil.addTypeContentLayout(_liveGroup);
 	}
 
+	@FeatureFlag(enable = false, value = "LPD-35914")
 	@Test
 	public void testFragmentEntryLinkCopiedWhenLocalStagingActivated()
-		throws PortalException {
+		throws Exception {
 
-		FragmentCollection fragmentCollection =
-			FragmentTestUtil.addFragmentCollection(_liveGroup.getGroupId());
-
-		FragmentEntry fragmentEntry = FragmentEntryTestUtil.addFragmentEntry(
-			fragmentCollection.getFragmentCollectionId());
-
-		FragmentEntryLink liveFragmentEntryLink =
-			FragmentTestUtil.addFragmentEntryLink(
-				_liveGroup.getGroupId(), fragmentEntry.getFragmentEntryId(),
-				_layout.getPlid());
-
-		_stagingGroup = FragmentStagingTestUtil.enableLocalStaging(_liveGroup);
-
-		FragmentEntryLink stagingFragmentEntryLink =
-			_fragmentEntryLinkLocalService.
-				fetchFragmentEntryLinkByUuidAndGroupId(
-					liveFragmentEntryLink.getUuid(),
-					_stagingGroup.getGroupId());
-
-		Assert.assertNotNull(stagingFragmentEntryLink);
+		_testFragmentEntryLinkCopiedWhenLocalStagingActivated();
 	}
 
 	@Test
+	public void testFragmentEntryLinkCopiedWhenLocalStagingActivatedWithBatch()
+		throws Exception {
+
+		_testFragmentEntryLinkCopiedWhenLocalStagingActivated();
+	}
+
+	@FeatureFlag(enable = false, value = "LPD-35914")
+	@Test
 	public void testPublishFragmentEntryDeletionWithPreviousFragmentEntryName()
+		throws PortalException {
+
+		_testPublishFragmentEntryDeletionWithPreviousFragmentEntryName();
+	}
+
+	@Test
+	public void testPublishFragmentEntryDeletionWithPreviousFragmentEntryNameWithBatch()
+		throws PortalException {
+
+		_testPublishFragmentEntryDeletionWithPreviousFragmentEntryName();
+	}
+
+	@FeatureFlag(enable = false, value = "LPD-35914")
+	@Test
+	public void testPublishFragmentEntryLink() throws Exception {
+		_testPublishFragmentEntryLink();
+	}
+
+	@Test
+	public void testPublishFragmentEntryLinkWithBatch() throws Exception {
+		_testPublishFragmentEntryLink();
+	}
+
+	@FeatureFlag(enable = false, value = "LPD-35914")
+	@Test
+	public void testValidateFragmentEntryAfterDeactivateStaging()
+		throws PortalException {
+
+		_testValidateFragmentEntryAfterDeactivateStaging();
+	}
+
+	@Test
+	public void testValidateFragmentEntryAfterDeactivateStagingWithBatch()
+		throws PortalException {
+
+		_testValidateFragmentEntryAfterDeactivateStaging();
+	}
+
+	private void _testFragmentEntryLinkCopiedWhenLocalStagingActivated()
+		throws Exception {
+
+		FragmentEntryLink liveFragmentEntryLink =
+			ContentLayoutTestUtil.addFragmentEntryLinkToLayout(
+				null, _layout,
+				SegmentsExperienceLocalServiceUtil.
+					fetchDefaultSegmentsExperienceId(_layout.getPlid()));
+
+		_stagingGroup = FragmentStagingTestUtil.enableLocalStaging(_liveGroup);
+
+		_fragmentEntryLinkLocalService.getFragmentEntryLinkByUuidAndGroupId(
+			liveFragmentEntryLink.getUuid(), _stagingGroup.getGroupId());
+	}
+
+	private void _testPublishFragmentEntryDeletionWithPreviousFragmentEntryName()
 		throws PortalException {
 
 		FragmentCollection liveFragmentCollection =
@@ -147,23 +194,22 @@ public class FragmentEntryLinkStagingTest {
 		Assert.assertNull(liveFragmentEntry);
 	}
 
-	@Test
-	public void testPublishFragmentEntryLink() throws PortalException {
+	private void _testPublishFragmentEntryLink() throws Exception {
 		_stagingGroup = FragmentStagingTestUtil.enableLocalStaging(_liveGroup);
-
-		FragmentCollection fragmentCollection =
-			FragmentTestUtil.addFragmentCollection(_stagingGroup.getGroupId());
-
-		FragmentEntry fragmentEntry = FragmentEntryTestUtil.addFragmentEntry(
-			fragmentCollection.getFragmentCollectionId());
 
 		Layout stagingLayout = LayoutLocalServiceUtil.getLayoutByUuidAndGroupId(
 			_layout.getUuid(), _stagingGroup.getGroupId(), false);
 
+		Layout draftStagingLayout = stagingLayout.fetchDraftLayout();
+
 		FragmentEntryLink stagingFragmentEntryLink =
-			FragmentTestUtil.addFragmentEntryLink(
-				_stagingGroup.getGroupId(), fragmentEntry.getFragmentEntryId(),
-				stagingLayout.getPlid());
+			ContentLayoutTestUtil.addFragmentEntryLinkToLayout(
+				null, draftStagingLayout,
+				SegmentsExperienceLocalServiceUtil.
+					fetchDefaultSegmentsExperienceId(
+						draftStagingLayout.getPlid()));
+
+		ContentLayoutTestUtil.publishLayout(draftStagingLayout, stagingLayout);
 
 		FragmentStagingTestUtil.publishLayouts(_stagingGroup, _liveGroup);
 
@@ -171,8 +217,7 @@ public class FragmentEntryLinkStagingTest {
 			stagingFragmentEntryLink.getUuid(), _liveGroup.getGroupId());
 	}
 
-	@Test
-	public void testValidateFragmentEntryAfterDeactivateStaging()
+	private void _testValidateFragmentEntryAfterDeactivateStaging()
 		throws PortalException {
 
 		FragmentCollection fragmentCollection =
