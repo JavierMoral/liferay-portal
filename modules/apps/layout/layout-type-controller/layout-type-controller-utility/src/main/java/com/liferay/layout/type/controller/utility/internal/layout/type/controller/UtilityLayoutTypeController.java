@@ -10,6 +10,7 @@ import com.liferay.layout.manager.LayoutLockManager;
 import com.liferay.layout.security.permission.resource.LayoutContentModelResourcePermission;
 import com.liferay.layout.type.controller.BaseLayoutTypeControllerImpl;
 import com.liferay.layout.utility.page.model.LayoutUtilityPageEntry;
+import com.liferay.layout.utility.page.service.LayoutUtilityPageEntryLocalServiceUtil;
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
@@ -330,22 +331,12 @@ public class UtilityLayoutTypeController extends BaseLayoutTypeControllerImpl {
 	private boolean _hasViewPermissions(
 		PermissionChecker permissionChecker, Layout layout) {
 
-		try {
-			if (_layoutPermission.containsLayoutUpdatePermission(
-					permissionChecker, layout) ||
-				_modelResourcePermission.contains(
-					permissionChecker, layout.getLayoutId(), ActionKeys.VIEW)) {
+		LayoutUtilityPageEntry layoutUtilityPageEntry = LayoutUtilityPageEntryLocalServiceUtil.fetchLayoutUtilityPageEntryByPlid(layout.getPlid());
 
-				return true;
-			}
-		}
-		catch (PortalException portalException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(portalException);
-			}
-		}
-
-		return false;
+		return permissionChecker.hasPermission(
+			layout.getGroupId(), LayoutUtilityPageEntry.class.getName(),
+			layoutUtilityPageEntry.getLayoutUtilityPageEntryId(),
+			ActionKeys.VIEW);
 	}
 
 	private static final String _EDIT_LAYOUT_PAGE =
