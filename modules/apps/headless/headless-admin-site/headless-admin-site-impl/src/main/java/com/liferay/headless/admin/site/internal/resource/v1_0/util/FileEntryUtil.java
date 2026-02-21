@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.util.MimeTypesUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.File;
+import java.io.IOException;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -78,15 +79,26 @@ public class FileEntryUtil {
 					" because of unsupported protocol ", url.getProtocol()));
 		}
 
-		URLConnection urlConnection = url.openConnection();
+		URLConnection urlConnection = null;
 
-		if ((urlConnection instanceof HttpURLConnection httpURLConnection) &&
-			(httpURLConnection.getResponseCode() !=
-				HttpURLConnection.HTTP_OK)) {
+		try {
+			urlConnection = url.openConnection();
 
+			if ((urlConnection instanceof
+					HttpURLConnection httpURLConnection) &&
+				(httpURLConnection.getResponseCode() !=
+					HttpURLConnection.HTTP_OK)) {
+
+				throw new IllegalArgumentException(
+					"Unable to download file from " +
+						thumbnailURLReference.getUrl());
+			}
+		}
+		catch (IOException ioException) {
 			throw new IllegalArgumentException(
 				"Unable to download file from " +
-					thumbnailURLReference.getUrl());
+					thumbnailURLReference.getUrl(),
+				ioException);
 		}
 
 		File file = FileUtil.createTempFile(
