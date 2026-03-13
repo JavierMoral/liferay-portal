@@ -10,6 +10,9 @@ package com.liferay.fragment.collection.filter.constants;
  */
 public interface FragmentCollectionFilterConstants {
 
+	public static final String CONFIGURATION_JSON_OBJECT_KEY =
+		"com.liferay.fragment.collection.filter.configurationJSONObject";
+
 	public static final String FILTER_PREFIX = "filter_";
 
 }

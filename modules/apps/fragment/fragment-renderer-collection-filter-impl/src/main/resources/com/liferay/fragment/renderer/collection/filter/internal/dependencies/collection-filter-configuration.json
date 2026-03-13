@@ -1,0 +1,124 @@
+{
+	"fieldSets": [
+		{
+			"fields": [
+				{
+					"dataType": "array",
+					"defaultValue": [],
+					"label": "target-collection",
+					"name": "targetCollections",
+					"type": "targetCollectionSelector",
+					"typeOptions": {
+						"enableCompatibleCollections": true
+					}
+				},
+				{
+					"dataType": "string",
+					"defaultValue": "",
+					"label": "filter",
+					"name": "filterKey",
+					"type": "filterSelector"
+				},
+				{
+					"label": "source",
+					"name": "source",
+					"type": "categoryTreeNodeSelector",
+					"typeOptions": {
+						"dependency": {
+							"filterKey": {
+								"type": "equal",
+								"value": "category"
+							}
+						}
+					}
+				},
+				{
+					"defaultValue": false,
+					"label": "single-selection",
+					"name": "singleSelection",
+					"type": "checkbox",
+					"typeOptions": {
+						"dependency": {
+							"filterKey": {
+								"type": "equal",
+								"value": "category"
+							}
+						}
+					}
+				},
+				{
+					"defaultValue": false,
+					"label": "include-search-field",
+					"name": "showSearch",
+					"type": "checkbox",
+					"typeOptions": {
+						"dependency": {
+							"filterKey": {
+								"type": "equal",
+								"value": "category"
+							}
+						}
+					}
+				},
+				{
+					"defaultValue": false,
+					"label": "show-label",
+					"name": "showLabel",
+					"type": "checkbox",
+					"typeOptions": {
+						"dependency": {
+							"filterKey": {
+								"type": "not-equal",
+								"value": ""
+							}
+						}
+					}
+				},
+				{
+					"defaultValue": "",
+					"label": "label-text",
+					"localizable": true,
+					"name": "label",
+					"type": "text",
+					"typeOptions": {
+						"dependency": {
+							"filterKey": {
+								"type": "not-equal",
+								"value": ""
+							}
+						}
+					}
+				},
+				{
+					"defaultValue": false,
+					"label": "show-help-text",
+					"name": "showHelpText",
+					"type": "checkbox",
+					"typeOptions": {
+						"dependency": {
+							"filterKey": {
+								"type": "equal",
+								"value": "tags"
+							}
+						}
+					}
+				},
+				{
+					"defaultValue": "type-a-comma-or-press-enter-to-input-a-tag",
+					"label": "help-text",
+					"localizable": true,
+					"name": "helpText",
+					"type": "text",
+					"typeOptions": {
+						"dependency": {
+							"filterKey": {
+								"type": "equal",
+								"value": "tags"
+							}
+						}
+					}
+				}
+			]
+		}
+	]
+}

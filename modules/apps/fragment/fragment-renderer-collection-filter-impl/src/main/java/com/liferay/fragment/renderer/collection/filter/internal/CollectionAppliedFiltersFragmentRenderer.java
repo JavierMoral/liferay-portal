@@ -11,9 +11,14 @@ import com.liferay.fragment.renderer.FragmentRendererContext;
 import com.liferay.fragment.renderer.collection.filter.internal.display.context.CollectionAppliedFiltersFragmentRendererDisplayContext;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
+import com.liferay.portal.kernel.json.JSONException;
+import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.ResourceBundleUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletContext;
@@ -35,6 +40,31 @@ public class CollectionAppliedFiltersFragmentRenderer
 	@Override
 	public String getCollectionKey() {
 		return "content-display";
+	}
+
+	@Override
+	public JSONObject getConfigurationJSONObject(
+		FragmentRendererContext fragmentRendererContext) {
+
+		try {
+			JSONObject jsonObject = _jsonFactory.createJSONObject(
+				StringUtil.read(
+					getClass(),
+					"/com/liferay/fragment/renderer/collection/filter/internal" +
+						"/dependencies/applied-filters-configuration.json"));
+
+			return _fragmentEntryConfigurationParser.translateConfiguration(
+				jsonObject,
+				ResourceBundleUtil.getBundle(
+					"content.Language", getClass()));
+		}
+		catch (JSONException jsonException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(jsonException);
+			}
+
+			return null;
+		}
 	}
 
 	@Override
@@ -84,6 +114,9 @@ public class CollectionAppliedFiltersFragmentRenderer
 
 	@Reference
 	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;
+
+	@Reference
+	private JSONFactory _jsonFactory;
 
 	@Reference
 	private Language _language;

@@ -7,15 +7,21 @@ package com.liferay.fragment.renderer.collection.filter.internal;
 
 import com.liferay.fragment.collection.filter.FragmentCollectionFilter;
 import com.liferay.fragment.collection.filter.FragmentCollectionFilterRegistry;
+import com.liferay.fragment.collection.filter.constants.FragmentCollectionFilterConstants;
 import com.liferay.fragment.constants.FragmentConfigurationFieldDataType;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.fragment.renderer.FragmentRendererContext;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
+import com.liferay.portal.kernel.json.JSONException;
+import com.liferay.portal.kernel.json.JSONFactory;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ResourceBundleUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletContext;
@@ -36,6 +42,31 @@ public class CollectionFilterFragmentRenderer implements FragmentRenderer {
 	@Override
 	public String getCollectionKey() {
 		return "content-display";
+	}
+
+	@Override
+	public JSONObject getConfigurationJSONObject(
+		FragmentRendererContext fragmentRendererContext) {
+
+		try {
+			JSONObject jsonObject = _jsonFactory.createJSONObject(
+				StringUtil.read(
+					getClass(),
+					"/com/liferay/fragment/renderer/collection/filter/internal" +
+						"/dependencies/collection-filter-configuration.json"));
+
+			return _fragmentEntryConfigurationParser.translateConfiguration(
+				jsonObject,
+				ResourceBundleUtil.getBundle(
+					"content.Language", getClass()));
+		}
+		catch (JSONException jsonException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(jsonException);
+			}
+
+			return null;
+		}
 	}
 
 	@Override
@@ -65,6 +96,12 @@ public class CollectionFilterFragmentRenderer implements FragmentRenderer {
 		}
 
 		try {
+			JSONObject configurationJSONObject = getConfigurationJSONObject(
+				fragmentRendererContext);
+
+			httpServletRequest.setAttribute(
+				FragmentCollectionFilterConstants.CONFIGURATION_JSON_OBJECT_KEY,
+				configurationJSONObject);
 			httpServletRequest.setAttribute(
 				FragmentCollectionFilter.class.getName(),
 				fragmentCollectionFilter);
@@ -103,6 +140,9 @@ public class CollectionFilterFragmentRenderer implements FragmentRenderer {
 
 	@Reference
 	private FragmentEntryConfigurationParser _fragmentEntryConfigurationParser;
+
+	@Reference
+	private JSONFactory _jsonFactory;
 
 	@Reference
 	private Language _language;

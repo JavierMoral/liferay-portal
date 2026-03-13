@@ -8,19 +8,15 @@ package com.liferay.fragment.collection.filter.tags;
 import com.liferay.asset.kernel.model.AssetTag;
 import com.liferay.asset.kernel.service.AssetTagLocalService;
 import com.liferay.fragment.collection.filter.FragmentCollectionFilter;
+import com.liferay.fragment.collection.filter.constants.FragmentCollectionFilterConstants;
 import com.liferay.fragment.collection.filter.tags.display.context.FragmentCollectionFilterTagsDisplayContext;
 import com.liferay.fragment.renderer.FragmentRendererContext;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
-import com.liferay.portal.kernel.json.JSONException;
-import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
-import com.liferay.portal.kernel.util.StringUtil;
 
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletContext;
@@ -28,7 +24,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.Locale;
-import java.util.ResourceBundle;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -38,29 +33,6 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(service = FragmentCollectionFilter.class)
 public class FragmentCollectionFilterTags implements FragmentCollectionFilter {
-
-	@Override
-	public JSONObject getConfigurationJSONObject() {
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			"content.Language", LocaleUtil.getMostRelevantLocale(), getClass());
-
-		try {
-			String json = StringUtil.read(
-				getClass(),
-				"/com/liferay/fragment/collection/filter/tags/dependencies" +
-					"/configuration.json");
-
-			return _fragmentEntryConfigurationParser.translateConfiguration(
-				_jsonFactory.createJSONObject(json), resourceBundle);
-		}
-		catch (JSONException jsonException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(jsonException);
-			}
-
-			return null;
-		}
-	}
 
 	@Override
 	public String getFilterKey() {
@@ -94,7 +66,9 @@ public class FragmentCollectionFilterTags implements FragmentCollectionFilter {
 			httpServletRequest.setAttribute(
 				FragmentCollectionFilterTagsDisplayContext.class.getName(),
 				new FragmentCollectionFilterTagsDisplayContext(
-					getConfigurationJSONObject(),
+					(JSONObject)httpServletRequest.getAttribute(
+						FragmentCollectionFilterConstants.
+							CONFIGURATION_JSON_OBJECT_KEY),
 					_fragmentEntryConfigurationParser, fragmentRendererContext,
 					httpServletRequest));
 
@@ -117,9 +91,6 @@ public class FragmentCollectionFilterTags implements FragmentCollectionFilter {
 
 	@Reference
 	private FragmentEntryConfigurationParser _fragmentEntryConfigurationParser;
-
-	@Reference
-	private JSONFactory _jsonFactory;
 
 	@Reference
 	private Language _language;

@@ -11,6 +11,7 @@ import com.liferay.fragment.exception.FragmentEntryConfigurationException;
 import com.liferay.fragment.validator.FragmentEntryValidator;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
+import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -88,9 +89,16 @@ public class FragmentCollectionFilterRegistryImpl
 			FragmentCollectionFilter fragmentCollectionFilter =
 				_bundleContext.getService(serviceReference);
 
+			JSONObject configurationJSONObject =
+				fragmentCollectionFilter.getConfigurationJSONObject();
+
+			if (configurationJSONObject == null) {
+				return fragmentCollectionFilter;
+			}
+
 			try {
 				_fragmentEntryValidator.validateConfiguration(
-					fragmentCollectionFilter.getConfigurationJSONObject());
+					configurationJSONObject);
 
 				return fragmentCollectionFilter;
 			}
