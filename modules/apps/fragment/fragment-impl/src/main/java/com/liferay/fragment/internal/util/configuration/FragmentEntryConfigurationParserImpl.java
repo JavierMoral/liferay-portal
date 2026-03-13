@@ -549,6 +549,13 @@ public class FragmentEntryConfigurationParserImpl
 				fragmentConfigurationFieldDataType, parsedValue);
 		}
 		else if (StringUtil.equalsIgnoreCase(
+					fragmentConfigurationField.getType(),
+					"targetCollectionSelector")) {
+
+			return _getFieldValue(
+				FragmentConfigurationFieldDataType.ARRAY, parsedValue);
+		}
+		else if (StringUtil.equalsIgnoreCase(
 					fragmentConfigurationField.getType(), "url")) {
 
 			return _getURLValue(parsedValue);

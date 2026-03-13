@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -279,8 +280,11 @@ public class FragmentEntryValidatorImpl implements FragmentEntryValidator {
 							dependencyFieldJSONObject.getString("type"))) {
 
 						throw new FragmentEntryConfigurationException(
-							"Dependency field type should be checkbox, " +
-								"select, or text");
+							"Dependency field type should be one of: " +
+								String.join(
+									", ",
+									new TreeSet<>(
+										_allowedDependencyTypes)));
 					}
 				}
 			}
@@ -288,7 +292,9 @@ public class FragmentEntryValidatorImpl implements FragmentEntryValidator {
 	}
 
 	private static final Set<String> _allowedDependencyTypes =
-		SetUtil.fromArray("checkbox", "select", "text");
+		SetUtil.fromArray(
+			"checkbox", "filterSelector", "select",
+			"targetCollectionSelector", "text");
 	private static final JSONValidator _configurationJSONValidator =
 		new JSONValidator(
 			FragmentEntryValidatorImpl.class.getResource(
