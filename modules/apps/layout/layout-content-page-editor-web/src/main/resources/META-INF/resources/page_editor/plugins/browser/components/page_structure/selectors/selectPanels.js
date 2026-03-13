@@ -5,7 +5,6 @@
 
 import {BACKGROUND_IMAGE_FRAGMENT_ENTRY_PROCESSOR} from '../../../../../app/config/constants/backgroundImageFragmentEntryProcessor';
 import {COLLECTION_APPLIED_FILTERS_FRAGMENT_ENTRY_KEY} from '../../../../../app/config/constants/collectionAppliedFiltersFragmentKey';
-import {COLLECTION_FILTER_FRAGMENT_ENTRY_KEY} from '../../../../../app/config/constants/collectionFilterFragmentEntryKey';
 import {EDITABLE_FRAGMENT_ENTRY_PROCESSOR} from '../../../../../app/config/constants/editableFragmentEntryProcessor';
 import {EDITABLE_TYPES} from '../../../../../app/config/constants/editableTypes';
 import {FRAGMENT_ENTRY_TYPES} from '../../../../../app/config/constants/fragmentEntryTypes';
@@ -20,7 +19,6 @@ import {formIsRestricted} from '../../../../../app/utils/formIsRestricted';
 import getFragmentItem from '../../../../../app/utils/getFragmentItem';
 import isEditableSubmit from '../../../../../app/utils/isEditableSubmit';
 import {CollectionAppliedFiltersGeneralPanel} from '../components/item_configuration_panels/CollectionAppliedFiltersGeneralPanel';
-import {CollectionFilterGeneralPanel} from '../components/item_configuration_panels/CollectionFilterGeneralPanel';
 import ContainerAdvancedPanel from '../components/item_configuration_panels/ContainerAdvancedPanel';
 import ContainerGeneralPanel from '../components/item_configuration_panels/ContainerGeneralPanel';
 import {ContainerStylesPanel} from '../components/item_configuration_panels/ContainerStylesPanel';
@@ -44,7 +42,6 @@ import {RowStylesPanel} from '../components/item_configuration_panels/RowStylesP
 import {CollectionGeneralPanel} from '../components/item_configuration_panels/collection_general_panel/CollectionGeneralPanel';
 
 const FRAGMENT_WITH_CUSTOM_PANEL = [
-	COLLECTION_FILTER_FRAGMENT_ENTRY_KEY,
 	COLLECTION_APPLIED_FILTERS_FRAGMENT_ENTRY_KEY,
 ];
 
@@ -56,7 +53,6 @@ const PANEL_TYPES = {
 
 export const PANEL_IDS = {
 	collectionAppliedFiltersGeneral: 'collectionAppliedFiltersGeneral',
-	collectionFilterGeneral: 'collectionFilterGeneral',
 	collectionGeneral: 'collectionGeneral',
 	containerAdvanced: 'containerAdvanced',
 	containerGeneral: 'containerGeneral',
@@ -83,12 +79,6 @@ export const PANEL_IDS = {
 export const PANELS = {
 	[PANEL_IDS.collectionAppliedFiltersGeneral]: {
 		component: CollectionAppliedFiltersGeneralPanel,
-		label: Liferay.Language.get('general'),
-		priority: 2,
-		type: PANEL_TYPES.general,
-	},
-	[PANEL_IDS.collectionFilterGeneral]: {
-		component: CollectionFilterGeneralPanel,
 		label: Liferay.Language.get('general'),
 		priority: 2,
 		type: PANEL_TYPES.general,
@@ -356,9 +346,6 @@ export function selectPanels(activeItemId, activeItemType, state) {
 			[PANEL_IDS.collectionAppliedFiltersGeneral]:
 				fragmentEntryKey ===
 					COLLECTION_APPLIED_FILTERS_FRAGMENT_ENTRY_KEY &&
-				state.selectedViewportSize === VIEWPORT_SIZES.desktop,
-			[PANEL_IDS.collectionFilterGeneral]:
-				fragmentEntryKey === COLLECTION_FILTER_FRAGMENT_ENTRY_KEY &&
 				state.selectedViewportSize === VIEWPORT_SIZES.desktop,
 			[PANEL_IDS.formInputGeneral]:
 				fragmentEntryType === FRAGMENT_ENTRY_TYPES.input &&

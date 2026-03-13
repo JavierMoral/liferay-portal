@@ -95,6 +95,7 @@ export function FragmentGeneralPanel({item}) {
 									fragmentEntryLinksRef.current
 								}
 								isCustomStylesFieldSet
+								item={item}
 								label={fieldSet.label}
 								languageId={languageId}
 								onValueSelect={onValueSelect}
