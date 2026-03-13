@@ -12,12 +12,14 @@ import {CollectionSelectorField} from './CollectionSelectorField';
 import {ColorPaletteField} from './ColorPaletteField';
 import {ColorPickerField} from './ColorPickerField';
 import CustomCSSField from './CustomCSSField';
+import {FilterSelectorField} from './FilterSelectorField';
 import {HideFragmentField} from './HideFragmentField';
 import {ImageSelectorField} from './ImageSelectorField';
 import {ItemSelectorField} from './ItemSelectorField';
 import {NavigationMenuSelectorField} from './NavigationMenuSelectorField';
 import {SelectField} from './SelectField';
 import {SpacingBoxField} from './SpacingBoxField';
+import {TargetCollectionsField} from './TargetCollectionsField';
 import {TextField} from './TextField';
 import URLField from './URLField';
 import {VideoSelectorField} from './VideoSelectorField';
@@ -31,6 +33,7 @@ export const FRAGMENT_CONFIGURATION_FIELDS = {
 	colorPicker: ColorPickerField,
 	cssClassSelector: CSSClassSelectorField,
 	customCSS: CustomCSSField,
+	filterSelector: FilterSelectorField,
 	hideFragment: HideFragmentField,
 	imageSelector: ImageSelectorField,
 	itemSelector: ItemSelectorField,
@@ -38,6 +41,7 @@ export const FRAGMENT_CONFIGURATION_FIELDS = {
 	navigationMenuSelector: NavigationMenuSelectorField,
 	select: SelectField,
 	spacing: SpacingBoxField,
+	targetCollectionSelector: TargetCollectionsField,
 	text: TextField,
 	url: URLField,
 	videoSelector: VideoSelectorField,
