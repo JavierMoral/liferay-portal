@@ -44,6 +44,7 @@ import com.liferay.headless.admin.site.internal.dto.v1_0.util.LayoutUtil;
 import com.liferay.headless.admin.site.internal.dto.v1_0.util.LocalizedValueUtil;
 import com.liferay.info.item.ERCInfoItemIdentifier;
 import com.liferay.info.item.InfoItemServiceRegistry;
+import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Layout;
@@ -904,6 +905,10 @@ public class FragmentConfigurationFieldValueDTOConverter
 
 			textFragmentConfigurationFieldValue.setValue_i18n(
 				() -> LocalizedValueUtil.toLocalizedValues(jsonObject));
+		}
+		else if (fragmentFragmentConfigurationFieldValue instanceof JSONArray) {
+			textFragmentConfigurationFieldValue.setValue(
+				fragmentFragmentConfigurationFieldValue::toString);
 		}
 		else {
 			textFragmentConfigurationFieldValue.setValue(

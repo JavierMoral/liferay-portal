@@ -54,6 +54,8 @@ public class FragmentConfigurationFieldValueTypeUtil {
 		).put(
 			"colorPicker", FragmentConfigurationFieldValue.Type.COLOR_PICKER
 		).put(
+			"filterSelector", FragmentConfigurationFieldValue.Type.TEXT
+		).put(
 			"itemSelector", FragmentConfigurationFieldValue.Type.ITEM
 		).put(
 			"length", FragmentConfigurationFieldValue.Type.LENGTH
@@ -62,6 +64,9 @@ public class FragmentConfigurationFieldValueTypeUtil {
 			FragmentConfigurationFieldValue.Type.NAVIGATION_MENU
 		).put(
 			"select", FragmentConfigurationFieldValue.Type.SELECT
+		).put(
+			"targetCollectionSelector",
+			FragmentConfigurationFieldValue.Type.TEXT
 		).put(
 			"text", FragmentConfigurationFieldValue.Type.TEXT
 		).put(
