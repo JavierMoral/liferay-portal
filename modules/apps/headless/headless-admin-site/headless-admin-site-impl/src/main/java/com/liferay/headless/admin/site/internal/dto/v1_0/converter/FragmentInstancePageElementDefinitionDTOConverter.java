@@ -9,6 +9,9 @@ import com.liferay.fragment.entry.processor.constants.FragmentEntryProcessorCons
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
 import com.liferay.fragment.processor.PortletRegistry;
+import com.liferay.fragment.renderer.DefaultFragmentRendererContext;
+import com.liferay.fragment.renderer.FragmentRenderer;
+import com.liferay.fragment.renderer.FragmentRendererRegistry;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.fragment.util.configuration.FragmentConfigurationField;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
@@ -29,6 +32,7 @@ import com.liferay.headless.admin.site.internal.dto.v1_0.util.WidgetInstanceUtil
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.layout.util.structure.FragmentStyledLayoutStructureItem;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -151,6 +155,23 @@ public class FragmentInstancePageElementDefinitionDTOConverter
 		return jsonObject.getBoolean(key);
 	}
 
+	private JSONObject _getConfigurationJSONObject(
+		FragmentEntryLink fragmentEntryLink) {
+
+		if (Validator.isNotNull(fragmentEntryLink.getRendererKey())) {
+			FragmentRenderer fragmentRenderer =
+				_fragmentRendererRegistry.getFragmentRenderer(
+					fragmentEntryLink.getRendererKey());
+
+			if (fragmentRenderer != null) {
+				return fragmentRenderer.getConfigurationJSONObject(
+					new DefaultFragmentRendererContext(fragmentEntryLink));
+			}
+		}
+
+		return fragmentEntryLink.getConfigurationJSONObject();
+	}
+
 	private String _getDraftFragmentInstanceExternalReferenceCode(
 		FragmentEntryLink fragmentEntryLink) {
 
@@ -196,10 +217,10 @@ public class FragmentInstancePageElementDefinitionDTOConverter
 			return Collections.emptyMap();
 		}
 
-		JSONObject configurationJSONObject =
-			fragmentEntryLink.getConfigurationJSONObject();
+		JSONObject configurationJSONObject = _getConfigurationJSONObject(
+			fragmentEntryLink);
 
-		if (configurationJSONObject == null) {
+		if (JSONUtil.isEmpty(configurationJSONObject)) {
 			return Collections.emptyMap();
 		}
 
@@ -210,8 +231,7 @@ public class FragmentInstancePageElementDefinitionDTOConverter
 
 		for (FragmentConfigurationField fragmentConfigurationField :
 				_fragmentEntryConfigurationParser.
-					getFragmentConfigurationFields(
-						fragmentEntryLink.getConfigurationJSONObject())) {
+					getFragmentConfigurationFields(configurationJSONObject)) {
 
 			if (!freeMarkerJSONObject.has(
 					fragmentConfigurationField.getName())) {
@@ -247,7 +267,17 @@ public class FragmentInstancePageElementDefinitionDTOConverter
 						fragmentStyledLayoutStructureItem.
 							getBackgroundImageJSONObject(),
 						scopeGroupId));
-				setConfiguration(fragmentEntryLink::getConfiguration);
+				setConfiguration(
+					() -> {
+						JSONObject configurationJSONObject =
+							_getConfigurationJSONObject(fragmentEntryLink);
+
+						if (configurationJSONObject == null) {
+							return null;
+						}
+
+						return configurationJSONObject.toString();
+					});
 				setCss(fragmentEntryLink::getCss);
 				setCssClasses(
 					() -> {
@@ -402,6 +432,9 @@ public class FragmentInstancePageElementDefinitionDTOConverter
 
 	@Reference
 	private FragmentEntryProcessorRegistry _fragmentEntryProcessorRegistry;
+
+	@Reference
+	private FragmentRendererRegistry _fragmentRendererRegistry;
 
 	@Reference
 	private InfoItemServiceRegistry _infoItemServiceRegistry;
