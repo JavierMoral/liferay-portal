@@ -103,6 +103,7 @@ import com.liferay.segments.processor.SegmentsExperienceRequestProcessorRegistry
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 import com.liferay.segments.service.SegmentsExperienceService;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.core.MultivaluedMap;
 
 import java.util.Arrays;
@@ -744,6 +745,10 @@ public class SitePageResourceImpl
 
 		Layout layout = _getLayout(groupId, friendlyUrlPath);
 
+		_log.error("LPP-62800");
+
+		HttpServletRequest httpServletRequest = contextHttpServletRequest;
+
 		contextHttpServletRequest = DynamicServletRequest.addQueryString(
 			contextHttpServletRequest, "p_l_id=" + layout.getPlid(), false);
 
@@ -776,7 +781,7 @@ public class SitePageResourceImpl
 			Document document = Jsoup.parse(
 				ThemeUtil.include(
 					ServletContextPool.get(StringPool.BLANK),
-					contextHttpServletRequest, contextHttpServletResponse,
+					httpServletRequest, contextHttpServletResponse,
 					"portal_normal.ftl", layoutSet.getTheme(), false));
 
 			Element bodyElement = document.body();
