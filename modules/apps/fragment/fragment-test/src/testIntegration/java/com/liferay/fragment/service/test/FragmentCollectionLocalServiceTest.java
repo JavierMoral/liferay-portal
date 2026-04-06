@@ -25,7 +25,6 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
-import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -363,20 +362,12 @@ public class FragmentCollectionLocalServiceTest {
 		FragmentCollection fragmentCollection =
 			FragmentTestUtil.addFragmentCollection(_group.getGroupId());
 
-		Folder subfolder = _portletFileRepository.addPortletFolder(
-			TestPropsValues.getUserId(),
-			PortletFileRepositoryUtil.getPortletRepository(
-				_group.getGroupId(), FragmentPortletKeys.FRAGMENT
-			).getRepositoryId(),
-			fragmentCollection.getResourcesFolderId(),
-			RandomTestUtil.randomString(),
-			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
-
 		_portletFileRepository.addPortletFileEntry(
 			_group.getGroupId(), TestPropsValues.getUserId(),
 			FragmentCollection.class.getName(),
 			fragmentCollection.getFragmentCollectionId(),
-			FragmentPortletKeys.FRAGMENT, subfolder.getFolderId(), new byte[0],
+			FragmentPortletKeys.FRAGMENT,
+			fragmentCollection.getResourcesFolderId(), new byte[0],
 			RandomTestUtil.randomString(), ContentTypes.IMAGE_PNG, false);
 
 		Assert.assertEquals(
