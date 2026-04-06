@@ -76,18 +76,16 @@ public class ExportFragmentCollectionsMVCResourceCommand
 			List<FragmentCollection> fragmentCollections =
 				_fragmentCollectionLocalService.
 					getExportableFragmentCollections(
+						new long[] {
+							themeDisplay.getScopeGroupId(),
+							themeDisplay.getCompanyGroupId()
+						},
 						exportFragmentCollectionIds);
 
 			ZipWriter zipWriter = _zipWriterFactory.getZipWriter();
 
 			for (FragmentCollection fragmentCollection : fragmentCollections) {
-				if ((fragmentCollection.getGroupId() ==
-						themeDisplay.getCompanyGroupId()) ||
-					(fragmentCollection.getGroupId() ==
-						themeDisplay.getScopeGroupId())) {
-
-					fragmentCollection.populateZipWriter(zipWriter);
-				}
+				fragmentCollection.populateZipWriter(zipWriter);
 			}
 
 			PortletResponseUtil.sendFile(

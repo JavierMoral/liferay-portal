@@ -131,19 +131,19 @@ public class FragmentCollectionServiceImpl
 
 	@Override
 	public List<FragmentCollection> getExportableFragmentCollections(
-		long[] fragmentCollectionIds) {
-
-		return fragmentCollectionLocalService.getExportableFragmentCollections(
-			fragmentCollectionIds);
-	}
-
-	@Override
-	public List<FragmentCollection> getExportableFragmentCollections(
 		long[] groupIds, int start, int end,
 		OrderByComparator<FragmentCollection> orderByComparator) {
 
 		return fragmentCollectionLocalService.getExportableFragmentCollections(
 			groupIds, start, end, orderByComparator);
+	}
+
+	@Override
+	public List<FragmentCollection> getExportableFragmentCollections(
+		long[] groupIds, long[] fragmentCollectionIds) {
+
+		return fragmentCollectionLocalService.getExportableFragmentCollections(
+			groupIds, fragmentCollectionIds);
 	}
 
 	@Override

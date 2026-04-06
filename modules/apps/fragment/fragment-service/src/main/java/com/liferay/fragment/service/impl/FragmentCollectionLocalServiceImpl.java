@@ -240,20 +240,6 @@ public class FragmentCollectionLocalServiceImpl
 
 	@Override
 	public List<FragmentCollection> getExportableFragmentCollections(
-		long[] fragmentCollectionIds) {
-
-		return fragmentCollectionPersistence.dslQuery(
-			DSLQueryFactoryUtil.select(
-				FragmentCollectionTable.INSTANCE
-			).from(
-				FragmentCollectionTable.INSTANCE
-			).where(
-				_getPredicate(fragmentCollectionIds, null, null)
-			));
-	}
-
-	@Override
-	public List<FragmentCollection> getExportableFragmentCollections(
 		long[] groupIds, int start, int end,
 		OrderByComparator<FragmentCollection> orderByComparator) {
 
@@ -268,6 +254,20 @@ public class FragmentCollectionLocalServiceImpl
 				FragmentCollectionTable.INSTANCE, orderByComparator
 			).limit(
 				start, end
+			));
+	}
+
+	@Override
+	public List<FragmentCollection> getExportableFragmentCollections(
+		long[] groupIds, long[] fragmentCollectionIds) {
+
+		return fragmentCollectionPersistence.dslQuery(
+			DSLQueryFactoryUtil.select(
+				FragmentCollectionTable.INSTANCE
+			).from(
+				FragmentCollectionTable.INSTANCE
+			).where(
+				_getPredicate(fragmentCollectionIds, groupIds, null)
 			));
 	}
 
