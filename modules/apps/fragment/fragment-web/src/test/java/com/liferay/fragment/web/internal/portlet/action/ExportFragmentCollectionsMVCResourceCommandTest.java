@@ -175,6 +175,7 @@ public class ExportFragmentCollectionsMVCResourceCommandTest {
 
 		Mockito.when(
 			_fragmentCollectionLocalService.getExportableFragmentCollections(
+				new long[] {_GROUP_ID, _COMPANY_GROUP_ID},
 				new long[] {_FRAGMENT_COLLECTION_ID})
 		).thenReturn(
 			fragmentCollections

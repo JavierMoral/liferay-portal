@@ -272,6 +272,7 @@ public class FragmentCollectionLocalServiceTest {
 
 		List<FragmentCollection> fragmentCollections =
 			_fragmentCollectionLocalService.getExportableFragmentCollections(
+				new long[] {_group.getGroupId()},
 				new long[] {
 					fragmentCollection1.getFragmentCollectionId(),
 					fragmentCollection2.getFragmentCollectionId(),
@@ -297,6 +298,7 @@ public class FragmentCollectionLocalServiceTest {
 
 		List<FragmentCollection> fragmentCollections =
 			_fragmentCollectionLocalService.getExportableFragmentCollections(
+				new long[] {_group.getGroupId()},
 				new long[] {
 					fragmentCollection.getFragmentCollectionId(),
 					RandomTestUtil.randomLong()
@@ -320,6 +322,7 @@ public class FragmentCollectionLocalServiceTest {
 
 		List<FragmentCollection> fragmentCollections =
 			_fragmentCollectionLocalService.getExportableFragmentCollections(
+				new long[] {_group.getGroupId()},
 				new long[] {
 					fragmentCollection1.getFragmentCollectionId(),
 					fragmentCollection2.getFragmentCollectionId()
