@@ -138,6 +138,14 @@ public class FragmentCollectionsDisplayContextTest {
 		HttpServletRequest httpServletRequest = Mockito.mock(
 			HttpServletRequest.class);
 
+		ThemeDisplay themeDisplay = Mockito.mock(ThemeDisplay.class);
+
+		Mockito.when(
+			themeDisplay.getScopeGroupId()
+		).thenReturn(
+			RandomTestUtil.randomLong()
+		);
+
 		Group group = Mockito.mock(Group.class);
 
 		Mockito.when(
@@ -146,18 +154,10 @@ public class FragmentCollectionsDisplayContextTest {
 			false
 		);
 
-		ThemeDisplay themeDisplay = Mockito.mock(ThemeDisplay.class);
-
 		Mockito.when(
 			themeDisplay.getScopeGroup()
 		).thenReturn(
 			group
-		);
-
-		Mockito.when(
-			themeDisplay.getScopeGroupId()
-		).thenReturn(
-			RandomTestUtil.randomLong()
 		);
 
 		Mockito.when(
