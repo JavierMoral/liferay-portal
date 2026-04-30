@@ -102,6 +102,67 @@ public class LayoutUtil {
 
 	public static Layout addContentLayout(
 			CETManager cetManager,
+			ContentPageSpecification contentPageSpecification,
+			FragmentEntryProcessorRegistry fragmentEntryProcessorRegistry,
+			long groupId, InfoItemServiceRegistry infoItemServiceRegistry,
+			boolean privateLayout, long parentLayoutId,
+			Map<Locale, String> nameMap, Map<Locale, String> titleMap,
+			Map<Locale, String> descriptionMap, Map<Locale, String> keywordsMap,
+			Map<Locale, String> robotsMap, String type,
+			UnicodeProperties typeSettingsUnicodeProperties, boolean hidden,
+			boolean system, Map<Locale, String> friendlyURLMap,
+			ServiceContext serviceContext)
+		throws Exception {
+
+		if (typeSettingsUnicodeProperties == null) {
+			typeSettingsUnicodeProperties = new UnicodeProperties();
+		}
+
+		Settings settings = contentPageSpecification.getSettings();
+
+		_setThemeSettings(settings, typeSettingsUnicodeProperties);
+
+		int status = WorkflowConstants.STATUS_DRAFT;
+
+		if (Objects.equals(
+				contentPageSpecification.getStatus(),
+				PageSpecification.Status.APPROVED)) {
+
+			serviceContext.setAttribute("published", Boolean.TRUE.toString());
+			typeSettingsUnicodeProperties.setProperty(
+				LayoutTypeSettingsConstants.KEY_PUBLISHED,
+				Boolean.TRUE.toString());
+
+			status = WorkflowConstants.STATUS_APPROVED;
+		}
+
+		String masterLayoutPageTemplateEntryERC =
+			_getMasterLayoutPageTemplateEntryERC(
+				settings, groupId, serviceContext);
+
+		Layout layout = LayoutServiceUtil.addLayout(
+			contentPageSpecification.getExternalReferenceCode(), groupId,
+			privateLayout, parentLayoutId, 0, 0, nameMap, titleMap,
+			descriptionMap, keywordsMap, robotsMap, type,
+			typeSettingsUnicodeProperties.toString(), hidden, system,
+			friendlyURLMap, masterLayoutPageTemplateEntryERC, serviceContext);
+
+		layout = updateLayout(
+			cetManager, fragmentEntryProcessorRegistry, infoItemServiceRegistry,
+			layout, nameMap, titleMap, descriptionMap, keywordsMap, robotsMap,
+			friendlyURLMap, contentPageSpecification, status, serviceContext);
+
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		if (draftLayout != null) {
+			LayoutLocalServiceUtil.copyLayoutContent(layout, draftLayout);
+		}
+
+		return layout;
+	}
+
+	public static Layout addContentLayout(
+			CETManager cetManager,
 			FragmentEntryProcessorRegistry fragmentEntryProcessorRegistry,
 			long groupId, InfoItemServiceRegistry infoItemServiceRegistry,
 			PageSpecification[] pageSpecifications, boolean privateLayout,
@@ -143,10 +204,6 @@ public class LayoutUtil {
 
 		_setThemeSettings(settings, typeSettingsUnicodeProperties);
 
-		String masterLayoutPageTemplateEntryERC =
-			_getMasterLayoutPageTemplateEntryERC(
-				settings, groupId, serviceContext);
-
 		ContentPageSpecification draftContentPageSpecification =
 			(ContentPageSpecification)sortedContentPageSpecifications[0];
 
@@ -159,6 +216,10 @@ public class LayoutUtil {
 				LayoutTypeSettingsConstants.KEY_PUBLISHED,
 				Boolean.TRUE.toString());
 		}
+
+		String masterLayoutPageTemplateEntryERC =
+			_getMasterLayoutPageTemplateEntryERC(
+				settings, groupId, serviceContext);
 
 		Layout layout = LayoutServiceUtil.addLayout(
 			publishedContentPageSpecification.getExternalReferenceCode(),
