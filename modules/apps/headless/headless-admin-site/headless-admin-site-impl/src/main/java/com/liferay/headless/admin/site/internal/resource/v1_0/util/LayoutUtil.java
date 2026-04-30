@@ -141,74 +141,11 @@ public class LayoutUtil {
 
 		Settings settings = publishedContentPageSpecification.getSettings();
 
-		if ((settings == null) ||
-			Validator.isNull(settings.getMasterPageItemExternalReference())) {
+		_setThemeSettings(settings, typeSettingsUnicodeProperties);
 
-			typeSettingsUnicodeProperties.setProperty(
-				"lfr-theme:regular:show-footer", Boolean.FALSE.toString());
-			typeSettingsUnicodeProperties.setProperty(
-				"lfr-theme:regular:show-header", Boolean.FALSE.toString());
-			typeSettingsUnicodeProperties.setProperty(
-				"lfr-theme:regular:show-header-search",
-				Boolean.FALSE.toString());
-			typeSettingsUnicodeProperties.setProperty(
-				"lfr-theme:regular:wrap-widget-page-content",
-				Boolean.FALSE.toString());
-		}
-
-		String masterLayoutPageTemplateEntryERC = null;
-
-		if ((settings != null) &&
-			(settings.getMasterPageItemExternalReference() != null)) {
-
-			if (Objects.equals(
-					LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT,
-					serviceContext.getAttribute(
-						"layout.page.template.entry.type"))) {
-
-				throw new IllegalArgumentException(
-					"A master page cannot reference another master page");
-			}
-
-			ItemExternalReference itemExternalReference =
-				settings.getMasterPageItemExternalReference();
-
-			if (Validator.isNotNull(
-					itemExternalReference.getExternalReferenceCode())) {
-
-				if (itemExternalReference.getScope() != null) {
-					throw new IllegalArgumentException(
-						"The master page reference does not belong to the " +
-							"same scope as the target page");
-				}
-
-				LayoutPageTemplateEntry layoutPageTemplateEntry =
-					LayoutPageTemplateEntryLocalServiceUtil.
-						fetchLayoutPageTemplateEntryByExternalReferenceCode(
-							itemExternalReference.getExternalReferenceCode(),
-							groupId);
-
-				if ((layoutPageTemplateEntry != null) &&
-					!Objects.equals(
-						LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT,
-						layoutPageTemplateEntry.getType())) {
-
-					throw new IllegalArgumentException(
-						"The master page reference does not point to a " +
-							"master page");
-				}
-
-				if (layoutPageTemplateEntry == null) {
-					LogUtil.logOptionalReference(
-						LayoutPageTemplateEntry.class,
-						itemExternalReference.getExternalReferenceCode(),
-						groupId);
-				}
-
-				masterLayoutPageTemplateEntryERC =
-					itemExternalReference.getExternalReferenceCode();
-			}
-		}
+		String masterLayoutPageTemplateEntryERC =
+			_getMasterLayoutPageTemplateEntryERC(
+				settings, groupId, serviceContext);
 
 		ContentPageSpecification draftContentPageSpecification =
 			(ContentPageSpecification)sortedContentPageSpecifications[0];
@@ -740,6 +677,62 @@ public class LayoutUtil {
 		return itemExternalReference.getExternalReferenceCode();
 	}
 
+	private static String _getMasterLayoutPageTemplateEntryERC(
+		Settings settings, long groupId, ServiceContext serviceContext) {
+
+		if ((settings == null) ||
+			(settings.getMasterPageItemExternalReference() == null)) {
+
+			return null;
+		}
+
+		if (Objects.equals(
+				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT,
+				serviceContext.getAttribute(
+					"layout.page.template.entry.type"))) {
+
+			throw new IllegalArgumentException(
+				"A master page cannot reference another master page");
+		}
+
+		ItemExternalReference itemExternalReference =
+			settings.getMasterPageItemExternalReference();
+
+		if (Validator.isNull(
+				itemExternalReference.getExternalReferenceCode())) {
+
+			return null;
+		}
+
+		if (itemExternalReference.getScope() != null) {
+			throw new IllegalArgumentException(
+				"The master page reference does not belong to the same scope " +
+					"as the target page");
+		}
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			LayoutPageTemplateEntryLocalServiceUtil.
+				fetchLayoutPageTemplateEntryByExternalReferenceCode(
+					itemExternalReference.getExternalReferenceCode(), groupId);
+
+		if ((layoutPageTemplateEntry != null) &&
+			!Objects.equals(
+				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT,
+				layoutPageTemplateEntry.getType())) {
+
+			throw new IllegalArgumentException(
+				"The master page reference does not point to a master page");
+		}
+
+		if (layoutPageTemplateEntry == null) {
+			LogUtil.logOptionalReference(
+				LayoutPageTemplateEntry.class,
+				itemExternalReference.getExternalReferenceCode(), groupId);
+		}
+
+		return itemExternalReference.getExternalReferenceCode();
+	}
+
 	private static String _getStyleBookEntryERC(
 		long companyId, long groupId, Settings settings) {
 
@@ -913,6 +906,25 @@ public class LayoutUtil {
 				serviceContext.setExpandoBridgeAttributes(
 					expandoBridgeAttributes);
 			}
+		}
+	}
+
+	private static void _setThemeSettings(
+		Settings settings, UnicodeProperties typeSettingsUnicodeProperties) {
+
+		if ((settings == null) ||
+			Validator.isNull(settings.getMasterPageItemExternalReference())) {
+
+			typeSettingsUnicodeProperties.setProperty(
+				"lfr-theme:regular:show-footer", Boolean.FALSE.toString());
+			typeSettingsUnicodeProperties.setProperty(
+				"lfr-theme:regular:show-header", Boolean.FALSE.toString());
+			typeSettingsUnicodeProperties.setProperty(
+				"lfr-theme:regular:show-header-search",
+				Boolean.FALSE.toString());
+			typeSettingsUnicodeProperties.setProperty(
+				"lfr-theme:regular:wrap-widget-page-content",
+				Boolean.FALSE.toString());
 		}
 	}
 
