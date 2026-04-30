@@ -12,20 +12,26 @@ import com.liferay.client.extension.type.manager.CETManager;
 import com.liferay.expando.kernel.util.ExpandoUtil;
 import com.liferay.exportimport.kernel.staging.StagingUtil;
 import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
+import com.liferay.headless.admin.site.dto.v1_0.BasicFragmentInstancePageElementDefinition;
 import com.liferay.headless.admin.site.dto.v1_0.BasicWidgetPageWidgetInstance;
 import com.liferay.headless.admin.site.dto.v1_0.ClientExtension;
 import com.liferay.headless.admin.site.dto.v1_0.ContentPageSpecification;
 import com.liferay.headless.admin.site.dto.v1_0.FavIcon;
 import com.liferay.headless.admin.site.dto.v1_0.FavIconClientExtension;
 import com.liferay.headless.admin.site.dto.v1_0.FavIconItemExternalReference;
+import com.liferay.headless.admin.site.dto.v1_0.FormFragmentInstancePageElementDefinition;
+import com.liferay.headless.admin.site.dto.v1_0.FragmentInstance;
 import com.liferay.headless.admin.site.dto.v1_0.GeneralConfig;
 import com.liferay.headless.admin.site.dto.v1_0.IconImageURL;
 import com.liferay.headless.admin.site.dto.v1_0.ItemExternalReference;
 import com.liferay.headless.admin.site.dto.v1_0.NestedApplicationsWidgetPageWidgetInstance;
 import com.liferay.headless.admin.site.dto.v1_0.NestedWidgetSection;
+import com.liferay.headless.admin.site.dto.v1_0.PageElement;
+import com.liferay.headless.admin.site.dto.v1_0.PageElementDefinition;
 import com.liferay.headless.admin.site.dto.v1_0.PageExperience;
 import com.liferay.headless.admin.site.dto.v1_0.PageSpecification;
 import com.liferay.headless.admin.site.dto.v1_0.Settings;
+import com.liferay.headless.admin.site.dto.v1_0.WidgetInstancePageElementDefinition;
 import com.liferay.headless.admin.site.dto.v1_0.WidgetLookAndFeelConfig;
 import com.liferay.headless.admin.site.dto.v1_0.WidgetPageSection;
 import com.liferay.headless.admin.site.dto.v1_0.WidgetPageSpecification;
@@ -42,6 +48,7 @@ import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil;
 import com.liferay.layout.util.LayoutServiceContextHelperUtil;
 import com.liferay.layout.util.UpdateLayoutModifiedDateThreadLocal;
+import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
@@ -102,6 +109,45 @@ public class LayoutUtil {
 
 	public static Layout addContentLayout(
 			CETManager cetManager,
+			ContentPageSpecification contentPageSpecification,
+			FragmentEntryProcessorRegistry fragmentEntryProcessorRegistry,
+			long groupId, InfoItemServiceRegistry infoItemServiceRegistry,
+			boolean privateLayout, long parentLayoutId,
+			Map<Locale, String> nameMap, Map<Locale, String> titleMap,
+			Map<Locale, String> descriptionMap, Map<Locale, String> keywordsMap,
+			Map<Locale, String> robotsMap, String type,
+			UnicodeProperties typeSettingsUnicodeProperties, boolean hidden,
+			boolean system, Map<Locale, String> friendlyURLMap,
+			ServiceContext serviceContext)
+		throws Exception {
+
+		String draftContentPageSpecificationERC =
+			contentPageSpecification.getExternalReferenceCode() + "-draft";
+
+		ContentPageSpecification draftContentPageSpecification =
+			ContentPageSpecification.unsafeToDTO(
+				contentPageSpecification.toString());
+
+		_setDraftReferences(
+			contentPageSpecification, draftContentPageSpecificationERC);
+
+		_applyDraftSuffix(
+			draftContentPageSpecification, draftContentPageSpecificationERC);
+
+		return addContentLayout(
+			cetManager, fragmentEntryProcessorRegistry, groupId,
+			infoItemServiceRegistry,
+			new PageSpecification[] {
+				contentPageSpecification, draftContentPageSpecification
+			},
+			privateLayout, parentLayoutId, nameMap, titleMap, descriptionMap,
+			keywordsMap, robotsMap, type, typeSettingsUnicodeProperties, hidden,
+			system, friendlyURLMap, WorkflowConstants.STATUS_APPROVED,
+			serviceContext);
+	}
+
+	public static Layout addContentLayout(
+			CETManager cetManager,
 			FragmentEntryProcessorRegistry fragmentEntryProcessorRegistry,
 			long groupId, InfoItemServiceRegistry infoItemServiceRegistry,
 			PageSpecification[] pageSpecifications, boolean privateLayout,
@@ -143,10 +189,6 @@ public class LayoutUtil {
 
 		_setThemeSettings(settings, typeSettingsUnicodeProperties);
 
-		String masterLayoutPageTemplateEntryERC =
-			_getMasterLayoutPageTemplateEntryERC(
-				settings, groupId, serviceContext);
-
 		ContentPageSpecification draftContentPageSpecification =
 			(ContentPageSpecification)sortedContentPageSpecifications[0];
 
@@ -159,6 +201,10 @@ public class LayoutUtil {
 				LayoutTypeSettingsConstants.KEY_PUBLISHED,
 				Boolean.TRUE.toString());
 		}
+
+		String masterLayoutPageTemplateEntryERC =
+			_getMasterLayoutPageTemplateEntryERC(
+				() -> _isMasterPageContext(serviceContext), groupId, settings);
 
 		Layout layout = LayoutServiceUtil.addLayout(
 			publishedContentPageSpecification.getExternalReferenceCode(),
@@ -386,6 +432,12 @@ public class LayoutUtil {
 				serviceContext);
 		}
 
+		if (pageSpecifications.length != 2) {
+			throw new IllegalArgumentException(
+				"The number of page specifications does not match the page " +
+					"type requirements");
+		}
+
 		PageSpecification[] sortedContentPageSpecifications =
 			PageSpecificationUtil.getSortedContentPageSpecifications(
 				pageSpecifications);
@@ -601,6 +653,118 @@ public class LayoutUtil {
 		}
 	}
 
+	private static void _applyDraftSuffix(
+		ContentPageSpecification draftContentPageSpecification,
+		String draftContentPageSpecificationERC) {
+
+		draftContentPageSpecification.setExternalReferenceCode(
+			() -> draftContentPageSpecificationERC);
+		draftContentPageSpecification.setStatus(
+			() -> PageSpecification.Status.APPROVED);
+
+		PageExperience[] pageExperiences =
+			draftContentPageSpecification.getPageExperiences();
+
+		if (pageExperiences == null) {
+			return;
+		}
+
+		for (PageExperience pageExperience : pageExperiences) {
+			String draftPageExperienceERC;
+
+			if (Objects.equals(
+					pageExperience.getKey(),
+					SegmentsExperienceConstants.KEY_DEFAULT)) {
+
+				draftPageExperienceERC =
+					draftContentPageSpecificationERC + "-default";
+			}
+			else {
+				draftPageExperienceERC =
+					pageExperience.getExternalReferenceCode() + "-draft";
+			}
+
+			pageExperience.setExternalReferenceCode(
+				() -> draftPageExperienceERC);
+			pageExperience.setPageSpecificationExternalReferenceCode(
+				() -> draftContentPageSpecificationERC);
+
+			String uuid = pageExperience.getUuid();
+
+			if (Validator.isNotNull(uuid)) {
+				pageExperience.setUuid(() -> uuid + "-draft");
+			}
+
+			_applyDraftSuffix(pageExperience.getPageElements());
+		}
+	}
+
+	private static void _applyDraftSuffix(FragmentInstance fragmentInstance) {
+		if (fragmentInstance == null) {
+			return;
+		}
+
+		String fragmentInstanceERC =
+			fragmentInstance.getFragmentInstanceExternalReferenceCode();
+
+		if (Validator.isNotNull(fragmentInstanceERC)) {
+			fragmentInstance.setFragmentInstanceExternalReferenceCode(
+				() -> fragmentInstanceERC + "-draft");
+			fragmentInstance.setUuid(() -> fragmentInstanceERC + "-draft");
+		}
+	}
+
+	private static void _applyDraftSuffix(PageElement[] pageElements) {
+		if (pageElements == null) {
+			return;
+		}
+
+		for (PageElement pageElement : pageElements) {
+			PageElementDefinition pageElementDefinition =
+				pageElement.getPageElementDefinition();
+
+			if (pageElementDefinition instanceof
+					BasicFragmentInstancePageElementDefinition
+						basicFragmentInstancePageElementDefinition) {
+
+				_applyDraftSuffix(
+					basicFragmentInstancePageElementDefinition.
+						getFragmentInstance());
+			}
+			else if (pageElementDefinition instanceof
+						FormFragmentInstancePageElementDefinition
+							formFragmentInstancePageElementDefinition) {
+
+				_applyDraftSuffix(
+					formFragmentInstancePageElementDefinition.
+						getFragmentInstance());
+			}
+			else if (pageElementDefinition instanceof
+						WidgetInstancePageElementDefinition
+							widgetInstancePageElementDefinition) {
+
+				_applyDraftSuffix(widgetInstancePageElementDefinition);
+			}
+
+			_applyDraftSuffix(pageElement.getPageElements());
+		}
+	}
+
+	private static void _applyDraftSuffix(
+		WidgetInstancePageElementDefinition
+			widgetInstancePageElementDefinition) {
+
+		String widgetInstanceERC =
+			widgetInstancePageElementDefinition.
+				getWidgetInstanceExternalReferenceCode();
+
+		if (Validator.isNotNull(widgetInstanceERC)) {
+			widgetInstancePageElementDefinition.
+				setWidgetInstanceExternalReferenceCode(
+					() -> widgetInstanceERC + "-draft");
+		}
+	}
+
 	private static byte[] _getIconImageByteArray(Settings settings)
 		throws Exception {
 
@@ -618,7 +782,8 @@ public class LayoutUtil {
 	}
 
 	private static String _getMasterLayoutPageTemplateEntryERC(
-			long groupId, Layout layout, Settings settings)
+			UnsafeSupplier<Boolean, Exception> currentPageMasterUnsafeSupplier,
+			long groupId, Settings settings)
 		throws Exception {
 
 		if (settings == null) {
@@ -637,83 +802,22 @@ public class LayoutUtil {
 
 		if (itemExternalReference.getScope() != null) {
 			throw new IllegalArgumentException(
-				"The master page references do not belong to the same scope " +
-					"as the current page");
-		}
-
-		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			LayoutPageTemplateEntryLocalServiceUtil.
-				fetchLayoutPageTemplateEntryByPlid(layout.getPlid());
-
-		if ((layoutPageTemplateEntry != null) &&
-			Objects.equals(
-				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT,
-				layoutPageTemplateEntry.getType())) {
-
-			throw new IllegalArgumentException(
-				"A master page cannot reference another master page");
-		}
-
-		layoutPageTemplateEntry =
-			LayoutPageTemplateEntryLocalServiceUtil.
-				fetchLayoutPageTemplateEntryByExternalReferenceCode(
-					itemExternalReference.getExternalReferenceCode(), groupId);
-
-		if ((layoutPageTemplateEntry != null) &&
-			!Objects.equals(
-				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT,
-				layoutPageTemplateEntry.getType())) {
-
-			throw new IllegalArgumentException(
-				"The master page reference does not point to a master page");
-		}
-
-		if (layoutPageTemplateEntry == null) {
-			LogUtil.logOptionalReference(
-				LayoutPageTemplateEntry.class,
-				itemExternalReference.getExternalReferenceCode(), groupId);
-		}
-
-		return itemExternalReference.getExternalReferenceCode();
-	}
-
-	private static String _getMasterLayoutPageTemplateEntryERC(
-		Settings settings, long groupId, ServiceContext serviceContext) {
-
-		if ((settings == null) ||
-			(settings.getMasterPageItemExternalReference() == null)) {
-
-			return null;
-		}
-
-		if (Objects.equals(
-				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT,
-				serviceContext.getAttribute(
-					"layout.page.template.entry.type"))) {
-
-			throw new IllegalArgumentException(
-				"A master page cannot reference another master page");
-		}
-
-		ItemExternalReference itemExternalReference =
-			settings.getMasterPageItemExternalReference();
-
-		if (Validator.isNull(
-				itemExternalReference.getExternalReferenceCode())) {
-
-			return null;
-		}
-
-		if (itemExternalReference.getScope() != null) {
-			throw new IllegalArgumentException(
 				"The master page reference does not belong to the same scope " +
-					"as the target page");
+					"as the page");
 		}
+
+		if (currentPageMasterUnsafeSupplier.get()) {
+			throw new IllegalArgumentException(
+				"A master page cannot reference another master page");
+		}
+
+		String externalReferenceCode =
+			itemExternalReference.getExternalReferenceCode();
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			LayoutPageTemplateEntryLocalServiceUtil.
 				fetchLayoutPageTemplateEntryByExternalReferenceCode(
-					itemExternalReference.getExternalReferenceCode(), groupId);
+					externalReferenceCode, groupId);
 
 		if ((layoutPageTemplateEntry != null) &&
 			!Objects.equals(
@@ -726,11 +830,10 @@ public class LayoutUtil {
 
 		if (layoutPageTemplateEntry == null) {
 			LogUtil.logOptionalReference(
-				LayoutPageTemplateEntry.class,
-				itemExternalReference.getExternalReferenceCode(), groupId);
+				LayoutPageTemplateEntry.class, externalReferenceCode, groupId);
 		}
 
-		return itemExternalReference.getExternalReferenceCode();
+		return externalReferenceCode;
 	}
 
 	private static String _getStyleBookEntryERC(
@@ -803,6 +906,26 @@ public class LayoutUtil {
 		PortletPreferencesPortletConfigurationImporterUtil.
 			importPortletConfiguration(
 				layout.getPlid(), portletId, configurationMap);
+	}
+
+	private static boolean _isMasterPage(Layout layout) {
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			LayoutPageTemplateEntryLocalServiceUtil.
+				fetchLayoutPageTemplateEntryByPlid(layout.getPlid());
+
+		if (layoutPageTemplateEntry == null) {
+			return false;
+		}
+
+		return Objects.equals(
+			LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT,
+			layoutPageTemplateEntry.getType());
+	}
+
+	private static boolean _isMasterPageContext(ServiceContext serviceContext) {
+		return Objects.equals(
+			LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT,
+			serviceContext.getAttribute("layout.page.template.entry.type"));
 	}
 
 	private static void _processWidgetPageWidgetInstance(
@@ -883,6 +1006,86 @@ public class LayoutUtil {
 					layout, layoutTypePortlet, portletIds, serviceContext,
 					nestedWidgetPageWidgetInstance);
 			}
+		}
+	}
+
+	private static void _setDraftFragmentInstanceExternalReferenceCode(
+		FragmentInstance fragmentInstance) {
+
+		if (fragmentInstance == null) {
+			return;
+		}
+
+		String fragmentInstanceERC =
+			fragmentInstance.getFragmentInstanceExternalReferenceCode();
+
+		if (Validator.isNotNull(fragmentInstanceERC)) {
+			fragmentInstance.setDraftFragmentInstanceExternalReferenceCode(
+				() -> fragmentInstanceERC + "-draft");
+		}
+	}
+
+	private static void _setDraftReferences(
+		ContentPageSpecification publishedContentPageSpecification,
+		String draftContentPageSpecificationERC) {
+
+		publishedContentPageSpecification.
+			setDraftContentPageSpecificationExternalReferenceCode(
+				() -> draftContentPageSpecificationERC);
+
+		PageExperience[] pageExperiences =
+			publishedContentPageSpecification.getPageExperiences();
+
+		if (pageExperiences == null) {
+			return;
+		}
+
+		for (PageExperience pageExperience : pageExperiences) {
+			_setDraftReferences(pageExperience.getPageElements());
+		}
+	}
+
+	private static void _setDraftReferences(PageElement[] pageElements) {
+		if (pageElements == null) {
+			return;
+		}
+
+		for (PageElement pageElement : pageElements) {
+			PageElementDefinition pageElementDefinition =
+				pageElement.getPageElementDefinition();
+
+			if (pageElementDefinition instanceof
+					BasicFragmentInstancePageElementDefinition
+						basicFragmentInstancePageElementDefinition) {
+
+				_setDraftFragmentInstanceExternalReferenceCode(
+					basicFragmentInstancePageElementDefinition.
+						getFragmentInstance());
+			}
+			else if (pageElementDefinition instanceof
+						FormFragmentInstancePageElementDefinition
+							formFragmentInstancePageElementDefinition) {
+
+				_setDraftFragmentInstanceExternalReferenceCode(
+					formFragmentInstancePageElementDefinition.
+						getFragmentInstance());
+			}
+			else if (pageElementDefinition instanceof
+						WidgetInstancePageElementDefinition
+							widgetInstancePageElementDefinition) {
+
+				String widgetInstanceERC =
+					widgetInstancePageElementDefinition.
+						getWidgetInstanceExternalReferenceCode();
+
+				if (Validator.isNotNull(widgetInstanceERC)) {
+					widgetInstancePageElementDefinition.
+						setDraftWidgetInstanceExternalReferenceCode(
+							() -> widgetInstanceERC + "-draft");
+				}
+			}
+
+			_setDraftReferences(pageElement.getPageElements());
 		}
 	}
 
@@ -1086,13 +1289,16 @@ public class LayoutUtil {
 			}
 		}
 
+		Layout currentLayout = layout;
+
 		layout = _updateLayout(
 			layout, nameMap, titleMap, descriptionMap, keywordsMap, robotsMap,
 			_getStyleBookEntryERC(
 				layout.getCompanyId(), layout.getGroupId(), settings),
 			faviconFileEntryERC, faviconFileEntryScopeERC,
 			_getMasterLayoutPageTemplateEntryERC(
-				serviceContext.getScopeGroupId(), layout, settings),
+				() -> _isMasterPage(currentLayout),
+				serviceContext.getScopeGroupId(), settings),
 			friendlyURLMap, serviceContext);
 
 		layout = LayoutLocalServiceUtil.updateIconImage(
