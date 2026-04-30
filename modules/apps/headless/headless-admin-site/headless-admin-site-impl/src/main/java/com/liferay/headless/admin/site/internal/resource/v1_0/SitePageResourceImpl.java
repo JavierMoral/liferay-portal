@@ -11,14 +11,20 @@ import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.vulcan.batch.engine.ExportImportVulcanBatchEngineTaskItemDelegate;
 import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
+import com.liferay.headless.admin.site.dto.v1_0.BasicFragmentInstancePageElementDefinition;
 import com.liferay.headless.admin.site.dto.v1_0.ContentPageSettings;
 import com.liferay.headless.admin.site.dto.v1_0.ContentPageSpecification;
 import com.liferay.headless.admin.site.dto.v1_0.CustomMetaTag;
 import com.liferay.headless.admin.site.dto.v1_0.EmbeddedPageSettings;
+import com.liferay.headless.admin.site.dto.v1_0.FormFragmentInstancePageElementDefinition;
+import com.liferay.headless.admin.site.dto.v1_0.FragmentInstance;
 import com.liferay.headless.admin.site.dto.v1_0.ItemExternalReference;
 import com.liferay.headless.admin.site.dto.v1_0.LinkToPagePageSettings;
 import com.liferay.headless.admin.site.dto.v1_0.LinkToURLPageSettings;
 import com.liferay.headless.admin.site.dto.v1_0.OpenGraphSettings;
+import com.liferay.headless.admin.site.dto.v1_0.PageElement;
+import com.liferay.headless.admin.site.dto.v1_0.PageElementDefinition;
+import com.liferay.headless.admin.site.dto.v1_0.PageExperience;
 import com.liferay.headless.admin.site.dto.v1_0.PageSetPageSettings;
 import com.liferay.headless.admin.site.dto.v1_0.PageSettings;
 import com.liferay.headless.admin.site.dto.v1_0.PageSpecification;
@@ -26,6 +32,7 @@ import com.liferay.headless.admin.site.dto.v1_0.SEOSettings;
 import com.liferay.headless.admin.site.dto.v1_0.SitePage;
 import com.liferay.headless.admin.site.dto.v1_0.SitePageNavigationSettings;
 import com.liferay.headless.admin.site.dto.v1_0.SitemapSettings;
+import com.liferay.headless.admin.site.dto.v1_0.WidgetInstancePageElementDefinition;
 import com.liferay.headless.admin.site.dto.v1_0.WidgetPageSettings;
 import com.liferay.headless.admin.site.internal.dto.v1_0.util.DTOConverterContextUtil;
 import com.liferay.headless.admin.site.internal.dto.v1_0.util.FileEntryUtil;
@@ -527,21 +534,48 @@ public class SitePageResourceImpl
 		Layout layout = null;
 
 		if (Objects.equals(sitePage.getType(), SitePage.Type.CONTENT_PAGE)) {
-			layout = LayoutUtil.addContentLayout(
-				_cetManager, _fragmentEntryProcessorRegistry, groupId,
-				_infoItemServiceRegistry, sitePage.getPageSpecifications(),
-				privateLayout,
-				_getParentLayoutId(
-					groupId, sitePage.getParentSitePageExternalReferenceCode(),
-					privateLayout, serviceContext),
-				nameMap, titleMap, descriptionMap, keywordsMap, robotsMap,
-				SitePageTypeUtil.toInternalType(sitePage.getType()),
-				typeSettingsUnicodeProperties,
-				_isHiddenFromNavigation(false, sitePage.getPageSettings()),
-				false,
-				LocalizedMapUtil.getLocalizedMap(
-					sitePage.getFriendlyUrlPath_i18n()),
-				WorkflowConstants.STATUS_APPROVED, serviceContext);
+			PageSpecification[] contentPageSpecifications =
+				sitePage.getPageSpecifications();
+
+			if ((contentPageSpecifications != null) &&
+				(contentPageSpecifications.length == 1)) {
+
+				layout = LayoutUtil.addContentLayout(
+					_cetManager,
+					(ContentPageSpecification)contentPageSpecifications[0],
+					_fragmentEntryProcessorRegistry, groupId,
+					_infoItemServiceRegistry, privateLayout,
+					_getParentLayoutId(
+						groupId,
+						sitePage.getParentSitePageExternalReferenceCode(),
+						privateLayout, serviceContext),
+					nameMap, titleMap, descriptionMap, keywordsMap, robotsMap,
+					SitePageTypeUtil.toInternalType(sitePage.getType()),
+					typeSettingsUnicodeProperties,
+					_isHiddenFromNavigation(false, sitePage.getPageSettings()),
+					false,
+					LocalizedMapUtil.getLocalizedMap(
+						sitePage.getFriendlyUrlPath_i18n()),
+					serviceContext);
+			}
+			else {
+				layout = LayoutUtil.addContentLayout(
+					_cetManager, _fragmentEntryProcessorRegistry, groupId,
+					_infoItemServiceRegistry, contentPageSpecifications,
+					privateLayout,
+					_getParentLayoutId(
+						groupId,
+						sitePage.getParentSitePageExternalReferenceCode(),
+						privateLayout, serviceContext),
+					nameMap, titleMap, descriptionMap, keywordsMap, robotsMap,
+					SitePageTypeUtil.toInternalType(sitePage.getType()),
+					typeSettingsUnicodeProperties,
+					_isHiddenFromNavigation(false, sitePage.getPageSettings()),
+					false,
+					LocalizedMapUtil.getLocalizedMap(
+						sitePage.getFriendlyUrlPath_i18n()),
+					WorkflowConstants.STATUS_APPROVED, serviceContext);
+			}
 		}
 		else if (Objects.equals(
 					sitePage.getType(), SitePage.Type.EMBEDDED_PAGE) ||
@@ -715,13 +749,24 @@ public class SitePageResourceImpl
 			contextUser.getUserId(), sitePage.getUuid());
 
 		if (Objects.equals(sitePage.getType(), SitePage.Type.CONTENT_PAGE)) {
-			if (sitePage.getPageSpecifications() == null) {
+			PageSpecification[] pageSpecifications =
+				sitePage.getPageSpecifications();
+
+			if (pageSpecifications == null) {
+				return serviceContext;
+			}
+
+			if (pageSpecifications.length == 1) {
+				ServiceContextUtil.setContentPageSpecificationAttributes(
+					(ContentPageSpecification)pageSpecifications[0], groupId,
+					serviceContext);
+
 				return serviceContext;
 			}
 
 			PageSpecification[] sortedContentPageSpecifications =
 				PageSpecificationUtil.getSortedContentPageSpecifications(
-					sitePage.getPageSpecifications());
+					pageSpecifications);
 
 			ContentPageSpecification draftContentPageSpecification =
 				(ContentPageSpecification)sortedContentPageSpecifications[0];
@@ -1208,6 +1253,79 @@ public class SitePageResourceImpl
 			serviceContext);
 	}
 
+	private void _validateDraftReference(FragmentInstance fragmentInstance) {
+		if (fragmentInstance == null) {
+			return;
+		}
+
+		if (Validator.isNotNull(
+				fragmentInstance.
+					getDraftFragmentInstanceExternalReferenceCode())) {
+
+			throw new ValidationException(
+				"A single content page specification cannot reference a " +
+					"draft fragment instance");
+		}
+	}
+
+	private void _validateDraftReferences(
+		ContentPageSpecification contentPageSpecification) {
+
+		PageExperience[] pageExperiences =
+			contentPageSpecification.getPageExperiences();
+
+		if (pageExperiences == null) {
+			return;
+		}
+
+		for (PageExperience pageExperience : pageExperiences) {
+			_validateDraftReferences(pageExperience.getPageElements());
+		}
+	}
+
+	private void _validateDraftReferences(PageElement[] pageElements) {
+		if (pageElements == null) {
+			return;
+		}
+
+		for (PageElement pageElement : pageElements) {
+			PageElementDefinition pageElementDefinition =
+				pageElement.getPageElementDefinition();
+
+			if (pageElementDefinition instanceof
+					BasicFragmentInstancePageElementDefinition
+						basicFragmentInstancePageElementDefinition) {
+
+				_validateDraftReference(
+					basicFragmentInstancePageElementDefinition.
+						getFragmentInstance());
+			}
+			else if (pageElementDefinition instanceof
+						FormFragmentInstancePageElementDefinition
+							formFragmentInstancePageElementDefinition) {
+
+				_validateDraftReference(
+					formFragmentInstancePageElementDefinition.
+						getFragmentInstance());
+			}
+			else if (pageElementDefinition instanceof
+						WidgetInstancePageElementDefinition
+							widgetInstancePageElementDefinition) {
+
+				if (Validator.isNotNull(
+						widgetInstancePageElementDefinition.
+							getDraftWidgetInstanceExternalReferenceCode())) {
+
+					throw new ValidationException(
+						"A single content page specification cannot " +
+							"reference a draft widget instance");
+				}
+			}
+
+			_validateDraftReferences(pageElement.getPageElements());
+		}
+	}
+
 	private void _validatePageSpecificationExternalReferenceCode(
 		ServiceContext serviceContext, SitePage sitePage) {
 
@@ -1232,6 +1350,26 @@ public class SitePageResourceImpl
 					pageSpecifications);
 
 			publishedPageSpecification = sortedContentPageSpecifications[1];
+		}
+		else if (Objects.equals(
+					sitePage.getType(), SitePage.Type.CONTENT_PAGE) &&
+				 (pageSpecifications.length == 1)) {
+
+			ContentPageSpecification contentPageSpecification =
+				(ContentPageSpecification)pageSpecifications[0];
+
+			if (Validator.isNotNull(
+					contentPageSpecification.
+						getDraftContentPageSpecificationExternalReferenceCode())) {
+
+				throw new IllegalArgumentException(
+					"A single content page specification cannot reference a " +
+						"draft content page specification");
+			}
+
+			_validateDraftReferences(contentPageSpecification);
+
+			publishedPageSpecification = contentPageSpecification;
 		}
 		else if ((Objects.equals(
 					sitePage.getType(), SitePage.Type.EMBEDDED_PAGE) ||
