@@ -122,18 +122,10 @@ public class LayoutUtil {
 
 		_setThemeSettings(settings, typeSettingsUnicodeProperties);
 
-		int status = WorkflowConstants.STATUS_DRAFT;
-
-		if (Objects.equals(
-				contentPageSpecification.getStatus(),
-				PageSpecification.Status.APPROVED)) {
-
-			serviceContext.setAttribute("published", Boolean.TRUE.toString());
+		if (GetterUtil.getBoolean(serviceContext.getAttribute("published"))) {
 			typeSettingsUnicodeProperties.setProperty(
 				LayoutTypeSettingsConstants.KEY_PUBLISHED,
 				Boolean.TRUE.toString());
-
-			status = WorkflowConstants.STATUS_APPROVED;
 		}
 
 		String masterLayoutPageTemplateEntryERC =
@@ -150,12 +142,17 @@ public class LayoutUtil {
 		layout = updateLayout(
 			cetManager, fragmentEntryProcessorRegistry, infoItemServiceRegistry,
 			layout, nameMap, titleMap, descriptionMap, keywordsMap, robotsMap,
-			friendlyURLMap, contentPageSpecification, status, serviceContext);
+			friendlyURLMap, contentPageSpecification,
+			WorkflowConstants.STATUS_APPROVED, serviceContext);
 
 		Layout draftLayout = layout.fetchDraftLayout();
 
 		if (draftLayout != null) {
 			LayoutLocalServiceUtil.copyLayoutContent(layout, draftLayout);
+
+			LayoutLocalServiceUtil.updateStatus(
+				serviceContext.getUserId(), draftLayout.getPlid(),
+				WorkflowConstants.STATUS_APPROVED, serviceContext);
 		}
 
 		return layout;
@@ -445,6 +442,12 @@ public class LayoutUtil {
 				layout.getFaviconFileEntryScopeERC(),
 				layout.getMasterLayoutPageTemplateEntryERC(), friendlyURLMap,
 				serviceContext);
+		}
+
+		if (pageSpecifications.length != 2) {
+			throw new IllegalArgumentException(
+				"The number of page specifications does not match the page " +
+					"type requirements");
 		}
 
 		PageSpecification[] sortedContentPageSpecifications =

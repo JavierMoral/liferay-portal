@@ -521,21 +521,48 @@ public class SitePageResourceImpl
 		Layout layout = null;
 
 		if (Objects.equals(sitePage.getType(), SitePage.Type.CONTENT_PAGE)) {
-			layout = LayoutUtil.addContentLayout(
-				_cetManager, _fragmentEntryProcessorRegistry, groupId,
-				_infoItemServiceRegistry, sitePage.getPageSpecifications(),
-				privateLayout,
-				_getParentLayoutId(
-					groupId, sitePage.getParentSitePageExternalReferenceCode(),
-					privateLayout, serviceContext),
-				nameMap, titleMap, descriptionMap, keywordsMap, robotsMap,
-				SitePageTypeUtil.toInternalType(sitePage.getType()),
-				typeSettingsUnicodeProperties,
-				_isHiddenFromNavigation(false, sitePage.getPageSettings()),
-				false,
-				LocalizedMapUtil.getLocalizedMap(
-					sitePage.getFriendlyUrlPath_i18n()),
-				WorkflowConstants.STATUS_APPROVED, serviceContext);
+			PageSpecification[] contentPageSpecifications =
+				sitePage.getPageSpecifications();
+
+			if ((contentPageSpecifications != null) &&
+				(contentPageSpecifications.length == 1)) {
+
+				layout = LayoutUtil.addContentLayout(
+					_cetManager,
+					(ContentPageSpecification)contentPageSpecifications[0],
+					_fragmentEntryProcessorRegistry, groupId,
+					_infoItemServiceRegistry, privateLayout,
+					_getParentLayoutId(
+						groupId,
+						sitePage.getParentSitePageExternalReferenceCode(),
+						privateLayout, serviceContext),
+					nameMap, titleMap, descriptionMap, keywordsMap, robotsMap,
+					SitePageTypeUtil.toInternalType(sitePage.getType()),
+					typeSettingsUnicodeProperties,
+					_isHiddenFromNavigation(false, sitePage.getPageSettings()),
+					false,
+					LocalizedMapUtil.getLocalizedMap(
+						sitePage.getFriendlyUrlPath_i18n()),
+					serviceContext);
+			}
+			else {
+				layout = LayoutUtil.addContentLayout(
+					_cetManager, _fragmentEntryProcessorRegistry, groupId,
+					_infoItemServiceRegistry, contentPageSpecifications,
+					privateLayout,
+					_getParentLayoutId(
+						groupId,
+						sitePage.getParentSitePageExternalReferenceCode(),
+						privateLayout, serviceContext),
+					nameMap, titleMap, descriptionMap, keywordsMap, robotsMap,
+					SitePageTypeUtil.toInternalType(sitePage.getType()),
+					typeSettingsUnicodeProperties,
+					_isHiddenFromNavigation(false, sitePage.getPageSettings()),
+					false,
+					LocalizedMapUtil.getLocalizedMap(
+						sitePage.getFriendlyUrlPath_i18n()),
+					WorkflowConstants.STATUS_APPROVED, serviceContext);
+			}
 		}
 		else if (Objects.equals(
 					sitePage.getType(), SitePage.Type.EMBEDDED_PAGE) ||
@@ -709,13 +736,24 @@ public class SitePageResourceImpl
 			contextUser.getUserId(), sitePage.getUuid());
 
 		if (Objects.equals(sitePage.getType(), SitePage.Type.CONTENT_PAGE)) {
-			if (sitePage.getPageSpecifications() == null) {
+			PageSpecification[] pageSpecifications =
+				sitePage.getPageSpecifications();
+
+			if (pageSpecifications == null) {
+				return serviceContext;
+			}
+
+			if (pageSpecifications.length == 1) {
+				ServiceContextUtil.setContentPageSpecificationAttributes(
+					(ContentPageSpecification)pageSpecifications[0], groupId,
+					serviceContext);
+
 				return serviceContext;
 			}
 
 			PageSpecification[] sortedContentPageSpecifications =
 				PageSpecificationUtil.getSortedContentPageSpecifications(
-					sitePage.getPageSpecifications());
+					pageSpecifications);
 
 			ContentPageSpecification draftContentPageSpecification =
 				(ContentPageSpecification)sortedContentPageSpecifications[0];
@@ -1226,6 +1264,24 @@ public class SitePageResourceImpl
 					pageSpecifications);
 
 			publishedPageSpecification = sortedContentPageSpecifications[1];
+		}
+		else if (Objects.equals(
+					sitePage.getType(), SitePage.Type.CONTENT_PAGE) &&
+				 (pageSpecifications.length == 1)) {
+
+			ContentPageSpecification contentPageSpecification =
+				(ContentPageSpecification)pageSpecifications[0];
+
+			if (Validator.isNotNull(
+					contentPageSpecification.
+						getDraftContentPageSpecificationExternalReferenceCode())) {
+
+				throw new IllegalArgumentException(
+					"A single content page specification cannot reference a " +
+						"draft content page specification");
+			}
+
+			publishedPageSpecification = contentPageSpecification;
 		}
 		else if ((Objects.equals(
 					sitePage.getType(), SitePage.Type.EMBEDDED_PAGE) ||

@@ -91,6 +91,37 @@ public class ServiceContextUtil {
 		return serviceContext;
 	}
 
+	public static void setContentPageSpecificationAttributes(
+			ContentPageSpecification contentPageSpecification, long groupId,
+			ServiceContext serviceContext)
+		throws Exception {
+
+		PageExperience defaultPageExperience =
+			PageExperienceUtil.getDefaultPageExperience(
+				contentPageSpecification.getPageExperiences());
+
+		serviceContext.setAttribute(
+			"defaultSegmentsExperienceExternalReferenceCode",
+			defaultPageExperience.getExternalReferenceCode());
+		serviceContext.setAttribute(
+			"defaultSegmentsExperienceUuid", defaultPageExperience.getUuid());
+
+		setLayoutSetPrototypeLayoutERC(
+			groupId, contentPageSpecification, serviceContext,
+			contentPageSpecification.
+				getSiteTemplatePageSpecificationExternalReferenceCode());
+
+		if (Objects.equals(
+				contentPageSpecification.getStatus(),
+				PageSpecification.Status.APPROVED)) {
+
+			serviceContext.setAttribute("published", Boolean.TRUE.toString());
+		}
+		else {
+			serviceContext.setAttribute("published", Boolean.FALSE.toString());
+		}
+	}
+
 	public static void setContentPageSpecificationsAttributes(
 			ContentPageSpecification draftContentPageSpecification,
 			long groupId,
