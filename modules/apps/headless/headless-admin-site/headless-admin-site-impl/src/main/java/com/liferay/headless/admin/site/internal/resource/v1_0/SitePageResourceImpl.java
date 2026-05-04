@@ -518,6 +518,10 @@ public class SitePageResourceImpl
 		UnicodeProperties typeSettingsUnicodeProperties =
 			_getTypeSettingsUnicodeProperties(groupId, sitePage);
 
+		long parentLayoutId = _getParentLayoutId(
+			groupId, sitePage.getParentSitePageExternalReferenceCode(),
+			privateLayout, serviceContext);
+
 		Layout layout = null;
 
 		if (Objects.equals(sitePage.getType(), SitePage.Type.CONTENT_PAGE)) {
@@ -531,11 +535,7 @@ public class SitePageResourceImpl
 					_cetManager,
 					(ContentPageSpecification)contentPageSpecifications[0],
 					_fragmentEntryProcessorRegistry, groupId,
-					_infoItemServiceRegistry, privateLayout,
-					_getParentLayoutId(
-						groupId,
-						sitePage.getParentSitePageExternalReferenceCode(),
-						privateLayout, serviceContext),
+					_infoItemServiceRegistry, privateLayout, parentLayoutId,
 					nameMap, titleMap, descriptionMap, keywordsMap, robotsMap,
 					SitePageTypeUtil.toInternalType(sitePage.getType()),
 					typeSettingsUnicodeProperties,
@@ -549,12 +549,8 @@ public class SitePageResourceImpl
 				layout = LayoutUtil.addContentLayout(
 					_cetManager, _fragmentEntryProcessorRegistry, groupId,
 					_infoItemServiceRegistry, contentPageSpecifications,
-					privateLayout,
-					_getParentLayoutId(
-						groupId,
-						sitePage.getParentSitePageExternalReferenceCode(),
-						privateLayout, serviceContext),
-					nameMap, titleMap, descriptionMap, keywordsMap, robotsMap,
+					privateLayout, parentLayoutId, nameMap, titleMap,
+					descriptionMap, keywordsMap, robotsMap,
 					SitePageTypeUtil.toInternalType(sitePage.getType()),
 					typeSettingsUnicodeProperties,
 					_isHiddenFromNavigation(false, sitePage.getPageSettings()),
@@ -575,10 +571,8 @@ public class SitePageResourceImpl
 
 			layout = LayoutUtil.addLayout(
 				sitePage.getExternalReferenceCode(), groupId, privateLayout,
-				_getParentLayoutId(
-					groupId, sitePage.getParentSitePageExternalReferenceCode(),
-					privateLayout, serviceContext),
-				nameMap, SitePageTypeUtil.toInternalType(sitePage.getType()),
+				parentLayoutId, nameMap,
+				SitePageTypeUtil.toInternalType(sitePage.getType()),
 				typeSettingsUnicodeProperties,
 				_isHiddenFromNavigation(false, sitePage.getPageSettings()),
 				LocalizedMapUtil.getLocalizedMap(
@@ -591,11 +585,8 @@ public class SitePageResourceImpl
 			layout = LayoutUtil.addPortletLayout(
 				_cetManager, sitePage.getExternalReferenceCode(),
 				_infoItemServiceRegistry, groupId, privateLayout,
-				_getParentLayoutId(
-					groupId, sitePage.getParentSitePageExternalReferenceCode(),
-					privateLayout, serviceContext),
-				nameMap, titleMap, descriptionMap, keywordsMap, robotsMap,
-				typeSettingsUnicodeProperties,
+				parentLayoutId, nameMap, titleMap, descriptionMap, keywordsMap,
+				robotsMap, typeSettingsUnicodeProperties,
 				_isHiddenFromNavigation(false, sitePage.getPageSettings()),
 				LocalizedMapUtil.getLocalizedMap(
 					sitePage.getFriendlyUrlPath_i18n()),
