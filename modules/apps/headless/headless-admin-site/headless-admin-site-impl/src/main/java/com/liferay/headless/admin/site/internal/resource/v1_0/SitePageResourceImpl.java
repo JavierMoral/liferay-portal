@@ -1276,7 +1276,7 @@ public class SitePageResourceImpl
 					contentPageSpecification.
 						getDraftContentPageSpecificationExternalReferenceCode())) {
 
-				throw new IllegalArgumentException(
+				throw new ValidationException(
 					"A single content page specification cannot reference a " +
 						"draft content page specification");
 			}
@@ -1298,7 +1298,7 @@ public class SitePageResourceImpl
 			publishedPageSpecification = pageSpecifications[0];
 		}
 		else {
-			throw new IllegalArgumentException(
+			throw new ValidationException(
 				"The number of page specifications does not match the page " +
 					"type requirements");
 		}
