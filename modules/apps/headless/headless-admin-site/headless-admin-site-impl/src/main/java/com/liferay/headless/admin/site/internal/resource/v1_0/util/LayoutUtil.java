@@ -42,6 +42,7 @@ import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil;
 import com.liferay.layout.util.LayoutServiceContextHelperUtil;
 import com.liferay.layout.util.UpdateLayoutModifiedDateThreadLocal;
+import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
@@ -130,7 +131,7 @@ public class LayoutUtil {
 
 		String masterLayoutPageTemplateEntryERC =
 			_getMasterLayoutPageTemplateEntryERC(
-				settings, groupId, serviceContext);
+				() -> _isMasterPageContext(serviceContext), groupId, settings);
 
 		Layout layout = LayoutServiceUtil.addLayout(
 			contentPageSpecification.getExternalReferenceCode(), groupId,
@@ -216,7 +217,7 @@ public class LayoutUtil {
 
 		String masterLayoutPageTemplateEntryERC =
 			_getMasterLayoutPageTemplateEntryERC(
-				settings, groupId, serviceContext);
+				() -> _isMasterPageContext(serviceContext), groupId, settings);
 
 		Layout layout = LayoutServiceUtil.addLayout(
 			publishedContentPageSpecification.getExternalReferenceCode(),
@@ -682,7 +683,8 @@ public class LayoutUtil {
 	}
 
 	private static String _getMasterLayoutPageTemplateEntryERC(
-			long groupId, Layout layout, Settings settings)
+			UnsafeSupplier<Boolean, Exception> currentPageMasterUnsafeSupplier,
+			long groupId, Settings settings)
 		throws Exception {
 
 		if (settings == null) {
@@ -701,83 +703,22 @@ public class LayoutUtil {
 
 		if (itemExternalReference.getScope() != null) {
 			throw new IllegalArgumentException(
-				"The master page references do not belong to the same scope " +
-					"as the current page");
-		}
-
-		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			LayoutPageTemplateEntryLocalServiceUtil.
-				fetchLayoutPageTemplateEntryByPlid(layout.getPlid());
-
-		if ((layoutPageTemplateEntry != null) &&
-			Objects.equals(
-				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT,
-				layoutPageTemplateEntry.getType())) {
-
-			throw new IllegalArgumentException(
-				"A master page cannot reference another master page");
-		}
-
-		layoutPageTemplateEntry =
-			LayoutPageTemplateEntryLocalServiceUtil.
-				fetchLayoutPageTemplateEntryByExternalReferenceCode(
-					itemExternalReference.getExternalReferenceCode(), groupId);
-
-		if ((layoutPageTemplateEntry != null) &&
-			!Objects.equals(
-				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT,
-				layoutPageTemplateEntry.getType())) {
-
-			throw new IllegalArgumentException(
-				"The master page reference does not point to a master page");
-		}
-
-		if (layoutPageTemplateEntry == null) {
-			LogUtil.logOptionalReference(
-				LayoutPageTemplateEntry.class,
-				itemExternalReference.getExternalReferenceCode(), groupId);
-		}
-
-		return itemExternalReference.getExternalReferenceCode();
-	}
-
-	private static String _getMasterLayoutPageTemplateEntryERC(
-		Settings settings, long groupId, ServiceContext serviceContext) {
-
-		if ((settings == null) ||
-			(settings.getMasterPageItemExternalReference() == null)) {
-
-			return null;
-		}
-
-		if (Objects.equals(
-				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT,
-				serviceContext.getAttribute(
-					"layout.page.template.entry.type"))) {
-
-			throw new IllegalArgumentException(
-				"A master page cannot reference another master page");
-		}
-
-		ItemExternalReference itemExternalReference =
-			settings.getMasterPageItemExternalReference();
-
-		if (Validator.isNull(
-				itemExternalReference.getExternalReferenceCode())) {
-
-			return null;
-		}
-
-		if (itemExternalReference.getScope() != null) {
-			throw new IllegalArgumentException(
 				"The master page reference does not belong to the same scope " +
-					"as the target page");
+					"as the page");
 		}
+
+		if (currentPageMasterUnsafeSupplier.get()) {
+			throw new IllegalArgumentException(
+				"A master page cannot reference another master page");
+		}
+
+		String externalReferenceCode =
+			itemExternalReference.getExternalReferenceCode();
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			LayoutPageTemplateEntryLocalServiceUtil.
 				fetchLayoutPageTemplateEntryByExternalReferenceCode(
-					itemExternalReference.getExternalReferenceCode(), groupId);
+					externalReferenceCode, groupId);
 
 		if ((layoutPageTemplateEntry != null) &&
 			!Objects.equals(
@@ -790,11 +731,10 @@ public class LayoutUtil {
 
 		if (layoutPageTemplateEntry == null) {
 			LogUtil.logOptionalReference(
-				LayoutPageTemplateEntry.class,
-				itemExternalReference.getExternalReferenceCode(), groupId);
+				LayoutPageTemplateEntry.class, externalReferenceCode, groupId);
 		}
 
-		return itemExternalReference.getExternalReferenceCode();
+		return externalReferenceCode;
 	}
 
 	private static String _getStyleBookEntryERC(
@@ -867,6 +807,26 @@ public class LayoutUtil {
 		PortletPreferencesPortletConfigurationImporterUtil.
 			importPortletConfiguration(
 				layout.getPlid(), portletId, configurationMap);
+	}
+
+	private static boolean _isMasterPage(Layout layout) {
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			LayoutPageTemplateEntryLocalServiceUtil.
+				fetchLayoutPageTemplateEntryByPlid(layout.getPlid());
+
+		if (layoutPageTemplateEntry == null) {
+			return false;
+		}
+
+		return Objects.equals(
+			LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT,
+			layoutPageTemplateEntry.getType());
+	}
+
+	private static boolean _isMasterPageContext(ServiceContext serviceContext) {
+		return Objects.equals(
+			LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT,
+			serviceContext.getAttribute("layout.page.template.entry.type"));
 	}
 
 	private static void _processWidgetPageWidgetInstance(
@@ -1146,13 +1106,16 @@ public class LayoutUtil {
 			}
 		}
 
+		Layout currentLayout = layout;
+
 		layout = _updateLayout(
 			layout, nameMap, titleMap, descriptionMap, keywordsMap, robotsMap,
 			_getStyleBookEntryERC(
 				layout.getCompanyId(), layout.getGroupId(), settings),
 			faviconFileEntryERC, faviconFileEntryScopeERC,
 			_getMasterLayoutPageTemplateEntryERC(
-				serviceContext.getScopeGroupId(), layout, settings),
+				() -> _isMasterPage(currentLayout),
+				serviceContext.getScopeGroupId(), settings),
 			friendlyURLMap, serviceContext);
 
 		layout = LayoutLocalServiceUtil.updateIconImage(
