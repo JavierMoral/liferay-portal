@@ -97,6 +97,8 @@ public class FileEntryUtil {
 
 		File file = null;
 
+		String originalUuid = serviceContext.getUuid();
+
 		try {
 			file = FileUtil.createTempFile(
 				_decodeOrGetByteArray(fileBase64, url));
@@ -116,6 +118,8 @@ public class FileEntryUtil {
 			serviceContext.setAddGroupPermissions(true);
 			serviceContext.setAddGuestPermissions(true);
 			serviceContext.setIndexingEnabled(false);
+
+			serviceContext.setUuid(null);
 
 			Repository repository =
 				PortletFileRepositoryUtil.addPortletRepository(
@@ -137,6 +141,8 @@ public class FileEntryUtil {
 				null, file, null, null, null, serviceContext);
 		}
 		finally {
+			serviceContext.setUuid(originalUuid);
+
 			if (file != null) {
 				FileUtil.delete(file);
 			}
