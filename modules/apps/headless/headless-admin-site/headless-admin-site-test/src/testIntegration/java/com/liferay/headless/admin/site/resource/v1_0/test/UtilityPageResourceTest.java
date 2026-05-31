@@ -1612,6 +1612,7 @@ public class UtilityPageResourceTest extends BaseUtilityPageResourceTestCase {
 		FileEntry fileEntry2 = FileEntryTestUtil.addPreviewFileEntry(
 			testGroup, _portletFileRepository, getClass());
 
+		putUtilityPage.setFriendlyUrlHistory((FriendlyUrlHistory)null);
 		putUtilityPage.setThumbnailURLReference(
 			() -> ThumbnailURLReferenceUtil.getThumbnailURLReference(
 				fileEntry2, null));
@@ -1624,6 +1625,7 @@ public class UtilityPageResourceTest extends BaseUtilityPageResourceTestCase {
 			_thumbnail1Bytes, fileEntry2.getExternalReferenceCode(),
 			putUtilityPage);
 
+		putUtilityPage.setFriendlyUrlHistory((FriendlyUrlHistory)null);
 		putUtilityPage.setThumbnailURLReference(() -> null);
 
 		putUtilityPage = utilityPageResource.putSiteUtilityPage(
