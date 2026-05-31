@@ -73,7 +73,6 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
@@ -408,12 +407,8 @@ public class DisplayPageTemplateResourceTest
 				}
 			});
 
-		Repository repository = _portletFileRepository.addPortletRepository(
-			testGroup.getGroupId(), RandomTestUtil.randomString(),
-			ServiceContextTestUtil.getServiceContext(
-				testGroup, TestPropsValues.getUserId()));
-
-		FileEntry fileEntry = _addPortletFileEntry(repository.getDlFolderId());
+		FileEntry fileEntry = FileEntryTestUtil.addPreviewFileEntry(
+			testGroup, _portletFileRepository, getClass());
 
 		expectedDisplayPageTemplate.setThumbnailURLReference(
 			ThumbnailURLReferenceUtil.getThumbnailURLReference(
@@ -672,23 +667,6 @@ public class DisplayPageTemplateResourceTest
 		try (OutputStream outputStream = httpExchange.getResponseBody()) {
 			outputStream.write(bytes);
 		}
-	}
-
-	private FileEntry _addPortletFileEntry(long folderId) throws Exception {
-		return _addPortletFileEntry(folderId, "thumbnail1.png");
-	}
-
-	private FileEntry _addPortletFileEntry(long folderId, String fileName)
-		throws Exception {
-
-		Class<?> clazz = getClass();
-
-		return _portletFileRepository.addPortletFileEntry(
-			null, testGroup.getGroupId(), TestPropsValues.getUserId(),
-			LayoutPageTemplateEntry.class.getName(),
-			RandomTestUtil.randomLong(), RandomTestUtil.randomString(),
-			folderId, clazz.getResourceAsStream("dependencies/" + fileName),
-			RandomTestUtil.randomString(), ContentTypes.IMAGE_PNG, false);
 	}
 
 	private void _assertNestedFields(DisplayPageTemplate displayPageTemplate)

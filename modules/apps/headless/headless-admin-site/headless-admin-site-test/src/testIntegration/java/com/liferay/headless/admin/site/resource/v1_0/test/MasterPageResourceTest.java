@@ -40,7 +40,6 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutSetPrototype;
-import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
@@ -325,12 +324,8 @@ public class MasterPageResourceTest extends BaseMasterPageResourceTestCase {
 				Boolean.TRUE, masterPage.getExternalReferenceCode(), null,
 				thumbnailURL));
 
-		Repository repository = _portletFileRepository.addPortletRepository(
-			testGroup.getGroupId(), RandomTestUtil.randomString(),
-			ServiceContextTestUtil.getServiceContext(
-				testGroup, TestPropsValues.getUserId()));
-
-		FileEntry fileEntry = _addPortletFileEntry(repository.getDlFolderId());
+		FileEntry fileEntry = FileEntryTestUtil.addPreviewFileEntry(
+			testGroup, _portletFileRepository, getClass());
 
 		_testPatchSiteMasterPage(
 			Boolean.TRUE,
@@ -338,7 +333,8 @@ public class MasterPageResourceTest extends BaseMasterPageResourceTestCase {
 				null, masterPage.getExternalReferenceCode(),
 				fileEntry.getExternalReferenceCode(), thumbnailURL));
 
-		fileEntry = _addPortletFileEntry(repository.getDlFolderId());
+		fileEntry = FileEntryTestUtil.addPreviewFileEntry(
+			testGroup, _portletFileRepository, getClass());
 
 		_testPatchSiteMasterPage(
 			Boolean.FALSE,
@@ -455,12 +451,8 @@ public class MasterPageResourceTest extends BaseMasterPageResourceTestCase {
 		MasterPage masterPage = testPostSiteMasterPage_addMasterPage(
 			randomMasterPage());
 
-		Repository repository = _portletFileRepository.addPortletRepository(
-			testGroup.getGroupId(), RandomTestUtil.randomString(),
-			ServiceContextTestUtil.getServiceContext(
-				testGroup, TestPropsValues.getUserId()));
-
-		FileEntry fileEntry = _addPortletFileEntry(repository.getDlFolderId());
+		FileEntry fileEntry = FileEntryTestUtil.addPreviewFileEntry(
+			testGroup, _portletFileRepository, getClass());
 
 		String thumbnailURL = RandomTestUtil.randomString();
 
@@ -557,23 +549,6 @@ public class MasterPageResourceTest extends BaseMasterPageResourceTestCase {
 		try (OutputStream outputStream = httpExchange.getResponseBody()) {
 			outputStream.write(bytes);
 		}
-	}
-
-	private FileEntry _addPortletFileEntry(long folderId) throws Exception {
-		return _addPortletFileEntry(folderId, "thumbnail1.png");
-	}
-
-	private FileEntry _addPortletFileEntry(long folderId, String fileName)
-		throws Exception {
-
-		Class<?> clazz = getClass();
-
-		return _portletFileRepository.addPortletFileEntry(
-			null, testGroup.getGroupId(), TestPropsValues.getUserId(),
-			LayoutPageTemplateEntry.class.getName(),
-			RandomTestUtil.randomLong(), RandomTestUtil.randomString(),
-			folderId, clazz.getResourceAsStream("dependencies/" + fileName),
-			RandomTestUtil.randomString(), ContentTypes.IMAGE_PNG, false);
 	}
 
 	private void _assertContentPageSpecificationPageElements(

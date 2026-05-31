@@ -30,7 +30,6 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
@@ -464,20 +463,19 @@ public class UtilityPageResourceTest extends BaseUtilityPageResourceTestCase {
 
 		ContentLayoutTestUtil.publishLayout(layout.fetchDraftLayout(), layout);
 
-		Repository repository = _portletFileRepository.addPortletRepository(
-			testGroup.getGroupId(), RandomTestUtil.randomString(),
-			ServiceContextTestUtil.getServiceContext(
-				testGroup, TestPropsValues.getUserId()));
-
 		_testPutSiteUtilityPage(
 			Boolean.FALSE,
 			_getUtilityPage(
-				_addPortletFileEntry(repository.getDlFolderId()), Boolean.FALSE,
+				FileEntryTestUtil.addPreviewFileEntry(
+					testGroup, _portletFileRepository, getClass()),
+				Boolean.FALSE,
 				layoutUtilityPageEntry.getExternalReferenceCode()));
 		_testPutSiteUtilityPage(
 			Boolean.TRUE,
 			_getUtilityPage(
-				_addPortletFileEntry(repository.getDlFolderId()), Boolean.TRUE,
+				FileEntryTestUtil.addPreviewFileEntry(
+					testGroup, _portletFileRepository, getClass()),
+				Boolean.TRUE,
 				layoutUtilityPageEntry.getExternalReferenceCode()));
 
 		_testPutSiteUtilityPage(
@@ -588,23 +586,6 @@ public class UtilityPageResourceTest extends BaseUtilityPageResourceTestCase {
 		try (OutputStream outputStream = httpExchange.getResponseBody()) {
 			outputStream.write(bytes);
 		}
-	}
-
-	private FileEntry _addPortletFileEntry(long folderId) throws Exception {
-		return _addPortletFileEntry(folderId, "thumbnail1.png");
-	}
-
-	private FileEntry _addPortletFileEntry(long folderId, String fileName)
-		throws Exception {
-
-		Class<?> clazz = getClass();
-
-		return _portletFileRepository.addPortletFileEntry(
-			null, testGroup.getGroupId(), TestPropsValues.getUserId(),
-			LayoutUtilityPageEntry.class.getName(), RandomTestUtil.randomLong(),
-			RandomTestUtil.randomString(), folderId,
-			clazz.getResourceAsStream("dependencies/" + fileName),
-			RandomTestUtil.randomString(), ContentTypes.IMAGE_PNG, false);
 	}
 
 	private void _assertNestedFields(UtilityPage utilityPage) throws Exception {
