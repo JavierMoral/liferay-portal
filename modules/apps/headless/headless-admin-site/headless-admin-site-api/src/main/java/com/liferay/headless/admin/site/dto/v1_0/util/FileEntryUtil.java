@@ -6,13 +6,10 @@
 package com.liferay.headless.admin.site.dto.v1_0.util;
 
 import com.liferay.document.library.kernel.model.DLFolderConstants;
-import com.liferay.document.library.kernel.service.DLAppLocalServiceUtil;
 import com.liferay.headless.admin.site.dto.v1_0.ThumbnailURLReference;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
-import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.Base64;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.MimeTypesUtil;
@@ -31,8 +28,7 @@ import java.util.Set;
 public class FileEntryUtil {
 
 	public static long getPreviewFileEntryId(
-			long groupId, String portletId, String resourceName,
-			ServiceContext serviceContext,
+			long groupId, String portletId, long userId,
 			ThumbnailURLReference thumbnailURLReference)
 		throws Exception {
 
@@ -62,8 +58,8 @@ public class FileEntryUtil {
 
 		if (fileEntry == null) {
 			fileEntry = _getFileEntry(
-				externalReferenceCode, fileBase64, groupId, portletId,
-				resourceName, serviceContext, url);
+				externalReferenceCode, fileBase64, groupId, portletId, userId,
+				url);
 		}
 
 		return fileEntry.getFileEntryId();
@@ -91,13 +87,10 @@ public class FileEntryUtil {
 
 	private static FileEntry _getFileEntry(
 			String externalReferenceCode, String fileBase64, long groupId,
-			String portletId, String resourceName,
-			ServiceContext serviceContext, String url)
+			String portletId, long userId, String url)
 		throws Exception {
 
 		File file = null;
-
-		String originalUuid = serviceContext.getUuid();
 
 		try {
 			file = FileUtil.createTempFile(
@@ -115,16 +108,6 @@ public class FileEntryUtil {
 				extension = iterator.next();
 			}
 
-			serviceContext.setAddGroupPermissions(true);
-			serviceContext.setAddGuestPermissions(true);
-			serviceContext.setIndexingEnabled(false);
-
-			serviceContext.setUuid(null);
-
-			Repository repository =
-				PortletFileRepositoryUtil.addPortletRepository(
-					groupId, portletId, serviceContext);
-
 			String fileNamePrefix = externalReferenceCode;
 
 			if (Validator.isNull(externalReferenceCode)) {
@@ -133,16 +116,12 @@ public class FileEntryUtil {
 
 			String fileName = fileNamePrefix + "_preview" + extension;
 
-			return DLAppLocalServiceUtil.addFileEntry(
-				externalReferenceCode, serviceContext.getUserId(),
-				repository.getRepositoryId(),
-				DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-				resourceName + "_" + fileName, mimeType, fileName, null, null,
-				null, file, null, null, null, serviceContext);
+			return PortletFileRepositoryUtil.addPortletFileEntry(
+				externalReferenceCode, groupId, userId, null, 0, portletId,
+				DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, file, fileName,
+				mimeType, false);
 		}
 		finally {
-			serviceContext.setUuid(originalUuid);
-
 			if (file != null) {
 				FileUtil.delete(file);
 			}
