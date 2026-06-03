@@ -453,8 +453,8 @@ public class DisplayPageTemplateResourceImpl
 		}
 
 		long previewFileEntryId = FileEntryUtil.getPreviewFileEntryId(
-			groupId, LayoutAdminPortletKeys.GROUP_PAGES, getResourceName(),
-			_getServiceContext(displayPageTemplate, groupId),
+			groupId, LayoutAdminPortletKeys.GROUP_PAGES,
+			contextUser.getUserId(),
 			displayPageTemplate.getThumbnailURLReference());
 
 		if (previewFileEntryId !=
@@ -631,8 +631,7 @@ public class DisplayPageTemplateResourceImpl
 				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE,
 				FileEntryUtil.getPreviewFileEntryId(
 					groupId, LayoutAdminPortletKeys.GROUP_PAGES,
-					getResourceName(),
-					_getServiceContext(displayPageTemplate, groupId),
+					contextUser.getUserId(),
 					displayPageTemplate.getThumbnailURLReference()),
 				GetterUtil.getBoolean(displayPageTemplate.getMarkedAsDefault()),
 				0L, layout.getPlid(), 0L,
