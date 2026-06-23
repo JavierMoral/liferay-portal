@@ -19,6 +19,7 @@ import com.liferay.headless.admin.site.dto.v1_0.PageSetPageSpecification;
 import com.liferay.headless.admin.site.dto.v1_0.PageSpecification;
 import com.liferay.headless.admin.site.dto.v1_0.WidgetInstancePageElementDefinition;
 import com.liferay.headless.admin.site.dto.v1_0.WidgetPageSpecification;
+import com.liferay.headless.admin.site.internal.exception.PageSpecificationException;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -34,14 +35,17 @@ import java.util.function.Consumer;
 public class PageSpecificationUtil {
 
 	public static PageSpecification getPageSpecification(
-		PageSpecification[] pageSpecifications) {
+			PageSpecification[] pageSpecifications)
+		throws PageSpecificationException {
 
 		if (ArrayUtil.isEmpty(pageSpecifications)) {
 			return null;
 		}
 
 		if (pageSpecifications.length != 1) {
-			throw new UnsupportedOperationException();
+			throw new PageSpecificationException(
+				PageSpecificationException.EXACTLY_ONE_REQUIRED,
+				"Exactly one page specification is required");
 		}
 
 		PageSpecification pageSpecification = pageSpecifications[0];
@@ -55,21 +59,25 @@ public class PageSpecificationUtil {
 				pageSpecification.getStatus(),
 				PageSpecification.Status.APPROVED)) {
 
-			throw new UnsupportedOperationException();
+			throw new PageSpecificationException(
+				PageSpecificationException.INVALID,
+				"The page specification is invalid or has not been approved");
 		}
 
 		return pageSpecification;
 	}
 
-	public static int getPublishedStatus(
-		PageSpecification[] pageSpecifications) {
+	public static int getPublishedStatus(PageSpecification[] pageSpecifications)
+		throws PageSpecificationException {
 
 		if (pageSpecifications == null) {
 			return WorkflowConstants.STATUS_DRAFT;
 		}
 
 		if (pageSpecifications.length != 2) {
-			throw new UnsupportedOperationException();
+			throw new PageSpecificationException(
+				PageSpecificationException.EXACTLY_TWO_REQUIRED,
+				"Exactly two page specifications are required");
 		}
 
 		PageSpecification[] sortedContentPageSpecifications =
@@ -89,14 +97,17 @@ public class PageSpecificationUtil {
 	}
 
 	public static PageSpecification[] getSortedContentPageSpecifications(
-		PageSpecification[] pageSpecifications) {
+			PageSpecification[] pageSpecifications)
+		throws PageSpecificationException {
 
 		if (pageSpecifications == null) {
 			return null;
 		}
 
 		if (pageSpecifications.length != 2) {
-			throw new UnsupportedOperationException();
+			throw new PageSpecificationException(
+				PageSpecificationException.EXACTLY_TWO_REQUIRED,
+				"Exactly two page specifications are required");
 		}
 
 		ContentPageSpecification draftContentPageSpecification;
@@ -124,7 +135,10 @@ public class PageSpecificationUtil {
 				publishedContentPageSpecification.
 					getDraftContentPageSpecificationExternalReferenceCode())) {
 
-			throw new UnsupportedOperationException();
+			throw new PageSpecificationException(
+				PageSpecificationException.MISMATCHED_EXTERNAL_REFERENCE_CODES,
+				"The draft and published page specifications have mismatched " +
+					"external reference codes");
 		}
 
 		return new PageSpecification[] {
@@ -133,7 +147,8 @@ public class PageSpecificationUtil {
 	}
 
 	public static WidgetPageSpecification getWidgetPageSpecification(
-		PageSpecification[] pageSpecifications) {
+			PageSpecification[] pageSpecifications)
+		throws PageSpecificationException {
 
 		return (WidgetPageSpecification)getPageSpecification(
 			pageSpecifications);

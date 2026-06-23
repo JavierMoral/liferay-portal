@@ -101,7 +101,8 @@ public class PageElementResourceImpl extends BasePageElementResourceImpl {
 				pageElementExternalReferenceCode);
 
 		if (layoutStructureItem == null) {
-			throw new NoSuchLayoutStructureItemException();
+			throw new NoSuchLayoutStructureItemException(
+				pageElementExternalReferenceCode);
 		}
 
 		layoutStructure.deleteLayoutStructureItem(
@@ -156,7 +157,8 @@ public class PageElementResourceImpl extends BasePageElementResourceImpl {
 				pageElementExternalReferenceCode);
 
 		if (layoutStructureItem == null) {
-			throw new NoSuchLayoutStructureItemException();
+			throw new NoSuchLayoutStructureItemException(
+				pageElementExternalReferenceCode);
 		}
 
 		PageElement pageElement = _pageElementDTOConverter.toDTO(
