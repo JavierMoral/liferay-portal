@@ -1215,7 +1215,8 @@ public class SitePageResourceImpl
 	}
 
 	private void _validatePageSpecificationExternalReferenceCode(
-		ServiceContext serviceContext, SitePage sitePage) {
+			ServiceContext serviceContext, SitePage sitePage)
+		throws Exception {
 
 		PageSpecification[] pageSpecifications =
 			sitePage.getPageSpecifications();

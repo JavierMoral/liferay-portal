@@ -6,6 +6,9 @@
 package com.liferay.headless.admin.site.internal.resource.v1_0.util;
 
 import com.liferay.headless.admin.site.dto.v1_0.PageExperience;
+import com.liferay.headless.admin.site.internal.exception.DuplicatePageExperienceKeyException;
+import com.liferay.headless.admin.site.internal.exception.PageExperienceException;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.segments.constants.SegmentsExperienceConstants;
@@ -21,10 +24,13 @@ import java.util.Set;
 public class PageExperienceUtil {
 
 	public static PageExperience getDefaultPageExperience(
-		PageExperience[] pageExperiences) {
+			PageExperience[] pageExperiences)
+		throws PageExperienceException {
 
 		if (ArrayUtil.isEmpty(pageExperiences)) {
-			throw new UnsupportedOperationException();
+			throw new PageExperienceException(
+				PageExperienceException.EXPERIENCE_REQUIRED,
+				"No page experiences were provided");
 		}
 
 		for (PageExperience pageExperience : pageExperiences) {
@@ -36,17 +42,25 @@ public class PageExperienceUtil {
 			}
 		}
 
-		throw new UnsupportedOperationException();
+		throw new PageExperienceException(
+			PageExperienceException.DEFAULT_EXPERIENCE_REQUIRED,
+			"No default page experience was found");
 	}
 
 	public static void validatePageExperiences(
-		SegmentsExperience defaultSegmentsExperience,
-		PageExperience[] pageExperiences) {
+			SegmentsExperience defaultSegmentsExperience,
+			PageExperience[] pageExperiences)
+		throws PortalException {
 
-		if ((defaultSegmentsExperience == null) ||
-			ArrayUtil.isEmpty(pageExperiences)) {
+		if (defaultSegmentsExperience == null) {
+			throw new IllegalStateException(
+				"The default segments experience does not exist");
+		}
 
-			throw new UnsupportedOperationException();
+		if (ArrayUtil.isEmpty(pageExperiences)) {
+			throw new PageExperienceException(
+				PageExperienceException.EXPERIENCE_REQUIRED,
+				"No page experiences were provided");
 		}
 
 		Set<String> pageExperienceKeys = new HashSet<>(pageExperiences.length);
@@ -55,7 +69,8 @@ public class PageExperienceUtil {
 
 		for (PageExperience pageExperience : pageExperiences) {
 			if (!pageExperienceKeys.add(pageExperience.getKey())) {
-				throw new UnsupportedOperationException();
+				throw new DuplicatePageExperienceKeyException(
+					pageExperience.getKey());
 			}
 
 			if (Objects.equals(
@@ -66,15 +81,34 @@ public class PageExperienceUtil {
 			}
 		}
 
-		if ((defaultPageExperience == null) ||
-			!StringUtil.equals(
-				defaultSegmentsExperience.getExternalReferenceCode(),
-				defaultPageExperience.getExternalReferenceCode()) ||
-			((defaultPageExperience.getPriority() != null) &&
-			 (defaultPageExperience.getPriority() != 0)) ||
-			(defaultPageExperience.getSegmentItemExternalReference() != null)) {
+		if (defaultPageExperience == null) {
+			throw new PageExperienceException(
+				PageExperienceException.DEFAULT_EXPERIENCE_REQUIRED,
+				"No default page experience was found");
+		}
 
-			throw new UnsupportedOperationException();
+		if ((defaultPageExperience.getPriority() != null) &&
+			(defaultPageExperience.getPriority() != 0)) {
+
+			throw new PageExperienceException(
+				PageExperienceException.INVALID_DEFAULT_PRIORITY,
+				"The default page experience must have a priority of 0");
+		}
+
+		if (!StringUtil.equals(
+				defaultSegmentsExperience.getExternalReferenceCode(),
+				defaultPageExperience.getExternalReferenceCode())) {
+
+			throw new PageExperienceException(
+				PageExperienceException.MISMATCHED_EXTERNAL_REFERENCE_CODE,
+				"The external reference code does not match the target page " +
+					"experience external reference code");
+		}
+
+		if (defaultPageExperience.getSegmentItemExternalReference() != null) {
+			throw new PageExperienceException(
+				PageExperienceException.DEFAULT_REFERENCES_SEGMENT,
+				"The default page experience cannot reference a segment");
 		}
 	}
 

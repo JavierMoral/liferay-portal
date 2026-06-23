@@ -6,6 +6,8 @@
 package com.liferay.headless.admin.site.internal.resource.v1_0.util;
 
 import com.liferay.headless.admin.site.dto.v1_0.DisplayPageTemplateFolder;
+import com.liferay.headless.admin.site.internal.exception.InvalidDisplayPageTemplateFolderExternalReferenceCodeException;
+import com.liferay.headless.admin.site.internal.exception.MismatchedDisplayPageTemplateFolderExternalReferenceCodeException;
 import com.liferay.headless.common.spi.service.context.ServiceContextBuilder;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateCollectionTypeConstants;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateConstants;
@@ -86,7 +88,7 @@ public class DisplayPageTemplateFolderUtil {
 					parentDisplayPageTemplateFolder.
 						getExternalReferenceCode())) {
 
-				throw new UnsupportedOperationException();
+				throw new MismatchedDisplayPageTemplateFolderExternalReferenceCodeException();
 			}
 
 			parentLayoutPageTemplateCollection =
@@ -101,7 +103,12 @@ public class DisplayPageTemplateFolderUtil {
 				LayoutPageTemplateCollectionTypeConstants.DISPLAY_PAGE,
 				parentLayoutPageTemplateCollection.getType())) {
 
-			throw new UnsupportedOperationException();
+			String externalReferenceCode =
+				displayPageTemplateFolder.
+					getParentDisplayPageTemplateFolderExternalReferenceCode();
+
+			throw new InvalidDisplayPageTemplateFolderExternalReferenceCodeException(
+				externalReferenceCode);
 		}
 
 		return parentLayoutPageTemplateCollection.

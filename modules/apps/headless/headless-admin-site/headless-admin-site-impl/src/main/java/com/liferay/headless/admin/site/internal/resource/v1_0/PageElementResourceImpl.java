@@ -9,6 +9,7 @@ import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
 import com.liferay.headless.admin.site.dto.v1_0.PageElement;
 import com.liferay.headless.admin.site.internal.dto.v1_0.util.DTOConverterContextUtil;
 import com.liferay.headless.admin.site.internal.dto.v1_0.util.InfoFormUtil;
+import com.liferay.headless.admin.site.internal.exception.NoSuchPageElementException;
 import com.liferay.headless.admin.site.internal.resource.v1_0.layout.structure.item.importer.context.LayoutStructureItemImporterContext;
 import com.liferay.headless.admin.site.internal.resource.v1_0.util.LayoutStructureUtil;
 import com.liferay.headless.admin.site.resource.v1_0.PageElementResource;
@@ -22,7 +23,6 @@ import com.liferay.layout.util.structure.CollectionStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructureItemUtil;
-import com.liferay.layout.util.structure.exception.NoSuchLayoutStructureItemException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
@@ -101,7 +101,8 @@ public class PageElementResourceImpl extends BasePageElementResourceImpl {
 				pageElementExternalReferenceCode);
 
 		if (layoutStructureItem == null) {
-			throw new NoSuchLayoutStructureItemException();
+			throw new NoSuchPageElementException(
+				pageElementExternalReferenceCode);
 		}
 
 		layoutStructure.deleteLayoutStructureItem(
@@ -156,7 +157,8 @@ public class PageElementResourceImpl extends BasePageElementResourceImpl {
 				pageElementExternalReferenceCode);
 
 		if (layoutStructureItem == null) {
-			throw new NoSuchLayoutStructureItemException();
+			throw new NoSuchPageElementException(
+				pageElementExternalReferenceCode);
 		}
 
 		PageElement pageElement = _pageElementDTOConverter.toDTO(
