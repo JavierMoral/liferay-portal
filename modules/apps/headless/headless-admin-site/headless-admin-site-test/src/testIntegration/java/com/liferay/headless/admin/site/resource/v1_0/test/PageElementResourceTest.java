@@ -269,7 +269,9 @@ public class PageElementResourceTest extends BasePageElementResourceTestCase {
 			Problem problem = problemException.getProblem();
 
 			Assert.assertEquals("NOT_FOUND", problem.getStatus());
-			Assert.assertNull(problem.getTitle());
+			Assert.assertEquals(
+				"The page element could not be found", problem.getTitle());
+			Assert.assertEquals("page-element-not-found", problem.getType());
 		}
 	}
 
@@ -312,7 +314,9 @@ public class PageElementResourceTest extends BasePageElementResourceTestCase {
 			Problem problem = problemException.getProblem();
 
 			Assert.assertEquals("NOT_FOUND", problem.getStatus());
-			Assert.assertNull(problem.getTitle());
+			Assert.assertEquals(
+				"The page element could not be found", problem.getTitle());
+			Assert.assertEquals("page-element-not-found", problem.getType());
 		}
 	}
 
@@ -356,7 +360,9 @@ public class PageElementResourceTest extends BasePageElementResourceTestCase {
 			Problem problem = problemException.getProblem();
 
 			Assert.assertEquals("NOT_FOUND", problem.getStatus());
-			Assert.assertNull(problem.getTitle());
+			Assert.assertEquals(
+				"The page element could not be found", problem.getTitle());
+			Assert.assertEquals("page-element-not-found", problem.getType());
 		}
 	}
 
@@ -838,6 +844,10 @@ public class PageElementResourceTest extends BasePageElementResourceTestCase {
 		}
 		catch (Problem.ProblemException problemException) {
 			Problem problem = problemException.getProblem();
+
+			if (problem.getDetail() != null) {
+				Assert.assertEquals(title, problem.getDetail());
+			}
 
 			Assert.assertEquals(status, problem.getStatus());
 			Assert.assertEquals(title, problem.getTitle());

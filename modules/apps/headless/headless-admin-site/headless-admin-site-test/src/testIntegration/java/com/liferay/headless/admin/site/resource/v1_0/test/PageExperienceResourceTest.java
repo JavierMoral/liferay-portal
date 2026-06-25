@@ -8,6 +8,7 @@ package com.liferay.headless.admin.site.resource.v1_0.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.headless.admin.site.client.dto.v1_0.PageExperience;
 import com.liferay.headless.admin.site.client.problem.Problem;
+import com.liferay.headless.admin.site.resource.v1_0.test.util.LayoutPageTemplateEntryTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.PageElementsTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.PageExperiencesTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.ReferencesTestUtil;
@@ -19,6 +20,8 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.test.log.LogCapture;
 import com.liferay.portal.test.log.LogEntry;
 import com.liferay.portal.test.log.LoggerTestUtil;
@@ -215,6 +218,9 @@ public class PageExperienceResourceTest
 					null)));
 
 		_testPostSitePageSpecificationPageExperienceWithPriority();
+
+		_testPostSitePageSpecificationPageExperienceWithDisplayPageTemplate();
+		_testPostSitePageSpecificationPageExperienceWithPageTemplate();
 	}
 
 	@Override
@@ -246,6 +252,8 @@ public class PageExperienceResourceTest
 			testGroup.getExternalReferenceCode(),
 			pageExperience.getExternalReferenceCode());
 
+		_testPutSitePageExperienceWithDisplayPageTemplate();
+		_testPutSitePageExperienceWithPageTemplate();
 		_testPutSitePageExperienceWithPriority();
 	}
 
@@ -415,6 +423,30 @@ public class PageExperienceResourceTest
 			Integer.valueOf(expectedPriority), pageExperience.getPriority());
 	}
 
+	private void _assertProblemException(
+			String expectedTitle, String expectedType,
+			UnsafeRunnable<Exception> unsafeRunnable)
+		throws Exception {
+
+		try {
+			unsafeRunnable.run();
+
+			Assert.fail();
+		}
+		catch (Problem.ProblemException problemException) {
+			Problem problem = problemException.getProblem();
+
+			Assert.assertEquals("BAD_REQUEST", problem.getStatus());
+			Assert.assertEquals(expectedTitle, problem.getTitle());
+
+			if (problem.getDetail() != null) {
+				Assert.assertEquals(expectedTitle, problem.getDetail());
+			}
+
+			Assert.assertEquals(expectedType, problem.getType());
+		}
+	}
+
 	private PageExperience _getPageExperience() throws Exception {
 		PageExperience pageExperience = super.randomPageExperience();
 
@@ -510,6 +542,29 @@ public class PageExperienceResourceTest
 		assertValid(postPageExperience);
 	}
 
+	private void _testPostSitePageSpecificationPageExperienceWithDisplayPageTemplate()
+		throws Exception {
+
+		Layout layout =
+			LayoutPageTemplateEntryTestUtil.
+				getDisplayPageLayoutPageTemplateEntryLayout(
+					ServiceContextTestUtil.getServiceContext(
+						testGroup.getGroupId(), TestPropsValues.getUserId()));
+
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		_assertProblemException(
+			"Only site pages can define additional page experiences",
+			"only-site-pages-can-define-additional-page-experiences",
+			() ->
+				pageExperienceResource.postSitePageSpecificationPageExperience(
+					testGroup.getExternalReferenceCode(),
+					draftLayout.getExternalReferenceCode(),
+					PageExperiencesTestUtil.getPageExperience(
+						draftLayout.getExternalReferenceCode(), 1,
+						testGroup.getGroupId(), null)));
+	}
+
 	private void
 			_testPostSitePageSpecificationPageExperienceWithMissingOptionalReference(
 				int count, UnsafeRunnable<Exception> unsafeRunnable)
@@ -535,6 +590,29 @@ public class PageExperienceResourceTest
 						"Optional reference generated for missing"));
 			}
 		}
+	}
+
+	private void _testPostSitePageSpecificationPageExperienceWithPageTemplate()
+		throws Exception {
+
+		Layout layout =
+			LayoutPageTemplateEntryTestUtil.
+				getBasicLayoutPageTemplateEntryLayout(
+					ServiceContextTestUtil.getServiceContext(
+						testGroup.getGroupId(), TestPropsValues.getUserId()));
+
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		_assertProblemException(
+			"Only site pages can define additional page experiences",
+			"only-site-pages-can-define-additional-page-experiences",
+			() ->
+				pageExperienceResource.postSitePageSpecificationPageExperience(
+					testGroup.getExternalReferenceCode(),
+					draftLayout.getExternalReferenceCode(),
+					PageExperiencesTestUtil.getPageExperience(
+						draftLayout.getExternalReferenceCode(), 1,
+						testGroup.getGroupId(), null)));
 	}
 
 	private void _testPostSitePageSpecificationPageExperienceWithPriority()
@@ -588,6 +666,48 @@ public class PageExperienceResourceTest
 		assertValid(putSitePageExperience);
 
 		return putSitePageExperience;
+	}
+
+	private void _testPutSitePageExperienceWithDisplayPageTemplate()
+		throws Exception {
+
+		Layout layout =
+			LayoutPageTemplateEntryTestUtil.
+				getDisplayPageLayoutPageTemplateEntryLayout(
+					ServiceContextTestUtil.getServiceContext(
+						testGroup.getGroupId(), TestPropsValues.getUserId()));
+
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		_assertProblemException(
+			"Only site pages can define additional page experiences",
+			"only-site-pages-can-define-additional-page-experiences",
+			() -> pageExperienceResource.putSitePageExperience(
+				testGroup.getExternalReferenceCode(),
+				RandomTestUtil.randomString(),
+				PageExperiencesTestUtil.getPageExperience(
+					draftLayout.getExternalReferenceCode(), 1,
+					testGroup.getGroupId(), null)));
+	}
+
+	private void _testPutSitePageExperienceWithPageTemplate() throws Exception {
+		Layout layout =
+			LayoutPageTemplateEntryTestUtil.
+				getBasicLayoutPageTemplateEntryLayout(
+					ServiceContextTestUtil.getServiceContext(
+						testGroup.getGroupId(), TestPropsValues.getUserId()));
+
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		_assertProblemException(
+			"Only site pages can define additional page experiences",
+			"only-site-pages-can-define-additional-page-experiences",
+			() -> pageExperienceResource.putSitePageExperience(
+				testGroup.getExternalReferenceCode(),
+				RandomTestUtil.randomString(),
+				PageExperiencesTestUtil.getPageExperience(
+					draftLayout.getExternalReferenceCode(), 1,
+					testGroup.getGroupId(), null)));
 	}
 
 	private void _testPutSitePageExperienceWithPriority() throws Exception {

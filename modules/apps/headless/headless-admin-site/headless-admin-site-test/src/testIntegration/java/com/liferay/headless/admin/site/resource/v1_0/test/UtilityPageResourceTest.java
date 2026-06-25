@@ -51,6 +51,7 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.test.util.IdempotentRetryAssert;
 import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
@@ -392,9 +393,12 @@ public class UtilityPageResourceTest extends BaseUtilityPageResourceTestCase {
 		Assert.assertFalse(layout.isPublished());
 
 		_assertProblemException(
-			"BAD_REQUEST", null,
-			() -> _testPutSiteUtilityPage(
-				Boolean.TRUE,
+			null, "CONFLICT",
+			"The default utility page must be published first",
+			"default-utility-page-must-be-published-first",
+			() -> utilityPageResource.putSiteUtilityPage(
+				testGroup.getExternalReferenceCode(),
+				layoutUtilityPageEntry.getExternalReferenceCode(),
 				_getUtilityPage(
 					null, Boolean.TRUE,
 					layoutUtilityPageEntry.getExternalReferenceCode())));
@@ -569,8 +573,8 @@ public class UtilityPageResourceTest extends BaseUtilityPageResourceTestCase {
 	}
 
 	private void _assertProblemException(
-			String expectedStatus, String expectedTitle,
-			UnsafeRunnable<Exception> unsafeRunnable)
+			String expectedDetail, String expectedStatus, String expectedTitle,
+			String expectedType, UnsafeRunnable<Exception> unsafeRunnable)
 		throws Exception {
 
 		try {
@@ -581,9 +585,29 @@ public class UtilityPageResourceTest extends BaseUtilityPageResourceTestCase {
 		catch (Problem.ProblemException problemException) {
 			Problem problem = problemException.getProblem();
 
+			if (Validator.isNotNull(expectedDetail)) {
+				Assert.assertEquals(expectedDetail, problem.getDetail());
+			}
+			else if (problem.getDetail() != null) {
+				Assert.assertEquals(expectedTitle, problem.getDetail());
+			}
+
+			if (expectedType != null) {
+				Assert.assertEquals(expectedType, problem.getType());
+			}
+
 			Assert.assertEquals(expectedStatus, problem.getStatus());
 			Assert.assertEquals(expectedTitle, problem.getTitle());
 		}
+	}
+
+	private void _assertProblemException(
+			String expectedStatus, String expectedTitle,
+			UnsafeRunnable<Exception> unsafeRunnable)
+		throws Exception {
+
+		_assertProblemException(
+			null, expectedStatus, expectedTitle, null, unsafeRunnable);
 	}
 
 	private void _assertThumbnailFileEntryId(

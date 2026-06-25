@@ -732,6 +732,10 @@ public class DisplayPageTemplateResourceTest
 		catch (Problem.ProblemException problemException) {
 			Problem problem = problemException.getProblem();
 
+			if (problem.getDetail() != null) {
+				Assert.assertEquals(expectedTitle, problem.getDetail());
+			}
+
 			Assert.assertEquals(expectedStatus, problem.getStatus());
 			Assert.assertEquals(expectedTitle, problem.getTitle());
 		}
@@ -1785,7 +1789,7 @@ public class DisplayPageTemplateResourceTest
 
 		_assertProblemException(
 			"CONFLICT",
-			"The default display page template must be published first.",
+			"The default display page template must be published first",
 			() -> displayPageTemplateResource.postSiteDisplayPageTemplate(
 				testGroup.getExternalReferenceCode(),
 				_randomDisplayPageTemplate(Boolean.TRUE)));
