@@ -768,8 +768,8 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 	}
 
 	private void _assertProblemException(
-			String expectedStatus, String expectedTitle,
-			UnsafeRunnable<Exception> unsafeRunnable)
+			String expectedDetail, String expectedStatus, String expectedTitle,
+			String expectedType, UnsafeRunnable<Exception> unsafeRunnable)
 		throws Exception {
 
 		try {
@@ -780,9 +780,29 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 		catch (Problem.ProblemException problemException) {
 			Problem problem = problemException.getProblem();
 
+			if (Validator.isNotNull(expectedDetail)) {
+				Assert.assertEquals(expectedDetail, problem.getDetail());
+			}
+			else if (problem.getDetail() != null) {
+				Assert.assertEquals(expectedTitle, problem.getDetail());
+			}
+
+			if (expectedType != null) {
+				Assert.assertEquals(expectedType, problem.getType());
+			}
+
 			Assert.assertEquals(expectedStatus, problem.getStatus());
 			Assert.assertEquals(expectedTitle, problem.getTitle());
 		}
+	}
+
+	private void _assertProblemException(
+			String expectedStatus, String expectedTitle,
+			UnsafeRunnable<Exception> unsafeRunnable)
+		throws Exception {
+
+		_assertProblemException(
+			null, expectedStatus, expectedTitle, null, unsafeRunnable);
 	}
 
 	private void _assertStagingGroupPageTemplateThumbnail(
@@ -1630,7 +1650,9 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 		}
 
 		_assertProblemException(
-			"BAD_REQUEST", null,
+			"The page template set does not belong to this site", "BAD_REQUEST",
+			"The page template set does not belong to this site",
+			"page-template-set-does-not-belong-to-this-site",
 			() -> pageTemplateResource.patchSitePageTemplate(
 				testGroup.getExternalReferenceCode(),
 				pageTemplate.getExternalReferenceCode(), patchPageTemplate));
@@ -1796,7 +1818,8 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 			});
 
 		_assertProblemException(
-			"BAD_REQUEST", null,
+			"BAD_REQUEST",
+			"The page specification is invalid or has not been approved",
 			() -> _postSitePageTemplate(
 				pageTemplate, testGroup.getExternalReferenceCode()));
 
@@ -1816,7 +1839,11 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 			});
 
 		_assertProblemException(
-			"BAD_REQUEST", null,
+			"Exactly one page specification is required", "BAD_REQUEST",
+			"The number of page specifications does not match the page type " +
+				"requirements",
+			"number-of-page-specifications-does-not-match-the-page-type-" +
+				"requirements",
 			() -> _postSitePageTemplate(
 				pageTemplate, testGroup.getExternalReferenceCode()));
 
@@ -1826,7 +1853,8 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 			() -> new PageSpecification[] {widgetPageSpecification});
 
 		_assertProblemException(
-			"BAD_REQUEST", null,
+			"BAD_REQUEST",
+			"The page specification is invalid or has not been approved",
 			() -> _postSitePageTemplate(
 				pageTemplate, testGroup.getExternalReferenceCode()));
 
@@ -1885,7 +1913,9 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 		pageTemplate.setPageTemplateSet(() -> null);
 
 		_assertProblemException(
-			"BAD_REQUEST", null,
+			"The page template set does not belong to this site", "BAD_REQUEST",
+			"The page template set does not belong to this site",
+			"page-template-set-does-not-belong-to-this-site",
 			() -> _postSitePageTemplate(
 				pageTemplate, testGroup.getExternalReferenceCode()));
 
@@ -1897,7 +1927,7 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 			});
 
 		_assertProblemException(
-			"BAD_REQUEST", null,
+			"BAD_REQUEST", "The page template set does not belong to this site",
 			() -> _postSitePageTemplate(
 				pageTemplate, testGroup.getExternalReferenceCode()));
 
@@ -2256,7 +2286,9 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 		pageTemplate.setPageTemplateSet(() -> null);
 
 		_assertProblemException(
-			"BAD_REQUEST", null,
+			"The page template set does not belong to this site", "BAD_REQUEST",
+			"The page template set does not belong to this site",
+			"page-template-set-does-not-belong-to-this-site",
 			() -> pageTemplateResource.putSitePageTemplate(
 				testGroup.getExternalReferenceCode(),
 				pageTemplate.getExternalReferenceCode(), pageTemplate));
@@ -2269,7 +2301,7 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 			});
 
 		_assertProblemException(
-			"BAD_REQUEST", null,
+			"BAD_REQUEST", "The page template set does not belong to this site",
 			() -> pageTemplateResource.putSitePageTemplate(
 				testGroup.getExternalReferenceCode(),
 				pageTemplate.getExternalReferenceCode(), pageTemplate));

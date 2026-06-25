@@ -42,12 +42,14 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.segments.constants.SegmentsExperienceConstants;
 import com.liferay.segments.service.SegmentsExperienceService;
 import com.liferay.style.book.model.StyleBookEntry;
 import com.liferay.style.book.service.StyleBookEntryLocalService;
@@ -379,6 +381,8 @@ public class PageSpecificationResourceTest
 			layoutPageTemplateEntry.getExternalReferenceCode(), serviceContext);
 
 		_testPutSitePageSpecificationWithStyleBookEntryScopeERC(serviceContext);
+
+		_testPutSitePageSpecificationWithInvalidPageExperiences(serviceContext);
 	}
 
 	@Override
@@ -634,8 +638,8 @@ public class PageSpecificationResourceTest
 	}
 
 	private void _assertProblemException(
-			String expectedStatus, String expectedTitle,
-			UnsafeRunnable<Exception> unsafeRunnable)
+			String expectedDetail, String expectedStatus, String expectedTitle,
+			String expectedType, UnsafeRunnable<Exception> unsafeRunnable)
 		throws Exception {
 
 		try {
@@ -645,9 +649,29 @@ public class PageSpecificationResourceTest
 		catch (Problem.ProblemException problemException) {
 			Problem problem = problemException.getProblem();
 
+			if (Validator.isNotNull(expectedDetail)) {
+				Assert.assertEquals(expectedDetail, problem.getDetail());
+			}
+			else if (problem.getDetail() != null) {
+				Assert.assertEquals(expectedTitle, problem.getDetail());
+			}
+
+			if (expectedType != null) {
+				Assert.assertEquals(expectedType, problem.getType());
+			}
+
 			Assert.assertEquals(expectedStatus, problem.getStatus());
 			Assert.assertEquals(expectedTitle, problem.getTitle());
 		}
+	}
+
+	private void _assertProblemException(
+			String expectedStatus, String expectedTitle,
+			UnsafeRunnable<Exception> unsafeRunnable)
+		throws Exception {
+
+		_assertProblemException(
+			null, expectedStatus, expectedTitle, null, unsafeRunnable);
 	}
 
 	private void _assertPutSiteContentPageSpecification(
@@ -1145,6 +1169,55 @@ public class PageSpecificationResourceTest
 				pageSpecificationExternalReferenceCode, pageSpecification);
 
 		assertEquals(pageSpecification, putPageSpecification);
+	}
+
+	private void _testPutSitePageSpecificationWithInvalidPageExperiences(
+			ServiceContext serviceContext)
+		throws Exception {
+
+		Layout layout = _addLayout(
+			LayoutConstants.TYPE_CONTENT, serviceContext);
+
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		_assertProblemException(
+			"A page experience with key DEFAULT already exists", "CONFLICT",
+			"A page experience with the same key already exists",
+			"page-experience-with-the-same-key-already-exists",
+			() -> pageSpecificationResource.putSitePageSpecification(
+				testGroup.getExternalReferenceCode(),
+				draftLayout.getExternalReferenceCode(),
+				PageSpecificationsTestUtil.getContentPageSpecification(
+					draftLayout.getExternalReferenceCode(), null, null,
+					new PageExperience[] {
+						PageExperiencesTestUtil.getPageExperience(
+							RandomTestUtil.randomString(),
+							SegmentsExperienceConstants.KEY_DEFAULT, 0,
+							RandomTestUtil.randomString()),
+						PageExperiencesTestUtil.getPageExperience(
+							RandomTestUtil.randomString(),
+							SegmentsExperienceConstants.KEY_DEFAULT, 0,
+							RandomTestUtil.randomString())
+					},
+					testGroup.getGroupId(), PageSpecification.Status.DRAFT)));
+
+		_assertProblemException(
+			"The default page experience must have a priority of 0",
+			"BAD_REQUEST",
+			"The default page experience must have a priority of 0",
+			"default-page-experience-must-have-a-priority-of-0",
+			() -> pageSpecificationResource.putSitePageSpecification(
+				testGroup.getExternalReferenceCode(),
+				draftLayout.getExternalReferenceCode(),
+				PageSpecificationsTestUtil.getContentPageSpecification(
+					draftLayout.getExternalReferenceCode(), null, null,
+					new PageExperience[] {
+						PageExperiencesTestUtil.getPageExperience(
+							RandomTestUtil.randomString(),
+							SegmentsExperienceConstants.KEY_DEFAULT, 1,
+							RandomTestUtil.randomString())
+					},
+					testGroup.getGroupId(), PageSpecification.Status.DRAFT)));
 	}
 
 	private void _testPutSitePageSpecificationWithLayoutWithDraftLayout(

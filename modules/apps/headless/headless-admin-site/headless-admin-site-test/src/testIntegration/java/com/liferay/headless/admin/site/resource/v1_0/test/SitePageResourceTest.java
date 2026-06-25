@@ -160,6 +160,7 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.segments.constants.SegmentsExperienceConstants;
+import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -376,6 +377,8 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 		_testPostSiteSitePageWithPageElements();
 		_testPostSiteSitePageWithPageSpecifications();
 		_testPostSiteSitePageWithContentPageSpecification();
+		_testPostSiteSitePageWithInvalidPageExperiences();
+		_testPostSiteSitePageWithInvalidPageSpecifications();
 		_testPostSiteSitePageWithWidgetPageSettings();
 		_testPostSiteSitePageWithWidgetPageSettingsWithWidgetPageTemplate();
 		_testPostSiteSitePageWithWidgetPageTypeIsDeprecated();
@@ -419,6 +422,8 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 				getMasterLayoutPageTemplateEntryLayout(serviceContext),
 			LayoutUtilityPageEntryTestUtil.getLayoutUtilityPageEntryLayout(
 				serviceContext));
+
+		_testPostSiteSitePagePageSpecificationWithInvalidPageExperiences();
 	}
 
 	@FeatureFlag("LPD-38869")
@@ -454,6 +459,7 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 		_testPutSiteSitePageWithExportedSitePage();
 		_testPutSiteSitePageWithExportedSitePageWithLayoutIdFriendlyURL();
 		_testPutSiteSitePageWithFormFragmentPageElements();
+		_testPutSiteSitePageWithInvalidPageExperiences();
 		LazyReferencingTestUtil.executeWithLazyReferencingSafeCloseable(
 			this::_testPutSiteSitePageWithMissingTaxonomyCategories);
 		_assertProblemException(
@@ -1092,9 +1098,41 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 		}
 	}
 
+	private void _assertPostSiteSitePageWithPageExperiencesProblemException(
+			String expectedTitle, String expectedType,
+			UnsafeFunction<PageExperience[], PageExperience[], Exception>
+				pageExperiencesUnsafeFunction)
+		throws Exception {
+
+		SitePageResource sitePageResource = _getSitePageResource(
+			"pageSpecifications");
+
+		SitePage sitePage = _getRandomSitePage(SitePage.Type.CONTENT_PAGE);
+
+		PageSpecification[] pageSpecifications =
+			PageSpecificationsTestUtil.getContentPageSpecifications(
+				sitePage.getExternalReferenceCode(), testGroup.getGroupId());
+
+		for (PageSpecification pageSpecification : pageSpecifications) {
+			ContentPageSpecification contentPageSpecification =
+				(ContentPageSpecification)pageSpecification;
+
+			contentPageSpecification.setPageExperiences(
+				pageExperiencesUnsafeFunction.apply(
+					contentPageSpecification.getPageExperiences()));
+		}
+
+		sitePage.setPageSpecifications(pageSpecifications);
+
+		_assertProblemException(
+			expectedTitle, "BAD_REQUEST", expectedTitle, expectedType,
+			() -> sitePageResource.postSiteSitePage(
+				testGroup.getExternalReferenceCode(), false, sitePage));
+	}
+
 	private void _assertProblemException(
-			String expectedStatus, String expectedTitle,
-			UnsafeRunnable<Exception> unsafeRunnable)
+			String expectedDetail, String expectedStatus, String expectedTitle,
+			String expectedType, UnsafeRunnable<Exception> unsafeRunnable)
 		throws Exception {
 
 		try {
@@ -1104,9 +1142,39 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 		catch (Problem.ProblemException problemException) {
 			Problem problem = problemException.getProblem();
 
+			if (Validator.isNotNull(expectedDetail)) {
+				Assert.assertEquals(expectedDetail, problem.getDetail());
+			}
+			else if (problem.getDetail() != null) {
+				Assert.assertEquals(expectedTitle, problem.getDetail());
+			}
+
+			if (expectedType != null) {
+				Assert.assertEquals(expectedType, problem.getType());
+			}
+
 			Assert.assertEquals(expectedStatus, problem.getStatus());
 			Assert.assertEquals(expectedTitle, problem.getTitle());
 		}
+	}
+
+	private void _assertProblemException(
+			String expectedDetail, String expectedStatus, String expectedTitle,
+			UnsafeRunnable<Exception> unsafeRunnable)
+		throws Exception {
+
+		_assertProblemException(
+			expectedDetail, expectedStatus, expectedTitle, null,
+			unsafeRunnable);
+	}
+
+	private void _assertProblemException(
+			String expectedStatus, String expectedTitle,
+			UnsafeRunnable<Exception> unsafeRunnable)
+		throws Exception {
+
+		_assertProblemException(
+			null, expectedStatus, expectedTitle, null, unsafeRunnable);
 	}
 
 	private void _assertProblemException(
@@ -1139,6 +1207,50 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 			() -> sitePageResource.putSiteSitePage(
 				testGroup.getExternalReferenceCode(),
 				sitePage.getExternalReferenceCode(), false, sitePage));
+	}
+
+	private void _assertPutSiteSitePageWithPageExperiencesProblemException(
+			String expectedStatus, String expectedTitle, String expectedDetail,
+			String expectedType,
+			UnsafeFunction<PageExperience[], PageExperience[], Exception>
+				pageExperiencesUnsafeFunction)
+		throws Exception {
+
+		SitePageResource sitePageResource = _getSitePageResource(
+			"pageSpecifications");
+
+		SitePage sitePage = _getSitePageWithPageElements(
+			PageElementsTestUtil.getPageElements(testGroup.getGroupId()));
+
+		sitePageResource.postSiteSitePage(
+			testGroup.getExternalReferenceCode(), false, sitePage);
+
+		SitePage getSitePage = sitePageResource.getSiteSitePage(
+			testGroup.getExternalReferenceCode(),
+			sitePage.getExternalReferenceCode());
+
+		for (PageSpecification pageSpecification :
+				getSitePage.getPageSpecifications()) {
+
+			ContentPageSpecification contentPageSpecification =
+				(ContentPageSpecification)pageSpecification;
+
+			contentPageSpecification.setPageExperiences(
+				pageExperiencesUnsafeFunction.apply(
+					contentPageSpecification.getPageExperiences()));
+		}
+
+		String detail = expectedDetail;
+
+		if (detail == null) {
+			detail = expectedTitle;
+		}
+
+		_assertProblemException(
+			detail, expectedStatus, expectedTitle, expectedType,
+			() -> sitePageResource.putSiteSitePage(
+				testGroup.getExternalReferenceCode(),
+				sitePage.getExternalReferenceCode(), false, getSitePage));
 	}
 
 	private void _assertSitePage(Layout layout, SitePage sitePage)
@@ -2823,6 +2935,56 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 			postSitePage);
 	}
 
+	private void _testPostSiteSitePagePageSpecificationWithInvalidPageExperiences()
+		throws Exception {
+
+		Layout layout = LayoutTestUtil.addTypeContentLayout(testGroup);
+
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		SitePageResource sitePageResource = _getSitePageResource(
+			"pageSpecifications");
+
+		_assertProblemException(
+			"A page experience with key DEFAULT already exists", "CONFLICT",
+			"A page experience with the same key already exists",
+			"page-experience-with-the-same-key-already-exists",
+			() -> sitePageResource.postSiteSitePagePageSpecification(
+				testGroup.getExternalReferenceCode(),
+				layout.getExternalReferenceCode(),
+				PageSpecificationsTestUtil.getContentPageSpecification(
+					draftLayout.getExternalReferenceCode(), null, null,
+					new PageExperience[] {
+						PageExperiencesTestUtil.getPageExperience(
+							RandomTestUtil.randomString(),
+							SegmentsExperienceConstants.KEY_DEFAULT, 0,
+							RandomTestUtil.randomString()),
+						PageExperiencesTestUtil.getPageExperience(
+							RandomTestUtil.randomString(),
+							SegmentsExperienceConstants.KEY_DEFAULT, 0,
+							RandomTestUtil.randomString())
+					},
+					testGroup.getGroupId(), PageSpecification.Status.DRAFT)));
+
+		_assertProblemException(
+			"The default page experience must have a priority of 0",
+			"BAD_REQUEST",
+			"The default page experience must have a priority of 0",
+			"default-page-experience-must-have-a-priority-of-0",
+			() -> sitePageResource.postSiteSitePagePageSpecification(
+				testGroup.getExternalReferenceCode(),
+				layout.getExternalReferenceCode(),
+				PageSpecificationsTestUtil.getContentPageSpecification(
+					draftLayout.getExternalReferenceCode(), null, null,
+					new PageExperience[] {
+						PageExperiencesTestUtil.getPageExperience(
+							RandomTestUtil.randomString(),
+							SegmentsExperienceConstants.KEY_DEFAULT, 1,
+							RandomTestUtil.randomString())
+					},
+					testGroup.getGroupId(), PageSpecification.Status.DRAFT)));
+	}
+
 	private void _testPostSiteSitePageWithContentPageSpecification()
 		throws Exception {
 
@@ -3014,6 +3176,89 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 			true, draftContentPageSpecification,
 			draftContentPageSpecificationExternalReferenceCode, true,
 			sitePageExternalReferenceCode, status);
+	}
+
+	private void _testPostSiteSitePageWithInvalidPageExperiences()
+		throws Exception {
+
+		_assertPostSiteSitePageWithPageExperiencesProblemException(
+			"A page experience is required", "page-experience-is-required",
+			pageExperiences -> new PageExperience[0]);
+
+		_assertPostSiteSitePageWithPageExperiencesProblemException(
+			"A default page experience is required",
+			"default-page-experience-is-required",
+			pageExperiences -> new PageExperience[] {
+				PageExperiencesTestUtil.getPageExperience()
+			});
+	}
+
+	private void _testPostSiteSitePageWithInvalidPageSpecifications()
+		throws Exception {
+
+		SitePageResource sitePageResource = _getSitePageResource(
+			"pageSpecifications");
+
+		SitePage widgetSitePage = _getRandomSitePage(SitePage.Type.WIDGET_PAGE);
+
+		widgetSitePage.setPageSpecifications(
+			new PageSpecification[] {
+				PageSpecificationsTestUtil.getWidgetPageSpecifications(
+					PageSpecificationsTestUtil.getCustomFields(), "1_column",
+					widgetSitePage.getExternalReferenceCode())[0],
+				PageSpecificationsTestUtil.getWidgetPageSpecifications(
+					PageSpecificationsTestUtil.getCustomFields(), "1_column",
+					RandomTestUtil.randomString())[0]
+			});
+
+		_assertProblemException(
+			"Exactly one page specification is required", "BAD_REQUEST",
+			"The number of page specifications does not match the page type " +
+				"requirements",
+			() -> sitePageResource.postSiteSitePage(
+				testGroup.getExternalReferenceCode(), false, widgetSitePage));
+
+		SitePage invalidWidgetSitePage = _getRandomSitePage(
+			SitePage.Type.WIDGET_PAGE);
+
+		PageSpecification[] widgetPageSpecifications =
+			PageSpecificationsTestUtil.getWidgetPageSpecifications(
+				PageSpecificationsTestUtil.getCustomFields(), "1_column",
+				invalidWidgetSitePage.getExternalReferenceCode());
+
+		widgetPageSpecifications[0].setStatus(PageSpecification.Status.DRAFT);
+
+		invalidWidgetSitePage.setPageSpecifications(widgetPageSpecifications);
+
+		_assertProblemException(
+			"The page specification is invalid or has not been approved",
+			"BAD_REQUEST",
+			"The page specification is invalid or has not been approved",
+			"page-specification-is-invalid-or-has-not-been-approved",
+			() -> sitePageResource.postSiteSitePage(
+				testGroup.getExternalReferenceCode(), false,
+				invalidWidgetSitePage));
+
+		SitePage mismatchedContentSitePage = _getRandomSitePage(
+			SitePage.Type.CONTENT_PAGE);
+
+		mismatchedContentSitePage.setPageSpecifications(
+			new PageSpecification[] {
+				PageSpecificationsTestUtil.getContentPageSpecification(
+					RandomTestUtil.randomString(), testGroup.getGroupId(),
+					PageSpecification.Status.APPROVED),
+				PageSpecificationsTestUtil.getContentPageSpecification(
+					null, testGroup.getGroupId(),
+					PageSpecification.Status.DRAFT)
+			});
+
+		_assertProblemException(
+			"BAD_REQUEST",
+			"The draft and published page specifications have mismatched " +
+				"external reference codes",
+			() -> sitePageResource.postSiteSitePage(
+				testGroup.getExternalReferenceCode(), false,
+				mismatchedContentSitePage));
 	}
 
 	private void _testPostSiteSitePageWithPageElements() throws Exception {
@@ -3918,6 +4163,81 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 			fragmentEntryLinks, infoForm, expectedInfoForm,
 			_layoutLocalService.getLayoutByExternalReferenceCode(
 				layout.getExternalReferenceCode(), testGroup.getGroupId()));
+	}
+
+	private void _testPutSiteSitePageWithInvalidPageExperiences()
+		throws Exception {
+
+		_assertPutSiteSitePageWithPageExperiencesProblemException(
+			"CONFLICT", "A page experience with the same key already exists",
+			"A page experience with key DEFAULT already exists",
+			"page-experience-with-the-same-key-already-exists",
+			pageExperiences -> {
+				PageExperience defaultPageExperience =
+					PageExperiencesTestUtil.getDefaultPageExperience(
+						pageExperiences);
+
+				return new PageExperience[] {
+					defaultPageExperience,
+					PageExperiencesTestUtil.getPageExperience(
+						RandomTestUtil.randomString(),
+						defaultPageExperience.getKey(), 0,
+						RandomTestUtil.randomString())
+				};
+			});
+
+		_assertPutSiteSitePageWithPageExperiencesProblemException(
+			"BAD_REQUEST",
+			"The default page experience must have a priority of 0", null,
+			"default-page-experience-must-have-a-priority-of-0",
+			pageExperiences -> {
+				PageExperience defaultPageExperience =
+					PageExperiencesTestUtil.getDefaultPageExperience(
+						pageExperiences);
+
+				defaultPageExperience.setPriority(1);
+
+				return pageExperiences;
+			});
+
+		_assertPutSiteSitePageWithPageExperiencesProblemException(
+			"BAD_REQUEST",
+			"The external reference code does not match the target page's " +
+				"experience external reference code",
+			null,
+			"external-reference-code-does-not-match-the-target-pages-" +
+				"experience-external-reference-code",
+			pageExperiences -> {
+				PageExperience defaultPageExperience =
+					PageExperiencesTestUtil.getDefaultPageExperience(
+						pageExperiences);
+
+				defaultPageExperience.setExternalReferenceCode(
+					RandomTestUtil.randomString());
+
+				return pageExperiences;
+			});
+
+		_assertPutSiteSitePageWithPageExperiencesProblemException(
+			"BAD_REQUEST",
+			"The default page experience cannot reference a segment", null,
+			"default-page-experience-cannot-reference-a-segment",
+			pageExperiences -> {
+				PageExperience defaultPageExperience =
+					PageExperiencesTestUtil.getDefaultPageExperience(
+						pageExperiences);
+
+				defaultPageExperience.setSegmentItemExternalReference(
+					() -> new ItemExternalReference() {
+						{
+							setClassName(SegmentsEntry.class.getName());
+							setExternalReferenceCode(
+								RandomTestUtil.randomString());
+						}
+					});
+
+				return pageExperiences;
+			});
 	}
 
 	private void _testPutSiteSitePageWithMissingTaxonomyCategories()

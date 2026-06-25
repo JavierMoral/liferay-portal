@@ -20,8 +20,6 @@ import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -272,6 +270,30 @@ public class DisplayPageTemplateFolderResourceTest
 			StringBundler.concat(
 				"Key ", key, " must have fewer than 75 characters"));
 
+		DisplayPageTemplateFolder displayPageTemplateFolder =
+			randomDisplayPageTemplateFolder();
+
+		String parentExternalReferenceCode = RandomTestUtil.randomString();
+
+		displayPageTemplateFolder.
+			setParentDisplayPageTemplateFolderExternalReferenceCode(
+				parentExternalReferenceCode);
+
+		_assertProblemException(
+			StringBundler.concat(
+				"The external reference code \"", parentExternalReferenceCode,
+				"\" does not point to a display page template folder"),
+			"BAD_REQUEST",
+			"The external reference code does not point to a display page " +
+				"template folder",
+			"external-reference-code-does-not-point-to-a-display-page-" +
+				"template-folder",
+			() ->
+				displayPageTemplateFolderResource.
+					postSiteDisplayPageTemplateFolder(
+						testGroup.getExternalReferenceCode(),
+						displayPageTemplateFolder));
+
 		_enableLocalStaging();
 
 		_assertProblemException(
@@ -456,7 +478,7 @@ public class DisplayPageTemplateFolderResourceTest
 	}
 
 	private void _assertProblemException(
-			String status, String title,
+			String detail, String status, String title, String type,
 			UnsafeRunnable<Exception> unsafeRunnable)
 		throws Exception {
 
@@ -468,9 +490,28 @@ public class DisplayPageTemplateFolderResourceTest
 		catch (Problem.ProblemException problemException) {
 			Problem problem = problemException.getProblem();
 
+			if (Validator.isNotNull(detail)) {
+				Assert.assertEquals(detail, problem.getDetail());
+			}
+			else if (problem.getDetail() != null) {
+				Assert.assertEquals(title, problem.getDetail());
+			}
+
+			if (type != null) {
+				Assert.assertEquals(type, problem.getType());
+			}
+
 			Assert.assertEquals(status, problem.getStatus());
 			Assert.assertEquals(title, problem.getTitle());
 		}
+	}
+
+	private void _assertProblemException(
+			String status, String title,
+			UnsafeRunnable<Exception> unsafeRunnable)
+		throws Exception {
+
+		_assertProblemException(null, status, title, null, unsafeRunnable);
 	}
 
 	private void _enableLocalStaging() throws Exception {
@@ -700,11 +741,22 @@ public class DisplayPageTemplateFolderResourceTest
 	private void _testPutSiteDisplayPageTemplateFolderWithParentDisplayPageTemplateFolder()
 		throws Exception {
 
+		String invalidParentExternalReferenceCode =
+			RandomTestUtil.randomString();
+
 		_assertProblemException(
-			"BAD_REQUEST", null,
+			StringBundler.concat(
+				"The external reference code \"",
+				invalidParentExternalReferenceCode,
+				"\" does not point to a display page template folder"),
+			"BAD_REQUEST",
+			"The external reference code does not point to a display page " +
+				"template folder",
+			"external-reference-code-does-not-point-to-a-display-page-" +
+				"template-folder",
 			() -> _testPutSiteDisplayPageTemplateFolder(
 				randomDisplayPageTemplateFolder(),
-				RandomTestUtil.randomString()));
+				invalidParentExternalReferenceCode));
 
 		DisplayPageTemplateFolder parentDisplayPageTemplateFolder =
 			testPostSiteDisplayPageTemplateFolder_addDisplayPageTemplateFolder(
@@ -727,30 +779,32 @@ public class DisplayPageTemplateFolderResourceTest
 		parentDisplayPageTemplateFolder = _getParentDisplayPageTemplateFolder(
 			5);
 
+		String deeplyNestedParentExternalReferenceCode =
+			parentDisplayPageTemplateFolder.getExternalReferenceCode();
+
 		putDisplayPageTemplateFolder.setParentDisplayPageTemplateFolder(
 			parentDisplayPageTemplateFolder);
+
 		putDisplayPageTemplateFolder.
 			setParentDisplayPageTemplateFolderExternalReferenceCode(
-				parentDisplayPageTemplateFolder.getExternalReferenceCode());
+				deeplyNestedParentExternalReferenceCode);
 
-		try {
-			displayPageTemplateFolderResource.putSiteDisplayPageTemplateFolder(
-				testGroup.getExternalReferenceCode(),
-				putDisplayPageTemplateFolder.getExternalReferenceCode(),
-				putDisplayPageTemplateFolder);
-
-			Assert.fail();
-		}
-		catch (Problem.ProblemException problemException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(problemException);
-			}
-
-			Problem problem = problemException.getProblem();
-
-			Assert.assertEquals(
-				"UnsupportedOperationException", problem.getType());
-		}
+		_assertProblemException(
+			StringBundler.concat(
+				"The external reference code \"",
+				deeplyNestedParentExternalReferenceCode,
+				"\" does not point to a display page template folder"),
+			"BAD_REQUEST",
+			"The external reference code does not point to a display page " +
+				"template folder",
+			"external-reference-code-does-not-point-to-a-display-page-" +
+				"template-folder",
+			() ->
+				displayPageTemplateFolderResource.
+					putSiteDisplayPageTemplateFolder(
+						testGroup.getExternalReferenceCode(),
+						putDisplayPageTemplateFolder.getExternalReferenceCode(),
+						putDisplayPageTemplateFolder));
 
 		try (SafeCloseable safeCloseable =
 				LazyReferencingTestUtil.setLazyReferencingWithSafeCloseable(
@@ -784,10 +838,36 @@ public class DisplayPageTemplateFolderResourceTest
 						testGroup.getGroupId()),
 				parentLayoutPageTemplateCollections);
 		}
-	}
 
-	private static final Log _log = LogFactoryUtil.getLog(
-		DisplayPageTemplateFolderResourceTest.class);
+		try (SafeCloseable safeCloseable =
+				LazyReferencingTestUtil.setLazyReferencingWithSafeCloseable(
+					true)) {
+
+			DisplayPageTemplateFolder mismatchedDisplayPageTemplateFolder =
+				randomDisplayPageTemplateFolder();
+
+			mismatchedDisplayPageTemplateFolder.
+				setParentDisplayPageTemplateFolder(
+					randomDisplayPageTemplateFolder());
+			mismatchedDisplayPageTemplateFolder.
+				setParentDisplayPageTemplateFolderExternalReferenceCode(
+					RandomTestUtil.randomString());
+
+			_assertProblemException(
+				null, "BAD_REQUEST",
+				"The parent display page template folder external reference " +
+					"codes do not match",
+				"parent-display-page-template-folder-external-reference-" +
+					"codes-do-not-match",
+				() ->
+					displayPageTemplateFolderResource.
+						putSiteDisplayPageTemplateFolder(
+							testGroup.getExternalReferenceCode(),
+							mismatchedDisplayPageTemplateFolder.
+								getExternalReferenceCode(),
+							mismatchedDisplayPageTemplateFolder));
+		}
+	}
 
 	@Inject
 	private LayoutPageTemplateCollectionLocalService

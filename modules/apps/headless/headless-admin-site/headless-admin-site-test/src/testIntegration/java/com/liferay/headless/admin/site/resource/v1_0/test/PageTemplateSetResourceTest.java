@@ -273,6 +273,8 @@ public class PageTemplateSetResourceTest
 			key,
 			StringBundler.concat(
 				"Key ", key, " must have fewer than 75 characters"));
+
+		_testPostSitePageTemplateSetWithDuplicateName();
 	}
 
 	@Override
@@ -330,8 +332,8 @@ public class PageTemplateSetResourceTest
 	}
 
 	private void _assertProblemException(
-			String status, String title,
-			UnsafeRunnable<Exception> unsafeRunnable)
+			String expectedDetail, String expectedStatus, String expectedTitle,
+			String expectedType, UnsafeRunnable<Exception> unsafeRunnable)
 		throws Exception {
 
 		try {
@@ -342,9 +344,28 @@ public class PageTemplateSetResourceTest
 		catch (Problem.ProblemException problemException) {
 			Problem problem = problemException.getProblem();
 
-			Assert.assertEquals(status, problem.getStatus());
-			Assert.assertEquals(title, problem.getTitle());
+			if (Validator.isNotNull(expectedDetail)) {
+				Assert.assertEquals(expectedDetail, problem.getDetail());
+			}
+			else if (problem.getDetail() != null) {
+				Assert.assertEquals(expectedTitle, problem.getDetail());
+			}
+
+			if (expectedType != null) {
+				Assert.assertEquals(expectedType, problem.getType());
+			}
+
+			Assert.assertEquals(expectedStatus, problem.getStatus());
+			Assert.assertEquals(expectedTitle, problem.getTitle());
 		}
+	}
+
+	private void _assertProblemException(
+			String status, String title,
+			UnsafeRunnable<Exception> unsafeRunnable)
+		throws Exception {
+
+		_assertProblemException(null, status, title, null, unsafeRunnable);
 	}
 
 	private void _enableLocalStaging() throws Exception {
@@ -403,6 +424,26 @@ public class PageTemplateSetResourceTest
 		assertValid(postPageTemplateSet);
 
 		return postPageTemplateSet;
+	}
+
+	private void _testPostSitePageTemplateSetWithDuplicateName()
+		throws Exception {
+
+		PageTemplateSet pageTemplateSet1 = _testPostSitePageTemplateSet(
+			randomPageTemplateSet());
+
+		PageTemplateSet pageTemplateSet2 = randomPageTemplateSet();
+
+		pageTemplateSet2.setName(pageTemplateSet1.getName());
+
+		_assertProblemException(
+			StringBundler.concat(
+				"A page template set with name ", pageTemplateSet1.getName(),
+				" already exists"),
+			"CONFLICT", "A page template set with the same name already exists",
+			"page-template-set-with-the-same-name-already-exists",
+			() -> pageTemplateSetResource.postSitePageTemplateSet(
+				testGroup.getExternalReferenceCode(), pageTemplateSet2));
 	}
 
 	@Inject
