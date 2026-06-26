@@ -25,6 +25,9 @@ public class DisplayPageTemplateDisplayPageTemplateFolderExceptionProblemMapper
 			layoutPageTemplateEntryLayoutPageTemplateCollectionIdException) {
 
 		return ProblemUtil.getProblem(
+			"The page template set does not belong to this site",
+			Problem.Status.BAD_REQUEST,
+			"page-template-set-does-not-belong-to-this-site",
 			layoutPageTemplateEntryLayoutPageTemplateCollectionIdException);
 	}
 

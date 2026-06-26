@@ -5,26 +5,28 @@
 
 package com.liferay.headless.admin.site.internal.vulcan.problem;
 
-import com.liferay.layout.utility.page.exception.DefaultLayoutUtilityPageEntryException;
+import com.liferay.headless.admin.site.internal.exception.DuplicatePageExperienceKeyException;
 import com.liferay.portal.vulcan.problem.Problem;
 import com.liferay.portal.vulcan.problem.ProblemMapper;
 
 import org.osgi.service.component.annotations.Component;
 
 /**
- * @author Lourdes Fernández Besada
+ * @author Javier Moral
  */
 @Component(service = ProblemMapper.class)
-public class UtilityPageMarkAsDefaultExceptionProblemMapper
-	implements ProblemMapper<DefaultLayoutUtilityPageEntryException> {
+public class DuplicatePageExperienceKeyExceptionProblemMapper
+	implements ProblemMapper<DuplicatePageExperienceKeyException> {
 
 	@Override
 	public Problem getProblem(
-		DefaultLayoutUtilityPageEntryException
-			defaultLayoutUtilityPageEntryException) {
+		DuplicatePageExperienceKeyException
+			duplicatePageExperienceKeyException) {
 
-		return ProblemUtil.getMustBePublishedFirstProblem(
-			"utility page", defaultLayoutUtilityPageEntryException);
+		return ProblemUtil.getDuplicateProblem(
+			"key", "page experience",
+			duplicatePageExperienceKeyException.getKey(),
+			duplicatePageExperienceKeyException);
 	}
 
 }

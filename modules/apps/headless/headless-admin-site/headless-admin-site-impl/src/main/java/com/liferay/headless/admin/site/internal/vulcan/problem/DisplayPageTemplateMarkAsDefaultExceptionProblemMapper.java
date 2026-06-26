@@ -7,7 +7,6 @@ package com.liferay.headless.admin.site.internal.vulcan.problem;
 
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.exception.LayoutPageTemplateEntryDefaultTemplateException;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.problem.Problem;
 import com.liferay.portal.vulcan.problem.ProblemMapper;
 
@@ -36,12 +35,8 @@ public class DisplayPageTemplateMarkAsDefaultExceptionProblemMapper
 			name = "master page";
 		}
 
-		return ProblemUtil.getProblem(
-			StringUtil.replace(
-				layoutPageTemplateEntryDefaultTemplateException.getMessage(),
-				"layout page template entry", name),
-			Problem.Status.CONFLICT,
-			layoutPageTemplateEntryDefaultTemplateException);
+		return ProblemUtil.getMustBePublishedFirstProblem(
+			name, layoutPageTemplateEntryDefaultTemplateException);
 	}
 
 }
