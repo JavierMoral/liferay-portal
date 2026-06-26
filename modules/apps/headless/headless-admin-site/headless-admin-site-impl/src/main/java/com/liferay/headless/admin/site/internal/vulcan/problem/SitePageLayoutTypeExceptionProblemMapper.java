@@ -30,7 +30,7 @@ public class SitePageLayoutTypeExceptionProblemMapper
 			_getLayoutTypeExceptionMessage(
 				layoutTypeException.getMessage(), layoutTypeException.getType(),
 				GetterUtil.getString(layoutTypeException.getLayoutType()),
-				LocaleUtil.getMostRelevantLocale()),
+				LocaleUtil.US),
 			Problem.Status.CONFLICT, layoutTypeException);
 	}
 

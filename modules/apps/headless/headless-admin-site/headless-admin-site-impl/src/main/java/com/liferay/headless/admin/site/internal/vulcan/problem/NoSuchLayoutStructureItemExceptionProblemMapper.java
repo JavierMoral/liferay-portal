@@ -6,6 +6,8 @@
 package com.liferay.headless.admin.site.internal.vulcan.problem;
 
 import com.liferay.layout.util.structure.exception.NoSuchLayoutStructureItemException;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.problem.Problem;
 import com.liferay.portal.vulcan.problem.ProblemMapper;
 
@@ -15,15 +17,29 @@ import org.osgi.service.component.annotations.Component;
  * @author Rubén Pulido
  */
 @Component(service = ProblemMapper.class)
-public class NoSuchPageElementExceptionProblemMapper
+public class NoSuchLayoutStructureItemExceptionProblemMapper
 	implements ProblemMapper<NoSuchLayoutStructureItemException> {
 
 	@Override
 	public Problem getProblem(
 		NoSuchLayoutStructureItemException noSuchLayoutStructureItemException) {
 
+		String title = "The page element could not be found";
+
+		String detail = title;
+
+		String externalReferenceCode =
+			noSuchLayoutStructureItemException.getExternalReferenceCode();
+
+		if (Validator.isNotNull(externalReferenceCode)) {
+			detail = StringBundler.concat(
+				"No page element with external reference code ",
+				externalReferenceCode, " exists in this page experience");
+		}
+
 		return ProblemUtil.getProblem(
-			Problem.Status.NOT_FOUND, noSuchLayoutStructureItemException);
+			detail, Problem.Status.NOT_FOUND, title, "page-element-not-found",
+			noSuchLayoutStructureItemException);
 	}
 
 }

@@ -23,9 +23,9 @@ public class PageTemplateSetExceptionProblemMapper
 		DuplicateLayoutPageTemplateCollectionException
 			duplicateLayoutPageTemplateCollectionException) {
 
-		return ProblemUtil.getProblem(
-			"A page template set with the same name already exists",
-			Problem.Status.CONFLICT,
+		return ProblemUtil.getDuplicateProblem(
+			"name", "page template set",
+			duplicateLayoutPageTemplateCollectionException.getMessage(),
 			duplicateLayoutPageTemplateCollectionException);
 	}
 
