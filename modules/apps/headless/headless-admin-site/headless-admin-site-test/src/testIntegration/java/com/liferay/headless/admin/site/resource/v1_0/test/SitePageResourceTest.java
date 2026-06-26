@@ -62,7 +62,6 @@ import com.liferay.headless.admin.site.client.dto.v1_0.WidgetPageSpecification;
 import com.liferay.headless.admin.site.client.http.HttpInvoker;
 import com.liferay.headless.admin.site.client.pagination.Page;
 import com.liferay.headless.admin.site.client.pagination.Pagination;
-import com.liferay.headless.admin.site.client.problem.Problem;
 import com.liferay.headless.admin.site.client.resource.v1_0.SitePageResource;
 import com.liferay.headless.admin.site.client.scope.Scope;
 import com.liferay.headless.admin.site.client.serdes.v1_0.FragmentImageValueSerDes;
@@ -73,6 +72,7 @@ import com.liferay.headless.admin.site.resource.v1_0.test.util.LayoutUtilityPage
 import com.liferay.headless.admin.site.resource.v1_0.test.util.PageElementsTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.PageExperiencesTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.PageSpecificationsTestUtil;
+import com.liferay.headless.admin.site.resource.v1_0.test.util.ProblemExceptionTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.SettingsTestUtil;
 import com.liferay.info.field.InfoField;
 import com.liferay.info.field.type.InfoFieldType;
@@ -101,7 +101,6 @@ import com.liferay.object.service.ObjectFieldSettingLocalService;
 import com.liferay.object.test.util.ObjectDefinitionTestUtil;
 import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.petra.function.UnsafeFunction;
-import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.function.UnsafeTriConsumer;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.lang.SafeCloseable;
@@ -462,7 +461,7 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 		_testPutSiteSitePageWithInvalidPageExperiences();
 		LazyReferencingTestUtil.executeWithLazyReferencingSafeCloseable(
 			this::_testPutSiteSitePageWithMissingTaxonomyCategories);
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"NOT_FOUND", null,
 			this::_testPutSiteSitePageWithMissingTaxonomyCategories);
 		_testPutSiteSitePageWithPageElements();
@@ -758,8 +757,8 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 		throws Exception {
 
 		for (Layout layout : layouts) {
-			_assertProblemException(
-				expectedTitle,
+			ProblemExceptionTestUtil.assertProblemException(
+				"BAD_REQUEST", expectedTitle,
 				() -> sitePageResource.deleteSiteSitePage(
 					testGroup.getExternalReferenceCode(),
 					layout.getExternalReferenceCode()));
@@ -1062,8 +1061,8 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 			String expectedTitle, SitePage sitePage)
 		throws Exception {
 
-		_assertProblemException(
-			expectedTitle,
+		ProblemExceptionTestUtil.assertProblemException(
+			"BAD_REQUEST", expectedTitle,
 			() -> sitePageResource.patchSiteSitePage(
 				testGroup.getExternalReferenceCode(),
 				sitePage.getExternalReferenceCode(), false, sitePage));
@@ -1073,8 +1072,8 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 			String expectedTitle, Layout layout)
 		throws Exception {
 
-		_assertProblemException(
-			expectedTitle,
+		ProblemExceptionTestUtil.assertProblemException(
+			"BAD_REQUEST", expectedTitle,
 			() -> sitePageResource.postSiteSitePagePageSpecification(
 				testGroup.getExternalReferenceCode(),
 				layout.getExternalReferenceCode(),
@@ -1124,64 +1123,10 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 
 		sitePage.setPageSpecifications(pageSpecifications);
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			expectedTitle, "BAD_REQUEST", expectedTitle, expectedType,
 			() -> sitePageResource.postSiteSitePage(
 				testGroup.getExternalReferenceCode(), false, sitePage));
-	}
-
-	private void _assertProblemException(
-			String expectedDetail, String expectedStatus, String expectedTitle,
-			String expectedType, UnsafeRunnable<Exception> unsafeRunnable)
-		throws Exception {
-
-		try {
-			unsafeRunnable.run();
-			Assert.fail();
-		}
-		catch (Problem.ProblemException problemException) {
-			Problem problem = problemException.getProblem();
-
-			if (Validator.isNotNull(expectedDetail)) {
-				Assert.assertEquals(expectedDetail, problem.getDetail());
-			}
-			else if (problem.getDetail() != null) {
-				Assert.assertEquals(expectedTitle, problem.getDetail());
-			}
-
-			if (expectedType != null) {
-				Assert.assertEquals(expectedType, problem.getType());
-			}
-
-			Assert.assertEquals(expectedStatus, problem.getStatus());
-			Assert.assertEquals(expectedTitle, problem.getTitle());
-		}
-	}
-
-	private void _assertProblemException(
-			String expectedDetail, String expectedStatus, String expectedTitle,
-			UnsafeRunnable<Exception> unsafeRunnable)
-		throws Exception {
-
-		_assertProblemException(
-			expectedDetail, expectedStatus, expectedTitle, null,
-			unsafeRunnable);
-	}
-
-	private void _assertProblemException(
-			String expectedStatus, String expectedTitle,
-			UnsafeRunnable<Exception> unsafeRunnable)
-		throws Exception {
-
-		_assertProblemException(
-			null, expectedStatus, expectedTitle, null, unsafeRunnable);
-	}
-
-	private void _assertProblemException(
-			String expectedTitle, UnsafeRunnable<Exception> unsafeRunnable)
-		throws Exception {
-
-		_assertProblemException("BAD_REQUEST", expectedTitle, unsafeRunnable);
 	}
 
 	private void _assertPutSiteSitePageProblemException(
@@ -1202,8 +1147,8 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 			String expectedTitle, SitePage sitePage)
 		throws Exception {
 
-		_assertProblemException(
-			expectedTitle,
+		ProblemExceptionTestUtil.assertProblemException(
+			"BAD_REQUEST", expectedTitle,
 			() -> sitePageResource.putSiteSitePage(
 				testGroup.getExternalReferenceCode(),
 				sitePage.getExternalReferenceCode(), false, sitePage));
@@ -1246,7 +1191,7 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 			detail = expectedTitle;
 		}
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			detail, expectedStatus, expectedTitle, expectedType,
 			() -> sitePageResource.putSiteSitePage(
 				testGroup.getExternalReferenceCode(),
@@ -2379,7 +2324,8 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 		SitePageResource sitePageResource = _getSitePageResource(
 			"pageSpecifications");
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
+			"BAD_REQUEST",
 			"A single content page specification cannot be applied to an " +
 				"existing page",
 			() -> sitePageResource.patchSiteSitePage(
@@ -2905,7 +2851,8 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 				SitePage.Type.CONTENT_PAGE,
 				StringUtil.toLowerCase(RandomTestUtil.randomString())));
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
+			"BAD_REQUEST",
 			"The private page setting does not match the target page's privacy",
 			() -> sitePageResource.postSiteSitePage(
 				testGroup.getExternalReferenceCode(), !privateLayout,
@@ -2945,7 +2892,7 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 		SitePageResource sitePageResource = _getSitePageResource(
 			"pageSpecifications");
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"A page experience with key DEFAULT already exists", "CONFLICT",
 			"A page experience with the same key already exists",
 			"page-experience-with-the-same-key-already-exists",
@@ -2966,7 +2913,7 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 					},
 					testGroup.getGroupId(), PageSpecification.Status.DRAFT)));
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"The default page experience must have a priority of 0",
 			"BAD_REQUEST",
 			"The default page experience must have a priority of 0",
@@ -3211,7 +3158,7 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 					RandomTestUtil.randomString())[0]
 			});
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"Exactly one page specification is required", "BAD_REQUEST",
 			"The number of page specifications does not match the page type " +
 				"requirements",
@@ -3230,7 +3177,7 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 
 		invalidWidgetSitePage.setPageSpecifications(widgetPageSpecifications);
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"The page specification is invalid or has not been approved",
 			"BAD_REQUEST",
 			"The page specification is invalid or has not been approved",
@@ -3252,7 +3199,7 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 					PageSpecification.Status.DRAFT)
 			});
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"BAD_REQUEST",
 			"The draft and published page specifications have mismatched " +
 				"external reference codes",
@@ -3315,7 +3262,8 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 				publishedContentPageSpecification, draftContentPageSpecification
 			});
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
+			"BAD_REQUEST",
 			StringBundler.concat(
 				"Site page external reference code ",
 				sitePage.getExternalReferenceCode(),
@@ -3741,7 +3689,8 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 		getSitePage.setPageSpecifications(
 			() -> new PageSpecification[] {pageSpecifications[0]});
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
+			"BAD_REQUEST",
 			"A single content page specification cannot be applied to an " +
 				"existing page",
 			() -> sitePageResource.putSiteSitePage(
@@ -3906,7 +3855,7 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 
 		pageSettings.setPriority(0);
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"CONFLICT",
 			_language.format(
 				LocaleUtil.getDefault(), "the-first-page-cannot-be-of-type-x",

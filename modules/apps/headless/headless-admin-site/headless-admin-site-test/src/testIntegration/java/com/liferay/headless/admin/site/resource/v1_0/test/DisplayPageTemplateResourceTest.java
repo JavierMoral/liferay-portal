@@ -35,6 +35,7 @@ import com.liferay.headless.admin.site.resource.v1_0.test.util.LayoutPageTemplat
 import com.liferay.headless.admin.site.resource.v1_0.test.util.PageElementsTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.PageExperiencesTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.PageSpecificationsTestUtil;
+import com.liferay.headless.admin.site.resource.v1_0.test.util.ProblemExceptionTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.SettingsTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.ThumbnailHttpServer;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.ThumbnailURLReferenceUtil;
@@ -201,7 +202,7 @@ public class DisplayPageTemplateResourceTest
 					postDisplayPageTemplate.getExternalReferenceCode(),
 					testGroup.getGroupId()));
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"NOT_FOUND", null,
 			() -> displayPageTemplateResource.deleteSiteDisplayPageTemplate(
 				testGroup.getExternalReferenceCode(),
@@ -214,7 +215,7 @@ public class DisplayPageTemplateResourceTest
 
 		_enableLocalStaging(irrelevantGroup);
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"BAD_REQUEST", null,
 			() -> displayPageTemplateResource.deleteSiteDisplayPageTemplate(
 				irrelevantGroup.getExternalReferenceCode(),
@@ -253,7 +254,7 @@ public class DisplayPageTemplateResourceTest
 
 		_testGetSiteDisplayPageTemplateWithNestedFields(displayPageTemplate);
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"NOT_FOUND", null,
 			() -> displayPageTemplateResource.getSiteDisplayPageTemplate(
 				testGroup.getExternalReferenceCode(),
@@ -421,7 +422,7 @@ public class DisplayPageTemplateResourceTest
 		_testPatchSiteDisplayPageTemplateWithPageSpecifications();
 		_testPatchSiteDisplayPageTemplateWithThumbnail();
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"NOT_FOUND", null,
 			() -> displayPageTemplateResource.patchSiteDisplayPageTemplate(
 				testGroup.getExternalReferenceCode(),
@@ -429,7 +430,7 @@ public class DisplayPageTemplateResourceTest
 
 		_enableLocalStaging();
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"BAD_REQUEST", null,
 			() -> displayPageTemplateResource.patchSiteDisplayPageTemplate(
 				testGroup.getExternalReferenceCode(),
@@ -556,7 +557,7 @@ public class DisplayPageTemplateResourceTest
 		_assertStagingGroupDisplayPageTemplateThumbnail(
 			displayPageTemplate, fileEntry);
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"BAD_REQUEST", null,
 			() -> displayPageTemplateResource.putSiteDisplayPageTemplate(
 				testGroup.getExternalReferenceCode(),
@@ -705,7 +706,7 @@ public class DisplayPageTemplateResourceTest
 				LayoutPageTemplateEntry layoutPageTemplateEntry)
 		throws Exception {
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"BAD_REQUEST", expectedTitle,
 			() ->
 				displayPageTemplateResource.
@@ -717,28 +718,6 @@ public class DisplayPageTemplateResourceTest
 								setType(() -> Type.CONTENT_PAGE_SPECIFICATION);
 							}
 						}));
-	}
-
-	private void _assertProblemException(
-			String expectedStatus, String expectedTitle,
-			UnsafeRunnable<Exception> unsafeRunnable)
-		throws Exception {
-
-		try {
-			unsafeRunnable.run();
-
-			Assert.fail();
-		}
-		catch (Problem.ProblemException problemException) {
-			Problem problem = problemException.getProblem();
-
-			if (problem.getDetail() != null) {
-				Assert.assertEquals(expectedTitle, problem.getDetail());
-			}
-
-			Assert.assertEquals(expectedStatus, problem.getStatus());
-			Assert.assertEquals(expectedTitle, problem.getTitle());
-		}
 	}
 
 	private void _assertStagingGroupDisplayPageTemplateThumbnail(
@@ -1787,7 +1766,7 @@ public class DisplayPageTemplateResourceTest
 
 		Assert.assertTrue(postDisplayPageTemplate.getMarkedAsDefault());
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"CONFLICT",
 			"The default display page template must be published first",
 			() -> displayPageTemplateResource.postSiteDisplayPageTemplate(

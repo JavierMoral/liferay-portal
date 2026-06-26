@@ -16,18 +16,17 @@ import com.liferay.headless.admin.site.client.dto.v1_0.PageSpecification;
 import com.liferay.headless.admin.site.client.dto.v1_0.Settings;
 import com.liferay.headless.admin.site.client.dto.v1_0.WidgetPageSpecification;
 import com.liferay.headless.admin.site.client.pagination.Page;
-import com.liferay.headless.admin.site.client.problem.Problem;
 import com.liferay.headless.admin.site.client.scope.Scope;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.LayoutPageTemplateEntryTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.LayoutUtilityPageEntryTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.PageExperiencesTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.PageSpecificationsTestUtil;
+import com.liferay.headless.admin.site.resource.v1_0.test.util.ProblemExceptionTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.SettingsTestUtil;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.layout.test.util.ContentLayoutTestUtil;
 import com.liferay.layout.utility.page.model.LayoutUtilityPageEntry;
-import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Layout;
@@ -42,7 +41,6 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
-import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.FeatureFlags;
@@ -103,7 +101,7 @@ public class PageSpecificationResourceTest
 		Layout layout = _addLayout(
 			LayoutConstants.TYPE_PORTLET, serviceContext);
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"BAD_REQUEST", "The page status is not valid",
 			() -> pageSpecificationResource.deleteSitePageSpecification(
 				testGroup.getExternalReferenceCode(),
@@ -136,13 +134,13 @@ public class PageSpecificationResourceTest
 		Layout layoutPageTemplateEntryLayout = _layoutLocalService.getLayout(
 			layoutPageTemplateEntry.getPlid());
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"NOT_FOUND", null,
 			() -> pageSpecificationResource.deleteSitePageSpecification(
 				testGroup.getExternalReferenceCode(),
 				layoutPageTemplateEntryLayout.getExternalReferenceCode()));
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"BAD_REQUEST", "The page status is not valid",
 			() -> pageSpecificationResource.deleteSitePageSpecification(
 				testGroup.getExternalReferenceCode(),
@@ -637,43 +635,6 @@ public class PageSpecificationResourceTest
 			layout.fetchDraftLayout(), pageSpecifications.get(1));
 	}
 
-	private void _assertProblemException(
-			String expectedDetail, String expectedStatus, String expectedTitle,
-			String expectedType, UnsafeRunnable<Exception> unsafeRunnable)
-		throws Exception {
-
-		try {
-			unsafeRunnable.run();
-			Assert.fail();
-		}
-		catch (Problem.ProblemException problemException) {
-			Problem problem = problemException.getProblem();
-
-			if (Validator.isNotNull(expectedDetail)) {
-				Assert.assertEquals(expectedDetail, problem.getDetail());
-			}
-			else if (problem.getDetail() != null) {
-				Assert.assertEquals(expectedTitle, problem.getDetail());
-			}
-
-			if (expectedType != null) {
-				Assert.assertEquals(expectedType, problem.getType());
-			}
-
-			Assert.assertEquals(expectedStatus, problem.getStatus());
-			Assert.assertEquals(expectedTitle, problem.getTitle());
-		}
-	}
-
-	private void _assertProblemException(
-			String expectedStatus, String expectedTitle,
-			UnsafeRunnable<Exception> unsafeRunnable)
-		throws Exception {
-
-		_assertProblemException(
-			null, expectedStatus, expectedTitle, null, unsafeRunnable);
-	}
-
 	private void _assertPutSiteContentPageSpecification(
 			Layout layout, ServiceContext serviceContext)
 		throws Exception {
@@ -860,7 +821,7 @@ public class PageSpecificationResourceTest
 			Layout layout, ServiceContext serviceContext)
 		throws Exception {
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"BAD_REQUEST", "The page status is not valid",
 			() -> pageSpecificationResource.deleteSitePageSpecification(
 				testGroup.getExternalReferenceCode(),
@@ -872,13 +833,13 @@ public class PageSpecificationResourceTest
 
 		ContentLayoutTestUtil.publishLayout(draftLayout, layout);
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"BAD_REQUEST", "The page status is not valid",
 			() -> pageSpecificationResource.deleteSitePageSpecification(
 				testGroup.getExternalReferenceCode(),
 				layout.getExternalReferenceCode()));
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"BAD_REQUEST", "The page status is not valid",
 			() -> pageSpecificationResource.deleteSitePageSpecification(
 				testGroup.getExternalReferenceCode(),
@@ -1075,7 +1036,7 @@ public class PageSpecificationResourceTest
 
 		widgetPageSpecification.setStatus(PageSpecification.Status.DRAFT);
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"BAD_REQUEST",
 			"The page specification must be widget and be in approved status",
 			() -> pageSpecificationResource.patchSitePageSpecification(
@@ -1137,7 +1098,7 @@ public class PageSpecificationResourceTest
 
 		contentPageSpecification.setStatus(PageSpecification.Status.APPROVED);
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"BAD_REQUEST",
 			"The page specification must be in draft status for content pages",
 			() -> pageSpecificationResource.patchSitePageSpecification(
@@ -1180,7 +1141,7 @@ public class PageSpecificationResourceTest
 
 		Layout draftLayout = layout.fetchDraftLayout();
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"A page experience with key DEFAULT already exists", "CONFLICT",
 			"A page experience with the same key already exists",
 			"page-experience-with-the-same-key-already-exists",
@@ -1201,7 +1162,7 @@ public class PageSpecificationResourceTest
 					},
 					testGroup.getGroupId(), PageSpecification.Status.DRAFT)));
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"The default page experience must have a priority of 0",
 			"BAD_REQUEST",
 			"The default page experience must have a priority of 0",
@@ -1234,13 +1195,13 @@ public class PageSpecificationResourceTest
 
 		pageSpecification.setStatus(PageSpecification.Status.APPROVED);
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"BAD_REQUEST",
 			"The page specification must be in draft status for content pages",
 			() -> pageSpecificationResource.putSitePageSpecification(
 				testGroup.getExternalReferenceCode(),
 				draftLayout.getExternalReferenceCode(), pageSpecification));
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"BAD_REQUEST",
 			"The page specification must be in draft status for content pages",
 			() -> pageSpecificationResource.putSitePageSpecification(
@@ -1249,7 +1210,7 @@ public class PageSpecificationResourceTest
 
 		pageSpecification.setStatus(PageSpecification.Status.DRAFT);
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"BAD_REQUEST",
 			"The page specification must be in draft status for content pages",
 			() -> pageSpecificationResource.putSitePageSpecification(
@@ -1262,7 +1223,7 @@ public class PageSpecificationResourceTest
 
 		pageSpecification.setStatus(PageSpecification.Status.APPROVED);
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"BAD_REQUEST",
 			"The page specification must be in draft status for content pages",
 			() -> pageSpecificationResource.putSitePageSpecification(

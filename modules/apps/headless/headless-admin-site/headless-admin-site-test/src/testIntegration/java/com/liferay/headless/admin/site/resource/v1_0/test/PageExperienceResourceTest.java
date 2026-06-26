@@ -11,6 +11,7 @@ import com.liferay.headless.admin.site.client.problem.Problem;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.LayoutPageTemplateEntryTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.PageElementsTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.PageExperiencesTestUtil;
+import com.liferay.headless.admin.site.resource.v1_0.test.util.ProblemExceptionTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.ReferencesTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.function.UnsafeRunnable;
@@ -423,30 +424,6 @@ public class PageExperienceResourceTest
 			Integer.valueOf(expectedPriority), pageExperience.getPriority());
 	}
 
-	private void _assertProblemException(
-			String expectedTitle, String expectedType,
-			UnsafeRunnable<Exception> unsafeRunnable)
-		throws Exception {
-
-		try {
-			unsafeRunnable.run();
-
-			Assert.fail();
-		}
-		catch (Problem.ProblemException problemException) {
-			Problem problem = problemException.getProblem();
-
-			Assert.assertEquals("BAD_REQUEST", problem.getStatus());
-			Assert.assertEquals(expectedTitle, problem.getTitle());
-
-			if (problem.getDetail() != null) {
-				Assert.assertEquals(expectedTitle, problem.getDetail());
-			}
-
-			Assert.assertEquals(expectedType, problem.getType());
-		}
-	}
-
 	private PageExperience _getPageExperience() throws Exception {
 		PageExperience pageExperience = super.randomPageExperience();
 
@@ -553,7 +530,8 @@ public class PageExperienceResourceTest
 
 		Layout draftLayout = layout.fetchDraftLayout();
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
+			null, "BAD_REQUEST",
 			"Only site pages can define additional page experiences",
 			"only-site-pages-can-define-additional-page-experiences",
 			() ->
@@ -603,7 +581,8 @@ public class PageExperienceResourceTest
 
 		Layout draftLayout = layout.fetchDraftLayout();
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
+			null, "BAD_REQUEST",
 			"Only site pages can define additional page experiences",
 			"only-site-pages-can-define-additional-page-experiences",
 			() ->
@@ -679,7 +658,8 @@ public class PageExperienceResourceTest
 
 		Layout draftLayout = layout.fetchDraftLayout();
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
+			null, "BAD_REQUEST",
 			"Only site pages can define additional page experiences",
 			"only-site-pages-can-define-additional-page-experiences",
 			() -> pageExperienceResource.putSitePageExperience(
@@ -699,7 +679,8 @@ public class PageExperienceResourceTest
 
 		Layout draftLayout = layout.fetchDraftLayout();
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
+			null, "BAD_REQUEST",
 			"Only site pages can define additional page experiences",
 			"only-site-pages-can-define-additional-page-experiences",
 			() -> pageExperienceResource.putSitePageExperience(

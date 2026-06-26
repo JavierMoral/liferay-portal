@@ -28,13 +28,13 @@ import com.liferay.headless.admin.site.resource.v1_0.test.util.LayoutPageTemplat
 import com.liferay.headless.admin.site.resource.v1_0.test.util.PageElementsTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.PageExperiencesTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.PageSpecificationsTestUtil;
+import com.liferay.headless.admin.site.resource.v1_0.test.util.ProblemExceptionTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.ThumbnailHttpServer;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.ThumbnailURLReferenceUtil;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.layout.test.util.ContentLayoutTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
-import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.string.StringPool;
@@ -159,7 +159,7 @@ public class MasterPageResourceTest extends BaseMasterPageResourceTestCase {
 					postMasterPage.getExternalReferenceCode(),
 					testGroup.getGroupId()));
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"NOT_FOUND", null,
 			() -> masterPageResource.deleteSiteMasterPage(
 				testGroup.getExternalReferenceCode(),
@@ -172,7 +172,7 @@ public class MasterPageResourceTest extends BaseMasterPageResourceTestCase {
 
 		_enableLocalStaging(irrelevantGroup);
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"BAD_REQUEST", null,
 			() -> masterPageResource.deleteSiteMasterPage(
 				irrelevantGroup.getExternalReferenceCode(),
@@ -191,7 +191,7 @@ public class MasterPageResourceTest extends BaseMasterPageResourceTestCase {
 
 		_testGetSiteMasterPageWithNestedFieldsAndMissingFragmentEntryLink();
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"NOT_FOUND", null,
 			() -> masterPageResource.getSiteMasterPage(
 				testGroup.getExternalReferenceCode(),
@@ -330,7 +330,7 @@ public class MasterPageResourceTest extends BaseMasterPageResourceTestCase {
 		_testPatchSiteMasterPageWithPageSpecifications();
 		_testPatchSiteMasterPageWithThumbnail();
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"NOT_FOUND", null,
 			() -> masterPageResource.patchSiteMasterPage(
 				testGroup.getExternalReferenceCode(),
@@ -341,7 +341,7 @@ public class MasterPageResourceTest extends BaseMasterPageResourceTestCase {
 
 		_enableLocalStaging();
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"BAD_REQUEST", null,
 			() -> masterPageResource.patchSiteMasterPage(
 				testGroup.getExternalReferenceCode(),
@@ -454,7 +454,7 @@ public class MasterPageResourceTest extends BaseMasterPageResourceTestCase {
 
 		_assertStagingGroupMasterPageThumbnail(fileEntry, masterPage);
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"BAD_REQUEST", null,
 			() -> masterPageResource.putSiteMasterPage(
 				testGroup.getExternalReferenceCode(),
@@ -597,7 +597,7 @@ public class MasterPageResourceTest extends BaseMasterPageResourceTestCase {
 			LayoutPageTemplateEntry layoutPageTemplateEntry)
 		throws Exception {
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"BAD_REQUEST", expectedTitle,
 			() -> masterPageResource.postSiteMasterPagePageSpecification(
 				testGroup.getExternalReferenceCode(),
@@ -607,44 +607,6 @@ public class MasterPageResourceTest extends BaseMasterPageResourceTestCase {
 						setType(() -> Type.CONTENT_PAGE_SPECIFICATION);
 					}
 				}));
-	}
-
-	private void _assertProblemException(
-			String expectedDetail, String expectedStatus, String expectedTitle,
-			String expectedType, UnsafeRunnable<Exception> unsafeRunnable)
-		throws Exception {
-
-		try {
-			unsafeRunnable.run();
-
-			Assert.fail();
-		}
-		catch (Problem.ProblemException problemException) {
-			Problem problem = problemException.getProblem();
-
-			if (Validator.isNotNull(expectedDetail)) {
-				Assert.assertEquals(expectedDetail, problem.getDetail());
-			}
-			else if (problem.getDetail() != null) {
-				Assert.assertEquals(expectedTitle, problem.getDetail());
-			}
-
-			if (expectedType != null) {
-				Assert.assertEquals(expectedType, problem.getType());
-			}
-
-			Assert.assertEquals(expectedStatus, problem.getStatus());
-			Assert.assertEquals(expectedTitle, problem.getTitle());
-		}
-	}
-
-	private void _assertProblemException(
-			String expectedStatus, String expectedTitle,
-			UnsafeRunnable<Exception> unsafeRunnable)
-		throws Exception {
-
-		_assertProblemException(
-			null, expectedStatus, expectedTitle, null, unsafeRunnable);
 	}
 
 	private void _assertStagingGroupMasterPageThumbnail(
@@ -1316,7 +1278,7 @@ public class MasterPageResourceTest extends BaseMasterPageResourceTestCase {
 
 		Layout draftLayout = layout.fetchDraftLayout();
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"A page experience with key DEFAULT already exists", "CONFLICT",
 			"A page experience with the same key already exists",
 			"page-experience-with-the-same-key-already-exists",
@@ -1337,7 +1299,7 @@ public class MasterPageResourceTest extends BaseMasterPageResourceTestCase {
 					},
 					testGroup.getGroupId(), PageSpecification.Status.DRAFT)));
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			null, "BAD_REQUEST",
 			"The default page experience must have a priority of 0",
 			"default-page-experience-must-have-a-priority-of-0",
@@ -1385,7 +1347,7 @@ public class MasterPageResourceTest extends BaseMasterPageResourceTestCase {
 					PageSpecification.Status.APPROVED)
 			});
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"Exactly two page specifications are required", "BAD_REQUEST",
 			"The number of page specifications does not match the page type " +
 				"requirements",
@@ -1406,7 +1368,7 @@ public class MasterPageResourceTest extends BaseMasterPageResourceTestCase {
 					PageSpecification.Status.DRAFT)
 			});
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			null, "BAD_REQUEST",
 			"The draft and published page specifications have mismatched " +
 				"external reference codes",
@@ -1704,7 +1666,7 @@ public class MasterPageResourceTest extends BaseMasterPageResourceTestCase {
 
 		masterPage.setMarkedAsDefault(Boolean.TRUE);
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"The default master page must be published first", "CONFLICT",
 			"The default master page must be published first",
 			"default-master-page-must-be-published-first",
