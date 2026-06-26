@@ -19,12 +19,12 @@ import com.liferay.headless.admin.site.client.resource.v1_0.UtilityPageResource;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.FileEntryTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.LayoutUtilityPageEntryTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.PageSpecificationsTestUtil;
+import com.liferay.headless.admin.site.resource.v1_0.test.util.ProblemExceptionTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.ThumbnailHttpServer;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.ThumbnailURLReferenceUtil;
 import com.liferay.layout.test.util.ContentLayoutTestUtil;
 import com.liferay.layout.utility.page.model.LayoutUtilityPageEntry;
 import com.liferay.layout.utility.page.service.LayoutUtilityPageEntryLocalService;
-import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -51,7 +51,6 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Time;
-import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.test.util.IdempotentRetryAssert;
 import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
@@ -148,7 +147,7 @@ public class UtilityPageResourceTest extends BaseUtilityPageResourceTestCase {
 					postUtilityPage.getExternalReferenceCode(),
 					testGroup.getGroupId()));
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"NOT_FOUND", null,
 			() -> utilityPageResource.deleteSiteUtilityPage(
 				testGroup.getExternalReferenceCode(),
@@ -172,7 +171,7 @@ public class UtilityPageResourceTest extends BaseUtilityPageResourceTestCase {
 		assertEquals(postUtilityPage, getUtilityPage);
 		assertValid(getUtilityPage);
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"NOT_FOUND", null,
 			() -> utilityPageResource.getSiteUtilityPage(
 				testGroup.getExternalReferenceCode(),
@@ -321,7 +320,7 @@ public class UtilityPageResourceTest extends BaseUtilityPageResourceTestCase {
 		_testPatchSiteUtilityPageWithPageSpecifications();
 		_testPatchSiteUtilityPageWithThumbnail();
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"NOT_FOUND", null,
 			() -> utilityPageResource.patchSiteUtilityPage(
 				testGroup.getExternalReferenceCode(),
@@ -392,7 +391,7 @@ public class UtilityPageResourceTest extends BaseUtilityPageResourceTestCase {
 
 		Assert.assertFalse(layout.isPublished());
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			null, "CONFLICT",
 			"The default utility page must be published first",
 			"default-utility-page-must-be-published-first",
@@ -570,44 +569,6 @@ public class UtilityPageResourceTest extends BaseUtilityPageResourceTestCase {
 		PageSpecificationsTestUtil.assertPageSpecifications(
 			draftContentPageSpecification, publishedContentPageSpecification,
 			utilityPage.getPageSpecifications(), layout, status);
-	}
-
-	private void _assertProblemException(
-			String expectedDetail, String expectedStatus, String expectedTitle,
-			String expectedType, UnsafeRunnable<Exception> unsafeRunnable)
-		throws Exception {
-
-		try {
-			unsafeRunnable.run();
-
-			Assert.fail();
-		}
-		catch (Problem.ProblemException problemException) {
-			Problem problem = problemException.getProblem();
-
-			if (Validator.isNotNull(expectedDetail)) {
-				Assert.assertEquals(expectedDetail, problem.getDetail());
-			}
-			else if (problem.getDetail() != null) {
-				Assert.assertEquals(expectedTitle, problem.getDetail());
-			}
-
-			if (expectedType != null) {
-				Assert.assertEquals(expectedType, problem.getType());
-			}
-
-			Assert.assertEquals(expectedStatus, problem.getStatus());
-			Assert.assertEquals(expectedTitle, problem.getTitle());
-		}
-	}
-
-	private void _assertProblemException(
-			String expectedStatus, String expectedTitle,
-			UnsafeRunnable<Exception> unsafeRunnable)
-		throws Exception {
-
-		_assertProblemException(
-			null, expectedStatus, expectedTitle, null, unsafeRunnable);
 	}
 
 	private void _assertThumbnailFileEntryId(
@@ -966,7 +927,7 @@ public class UtilityPageResourceTest extends BaseUtilityPageResourceTestCase {
 
 			PageSpecification pageSpecification = pageSpecifications[0];
 
-			_assertProblemException(
+			ProblemExceptionTestUtil.assertProblemException(
 				"BAD_REQUEST", "Utility pages do not support custom fields",
 				() -> utilityPageResource.patchSiteUtilityPage(
 					testGroup.getExternalReferenceCode(),
@@ -1123,7 +1084,7 @@ public class UtilityPageResourceTest extends BaseUtilityPageResourceTestCase {
 				() -> PageSpecificationsTestUtil.getContentPageSpecifications(
 					RandomTestUtil.randomString(), testGroup.getGroupId()));
 
-			_assertProblemException(
+			ProblemExceptionTestUtil.assertProblemException(
 				"BAD_REQUEST", "Utility pages do not support custom fields",
 				() -> utilityPageResource.postSiteUtilityPage(
 					testGroup.getExternalReferenceCode(), utilityPage));
@@ -1409,7 +1370,7 @@ public class UtilityPageResourceTest extends BaseUtilityPageResourceTestCase {
 					pageSpecification.getExternalReferenceCode(),
 					testGroup.getGroupId()));
 
-			_assertProblemException(
+			ProblemExceptionTestUtil.assertProblemException(
 				"BAD_REQUEST", "Utility pages do not support custom fields",
 				() -> utilityPageResource.patchSiteUtilityPage(
 					testGroup.getExternalReferenceCode(),

@@ -9,9 +9,8 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.exportimport.kernel.service.StagingLocalService;
 import com.liferay.headless.admin.site.client.dto.v1_0.PageTemplateSet;
 import com.liferay.headless.admin.site.client.pagination.Page;
-import com.liferay.headless.admin.site.client.problem.Problem;
+import com.liferay.headless.admin.site.resource.v1_0.test.util.ProblemExceptionTestUtil;
 import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionLocalService;
-import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
@@ -85,7 +84,7 @@ public class PageTemplateSetResourceTest
 
 		_enableLocalStaging(irrelevantGroup);
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"BAD_REQUEST", null,
 			() -> pageTemplateSetResource.deleteSitePageTemplateSet(
 				irrelevantGroup.getExternalReferenceCode(),
@@ -222,7 +221,7 @@ public class PageTemplateSetResourceTest
 
 		_enableLocalStaging();
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"BAD_REQUEST", null,
 			() -> pageTemplateSetResource.patchSitePageTemplateSet(
 				testGroup.getExternalReferenceCode(),
@@ -292,7 +291,7 @@ public class PageTemplateSetResourceTest
 
 		_enableLocalStaging();
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"BAD_REQUEST", null,
 			() -> pageTemplateSetResource.putSitePageTemplateSet(
 				testGroup.getExternalReferenceCode(),
@@ -331,43 +330,6 @@ public class PageTemplateSetResourceTest
 			testGroup.getExternalReferenceCode(), pageTemplateSet);
 	}
 
-	private void _assertProblemException(
-			String expectedDetail, String expectedStatus, String expectedTitle,
-			String expectedType, UnsafeRunnable<Exception> unsafeRunnable)
-		throws Exception {
-
-		try {
-			unsafeRunnable.run();
-
-			Assert.fail();
-		}
-		catch (Problem.ProblemException problemException) {
-			Problem problem = problemException.getProblem();
-
-			if (Validator.isNotNull(expectedDetail)) {
-				Assert.assertEquals(expectedDetail, problem.getDetail());
-			}
-			else if (problem.getDetail() != null) {
-				Assert.assertEquals(expectedTitle, problem.getDetail());
-			}
-
-			if (expectedType != null) {
-				Assert.assertEquals(expectedType, problem.getType());
-			}
-
-			Assert.assertEquals(expectedStatus, problem.getStatus());
-			Assert.assertEquals(expectedTitle, problem.getTitle());
-		}
-	}
-
-	private void _assertProblemException(
-			String status, String title,
-			UnsafeRunnable<Exception> unsafeRunnable)
-		throws Exception {
-
-		_assertProblemException(null, status, title, null, unsafeRunnable);
-	}
-
 	private void _enableLocalStaging() throws Exception {
 		_enableLocalStaging(testGroup);
 	}
@@ -395,7 +357,7 @@ public class PageTemplateSetResourceTest
 
 		pageTemplateSet.setKey(key);
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"CONFLICT", title,
 			() -> pageTemplateSetResource.postSitePageTemplateSet(
 				testGroup.getExternalReferenceCode(), pageTemplateSet));
@@ -436,7 +398,7 @@ public class PageTemplateSetResourceTest
 
 		pageTemplateSet2.setName(pageTemplateSet1.getName());
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			StringBundler.concat(
 				"A page template set with name ", pageTemplateSet1.getName(),
 				" already exists"),

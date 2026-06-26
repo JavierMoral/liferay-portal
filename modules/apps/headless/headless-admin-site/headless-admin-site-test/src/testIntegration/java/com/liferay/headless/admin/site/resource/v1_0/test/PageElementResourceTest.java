@@ -113,6 +113,7 @@ import com.liferay.headless.admin.site.resource.v1_0.test.util.FragmentViewportS
 import com.liferay.headless.admin.site.resource.v1_0.test.util.FragmentViewportTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.ImageValueTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.PageElementsTestUtil;
+import com.liferay.headless.admin.site.resource.v1_0.test.util.ProblemExceptionTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.ReferencesTestUtil;
 import com.liferay.journal.constants.JournalContentPortletKeys;
 import com.liferay.journal.constants.JournalFolderConstants;
@@ -830,28 +831,6 @@ public class PageElementResourceTest extends BasePageElementResourceTestCase {
 		Assert.assertTrue(
 			scopeExternalReferenceCode,
 			Validator.isNull(scopeExternalReferenceCode));
-	}
-
-	private void _assertProblemException(
-			String status, String title,
-			UnsafeRunnable<Exception> unsafeRunnable)
-		throws Exception {
-
-		try {
-			unsafeRunnable.run();
-
-			Assert.fail();
-		}
-		catch (Problem.ProblemException problemException) {
-			Problem problem = problemException.getProblem();
-
-			if (problem.getDetail() != null) {
-				Assert.assertEquals(title, problem.getDetail());
-			}
-
-			Assert.assertEquals(status, problem.getStatus());
-			Assert.assertEquals(title, problem.getTitle());
-		}
 	}
 
 	private void _assertStyledLayoutStructureItemBackgroundImage(
@@ -2414,7 +2393,7 @@ public class PageElementResourceTest extends BasePageElementResourceTestCase {
 		collectionItemPageElement.setExternalReferenceCode(
 			pageElements[0].getExternalReferenceCode());
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"BAD_REQUEST", null,
 			() -> _testPostSitePageSpecificationPageExperiencePageElement(
 				collectionItemPageElement));
@@ -2554,7 +2533,7 @@ public class PageElementResourceTest extends BasePageElementResourceTestCase {
 				RandomTestUtil.randomString(),
 				formContainerExternalReferenceCode, false));
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"BAD_REQUEST",
 			"Form relationship can only be added inside of a form",
 			() -> _testPostSitePageSpecificationPageExperiencePageElement(
