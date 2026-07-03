@@ -104,12 +104,6 @@ public class PageExperienceUtil {
 				"The external reference code does not match the target page " +
 					"experience external reference code");
 		}
-
-		if (defaultPageExperience.getSegmentItemExternalReference() != null) {
-			throw new PageExperienceException(
-				PageExperienceException.DEFAULT_REFERENCES_SEGMENT,
-				"The default page experience cannot reference a segment");
-		}
 	}
 
 }

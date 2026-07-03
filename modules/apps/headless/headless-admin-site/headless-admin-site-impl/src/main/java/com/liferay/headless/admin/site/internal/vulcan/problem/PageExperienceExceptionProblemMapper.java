@@ -42,10 +42,6 @@ public class PageExperienceExceptionProblemMapper
 			return "Only site pages can define additional page experiences";
 		}
 
-		if (type == PageExperienceException.DEFAULT_REFERENCES_SEGMENT) {
-			return "The default page experience cannot reference a segment";
-		}
-
 		if (type == PageExperienceException.INVALID_DEFAULT_PRIORITY) {
 			return "The default page experience must have a priority of 0";
 		}
@@ -64,10 +60,6 @@ public class PageExperienceExceptionProblemMapper
 	private String _getType(int type) {
 		if (type == PageExperienceException.CONTENT_PAGES_ONLY) {
 			return "only-site-pages-can-define-additional-page-experiences";
-		}
-
-		if (type == PageExperienceException.DEFAULT_REFERENCES_SEGMENT) {
-			return "default-page-experience-cannot-reference-a-segment";
 		}
 
 		if (type == PageExperienceException.INVALID_DEFAULT_PRIORITY) {

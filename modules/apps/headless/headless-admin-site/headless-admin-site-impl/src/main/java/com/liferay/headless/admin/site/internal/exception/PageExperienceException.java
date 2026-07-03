@@ -16,8 +16,6 @@ public class PageExperienceException extends PortalException {
 
 	public static final int DEFAULT_EXPERIENCE_REQUIRED = 2;
 
-	public static final int DEFAULT_REFERENCES_SEGMENT = 3;
-
 	public static final int EXPERIENCE_REQUIRED = 4;
 
 	public static final int INVALID_DEFAULT_PRIORITY = 5;
