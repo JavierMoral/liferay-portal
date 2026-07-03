@@ -27,6 +27,7 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.segments.constants.SegmentsExperienceConstants;
+import com.liferay.segments.exception.DuplicateSegmentsExperienceKeyException;
 import com.liferay.segments.exception.LockedSegmentsExperimentException;
 import com.liferay.segments.exception.RequiredSegmentsExperienceException;
 import com.liferay.segments.exception.SegmentsExperienceNameException;
@@ -124,6 +125,7 @@ public class SegmentsExperienceLocalServiceImpl
 
 		_validateName(nameMap);
 		_validatePriority(groupId, plid, priority);
+		_validateSegmentsExperienceKey(groupId, plid, segmentsExperienceKey);
 
 		long segmentsExperienceId = counterLocalService.increment();
 
@@ -763,6 +765,20 @@ public class SegmentsExperienceLocalServiceImpl
 			throw new SegmentsExperiencePriorityException(
 				"A segments experience with the priority " + priority +
 					" already exists");
+		}
+	}
+
+	private void _validateSegmentsExperienceKey(
+			long groupId, long plid, String segmentsExperienceKey)
+		throws PortalException {
+
+		SegmentsExperience segmentsExperience =
+			segmentsExperiencePersistence.fetchByG_SEK_P(
+				groupId, segmentsExperienceKey, plid);
+
+		if (segmentsExperience != null) {
+			throw new DuplicateSegmentsExperienceKeyException(
+				segmentsExperienceKey);
 		}
 	}
 

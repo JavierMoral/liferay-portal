@@ -6,12 +6,12 @@
 package com.liferay.headless.admin.site.internal.resource.v1_0.util;
 
 import com.liferay.headless.admin.site.dto.v1_0.PageExperience;
-import com.liferay.headless.admin.site.internal.exception.DuplicatePageExperienceKeyException;
 import com.liferay.headless.admin.site.internal.exception.PageExperienceException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.segments.constants.SegmentsExperienceConstants;
+import com.liferay.segments.exception.DuplicateSegmentsExperienceKeyException;
 import com.liferay.segments.model.SegmentsExperience;
 
 import java.util.HashSet;
@@ -69,7 +69,7 @@ public class PageExperienceUtil {
 
 		for (PageExperience pageExperience : pageExperiences) {
 			if (!pageExperienceKeys.add(pageExperience.getKey())) {
-				throw new DuplicatePageExperienceKeyException(
+				throw new DuplicateSegmentsExperienceKeyException(
 					pageExperience.getKey());
 			}
 

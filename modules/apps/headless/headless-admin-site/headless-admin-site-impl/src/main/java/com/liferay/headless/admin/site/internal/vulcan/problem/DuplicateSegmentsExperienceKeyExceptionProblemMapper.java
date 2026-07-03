@@ -5,9 +5,9 @@
 
 package com.liferay.headless.admin.site.internal.vulcan.problem;
 
-import com.liferay.headless.admin.site.internal.exception.DuplicatePageExperienceKeyException;
 import com.liferay.portal.vulcan.problem.Problem;
 import com.liferay.portal.vulcan.problem.ProblemMapper;
+import com.liferay.segments.exception.DuplicateSegmentsExperienceKeyException;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -15,18 +15,18 @@ import org.osgi.service.component.annotations.Component;
  * @author Javier Moral
  */
 @Component(service = ProblemMapper.class)
-public class DuplicatePageExperienceKeyExceptionProblemMapper
-	implements ProblemMapper<DuplicatePageExperienceKeyException> {
+public class DuplicateSegmentsExperienceKeyExceptionProblemMapper
+	implements ProblemMapper<DuplicateSegmentsExperienceKeyException> {
 
 	@Override
 	public Problem getProblem(
-		DuplicatePageExperienceKeyException
-			duplicatePageExperienceKeyException) {
+		DuplicateSegmentsExperienceKeyException
+			duplicateSegmentsExperienceKeyException) {
 
 		return ProblemUtil.getDuplicateProblem(
 			"key", "page experience",
-			duplicatePageExperienceKeyException.getKey(),
-			duplicatePageExperienceKeyException);
+			duplicateSegmentsExperienceKeyException.getSegmentsExperienceKey(),
+			duplicateSegmentsExperienceKeyException);
 	}
 
 }
