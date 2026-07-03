@@ -31,6 +31,7 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.segments.constants.SegmentsExperienceConstants;
 import com.liferay.segments.constants.SegmentsExperimentConstants;
 import com.liferay.segments.exception.DuplicateSegmentsExperienceExternalReferenceCodeException;
+import com.liferay.segments.exception.DuplicateSegmentsExperienceKeyException;
 import com.liferay.segments.exception.LockedSegmentsExperimentException;
 import com.liferay.segments.exception.RequiredSegmentsExperienceException;
 import com.liferay.segments.exception.SegmentsExperienceNameException;
@@ -229,6 +230,31 @@ public class SegmentsExperienceLocalServiceTest {
 			externalReferenceCode, TestPropsValues.getUserId(),
 			_group.getGroupId(), segmentsEntry.getExternalReferenceCode(), null,
 			_plid, RandomTestUtil.randomLocaleStringMap(), false,
+			new UnicodeProperties(true),
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+	}
+
+	@Test(expected = DuplicateSegmentsExperienceKeyException.class)
+	public void testAddSegmentsExperienceWithExistingSegmentsExperienceKey()
+		throws Exception {
+
+		SegmentsEntry segmentsEntry = SegmentsTestUtil.addSegmentsEntry(
+			_group.getGroupId());
+
+		String segmentsExperienceKey = StringUtil.randomString();
+
+		_segmentsExperienceLocalService.addSegmentsExperience(
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
+			segmentsEntry.getExternalReferenceCode(), null,
+			segmentsExperienceKey, _plid,
+			RandomTestUtil.randomLocaleStringMap(), 1, true,
+			new UnicodeProperties(true),
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+		_segmentsExperienceLocalService.addSegmentsExperience(
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
+			segmentsEntry.getExternalReferenceCode(), null,
+			segmentsExperienceKey, _plid,
+			RandomTestUtil.randomLocaleStringMap(), 2, true,
 			new UnicodeProperties(true),
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 	}
