@@ -10,7 +10,6 @@ import com.liferay.headless.admin.site.dto.v1_0.ItemExternalReference;
 import com.liferay.headless.admin.site.dto.v1_0.PageElement;
 import com.liferay.headless.admin.site.dto.v1_0.PageExperience;
 import com.liferay.headless.admin.site.internal.dto.v1_0.util.ItemScopeUtil;
-import com.liferay.headless.admin.site.internal.exception.PageExperienceException;
 import com.liferay.headless.admin.site.internal.resource.v1_0.layout.structure.item.importer.context.LayoutStructureItemImporterContext;
 import com.liferay.headless.admin.site.internal.util.LogUtil;
 import com.liferay.info.item.InfoItemServiceRegistry;
@@ -27,6 +26,7 @@ import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.segments.constants.SegmentsExperienceConstants;
+import com.liferay.segments.exception.SegmentsExperienceLayoutException;
 import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.service.SegmentsEntryLocalServiceUtil;
@@ -47,9 +47,7 @@ public class SegmentsExperienceUtil {
 		throws Exception {
 
 		if (!Objects.equals(layout.getType(), LayoutConstants.TYPE_CONTENT)) {
-			throw new PageExperienceException(
-				PageExperienceException.CONTENT_PAGES_ONLY,
-				"Page experiences can only be added to content pages");
+			throw new SegmentsExperienceLayoutException(layout.getPlid());
 		}
 
 		SegmentsEntryReference segmentsEntryReference =
@@ -147,12 +145,10 @@ public class SegmentsExperienceUtil {
 	}
 
 	public static void validateSegmentsExperienceLayout(Layout layout)
-		throws PageExperienceException {
+		throws SegmentsExperienceLayoutException {
 
 		if (!Objects.equals(layout.getType(), LayoutConstants.TYPE_CONTENT)) {
-			throw new PageExperienceException(
-				PageExperienceException.CONTENT_PAGES_ONLY,
-				"Page experiences can only be added to content pages");
+			throw new SegmentsExperienceLayoutException(layout.getPlid());
 		}
 
 		long plid = layout.getPlid();
@@ -166,9 +162,7 @@ public class SegmentsExperienceUtil {
 				fetchLayoutPageTemplateEntryByPlid(plid);
 
 		if (layoutPageTemplateEntry != null) {
-			throw new PageExperienceException(
-				PageExperienceException.CONTENT_PAGES_ONLY,
-				"Page experiences cannot be added to a page template");
+			throw new SegmentsExperienceLayoutException(layout.getPlid());
 		}
 	}
 

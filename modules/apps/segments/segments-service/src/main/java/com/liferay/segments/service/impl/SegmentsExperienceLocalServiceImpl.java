@@ -5,11 +5,14 @@
 
 package com.liferay.segments.service.impl;
 
+import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
+import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.LockedLayoutException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
@@ -31,6 +34,7 @@ import com.liferay.segments.exception.DefaultSegmentsExperienceSegmentException;
 import com.liferay.segments.exception.DuplicateSegmentsExperienceKeyException;
 import com.liferay.segments.exception.LockedSegmentsExperimentException;
 import com.liferay.segments.exception.RequiredSegmentsExperienceException;
+import com.liferay.segments.exception.SegmentsExperienceLayoutException;
 import com.liferay.segments.exception.SegmentsExperienceNameException;
 import com.liferay.segments.exception.SegmentsExperiencePriorityException;
 import com.liferay.segments.model.SegmentsExperience;
@@ -124,10 +128,11 @@ public class SegmentsExperienceLocalServiceImpl
 
 		User user = _userLocalService.getUser(userId);
 
+		_validateDefaultSegmentsEntry(segmentsEntryERC, segmentsExperienceKey);
+		_validateLayout(plid, segmentsExperienceKey);
 		_validateName(nameMap);
 		_validatePriority(groupId, plid, priority);
 		_validateSegmentsExperienceKey(groupId, plid, segmentsExperienceKey);
-		_validateDefaultSegmentsEntry(segmentsEntryERC, segmentsExperienceKey);
 
 		long segmentsExperienceId = counterLocalService.increment();
 
@@ -762,6 +767,40 @@ public class SegmentsExperienceLocalServiceImpl
 		}
 	}
 
+	private void _validateLayout(long plid, String segmentsExperienceKey)
+		throws PortalException {
+
+		if (SegmentsExperienceConstants.KEY_DEFAULT.equals(
+				segmentsExperienceKey)) {
+
+			return;
+		}
+
+		Layout layout = _layoutLocalService.fetchLayout(plid);
+
+		if (layout == null) {
+			return;
+		}
+
+		if (!LayoutConstants.TYPE_CONTENT.equals(layout.getType())) {
+			throw new SegmentsExperienceLayoutException(plid);
+		}
+
+		long layoutPageTemplateEntryPlid = layout.getPlid();
+
+		if (layout.getClassPK() > 0) {
+			layoutPageTemplateEntryPlid = layout.getClassPK();
+		}
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_layoutPageTemplateEntryLocalService.
+				fetchLayoutPageTemplateEntryByPlid(layoutPageTemplateEntryPlid);
+
+		if (layoutPageTemplateEntry != null) {
+			throw new SegmentsExperienceLayoutException(plid);
+		}
+	}
+
 	private void _validateName(Map<Locale, String> nameMap)
 		throws PortalException {
 
@@ -804,6 +843,10 @@ public class SegmentsExperienceLocalServiceImpl
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;
+
+	@Reference
+	private LayoutPageTemplateEntryLocalService
+		_layoutPageTemplateEntryLocalService;
 
 	@Reference
 	private ResourceLocalService _resourceLocalService;

@@ -11,6 +11,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.segments.constants.SegmentsExperienceConstants;
+import com.liferay.segments.exception.DefaultSegmentsExperienceSegmentException;
 import com.liferay.segments.exception.DuplicateSegmentsExperienceKeyException;
 import com.liferay.segments.model.SegmentsExperience;
 
@@ -103,6 +104,10 @@ public class PageExperienceUtil {
 				PageExperienceException.MISMATCHED_EXTERNAL_REFERENCE_CODE,
 				"The external reference code does not match the target page " +
 					"experience external reference code");
+		}
+
+		if (defaultPageExperience.getSegmentItemExternalReference() != null) {
+			throw new DefaultSegmentsExperienceSegmentException();
 		}
 	}
 

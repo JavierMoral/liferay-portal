@@ -12,8 +12,6 @@ import com.liferay.portal.kernel.exception.PortalException;
  */
 public class PageExperienceException extends PortalException {
 
-	public static final int CONTENT_PAGES_ONLY = 1;
-
 	public static final int DEFAULT_EXPERIENCE_REQUIRED = 2;
 
 	public static final int EXPERIENCE_REQUIRED = 4;
