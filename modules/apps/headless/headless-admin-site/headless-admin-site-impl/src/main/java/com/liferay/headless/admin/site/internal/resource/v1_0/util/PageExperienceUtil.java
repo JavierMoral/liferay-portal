@@ -10,6 +10,7 @@ import com.liferay.headless.admin.site.internal.exception.PageExperienceExceptio
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.segments.constants.SegmentsExperienceConstants;
 import com.liferay.segments.exception.DefaultSegmentsExperienceSegmentException;
 import com.liferay.segments.exception.DuplicateSegmentsExperienceKeyException;
@@ -69,6 +70,12 @@ public class PageExperienceUtil {
 		PageExperience defaultPageExperience = null;
 
 		for (PageExperience pageExperience : pageExperiences) {
+			if (Validator.isNull(pageExperience.getKey())) {
+				throw new PageExperienceException(
+					PageExperienceException.KEY_REQUIRED,
+					"A page experience key is required");
+			}
+
 			if (!pageExperienceKeys.add(pageExperience.getKey())) {
 				throw new DuplicateSegmentsExperienceKeyException(
 					pageExperience.getKey());

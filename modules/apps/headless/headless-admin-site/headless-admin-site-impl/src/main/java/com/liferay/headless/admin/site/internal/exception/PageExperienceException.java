@@ -12,13 +12,15 @@ import com.liferay.portal.kernel.exception.PortalException;
  */
 public class PageExperienceException extends PortalException {
 
-	public static final int DEFAULT_EXPERIENCE_REQUIRED = 2;
+	public static final int DEFAULT_EXPERIENCE_REQUIRED = 1;
 
-	public static final int EXPERIENCE_REQUIRED = 4;
+	public static final int EXPERIENCE_REQUIRED = 2;
 
-	public static final int INVALID_DEFAULT_PRIORITY = 5;
+	public static final int INVALID_DEFAULT_PRIORITY = 3;
 
-	public static final int MISMATCHED_EXTERNAL_REFERENCE_CODE = 6;
+	public static final int KEY_REQUIRED = 4;
+
+	public static final int MISMATCHED_EXTERNAL_REFERENCE_CODE = 5;
 
 	public PageExperienceException(int type, String message) {
 		super(message);

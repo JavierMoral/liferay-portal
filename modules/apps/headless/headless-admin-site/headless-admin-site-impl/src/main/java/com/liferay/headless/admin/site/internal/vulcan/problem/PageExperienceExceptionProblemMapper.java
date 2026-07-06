@@ -32,6 +32,11 @@ public class PageExperienceExceptionProblemMapper
 				"page experience", pageExperienceException);
 		}
 
+		if (type == PageExperienceException.KEY_REQUIRED) {
+			return ProblemUtil.getRequiredFieldProblem(
+				"page experience key", pageExperienceException);
+		}
+
 		return ProblemUtil.getProblem(
 			_getMessage(type), Problem.Status.BAD_REQUEST, _getType(type),
 			pageExperienceException);
