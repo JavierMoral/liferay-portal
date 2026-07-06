@@ -1155,7 +1155,7 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 	}
 
 	private void _assertPutSiteSitePageWithPageExperiencesProblemException(
-			String expectedStatus, String expectedTitle, String expectedDetail,
+			String expectedDetail, String expectedStatus, String expectedTitle,
 			String expectedType,
 			UnsafeFunction<PageExperience[], PageExperience[], Exception>
 				pageExperiencesUnsafeFunction)
@@ -1185,14 +1185,8 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 					contentPageSpecification.getPageExperiences()));
 		}
 
-		String detail = expectedDetail;
-
-		if (detail == null) {
-			detail = expectedTitle;
-		}
-
 		ProblemExceptionTestUtil.assertProblemException(
-			detail, expectedStatus, expectedTitle, expectedType,
+			expectedDetail, expectedStatus, expectedTitle, expectedType,
 			() -> sitePageResource.putSiteSitePage(
 				testGroup.getExternalReferenceCode(),
 				sitePage.getExternalReferenceCode(), false, getSitePage));
@@ -2930,6 +2924,26 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 							RandomTestUtil.randomString())
 					},
 					testGroup.getGroupId(), PageSpecification.Status.DRAFT)));
+
+		ProblemExceptionTestUtil.assertProblemException(
+			"A page experience key is required", "BAD_REQUEST",
+			"A page experience key is required",
+			"page-experience-key-is-required",
+			() -> sitePageResource.postSiteSitePagePageSpecification(
+				testGroup.getExternalReferenceCode(),
+				layout.getExternalReferenceCode(),
+				PageSpecificationsTestUtil.getContentPageSpecification(
+					draftLayout.getExternalReferenceCode(), null, null,
+					new PageExperience[] {
+						PageExperiencesTestUtil.getPageExperience(
+							RandomTestUtil.randomString(),
+							SegmentsExperienceConstants.KEY_DEFAULT, 0,
+							RandomTestUtil.randomString()),
+						PageExperiencesTestUtil.getPageExperience(
+							RandomTestUtil.randomString(), null, 1,
+							RandomTestUtil.randomString())
+					},
+					testGroup.getGroupId(), PageSpecification.Status.DRAFT)));
 	}
 
 	private void _testPostSiteSitePageWithContentPageSpecification()
@@ -4118,8 +4132,8 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 		throws Exception {
 
 		_assertPutSiteSitePageWithPageExperiencesProblemException(
-			"CONFLICT", "A page experience with the same key already exists",
-			"A page experience with key DEFAULT already exists",
+			"A page experience with key DEFAULT already exists", "CONFLICT",
+			"A page experience with the same key already exists",
 			"page-experience-with-the-same-key-already-exists",
 			pageExperiences -> {
 				PageExperience defaultPageExperience =
@@ -4136,8 +4150,8 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 			});
 
 		_assertPutSiteSitePageWithPageExperiencesProblemException(
-			"BAD_REQUEST",
-			"The default page experience must have a priority of 0", null,
+			null, "BAD_REQUEST",
+			"The default page experience must have a priority of 0",
 			"default-page-experience-must-have-a-priority-of-0",
 			pageExperiences -> {
 				PageExperience defaultPageExperience =
@@ -4150,10 +4164,9 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 			});
 
 		_assertPutSiteSitePageWithPageExperiencesProblemException(
-			"BAD_REQUEST",
+			null, "BAD_REQUEST",
 			"The external reference code does not match the target page's " +
 				"experience external reference code",
-			null,
 			"external-reference-code-does-not-match-the-target-pages-" +
 				"experience-external-reference-code",
 			pageExperiences -> {
@@ -4168,8 +4181,8 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 			});
 
 		_assertPutSiteSitePageWithPageExperiencesProblemException(
-			"BAD_REQUEST",
-			"The default page experience cannot reference a segment", null,
+			null, "BAD_REQUEST",
+			"The default page experience cannot reference a segment",
 			"default-page-experience-cannot-reference-a-segment",
 			pageExperiences -> {
 				PageExperience defaultPageExperience =
