@@ -249,29 +249,19 @@ public class PageTemplateSetResourceTest
 			randomPageTemplateSet.getKey(), postPageTemplateSet.getKey());
 
 		_postSitePageTemplateSetWithInvalidKey(
-			postPageTemplateSet.getKey(),
-			StringBundler.concat(
-				"Duplicate page template set for group ",
-				testGroup.getGroupId(), " with key ",
-				postPageTemplateSet.getKey()));
+			postPageTemplateSet.getKey(), "CONFLICT",
+			"A page template set with the same key already exists");
 
-		String key =
+		_postSitePageTemplateSetWithInvalidKey(
 			RandomTestUtil.randomString() + StringPool.AMPERSAND +
-				RandomTestUtil.randomString();
+				RandomTestUtil.randomString(),
+			"BAD_REQUEST",
+			"The key must contain only alphanumeric characters, dashes, and " +
+				"underscores");
 
 		_postSitePageTemplateSetWithInvalidKey(
-			key,
-			StringBundler.concat(
-				"Key ", key,
-				" must contain only alphanumeric characters, dashes, and ",
-				"underscores"));
-
-		key = RandomTestUtil.randomString(80);
-
-		_postSitePageTemplateSetWithInvalidKey(
-			key,
-			StringBundler.concat(
-				"Key ", key, " must have fewer than 75 characters"));
+			RandomTestUtil.randomString(80), "BAD_REQUEST",
+			"The key is too long");
 
 		_testPostSitePageTemplateSetWithDuplicateName();
 	}
@@ -350,7 +340,7 @@ public class PageTemplateSetResourceTest
 	}
 
 	private void _postSitePageTemplateSetWithInvalidKey(
-			String key, String title)
+			String key, String status, String title)
 		throws Exception {
 
 		PageTemplateSet pageTemplateSet = randomPageTemplateSet();
@@ -358,7 +348,7 @@ public class PageTemplateSetResourceTest
 		pageTemplateSet.setKey(key);
 
 		ProblemExceptionTestUtil.assertProblemException(
-			"CONFLICT", title,
+			status, title,
 			() -> pageTemplateSetResource.postSitePageTemplateSet(
 				testGroup.getExternalReferenceCode(), pageTemplateSet));
 	}
