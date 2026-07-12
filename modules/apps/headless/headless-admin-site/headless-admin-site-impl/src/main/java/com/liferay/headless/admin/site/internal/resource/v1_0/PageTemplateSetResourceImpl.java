@@ -9,6 +9,7 @@ import com.liferay.exportimport.constants.ExportImportConstants;
 import com.liferay.exportimport.vulcan.batch.engine.ExportImportVulcanBatchEngineTaskItemDelegate;
 import com.liferay.headless.admin.site.dto.v1_0.PageTemplateSet;
 import com.liferay.headless.admin.site.internal.dto.v1_0.util.DTOConverterContextUtil;
+import com.liferay.headless.admin.site.internal.exception.NoSuchEntityException;
 import com.liferay.headless.admin.site.internal.odata.entity.v1_0.PageTemplateSetEntityModel;
 import com.liferay.headless.admin.site.internal.resource.v1_0.util.PageTemplateSetUtil;
 import com.liferay.headless.admin.site.internal.util.EnabledUtil;
@@ -63,10 +64,21 @@ public class PageTemplateSetResourceImpl
 
 		EnabledUtil.checkEnabled(contextCompany);
 
+		LayoutPageTemplateCollection layoutPageTemplateCollection =
+			_layoutPageTemplateCollectionService.
+				fetchLayoutPageTemplateCollection(
+					pageTemplateSetExternalReferenceCode,
+					GroupUtil.getStagingAwareGroupId(
+						contextCompany.getCompanyId(),
+						siteExternalReferenceCode));
+
+		if (layoutPageTemplateCollection == null) {
+			throw new NoSuchEntityException(
+				"page template set", pageTemplateSetExternalReferenceCode);
+		}
+
 		_layoutPageTemplateCollectionService.deleteLayoutPageTemplateCollection(
-			pageTemplateSetExternalReferenceCode,
-			GroupUtil.getStagingAwareGroupId(
-				contextCompany.getCompanyId(), siteExternalReferenceCode));
+			layoutPageTemplateCollection.getLayoutPageTemplateCollectionId());
 	}
 
 	@Override
@@ -137,13 +149,20 @@ public class PageTemplateSetResourceImpl
 
 		EnabledUtil.checkEnabled(contextCompany);
 
-		return _toPageTemplateSet(
+		LayoutPageTemplateCollection layoutPageTemplateCollection =
 			_layoutPageTemplateCollectionService.
-				getLayoutPageTemplateCollection(
+				fetchLayoutPageTemplateCollection(
 					pageTemplateSetExternalReferenceCode,
 					GroupUtil.getGroupId(
 						true, contextCompany.getCompanyId(),
-						siteExternalReferenceCode)));
+						siteExternalReferenceCode));
+
+		if (layoutPageTemplateCollection == null) {
+			throw new NoSuchEntityException(
+				"page template set", pageTemplateSetExternalReferenceCode);
+		}
+
+		return _toPageTemplateSet(layoutPageTemplateCollection);
 	}
 
 	@Override
@@ -237,9 +256,14 @@ public class PageTemplateSetResourceImpl
 
 		LayoutPageTemplateCollection layoutPageTemplateCollection =
 			_layoutPageTemplateCollectionService.
-				getLayoutPageTemplateCollection(
+				fetchLayoutPageTemplateCollection(
 					externalReferenceCode,
 					getPermissionCheckerGroupId(groupExternalReferenceCode));
+
+		if (layoutPageTemplateCollection == null) {
+			throw new NoSuchEntityException(
+				"page template set", externalReferenceCode);
+		}
 
 		return layoutPageTemplateCollection.getPrimaryKey();
 	}
