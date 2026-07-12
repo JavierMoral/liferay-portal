@@ -7649,7 +7649,7 @@ paths:
                                 $ref: "#/components/schemas/PageTemplateSet"
                 409:
                     description:
-                        "A page template set with the same name already exists."
+                        "A page template set with the same name or key already exists."
             # @review
             tags: ["PageTemplateSet"]
     "/sites/{siteExternalReferenceCode}/page-template-sets/{pageTemplateSetExternalReferenceCode}":
@@ -7758,6 +7758,9 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/PageTemplateSet"
+                409:
+                    description:
+                        "A page template set with the same name or key already exists."
             tags: ["PageTemplateSet"]
         put:
             # @review
@@ -7804,6 +7807,9 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/PageTemplateSet"
+                409:
+                    description:
+                        "A page template set with the same name or key already exists."
             tags: ["PageTemplateSet"]
     "/sites/{siteExternalReferenceCode}/page-template-sets/{pageTemplateSetExternalReferenceCode}/page-templates":
         get:
