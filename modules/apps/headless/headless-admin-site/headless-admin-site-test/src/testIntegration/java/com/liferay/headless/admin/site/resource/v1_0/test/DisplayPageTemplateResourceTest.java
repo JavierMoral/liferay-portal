@@ -1819,7 +1819,8 @@ public class DisplayPageTemplateResourceTest
 		displayPageTemplate5.setName(displayPageTemplate4.getName());
 
 		_assertPostSiteDisplayPageTemplateProblemException(
-			"CONFLICT", "A page template with the same name already exists",
+			"CONFLICT",
+			"A display page template with the same name already exists",
 			displayPageTemplate5);
 	}
 

@@ -400,6 +400,9 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 			_getWidgetPageTemplate(testGroup),
 			testGroup.getExternalReferenceCode());
 
+		_testPostSitePageTemplateWithInvalidKey();
+		_testPostSitePageTemplateWithInvalidName();
+		_testPostSitePageTemplateWithInvalidPageTemplateSet();
 		_testPostSitePageTemplateWithPageSpecifications();
 		_testPostSitePageTemplateWithPageTemplateSet();
 		_testPostSitePageTemplateWithThumbnail();
@@ -770,6 +773,16 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 						setType(() -> Type.CONTENT_PAGE_SPECIFICATION);
 					}
 				}));
+	}
+
+	private void _assertPostSitePageTemplateProblemException(
+			PageTemplate pageTemplate, String status, String title)
+		throws Exception {
+
+		ProblemExceptionTestUtil.assertProblemException(
+			status, title,
+			() -> pageTemplateResource.postSitePageTemplate(
+				testGroup.getExternalReferenceCode(), pageTemplate));
 	}
 
 	private void _assertStagingGroupPageTemplateThumbnail(
@@ -1852,6 +1865,115 @@ public class PageTemplateResourceTest extends BasePageTemplateResourceTestCase {
 		_layoutPageTemplateEntryLocalService.deleteLayoutPageTemplateEntry(
 			postPageTemplate.getExternalReferenceCode(),
 			testGroup.getGroupId());
+	}
+
+	private void _testPostSitePageTemplateWithInvalidKey() throws Exception {
+		ContentPageTemplate contentPageTemplate1 = _getContentPageTemplate(
+			testGroup);
+
+		contentPageTemplate1.setKey("invalid/key");
+
+		_assertPostSitePageTemplateProblemException(
+			contentPageTemplate1, "BAD_REQUEST",
+			"The key must contain only alphanumeric characters, dashes, and " +
+				"underscores");
+
+		ContentPageTemplate contentPageTemplate2 = _getContentPageTemplate(
+			testGroup);
+
+		contentPageTemplate2.setKey(RandomTestUtil.randomString(300));
+
+		_assertPostSitePageTemplateProblemException(
+			contentPageTemplate2, "BAD_REQUEST", "The key is too long");
+
+		PageTemplate pageTemplate = pageTemplateResource.postSitePageTemplate(
+			testGroup.getExternalReferenceCode(),
+			_getContentPageTemplate(testGroup));
+
+		ContentPageTemplate contentPageTemplate3 = _getContentPageTemplate(
+			testGroup);
+
+		contentPageTemplate3.setKey(pageTemplate.getKey());
+
+		_assertPostSitePageTemplateProblemException(
+			contentPageTemplate3, "CONFLICT",
+			"A page template with the same key already exists");
+	}
+
+	private void _testPostSitePageTemplateWithInvalidName() throws Exception {
+		ContentPageTemplate contentPageTemplate1 = _getContentPageTemplate(
+			testGroup);
+
+		contentPageTemplate1.setName((String)null);
+
+		_assertPostSitePageTemplateProblemException(
+			contentPageTemplate1, "BAD_REQUEST", "A name is required");
+
+		ContentPageTemplate contentPageTemplate2 = _getContentPageTemplate(
+			testGroup);
+
+		contentPageTemplate2.setName(RandomTestUtil.randomString(300));
+
+		_assertPostSitePageTemplateProblemException(
+			contentPageTemplate2, "BAD_REQUEST", "The name is too long");
+
+		ContentPageTemplate contentPageTemplate3 = _getContentPageTemplate(
+			testGroup);
+
+		contentPageTemplate3.setName("Invalid/Name");
+
+		_assertPostSitePageTemplateProblemException(
+			contentPageTemplate3, "BAD_REQUEST",
+			"The name contains an invalid character: \"/\"");
+
+		ContentPageTemplate contentPageTemplate4 = _getContentPageTemplate(
+			testGroup);
+
+		PageTemplate pageTemplate = pageTemplateResource.postSitePageTemplate(
+			testGroup.getExternalReferenceCode(), contentPageTemplate4);
+
+		ContentPageTemplate contentPageTemplate5 = _getContentPageTemplate(
+			testGroup);
+
+		contentPageTemplate5.setName(pageTemplate.getName());
+		contentPageTemplate5.setPageTemplateSet(
+			contentPageTemplate4.getPageTemplateSet());
+
+		_assertPostSitePageTemplateProblemException(
+			contentPageTemplate5, "CONFLICT",
+			"A page template with the same name already exists");
+	}
+
+	private void _testPostSitePageTemplateWithInvalidPageTemplateSet()
+		throws Exception {
+
+		LayoutPageTemplateCollection layoutPageTemplateCollection =
+			_layoutPageTemplateCollectionLocalService.
+				addLayoutPageTemplateCollection(
+					null, TestPropsValues.getUserId(), testGroup.getGroupId(),
+					LayoutPageTemplateConstants.
+						PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
+					null, RandomTestUtil.randomString(),
+					RandomTestUtil.randomString(),
+					LayoutPageTemplateCollectionTypeConstants.DISPLAY_PAGE,
+					ServiceContextTestUtil.getServiceContext(
+						testGroup, TestPropsValues.getUserId()));
+
+		ContentPageTemplate contentPageTemplate = _getContentPageTemplate(
+			testGroup);
+
+		contentPageTemplate.setPageTemplateSet(
+			new PageTemplateSet() {
+				{
+					setExternalReferenceCode(
+						layoutPageTemplateCollection.
+							getExternalReferenceCode());
+				}
+			});
+
+		_assertPostSitePageTemplateProblemException(
+			contentPageTemplate, "BAD_REQUEST",
+			"The page template set must be of type basic");
 	}
 
 	private void _testPostSitePageTemplateWithPageSpecifications()

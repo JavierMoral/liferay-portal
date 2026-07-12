@@ -382,6 +382,7 @@ public class MasterPageResourceTest extends BaseMasterPageResourceTestCase {
 		Assert.assertNull(postMasterPage.getThumbnailURLReference());
 
 		_testPostSiteMasterPageWithDropZonePageElement();
+		_testPostSiteMasterPageWithDuplicateName();
 		_testPostSiteMasterPageWithInvalidPageSpecifications();
 		_testPostSiteMasterPageWithPageSpecifications();
 		_testPostSiteMasterPageWithSiteTemplatePageSpecification();
@@ -1358,6 +1359,22 @@ public class MasterPageResourceTest extends BaseMasterPageResourceTestCase {
 			pageElements,
 			masterPageResource.postSiteMasterPage(
 				testGroup.getExternalReferenceCode(), masterPage));
+	}
+
+	private void _testPostSiteMasterPageWithDuplicateName() throws Exception {
+		MasterPage masterPage1 = randomMasterPage();
+
+		masterPageResource.postSiteMasterPage(
+			testGroup.getExternalReferenceCode(), masterPage1);
+
+		MasterPage masterPage2 = randomMasterPage();
+
+		masterPage2.setName(masterPage1.getName());
+
+		ProblemExceptionTestUtil.assertProblemException(
+			"CONFLICT", "A master page with the same name already exists",
+			() -> masterPageResource.postSiteMasterPage(
+				testGroup.getExternalReferenceCode(), masterPage2));
 	}
 
 	private void _testPostSiteMasterPageWithInvalidPageSpecifications()
