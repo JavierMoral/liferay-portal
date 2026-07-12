@@ -35,6 +35,7 @@ import com.liferay.headless.admin.site.resource.v1_0.test.util.LayoutPageTemplat
 import com.liferay.headless.admin.site.resource.v1_0.test.util.PageElementsTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.PageExperiencesTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.PageSpecificationsTestUtil;
+import com.liferay.headless.admin.site.resource.v1_0.test.util.ProblemExceptionTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.SettingsTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.ThumbnailHttpServer;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.ThumbnailURLReferenceUtil;
@@ -66,6 +67,7 @@ import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
@@ -201,8 +203,12 @@ public class DisplayPageTemplateResourceTest
 					postDisplayPageTemplate.getExternalReferenceCode(),
 					testGroup.getGroupId()));
 
-		_assertProblemException(
-			"NOT_FOUND", null,
+		ProblemExceptionTestUtil.assertProblemException(
+			"NOT_FOUND",
+			StringBundler.concat(
+				"No display page template exists with the external reference ",
+				"code \"", postDisplayPageTemplate.getExternalReferenceCode(),
+				"\""),
 			() -> displayPageTemplateResource.deleteSiteDisplayPageTemplate(
 				testGroup.getExternalReferenceCode(),
 				postDisplayPageTemplate.getExternalReferenceCode()));
@@ -214,8 +220,8 @@ public class DisplayPageTemplateResourceTest
 
 		_enableLocalStaging(irrelevantGroup);
 
-		_assertProblemException(
-			"BAD_REQUEST", null,
+		ProblemExceptionTestUtil.assertProblemException(
+			"BAD_REQUEST", "The site does not support this operation",
 			() -> displayPageTemplateResource.deleteSiteDisplayPageTemplate(
 				irrelevantGroup.getExternalReferenceCode(),
 				liveGroupDisplayPageTemplate.getExternalReferenceCode()));
@@ -253,11 +259,15 @@ public class DisplayPageTemplateResourceTest
 
 		_testGetSiteDisplayPageTemplateWithNestedFields(displayPageTemplate);
 
-		_assertProblemException(
-			"NOT_FOUND", null,
+		String externalReferenceCode = RandomTestUtil.randomString();
+
+		ProblemExceptionTestUtil.assertProblemException(
+			"NOT_FOUND",
+			StringBundler.concat(
+				"No display page template exists with the external reference ",
+				"code \"", externalReferenceCode, "\""),
 			() -> displayPageTemplateResource.getSiteDisplayPageTemplate(
-				testGroup.getExternalReferenceCode(),
-				RandomTestUtil.randomString()));
+				testGroup.getExternalReferenceCode(), externalReferenceCode));
 
 		_enableLocalStaging();
 
@@ -421,16 +431,21 @@ public class DisplayPageTemplateResourceTest
 		_testPatchSiteDisplayPageTemplateWithPageSpecifications();
 		_testPatchSiteDisplayPageTemplateWithThumbnail();
 
-		_assertProblemException(
-			"NOT_FOUND", null,
+		String externalReferenceCode = RandomTestUtil.randomString();
+
+		ProblemExceptionTestUtil.assertProblemException(
+			"NOT_FOUND",
+			StringBundler.concat(
+				"No display page template exists with the external reference ",
+				"code \"", externalReferenceCode, "\""),
 			() -> displayPageTemplateResource.patchSiteDisplayPageTemplate(
-				testGroup.getExternalReferenceCode(),
-				RandomTestUtil.randomString(), randomDisplayPageTemplate()));
+				testGroup.getExternalReferenceCode(), externalReferenceCode,
+				randomDisplayPageTemplate()));
 
 		_enableLocalStaging();
 
-		_assertProblemException(
-			"BAD_REQUEST", null,
+		ProblemExceptionTestUtil.assertProblemException(
+			"BAD_REQUEST", "The site does not support this operation",
 			() -> displayPageTemplateResource.patchSiteDisplayPageTemplate(
 				testGroup.getExternalReferenceCode(),
 				expectedDisplayPageTemplate.getExternalReferenceCode(),
@@ -443,6 +458,8 @@ public class DisplayPageTemplateResourceTest
 	public void testPostSiteDisplayPageTemplate() throws Exception {
 		super.testPostSiteDisplayPageTemplate();
 
+		_testPostSiteDisplayPageTemplateWithInvalidKey();
+		_testPostSiteDisplayPageTemplateWithInvalidName();
 		_testPostSiteDisplayPageTemplateWithKey();
 		_testPostSiteDisplayPageTemplateWithMarkedAsDefault();
 		_testPostSiteDisplayPageTemplateWithPageElementsWithTemplateEntries();
@@ -514,6 +531,24 @@ public class DisplayPageTemplateResourceTest
 				"type",
 			LayoutPageTemplateEntryTestUtil.getMasterLayoutPageTemplateEntry(
 				serviceContext, WorkflowConstants.STATUS_DRAFT));
+
+		String externalReferenceCode = RandomTestUtil.randomString();
+
+		ProblemExceptionTestUtil.assertProblemException(
+			"NOT_FOUND",
+			StringBundler.concat(
+				"No display page template exists with the external reference ",
+				"code \"", externalReferenceCode, "\""),
+			() ->
+				displayPageTemplateResource.
+					postSiteDisplayPageTemplatePageSpecification(
+						testGroup.getExternalReferenceCode(),
+						externalReferenceCode,
+						new ContentPageSpecification() {
+							{
+								setType(() -> Type.CONTENT_PAGE_SPECIFICATION);
+							}
+						}));
 	}
 
 	@Override
@@ -556,8 +591,8 @@ public class DisplayPageTemplateResourceTest
 		_assertStagingGroupDisplayPageTemplateThumbnail(
 			displayPageTemplate, fileEntry);
 
-		_assertProblemException(
-			"BAD_REQUEST", null,
+		ProblemExceptionTestUtil.assertProblemException(
+			"BAD_REQUEST", "The site does not support this operation",
 			() -> displayPageTemplateResource.putSiteDisplayPageTemplate(
 				testGroup.getExternalReferenceCode(),
 				displayPageTemplate.getExternalReferenceCode(),
@@ -705,7 +740,7 @@ public class DisplayPageTemplateResourceTest
 				LayoutPageTemplateEntry layoutPageTemplateEntry)
 		throws Exception {
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"BAD_REQUEST", expectedTitle,
 			() ->
 				displayPageTemplateResource.
@@ -719,22 +754,15 @@ public class DisplayPageTemplateResourceTest
 						}));
 	}
 
-	private void _assertProblemException(
+	private void _assertPostSiteDisplayPageTemplateProblemException(
 			String expectedStatus, String expectedTitle,
-			UnsafeRunnable<Exception> unsafeRunnable)
+			DisplayPageTemplate displayPageTemplate)
 		throws Exception {
 
-		try {
-			unsafeRunnable.run();
-
-			Assert.fail();
-		}
-		catch (Problem.ProblemException problemException) {
-			Problem problem = problemException.getProblem();
-
-			Assert.assertEquals(expectedStatus, problem.getStatus());
-			Assert.assertEquals(expectedTitle, problem.getTitle());
-		}
+		ProblemExceptionTestUtil.assertProblemException(
+			expectedStatus, expectedTitle,
+			() -> displayPageTemplateResource.postSiteDisplayPageTemplate(
+				testGroup.getExternalReferenceCode(), displayPageTemplate));
 	}
 
 	private void _assertStagingGroupDisplayPageTemplateThumbnail(
@@ -1721,6 +1749,80 @@ public class DisplayPageTemplateResourceTest
 		}
 	}
 
+	private void _testPostSiteDisplayPageTemplateWithInvalidKey()
+		throws Exception {
+
+		DisplayPageTemplate displayPageTemplate1 = randomDisplayPageTemplate();
+
+		displayPageTemplate1.setKey("invalid/key");
+
+		_assertPostSiteDisplayPageTemplateProblemException(
+			"BAD_REQUEST",
+			"The key must contain only alphanumeric characters, dashes, and " +
+				"underscores",
+			displayPageTemplate1);
+
+		DisplayPageTemplate displayPageTemplate2 = randomDisplayPageTemplate();
+
+		displayPageTemplate2.setKey(RandomTestUtil.randomString(300));
+
+		_assertPostSiteDisplayPageTemplateProblemException(
+			"BAD_REQUEST", "The key is too long", displayPageTemplate2);
+
+		DisplayPageTemplate displayPageTemplate3 = randomDisplayPageTemplate();
+
+		displayPageTemplateResource.postSiteDisplayPageTemplate(
+			testGroup.getExternalReferenceCode(), displayPageTemplate3);
+
+		DisplayPageTemplate displayPageTemplate4 = randomDisplayPageTemplate();
+
+		displayPageTemplate4.setKey(displayPageTemplate3.getKey());
+
+		_assertPostSiteDisplayPageTemplateProblemException(
+			"CONFLICT",
+			"A display page template with the same key already exists",
+			displayPageTemplate4);
+	}
+
+	private void _testPostSiteDisplayPageTemplateWithInvalidName()
+		throws Exception {
+
+		DisplayPageTemplate displayPageTemplate1 = randomDisplayPageTemplate();
+
+		displayPageTemplate1.setName((String)null);
+
+		_assertPostSiteDisplayPageTemplateProblemException(
+			"BAD_REQUEST", "A name is required", displayPageTemplate1);
+
+		DisplayPageTemplate displayPageTemplate2 = randomDisplayPageTemplate();
+
+		displayPageTemplate2.setName(RandomTestUtil.randomString(300));
+
+		_assertPostSiteDisplayPageTemplateProblemException(
+			"BAD_REQUEST", "The name is too long", displayPageTemplate2);
+
+		DisplayPageTemplate displayPageTemplate3 = randomDisplayPageTemplate();
+
+		displayPageTemplate3.setName("Invalid/Name");
+
+		_assertPostSiteDisplayPageTemplateProblemException(
+			"BAD_REQUEST", "The name contains an invalid character: \"/\"",
+			displayPageTemplate3);
+
+		DisplayPageTemplate displayPageTemplate4 = randomDisplayPageTemplate();
+
+		displayPageTemplateResource.postSiteDisplayPageTemplate(
+			testGroup.getExternalReferenceCode(), displayPageTemplate4);
+
+		DisplayPageTemplate displayPageTemplate5 = randomDisplayPageTemplate();
+
+		displayPageTemplate5.setName(displayPageTemplate4.getName());
+
+		_assertPostSiteDisplayPageTemplateProblemException(
+			"CONFLICT", "A page template with the same name already exists",
+			displayPageTemplate5);
+	}
+
 	private void _testPostSiteDisplayPageTemplateWithKey() throws Exception {
 		DisplayPageTemplate displayPageTemplate = randomDisplayPageTemplate();
 
@@ -1783,9 +1885,9 @@ public class DisplayPageTemplateResourceTest
 
 		Assert.assertTrue(postDisplayPageTemplate.getMarkedAsDefault());
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"CONFLICT",
-			"The default display page template must be published first.",
+			"The default display page template must be published first",
 			() -> displayPageTemplateResource.postSiteDisplayPageTemplate(
 				testGroup.getExternalReferenceCode(),
 				_randomDisplayPageTemplate(Boolean.TRUE)));
