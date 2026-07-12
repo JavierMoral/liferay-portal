@@ -77,6 +77,15 @@ public class PageTemplateSetResourceTest
 					pageTemplateSet.getExternalReferenceCode(),
 					testGroup.getGroupId()));
 
+		ProblemExceptionTestUtil.assertProblemException(
+			"NOT_FOUND",
+			StringBundler.concat(
+				"No page template set exists with the external reference code ",
+				"\"", pageTemplateSet.getExternalReferenceCode(), "\""),
+			() -> pageTemplateSetResource.deleteSitePageTemplateSet(
+				testGroup.getExternalReferenceCode(),
+				pageTemplateSet.getExternalReferenceCode()));
+
 		PageTemplateSet liveGroupPageTemplateSet =
 			testGetSitePageTemplateSetsPage_addPageTemplateSet(
 				irrelevantGroup.getExternalReferenceCode(),
@@ -219,6 +228,17 @@ public class PageTemplateSetResourceTest
 		assertEquals(pageTemplateSet, patchPageTemplateSet);
 		assertValid(patchPageTemplateSet);
 
+		String externalReferenceCode = RandomTestUtil.randomString();
+
+		ProblemExceptionTestUtil.assertProblemException(
+			"NOT_FOUND",
+			StringBundler.concat(
+				"No page template set exists with the external reference code ",
+				"\"", externalReferenceCode, "\""),
+			() -> pageTemplateSetResource.patchSitePageTemplateSet(
+				testGroup.getExternalReferenceCode(), externalReferenceCode,
+				randomPageTemplateSet()));
+
 		_enableLocalStaging();
 
 		ProblemExceptionTestUtil.assertProblemException(
@@ -262,6 +282,10 @@ public class PageTemplateSetResourceTest
 		_postSitePageTemplateSetWithInvalidKey(
 			RandomTestUtil.randomString(80), "BAD_REQUEST",
 			"The key is too long");
+
+		_postSitePageTemplateSetWithInvalidName(null, "A name is required");
+		_postSitePageTemplateSetWithInvalidName(
+			RandomTestUtil.randomString(300), "The name is too long");
 
 		_testPostSitePageTemplateSetWithDuplicateName();
 	}
@@ -349,6 +373,20 @@ public class PageTemplateSetResourceTest
 
 		ProblemExceptionTestUtil.assertProblemException(
 			status, title,
+			() -> pageTemplateSetResource.postSitePageTemplateSet(
+				testGroup.getExternalReferenceCode(), pageTemplateSet));
+	}
+
+	private void _postSitePageTemplateSetWithInvalidName(
+			String name, String title)
+		throws Exception {
+
+		PageTemplateSet pageTemplateSet = randomPageTemplateSet();
+
+		pageTemplateSet.setName(name);
+
+		ProblemExceptionTestUtil.assertProblemException(
+			"BAD_REQUEST", title,
 			() -> pageTemplateSetResource.postSitePageTemplateSet(
 				testGroup.getExternalReferenceCode(), pageTemplateSet));
 	}
