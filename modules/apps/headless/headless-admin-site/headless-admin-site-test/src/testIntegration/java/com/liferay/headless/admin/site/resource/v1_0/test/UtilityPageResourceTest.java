@@ -346,6 +346,7 @@ public class UtilityPageResourceTest extends BaseUtilityPageResourceTestCase {
 	public void testPostSiteUtilityPage() throws Exception {
 		super.testPostSiteUtilityPage();
 
+		_testPostSiteUtilityPageWithInvalidName();
 		_testPostSiteUtilityPageWithPageSpecifications();
 		_testPostSiteUtilityPageWithThumbnailURLReferenceExternalReferenceCodeAndFileBase64();
 		_testPostSiteUtilityPageWithThumbnailURLReferenceExternalReferenceCodeEmptyAndFileBase64();
@@ -357,6 +358,7 @@ public class UtilityPageResourceTest extends BaseUtilityPageResourceTestCase {
 		_testPostSiteUtilityPageWithThumbnailURLReferenceURL();
 		_testPostSiteUtilityPageWithThumbnailURLReferenceURLUnreachableProblemException();
 		_testPostSiteUtilityPageWithThumbnailURLReferenceURLUnsupportedProtocolProblemException();
+		_testPostSiteUtilityPageWithUnsupportedType();
 	}
 
 	@Override
@@ -580,6 +582,16 @@ public class UtilityPageResourceTest extends BaseUtilityPageResourceTestCase {
 		PageSpecificationsTestUtil.assertPageSpecifications(
 			draftContentPageSpecification, publishedContentPageSpecification,
 			utilityPage.getPageSpecifications(), layout, status);
+	}
+
+	private void _assertPostSiteUtilityPageProblemException(
+			UtilityPage utilityPage, String status, String title)
+		throws Exception {
+
+		ProblemExceptionTestUtil.assertProblemException(
+			status, title,
+			() -> utilityPageResource.postSiteUtilityPage(
+				testGroup.getExternalReferenceCode(), utilityPage));
 	}
 
 	private void _assertThumbnailFileEntryId(
@@ -1070,6 +1082,41 @@ public class UtilityPageResourceTest extends BaseUtilityPageResourceTestCase {
 		}
 	}
 
+	private void _testPostSiteUtilityPageWithInvalidName() throws Exception {
+		UtilityPage utilityPage1 = randomUtilityPage();
+
+		utilityPage1.setName((String)null);
+
+		_assertPostSiteUtilityPageProblemException(
+			utilityPage1, "BAD_REQUEST", "A name is required");
+
+		UtilityPage utilityPage2 = randomUtilityPage();
+
+		utilityPage2.setName(RandomTestUtil.randomString(300));
+
+		_assertPostSiteUtilityPageProblemException(
+			utilityPage2, "BAD_REQUEST", "The name is too long");
+
+		UtilityPage utilityPage3 = randomUtilityPage();
+
+		utilityPage3.setName("Invalid/Name");
+
+		_assertPostSiteUtilityPageProblemException(
+			utilityPage3, "BAD_REQUEST",
+			"The name contains an invalid character: \"/\"");
+
+		UtilityPage utilityPage4 = utilityPageResource.postSiteUtilityPage(
+			testGroup.getExternalReferenceCode(), randomUtilityPage());
+
+		UtilityPage utilityPage5 = randomUtilityPage();
+
+		utilityPage5.setName(utilityPage4.getName());
+
+		_assertPostSiteUtilityPageProblemException(
+			utilityPage5, "CONFLICT",
+			"A utility page with the same name already exists");
+	}
+
 	private void _testPostSiteUtilityPageWithPageSpecifications()
 		throws Exception {
 
@@ -1261,6 +1308,18 @@ public class UtilityPageResourceTest extends BaseUtilityPageResourceTestCase {
 			"Unable to download file from " + url +
 				" because of unsupported protocol ftp",
 			RandomTestUtil.randomString(), url);
+	}
+
+	private void _testPostSiteUtilityPageWithUnsupportedType()
+		throws Exception {
+
+		UtilityPage utilityPage = randomUtilityPage();
+
+		utilityPage.setType(UtilityPage.Type.ERROR_CODE503);
+
+		_assertPostSiteUtilityPageProblemException(
+			utilityPage, "BAD_REQUEST",
+			"The page type does not match the expected utility page type");
 	}
 
 	private void _testPostUtilityPageThumbnailURLReferenceProblemException(
