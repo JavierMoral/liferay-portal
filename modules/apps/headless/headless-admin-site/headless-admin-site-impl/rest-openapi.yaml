@@ -5270,6 +5270,9 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/DisplayPageTemplateFolder"
+                409:
+                    description:
+                        "A display page template folder with the same name or key already exists."
             # @review
             tags: ["DisplayPageTemplateFolder"]
     "/sites/{siteExternalReferenceCode}/display-page-template-folders/{displayPageTemplateFolderExternalReferenceCode}":
@@ -5378,6 +5381,9 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/DisplayPageTemplateFolder"
+                409:
+                    description:
+                        "A display page template folder with the same name or key already exists."
             tags: ["DisplayPageTemplateFolder"]
         put:
             # @review
@@ -5424,6 +5430,9 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/DisplayPageTemplateFolder"
+                409:
+                    description:
+                        "A display page template folder with the same name or key already exists."
             tags: ["DisplayPageTemplateFolder"]
     "/sites/{siteExternalReferenceCode}/display-page-template-folders/{displayPageTemplateFolderExternalReferenceCode}/display-page-templates":
         get:
