@@ -7,7 +7,7 @@ package com.liferay.headless.admin.site.internal.vulcan.problem;
 
 import com.liferay.portal.vulcan.problem.Problem;
 import com.liferay.portal.vulcan.problem.ProblemMapper;
-import com.liferay.segments.exception.DefaultSegmentsExperienceSegmentException;
+import com.liferay.segments.exception.DefaultSegmentsExperiencePriorityException;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -15,18 +15,18 @@ import org.osgi.service.component.annotations.Component;
  * @author Javier Moral
  */
 @Component(service = ProblemMapper.class)
-public class DefaultSegmentsExperienceSegmentExceptionProblemMapper
-	implements ProblemMapper<DefaultSegmentsExperienceSegmentException> {
+public class DefaultSegmentsExperiencePriorityExceptionProblemMapper
+	implements ProblemMapper<DefaultSegmentsExperiencePriorityException> {
 
 	@Override
 	public Problem getProblem(
-		DefaultSegmentsExperienceSegmentException
-			defaultSegmentsExperienceSegmentException) {
+		DefaultSegmentsExperiencePriorityException
+			defaultSegmentsExperiencePriorityException) {
 
 		return ProblemUtil.getProblem(
-			"The default page experience cannot reference a segment",
+			"Only the default page experience can have a priority of 0",
 			Problem.Status.BAD_REQUEST,
-			defaultSegmentsExperienceSegmentException);
+			defaultSegmentsExperiencePriorityException);
 	}
 
 }

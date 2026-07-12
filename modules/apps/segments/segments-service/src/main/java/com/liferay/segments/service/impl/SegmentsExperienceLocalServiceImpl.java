@@ -30,6 +30,8 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.segments.constants.SegmentsExperienceConstants;
+import com.liferay.segments.exception.DefaultSegmentsExperienceKeyException;
+import com.liferay.segments.exception.DefaultSegmentsExperiencePriorityException;
 import com.liferay.segments.exception.DefaultSegmentsExperienceSegmentException;
 import com.liferay.segments.exception.DuplicateSegmentsExperienceKeyException;
 import com.liferay.segments.exception.LockedSegmentsExperimentException;
@@ -131,8 +133,8 @@ public class SegmentsExperienceLocalServiceImpl
 		_validateDefaultSegmentsEntry(segmentsEntryERC, segmentsExperienceKey);
 		_validateLayout(plid, segmentsExperienceKey);
 		_validateName(nameMap);
-		_validatePriority(groupId, plid, priority);
 		_validateSegmentsExperienceKey(groupId, plid, segmentsExperienceKey);
+		_validatePriority(groupId, plid, priority);
 
 		long segmentsExperienceId = counterLocalService.increment();
 
@@ -572,15 +574,9 @@ public class SegmentsExperienceLocalServiceImpl
 
 		_checkUnlockedLayout(segmentsExperience.getPlid(), userId);
 
-		boolean swap = true;
-
-		if ((newPriority == 0) && (segmentsExperience.getPriority() > 0)) {
-			newPriority = -1;
-			swap = false;
-		}
-		else if ((newPriority == 0) && (segmentsExperience.getPriority() < 0)) {
-			newPriority = 1;
-			swap = false;
+		if ((newPriority == 0) && !segmentsExperience.isDefault()) {
+			throw new DefaultSegmentsExperiencePriorityException(
+				"Only the default segments experience can have priority 0");
 		}
 
 		SegmentsExperience swapSegmentsExperience =
@@ -608,12 +604,10 @@ public class SegmentsExperienceLocalServiceImpl
 			segmentsExperiencePersistence.findByPrimaryKey(
 				segmentsExperience.getSegmentsExperienceId()));
 
-		if (swap) {
-			_updateSegmentsExperiencePriorityAndFlush(
-				oldPriority,
-				segmentsExperiencePersistence.findByPrimaryKey(
-					swapSegmentsExperience.getSegmentsExperienceId()));
-		}
+		_updateSegmentsExperiencePriorityAndFlush(
+			oldPriority,
+			segmentsExperiencePersistence.findByPrimaryKey(
+				swapSegmentsExperience.getSegmentsExperienceId()));
 
 		_compactSegmentsExperiencesPriorities(segmentsExperience);
 
@@ -817,11 +811,18 @@ public class SegmentsExperienceLocalServiceImpl
 		SegmentsExperience segmentsExperience =
 			segmentsExperiencePersistence.fetchByG_P_P(groupId, plid, priority);
 
-		if (segmentsExperience != null) {
-			throw new SegmentsExperiencePriorityException(
-				"A segments experience with the priority " + priority +
-					" already exists");
+		if (segmentsExperience == null) {
+			return;
 		}
+
+		if (priority == 0) {
+			throw new DefaultSegmentsExperiencePriorityException(
+				"Only the default segments experience can have priority 0");
+		}
+
+		throw new SegmentsExperiencePriorityException(
+			"A segments experience with the priority " + priority +
+				" already exists");
 	}
 
 	private void _validateSegmentsExperienceKey(
@@ -832,10 +833,20 @@ public class SegmentsExperienceLocalServiceImpl
 			segmentsExperiencePersistence.fetchByG_SEK_P(
 				groupId, segmentsExperienceKey, plid);
 
-		if (segmentsExperience != null) {
-			throw new DuplicateSegmentsExperienceKeyException(
-				segmentsExperienceKey);
+		if (segmentsExperience == null) {
+			return;
 		}
+
+		if (SegmentsExperienceConstants.KEY_DEFAULT.equals(
+				segmentsExperienceKey)) {
+
+			throw new DefaultSegmentsExperienceKeyException(
+				"Only the default segments experience can use the key \"" +
+					SegmentsExperienceConstants.KEY_DEFAULT + "\"");
+		}
+
+		throw new DuplicateSegmentsExperienceKeyException(
+			segmentsExperienceKey);
 	}
 
 	@Reference
