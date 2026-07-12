@@ -8,6 +8,7 @@ package com.liferay.headless.admin.site.internal.resource.v1_0;
 import com.liferay.exportimport.constants.ExportImportConstants;
 import com.liferay.exportimport.vulcan.batch.engine.ExportImportVulcanBatchEngineTaskItemDelegate;
 import com.liferay.headless.admin.site.dto.v1_0.DisplayPageTemplateFolder;
+import com.liferay.headless.admin.site.internal.exception.NoSuchEntityException;
 import com.liferay.headless.admin.site.internal.odata.entity.v1_0.DisplayPageTemplateFolderEntityModel;
 import com.liferay.headless.admin.site.internal.resource.v1_0.util.DisplayPageTemplateFolderUtil;
 import com.liferay.headless.admin.site.internal.util.EnabledUtil;
@@ -65,10 +66,22 @@ public class DisplayPageTemplateFolderResourceImpl
 
 		EnabledUtil.checkEnabled(contextCompany);
 
+		LayoutPageTemplateCollection layoutPageTemplateCollection =
+			_layoutPageTemplateCollectionService.
+				fetchLayoutPageTemplateCollection(
+					displayPageTemplateFolderExternalReferenceCode,
+					GroupUtil.getStagingAwareGroupId(
+						contextCompany.getCompanyId(),
+						siteExternalReferenceCode));
+
+		if (layoutPageTemplateCollection == null) {
+			throw new NoSuchEntityException(
+				"display page template folder",
+				displayPageTemplateFolderExternalReferenceCode);
+		}
+
 		_layoutPageTemplateCollectionService.deleteLayoutPageTemplateCollection(
-			displayPageTemplateFolderExternalReferenceCode,
-			GroupUtil.getStagingAwareGroupId(
-				contextCompany.getCompanyId(), siteExternalReferenceCode));
+			layoutPageTemplateCollection.getLayoutPageTemplateCollectionId());
 	}
 
 	@Override
@@ -138,13 +151,21 @@ public class DisplayPageTemplateFolderResourceImpl
 
 		EnabledUtil.checkEnabled(contextCompany);
 
-		return _toDisplayPageTemplateFolder(
+		LayoutPageTemplateCollection layoutPageTemplateCollection =
 			_layoutPageTemplateCollectionService.
-				getLayoutPageTemplateCollection(
+				fetchLayoutPageTemplateCollection(
 					displayPageTemplateFolderExternalReferenceCode,
 					GroupUtil.getGroupId(
 						true, contextCompany.getCompanyId(),
-						siteExternalReferenceCode)));
+						siteExternalReferenceCode));
+
+		if (layoutPageTemplateCollection == null) {
+			throw new NoSuchEntityException(
+				"display page template folder",
+				displayPageTemplateFolderExternalReferenceCode);
+		}
+
+		return _toDisplayPageTemplateFolder(layoutPageTemplateCollection);
 	}
 
 	@Override
@@ -240,15 +261,13 @@ public class DisplayPageTemplateFolderResourceImpl
 						parentLayoutPageTemplateCollectionId);
 		}
 
-		layoutPageTemplateCollection =
+		return _toDisplayPageTemplateFolder(
 			_layoutPageTemplateCollectionService.
 				updateLayoutPageTemplateCollection(
 					layoutPageTemplateCollection.
 						getLayoutPageTemplateCollectionId(),
 					displayPageTemplateFolder.getName(),
-					displayPageTemplateFolder.getDescription());
-
-		return _toDisplayPageTemplateFolder(layoutPageTemplateCollection);
+					displayPageTemplateFolder.getDescription()));
 	}
 
 	@Override
@@ -258,9 +277,14 @@ public class DisplayPageTemplateFolderResourceImpl
 
 		LayoutPageTemplateCollection layoutPageTemplateCollection =
 			_layoutPageTemplateCollectionService.
-				getLayoutPageTemplateCollection(
+				fetchLayoutPageTemplateCollection(
 					externalReferenceCode,
 					getPermissionCheckerGroupId(groupExternalReferenceCode));
+
+		if (layoutPageTemplateCollection == null) {
+			throw new NoSuchEntityException(
+				"display page template folder", externalReferenceCode);
+		}
 
 		return layoutPageTemplateCollection.getPrimaryKey();
 	}

@@ -5,6 +5,7 @@
 
 package com.liferay.layout.page.template.exception;
 
+import com.liferay.layout.page.template.constants.LayoutPageTemplateCollectionTypeConstants;
 import com.liferay.portal.kernel.exception.PortalException;
 
 /**
@@ -21,6 +22,14 @@ public class DuplicateLayoutPageTemplateCollectionException
 	}
 
 	public DuplicateLayoutPageTemplateCollectionException(
+		String msg, int type) {
+
+		super(msg);
+
+		_type = type;
+	}
+
+	public DuplicateLayoutPageTemplateCollectionException(
 		String msg, Throwable throwable) {
 
 		super(msg, throwable);
@@ -29,5 +38,11 @@ public class DuplicateLayoutPageTemplateCollectionException
 	public DuplicateLayoutPageTemplateCollectionException(Throwable throwable) {
 		super(throwable);
 	}
+
+	public int getType() {
+		return _type;
+	}
+
+	private int _type = LayoutPageTemplateCollectionTypeConstants.BASIC;
 
 }

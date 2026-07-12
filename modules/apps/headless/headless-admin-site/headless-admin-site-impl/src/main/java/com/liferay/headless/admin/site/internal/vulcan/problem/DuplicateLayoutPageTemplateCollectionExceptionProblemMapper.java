@@ -5,6 +5,7 @@
 
 package com.liferay.headless.admin.site.internal.vulcan.problem;
 
+import com.liferay.layout.page.template.constants.LayoutPageTemplateCollectionTypeConstants;
 import com.liferay.layout.page.template.exception.DuplicateLayoutPageTemplateCollectionException;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.util.Validator;
@@ -17,13 +18,23 @@ import org.osgi.service.component.annotations.Component;
  * @author Javier Moral
  */
 @Component(service = ProblemMapper.class)
-public class PageTemplateSetExceptionProblemMapper
+public class DuplicateLayoutPageTemplateCollectionExceptionProblemMapper
 	implements ProblemMapper<DuplicateLayoutPageTemplateCollectionException> {
 
 	@Override
 	public Problem getProblem(
 		DuplicateLayoutPageTemplateCollectionException
 			duplicateLayoutPageTemplateCollectionException) {
+
+		if (duplicateLayoutPageTemplateCollectionException.getType() ==
+				LayoutPageTemplateCollectionTypeConstants.DISPLAY_PAGE) {
+
+			return ProblemUtil.getProblem(
+				"A display page template folder with the same name already " +
+					"exists",
+				Problem.Status.CONFLICT,
+				duplicateLayoutPageTemplateCollectionException);
+		}
 
 		String name =
 			duplicateLayoutPageTemplateCollectionException.getMessage();

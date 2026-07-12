@@ -538,7 +538,8 @@ public class LayoutPageTemplateCollectionLocalServiceImpl
 				groupId, parentLayoutPageTemplateCollection, name, type);
 
 		if (layoutPageTemplateCollection != null) {
-			throw new DuplicateLayoutPageTemplateCollectionException(name);
+			throw new DuplicateLayoutPageTemplateCollectionException(
+				name, type);
 		}
 	}
 
