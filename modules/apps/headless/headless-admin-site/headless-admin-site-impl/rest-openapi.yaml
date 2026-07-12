@@ -9494,6 +9494,9 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/UtilityPage"
+                409:
+                    description:
+                        "A utility page with the same name already exists."
             # @review
             tags: ["UtilityPage"]
     "/sites/{siteExternalReferenceCode}/utility-pages/{utilityPageExternalReferenceCode}":
@@ -9602,6 +9605,9 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/UtilityPage"
+                409:
+                    description:
+                        "A utility page with the same name already exists, or the default utility page must be published first."
             tags: ["UtilityPage"]
         put:
             # @review
@@ -9650,7 +9656,7 @@ paths:
                                 $ref: "#/components/schemas/UtilityPage"
                 409:
                     description:
-                        "The default utility page must be published first."
+                        "A utility page with the same name already exists, or the default utility page must be published first."
             tags: ["UtilityPage"]
     "/sites/{siteExternalReferenceCode}/utility-pages/{utilityPageExternalReferenceCode}/friendly-url-history":
         get:
