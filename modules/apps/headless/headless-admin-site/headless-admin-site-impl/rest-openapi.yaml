@@ -7904,6 +7904,9 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/PageTemplate"
+                409:
+                    description:
+                        "A page template with the same name or key already exists."
             # @review
             tags: ["PageTemplate"]
     "/sites/{siteExternalReferenceCode}/page-template-sets/{pageTemplateSetExternalReferenceCode}/permissions":
@@ -8053,6 +8056,9 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/PageTemplate"
+                409:
+                    description:
+                        "A page template with the same name or key already exists."
             # @review
             tags: ["PageTemplate"]
     "/sites/{siteExternalReferenceCode}/page-templates/{pageTemplateExternalReferenceCode}":
@@ -8161,6 +8167,9 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/PageTemplate"
+                409:
+                    description:
+                        "A page template with the same name or key already exists."
             tags: ["PageTemplate"]
         put:
             # @review
@@ -8207,6 +8216,9 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/PageTemplate"
+                409:
+                    description:
+                        "A page template with the same name or key already exists."
             tags: ["PageTemplate"]
     "/sites/{siteExternalReferenceCode}/page-templates/{pageTemplateExternalReferenceCode}/page-specifications":
         get:
