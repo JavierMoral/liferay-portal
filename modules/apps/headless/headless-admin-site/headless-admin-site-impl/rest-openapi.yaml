@@ -8780,6 +8780,9 @@ paths:
                                 items:
                                     $ref: "#/components/schemas/WidgetPageWidgetInstance"
                                 type: array
+                404:
+                    description:
+                        "The requested site page could not be found."
             # @review
             tags: ["WidgetPageWidgetInstance"]
         post:
@@ -8827,6 +8830,9 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/WidgetPageWidgetInstance"
+                404:
+                    description:
+                        "The requested site page could not be found."
             # @review
             tags: ["WidgetPageWidgetInstance"]
     "/sites/{siteExternalReferenceCode}/site-pages/{sitePageExternalReferenceCode}/widget-instances/{widgetInstanceExternalReferenceCode}":
@@ -8856,6 +8862,9 @@ paths:
                     content:
                         application/json: {}
                         application/xml: {}
+                404:
+                    description:
+                        "The requested site page or widget instance could not be found."
             tags: ["WidgetPageWidgetInstance"]
         get:
             # @review
@@ -8899,6 +8908,9 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/WidgetPageWidgetInstance"
+                404:
+                    description:
+                        "The requested site page or widget instance could not be found."
             tags: ["WidgetPageWidgetInstance"]
         patch:
             # @review
@@ -8950,6 +8962,9 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/WidgetPageWidgetInstance"
+                404:
+                    description:
+                        "The requested site page or widget instance could not be found."
             tags: ["WidgetPageWidgetInstance"]
         put:
             # @review
@@ -9001,6 +9016,9 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/WidgetPageWidgetInstance"
+                404:
+                    description:
+                        "The requested site page could not be found."
             tags: ["WidgetPageWidgetInstance"]
     "/sites/{siteExternalReferenceCode}/style-books":
         get:
