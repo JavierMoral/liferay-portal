@@ -14,6 +14,7 @@ import com.liferay.headless.admin.site.dto.v1_0.MasterPage;
 import com.liferay.headless.admin.site.dto.v1_0.PageSpecification;
 import com.liferay.headless.admin.site.dto.v1_0.util.FileEntryUtil;
 import com.liferay.headless.admin.site.internal.dto.v1_0.util.DTOConverterContextUtil;
+import com.liferay.headless.admin.site.internal.exception.NoSuchEntityException;
 import com.liferay.headless.admin.site.internal.odata.entity.v1_0.MasterPageEntityModel;
 import com.liferay.headless.admin.site.internal.resource.v1_0.util.LayoutUtil;
 import com.liferay.headless.admin.site.internal.resource.v1_0.util.PageSpecificationUtil;
@@ -84,10 +85,21 @@ public class MasterPageResourceImpl
 
 		EnabledUtil.checkEnabled(contextCompany);
 
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_layoutPageTemplateEntryService.
+				fetchLayoutPageTemplateEntryByExternalReferenceCode(
+					masterPageExternalReferenceCode,
+					GroupUtil.getStagingAwareGroupId(
+						contextCompany.getCompanyId(),
+						siteExternalReferenceCode));
+
+		if (layoutPageTemplateEntry == null) {
+			throw new NoSuchEntityException(
+				"master page", masterPageExternalReferenceCode);
+		}
+
 		_layoutPageTemplateEntryService.deleteLayoutPageTemplateEntry(
-			masterPageExternalReferenceCode,
-			GroupUtil.getStagingAwareGroupId(
-				contextCompany.getCompanyId(), siteExternalReferenceCode));
+			layoutPageTemplateEntry.getLayoutPageTemplateEntryId());
 	}
 
 	@Override
@@ -171,6 +183,11 @@ public class MasterPageResourceImpl
 						contextCompany.getCompanyId(),
 						siteExternalReferenceCode));
 
+		if (layoutPageTemplateEntry == null) {
+			throw new NoSuchEntityException(
+				"master page", pageTemplateExternalReferenceCode);
+		}
+
 		if (!Objects.equals(
 				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT,
 				layoutPageTemplateEntry.getType())) {
@@ -204,11 +221,16 @@ public class MasterPageResourceImpl
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryService.
-				getLayoutPageTemplateEntryByExternalReferenceCode(
+				fetchLayoutPageTemplateEntryByExternalReferenceCode(
 					masterPageExternalReferenceCode,
 					GroupUtil.getGroupId(
 						true, contextCompany.getCompanyId(),
 						siteExternalReferenceCode));
+
+		if (layoutPageTemplateEntry == null) {
+			throw new NoSuchEntityException(
+				"master page", masterPageExternalReferenceCode);
+		}
 
 		if (!Objects.equals(
 				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT,
@@ -373,9 +395,14 @@ public class MasterPageResourceImpl
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryService.
-				getLayoutPageTemplateEntryByExternalReferenceCode(
+				fetchLayoutPageTemplateEntryByExternalReferenceCode(
 					externalReferenceCode,
 					getPermissionCheckerGroupId(groupExternalReferenceCode));
+
+		if (layoutPageTemplateEntry == null) {
+			throw new NoSuchEntityException(
+				"master page", externalReferenceCode);
+		}
 
 		return layoutPageTemplateEntry.getPrimaryKey();
 	}
