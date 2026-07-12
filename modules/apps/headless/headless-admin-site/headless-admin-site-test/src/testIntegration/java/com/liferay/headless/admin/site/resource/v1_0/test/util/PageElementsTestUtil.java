@@ -39,7 +39,12 @@ import com.liferay.headless.admin.site.client.dto.v1_0.ContainerPageElementDefin
 import com.liferay.headless.admin.site.client.dto.v1_0.ContentPageSpecification;
 import com.liferay.headless.admin.site.client.dto.v1_0.DefaultFragmentReference;
 import com.liferay.headless.admin.site.client.dto.v1_0.DropZonePageElementDefinition;
+import com.liferay.headless.admin.site.client.dto.v1_0.FormContainerClassSubtypeReference;
+import com.liferay.headless.admin.site.client.dto.v1_0.FormContainerConfig;
 import com.liferay.headless.admin.site.client.dto.v1_0.FormContainerPageElementDefinition;
+import com.liferay.headless.admin.site.client.dto.v1_0.FormContainerReference;
+import com.liferay.headless.admin.site.client.dto.v1_0.FormFragmentInstancePageElementDefinition;
+import com.liferay.headless.admin.site.client.dto.v1_0.FormRelationshipPageElementDefinition;
 import com.liferay.headless.admin.site.client.dto.v1_0.FormStepContainerPageElementDefinition;
 import com.liferay.headless.admin.site.client.dto.v1_0.FormStepPageElementDefinition;
 import com.liferay.headless.admin.site.client.dto.v1_0.FragmentDropZonePageElementDefinition;
@@ -435,6 +440,163 @@ public class PageElementsTestUtil {
 			externalReferenceCode, dropZonePageElementDefinition);
 	}
 
+	public static PageElement getDuplicateFragmentInstancePageElement(
+		long scopeGroupId) {
+
+		FragmentEntry fragmentEntry =
+			FragmentCollectionContributorRegistryUtil.getFragmentEntry(
+				"BASIC_COMPONENT-heading");
+
+		String fragmentInstanceExternalReferenceCode =
+			RandomTestUtil.randomString();
+
+		return _getPageElement(
+			RandomTestUtil.randomString(),
+			getPageElementDefinition(
+				PageElementDefinition.Type.CONTAINER, scopeGroupId),
+			new PageElement[] {
+				_getPageElement(
+					RandomTestUtil.randomString(),
+					getBasicFragmentInstancePageElementDefinition(
+						null, Collections.emptyMap(),
+						new FragmentEditableElement[0], fragmentEntry,
+						fragmentInstanceExternalReferenceCode, null,
+						RandomTestUtil.randomString(), scopeGroupId,
+						RandomTestUtil.randomString(), null)),
+				_getPageElement(
+					RandomTestUtil.randomString(),
+					getBasicFragmentInstancePageElementDefinition(
+						null, Collections.emptyMap(),
+						new FragmentEditableElement[0], fragmentEntry,
+						fragmentInstanceExternalReferenceCode, null,
+						RandomTestUtil.randomString(), scopeGroupId,
+						RandomTestUtil.randomString(), null))
+			},
+			StringPool.BLANK, 0);
+	}
+
+	public static PageElement getFormFragmentPageElement(long scopeGroupId) {
+		BasicFragmentInstancePageElementDefinition
+			basicFragmentInstancePageElementDefinition =
+				getBasicFragmentInstancePageElementDefinition(
+					null, Collections.emptyMap(), "INPUTS-text-input",
+					scopeGroupId);
+
+		FormFragmentInstancePageElementDefinition
+			formFragmentInstancePageElementDefinition =
+				new FormFragmentInstancePageElementDefinition();
+
+		formFragmentInstancePageElementDefinition.setFragmentInstance(
+			basicFragmentInstancePageElementDefinition.getFragmentInstance());
+		formFragmentInstancePageElementDefinition.setType(
+			PageElementDefinition.Type.FORM_FRAGMENT);
+
+		return _getPageElement(
+			RandomTestUtil.randomString(),
+			formFragmentInstancePageElementDefinition);
+	}
+
+	public static PageElement getFormRelationshipPageElement() {
+		FormRelationshipPageElementDefinition
+			formRelationshipPageElementDefinition =
+				new FormRelationshipPageElementDefinition();
+
+		formRelationshipPageElementDefinition.setType(
+			PageElementDefinition.Type.FORM_RELATIONSHIP);
+
+		return _getPageElement(
+			RandomTestUtil.randomString(),
+			formRelationshipPageElementDefinition);
+	}
+
+	public static PageElement getFormStepContainerWithFragmentPageElement(
+		long scopeGroupId) {
+
+		return _getPageElement(
+			RandomTestUtil.randomString(),
+			_getMappedFormContainerPageElementDefinition(),
+			new PageElement[] {
+				_getPageElement(
+					RandomTestUtil.randomString(),
+					getPageElementDefinition(
+						PageElementDefinition.Type.FORM_STEP_CONTAINER,
+						scopeGroupId),
+					new PageElement[] {
+						_getPageElement(
+							RandomTestUtil.randomString(),
+							getPageElementDefinition(
+								PageElementDefinition.Type.BASIC_FRAGMENT,
+								scopeGroupId))
+					},
+					StringPool.BLANK, 0)
+			},
+			StringPool.BLANK, 0);
+	}
+
+	public static PageElement getInvalidColumnCountGridPageElement(
+		long scopeGroupId) {
+
+		PageElement[] modulePageElements = new PageElement[7];
+
+		for (int i = 0; i < modulePageElements.length; i++) {
+			modulePageElements[i] = _getPageElement(
+				RandomTestUtil.randomString(),
+				getPageElementDefinition(
+					PageElementDefinition.Type.MODULE, scopeGroupId));
+		}
+
+		GridPageElementDefinition gridPageElementDefinition =
+			new GridPageElementDefinition();
+
+		gridPageElementDefinition.setNumberOfModules(modulePageElements.length);
+		gridPageElementDefinition.setType(PageElementDefinition.Type.GRID);
+
+		return _getPageElement(
+			RandomTestUtil.randomString(), gridPageElementDefinition,
+			modulePageElements, StringPool.BLANK, 0);
+	}
+
+	public static PageElement getMultipleStepperFormContainerPageElement(
+		long scopeGroupId) {
+
+		return _getPageElement(
+			RandomTestUtil.randomString(),
+			_getMappedFormContainerPageElementDefinition(),
+			new PageElement[] {
+				_getPageElement(
+					RandomTestUtil.randomString(),
+					getBasicFragmentInstancePageElementDefinition(
+						null, Collections.emptyMap(), "INPUTS-stepper",
+						scopeGroupId)),
+				_getPageElement(
+					RandomTestUtil.randomString(),
+					getBasicFragmentInstancePageElementDefinition(
+						null, Collections.emptyMap(), "INPUTS-stepper",
+						scopeGroupId))
+			},
+			StringPool.BLANK, 0);
+	}
+
+	public static PageElement
+		getNoninstanceableWidgetCollectionDisplayPageElement(
+			long scopeGroupId) {
+
+		return _getPageElement(
+			RandomTestUtil.randomString(),
+			getPageElementDefinition(
+				PageElementDefinition.Type.COLLECTION_DISPLAY, scopeGroupId),
+			new PageElement[] {
+				_getPageElement(
+					RandomTestUtil.randomString(),
+					getPageElementDefinition(
+						PageElementDefinition.Type.COLLECTION_ITEM,
+						scopeGroupId),
+					new PageElement[] {_getNoninstanceableWidgetPageElement()},
+					StringPool.BLANK, 0)
+			},
+			StringPool.BLANK, 0);
+	}
+
 	public static PageElementDefinition getPageElementDefinition(
 		Boolean hidden, PageElementDefinition.Type type, long scopeGroupId) {
 
@@ -641,6 +803,80 @@ public class PageElementsTestUtil {
 				position, scopeGroupId));
 
 		return pageElements.toArray(new PageElement[0]);
+	}
+
+	public static PageElement getStepperFragmentPageElement(long scopeGroupId) {
+		return _getPageElement(
+			RandomTestUtil.randomString(),
+			getBasicFragmentInstancePageElementDefinition(
+				null, Collections.emptyMap(), "INPUTS-stepper", scopeGroupId));
+	}
+
+	public static PageElement getUnmappedCollectionDisplayPageElement(
+		String externalReferenceCode, long scopeGroupId) {
+
+		CollectionDisplayPageElementDefinition
+			collectionDisplayPageElementDefinition =
+				new CollectionDisplayPageElementDefinition();
+
+		collectionDisplayPageElementDefinition.setCollectionSettings(
+			new CollectionSettings());
+		collectionDisplayPageElementDefinition.setType(
+			PageElementDefinition.Type.COLLECTION_DISPLAY);
+
+		PageElement collectionItemPageElement = _getPageElement(
+			RandomTestUtil.randomString(),
+			getPageElementDefinition(
+				PageElementDefinition.Type.COLLECTION_ITEM, scopeGroupId),
+			new PageElement[] {
+				_getPageElement(
+					RandomTestUtil.randomString(),
+					getPageElementDefinition(
+						PageElementDefinition.Type.BASIC_FRAGMENT,
+						scopeGroupId))
+			},
+			StringPool.BLANK, 0);
+
+		return _getPageElement(
+			externalReferenceCode, collectionDisplayPageElementDefinition,
+			new PageElement[] {collectionItemPageElement}, StringPool.BLANK, 0);
+	}
+
+	public static PageElement getUnmappedFormContainerPageElement(
+		String externalReferenceCode, long scopeGroupId) {
+
+		FormContainerPageElementDefinition formContainerPageElementDefinition =
+			new FormContainerPageElementDefinition();
+
+		formContainerPageElementDefinition.setIndexed(Boolean.TRUE);
+		formContainerPageElementDefinition.setType(
+			PageElementDefinition.Type.FORM_CONTAINER);
+
+		return _getPageElement(
+			externalReferenceCode, formContainerPageElementDefinition,
+			new PageElement[] {
+				_getPageElement(
+					RandomTestUtil.randomString(),
+					getPageElementDefinition(
+						PageElementDefinition.Type.BASIC_FRAGMENT,
+						scopeGroupId))
+			},
+			StringPool.BLANK, 0);
+	}
+
+	public static PageElement getWidgetFormContainerPageElement(
+		long scopeGroupId) {
+
+		return _getPageElement(
+			RandomTestUtil.randomString(),
+			_getMappedFormContainerPageElementDefinition(),
+			new PageElement[] {
+				_getPageElement(
+					RandomTestUtil.randomString(),
+					getPageElementDefinition(
+						PageElementDefinition.Type.WIDGET, scopeGroupId))
+			},
+			StringPool.BLANK, 0);
 	}
 
 	private static AssetListEntry _addAssetListEntry(
@@ -1291,6 +1527,35 @@ public class PageElementsTestUtil {
 		return gridViewport;
 	}
 
+	private static FormContainerPageElementDefinition
+		_getMappedFormContainerPageElementDefinition() {
+
+		FormContainerClassSubtypeReference formContainerClassSubtypeReference =
+			new FormContainerClassSubtypeReference();
+
+		formContainerClassSubtypeReference.setClassName(
+			"com.liferay.journal.model.JournalArticle");
+		formContainerClassSubtypeReference.setType(
+			FormContainerReference.Type.FORM_CONTAINER_CLASS_SUBTYPE_REFERENCE);
+
+		FormContainerConfig formContainerConfig = new FormContainerConfig();
+
+		formContainerConfig.setFormContainerReference(
+			formContainerClassSubtypeReference);
+		formContainerConfig.setNumberOfSteps(1);
+
+		FormContainerPageElementDefinition formContainerPageElementDefinition =
+			new FormContainerPageElementDefinition();
+
+		formContainerPageElementDefinition.setFormContainerConfig(
+			formContainerConfig);
+		formContainerPageElementDefinition.setIndexed(Boolean.TRUE);
+		formContainerPageElementDefinition.setType(
+			PageElementDefinition.Type.FORM_CONTAINER);
+
+		return formContainerPageElementDefinition;
+	}
+
 	private static ModulePageElementDefinition _getModulePageElementDefinition(
 		ModuleViewport[] moduleViewports) {
 
@@ -1301,6 +1566,34 @@ public class PageElementsTestUtil {
 		modulePageElementDefinition.setType(PageElementDefinition.Type.MODULE);
 
 		return modulePageElementDefinition;
+	}
+
+	private static PageElement _getNoninstanceableWidgetPageElement() {
+		WidgetInstance widgetInstance = new WidgetInstance();
+
+		widgetInstance.setWidgetConfig(new HashMap<>());
+		widgetInstance.setWidgetInstanceId(RandomTestUtil.randomString());
+		widgetInstance.setWidgetName(
+			"com_liferay_product_navigation_product_menu_web_portlet_" +
+				"ProductMenuPortlet");
+		widgetInstance.setWidgetPermissions(new WidgetPermission[0]);
+
+		WidgetInstancePageElementDefinition
+			widgetInstancePageElementDefinition =
+				new WidgetInstancePageElementDefinition();
+
+		widgetInstancePageElementDefinition.setIndexed(true);
+		widgetInstancePageElementDefinition.setName(
+			RandomTestUtil.randomString());
+		widgetInstancePageElementDefinition.setType(
+			PageElementDefinition.Type.WIDGET);
+		widgetInstancePageElementDefinition.setWidgetInstance(widgetInstance);
+		widgetInstancePageElementDefinition.
+			setWidgetInstanceExternalReferenceCode(
+				RandomTestUtil.randomString());
+
+		return _getPageElement(
+			RandomTestUtil.randomString(), widgetInstancePageElementDefinition);
 	}
 
 	private static PageElement _getPageElement(

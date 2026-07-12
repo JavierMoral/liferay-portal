@@ -22,6 +22,8 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import java.io.Serializable;
+
 /**
  * @author Lourdes Fernández Besada
  */
@@ -98,15 +100,30 @@ public class LayoutPageTemplateEntryTestUtil {
 			ServiceContext serviceContext, int status)
 		throws Exception {
 
-		return LayoutPageTemplateEntryLocalServiceUtil.
-			addLayoutPageTemplateEntry(
-				null, TestPropsValues.getUserId(),
-				serviceContext.getScopeGroupId(),
-				LayoutPageTemplateConstants.
-					PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
-				null, RandomTestUtil.randomString(),
-				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT, 0, status,
-				serviceContext);
+		// Adding a master sets "layout.page.template.entry.type" to
+		// MASTER_LAYOUT on the service context. Restore its original value so a
+		// content layout created afterward with the same service context is not
+		// treated as a master and seeded with a drop zone.
+
+		Serializable originalLayoutPageTemplateEntryType =
+			serviceContext.getAttribute("layout.page.template.entry.type");
+
+		try {
+			return LayoutPageTemplateEntryLocalServiceUtil.
+				addLayoutPageTemplateEntry(
+					null, TestPropsValues.getUserId(),
+					serviceContext.getScopeGroupId(),
+					LayoutPageTemplateConstants.
+						PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
+					null, RandomTestUtil.randomString(),
+					LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT, 0,
+					status, serviceContext);
+		}
+		finally {
+			serviceContext.setAttribute(
+				"layout.page.template.entry.type",
+				originalLayoutPageTemplateEntryType);
+		}
 	}
 
 	public static Layout getMasterLayoutPageTemplateEntryLayout(

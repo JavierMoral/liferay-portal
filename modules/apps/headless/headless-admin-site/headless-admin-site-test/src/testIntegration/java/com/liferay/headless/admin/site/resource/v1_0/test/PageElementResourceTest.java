@@ -386,6 +386,8 @@ public class PageElementResourceTest extends BasePageElementResourceTestCase {
 
 		_testPostSitePageSpecificationPageExperiencePageElementWithFormContainerPageElement(
 			objectDefinition);
+		_testPostSitePageSpecificationPageExperiencePageElementWithFormContainerPageElementWithoutNumberOfSteps(
+			objectDefinition);
 		_testPostSitePageSpecificationPageExperiencePageElementWithFormRelationshipPageElement(
 			objectDefinition);
 
@@ -2620,6 +2622,63 @@ public class PageElementResourceTest extends BasePageElementResourceTestCase {
 				false, RandomTestUtil.randomInt(2, 10),
 				RandomTestUtil.randomString(),
 				LocalizationConfig.UnlocalizedFieldsState.DISABLED));
+	}
+
+	private void
+			_testPostSitePageSpecificationPageExperiencePageElementWithFormContainerPageElementWithoutNumberOfSteps(
+				ObjectDefinition objectDefinition)
+		throws Exception {
+
+		SegmentsExperience segmentsExperience =
+			_segmentsExperienceLocalService.fetchSegmentsExperience(
+				testGroup.getGroupId(), SegmentsExperienceConstants.KEY_DEFAULT,
+				_layout.getPlid());
+
+		FormContainerClassSubtypeReference formContainerClassSubtypeReference =
+			new FormContainerClassSubtypeReference();
+
+		formContainerClassSubtypeReference.setClassName(
+			objectDefinition.getClassName());
+		formContainerClassSubtypeReference.setType(
+			FormContainerReference.Type.FORM_CONTAINER_CLASS_SUBTYPE_REFERENCE);
+
+		FormContainerConfig formContainerConfig = new FormContainerConfig();
+
+		formContainerConfig.setFormContainerReference(
+			formContainerClassSubtypeReference);
+		formContainerConfig.setFormContainerType(
+			FormContainerConfig.FormContainerType.SIMPLE);
+
+		FormContainerPageElementDefinition formContainerPageElementDefinition =
+			new FormContainerPageElementDefinition();
+
+		formContainerPageElementDefinition.setFormContainerConfig(
+			formContainerConfig);
+		formContainerPageElementDefinition.setType(
+			PageElementDefinition.Type.FORM_CONTAINER);
+
+		PageElement pageElement = randomPageElement();
+
+		pageElement.setPageElementDefinition(
+			formContainerPageElementDefinition);
+
+		PageElement postPageElement =
+			pageElementResource.
+				postSitePageSpecificationPageExperiencePageElement(
+					testGroup.getExternalReferenceCode(),
+					_draftLayout.getExternalReferenceCode(),
+					segmentsExperience.getExternalReferenceCode(), pageElement);
+
+		FormContainerPageElementDefinition
+			postFormContainerPageElementDefinition =
+				(FormContainerPageElementDefinition)
+					postPageElement.getPageElementDefinition();
+
+		FormContainerConfig postFormContainerConfig =
+			postFormContainerPageElementDefinition.getFormContainerConfig();
+
+		Assert.assertEquals(
+			Integer.valueOf(0), postFormContainerConfig.getNumberOfSteps());
 	}
 
 	private void

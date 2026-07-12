@@ -389,7 +389,19 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 		_testPostSiteSitePage(
 			_getRandomSitePage(serviceContext, SitePage.Type.WIDGET_PAGE));
 
+		_testPostSiteSitePageWithDropZone();
+		_testPostSiteSitePageWithDuplicateFragmentInstance();
 		_testPostSiteSitePageWithDuplicateFriendlyURL(serviceContext);
+		_testPostSiteSitePageWithFormFragment();
+		_testPostSiteSitePageWithFormRelationship();
+		_testPostSiteSitePageWithFormStepContainerFragment();
+		_testPostSiteSitePageWithInvalidColumnCount();
+		_testPostSiteSitePageWithMultipleSteppers();
+		_testPostSiteSitePageWithNoninstanceableWidgetInCollection();
+		_testPostSiteSitePageWithStepperOutsideForm();
+		_testPostSiteSitePageWithUnmappedCollectionDisplay();
+		_testPostSiteSitePageWithUnmappedFormContainer();
+		_testPostSiteSitePageWithWidgetInForm();
 
 		Layout layout = LayoutTestUtil.addTypePortletLayout(testGroup);
 
@@ -1173,6 +1185,22 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 			_assertPostSiteSitePagePageSpecificationProblemException(
 				expectedTitle, layout);
 		}
+	}
+
+	private void _assertPostSiteSitePageWithPageElementProblemException(
+			String expectedTitle, PageElement pageElement)
+		throws Exception {
+
+		SitePage sitePage = _getSitePageWithPageElements(
+			new PageElement[] {pageElement});
+
+		SitePageResource sitePageResource = _getSitePageResource(
+			"pageSpecifications");
+
+		ProblemExceptionTestUtil.assertProblemException(
+			"BAD_REQUEST", expectedTitle,
+			() -> sitePageResource.postSiteSitePage(
+				testGroup.getExternalReferenceCode(), false, sitePage));
 	}
 
 	private void _assertPostSiteSitePageWithPageExperiencesProblemException(
@@ -3242,6 +3270,14 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 			sitePageExternalReferenceCode, status);
 	}
 
+	private void _testPostSiteSitePageWithDropZone() throws Exception {
+		_assertPostSiteSitePageWithPageElementProblemException(
+			"A drop zone can only be placed inside a master",
+			PageElementsTestUtil.getDropZonePageElement(
+				StringUtil.toLowerCase(RandomTestUtil.randomString()),
+				testGroup.getGroupId()));
+	}
+
 	private void _testPostSiteSitePageWithDuplicateExternalReferenceCode()
 		throws Exception {
 
@@ -3260,6 +3296,15 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 			() -> sitePageResource.postSiteSitePage(
 				testGroup.getExternalReferenceCode(), false,
 				duplicateSitePage));
+	}
+
+	private void _testPostSiteSitePageWithDuplicateFragmentInstance()
+		throws Exception {
+
+		_assertPostSiteSitePageWithPageElementProblemException(
+			"A fragment instance can only be referenced by one page element",
+			PageElementsTestUtil.getDuplicateFragmentInstancePageElement(
+				testGroup.getGroupId()));
 	}
 
 	private void _testPostSiteSitePageWithDuplicateFriendlyURL(
@@ -3304,6 +3349,38 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 			() -> _addContentSitePage(
 				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 				pageExperienceUuid));
+	}
+
+	private void _testPostSiteSitePageWithFormFragment() throws Exception {
+		_assertPostSiteSitePageWithPageElementProblemException(
+			"This form component can only be placed inside a mapped form " +
+				"container",
+			PageElementsTestUtil.getFormFragmentPageElement(
+				testGroup.getGroupId()));
+	}
+
+	private void _testPostSiteSitePageWithFormRelationship() throws Exception {
+		_assertPostSiteSitePageWithPageElementProblemException(
+			"Form relationship can only be added inside of a form",
+			PageElementsTestUtil.getFormRelationshipPageElement());
+	}
+
+	private void _testPostSiteSitePageWithFormStepContainerFragment()
+		throws Exception {
+
+		_assertPostSiteSitePageWithPageElementProblemException(
+			"A form-step-container cannot contain a fragment",
+			PageElementsTestUtil.getFormStepContainerWithFragmentPageElement(
+				testGroup.getGroupId()));
+	}
+
+	private void _testPostSiteSitePageWithInvalidColumnCount()
+		throws Exception {
+
+		_assertPostSiteSitePageWithPageElementProblemException(
+			"A row can have 1, 2, 3, 4, 5, 6, or 12 columns",
+			PageElementsTestUtil.getInvalidColumnCountGridPageElement(
+				testGroup.getGroupId()));
 	}
 
 	private void _testPostSiteSitePageWithInvalidPageExperiences()
@@ -3431,6 +3508,24 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 			() -> sitePageResource.postSiteSitePage(
 				testGroup.getExternalReferenceCode(), false,
 				missingSectionWidgetSitePage));
+	}
+
+	private void _testPostSiteSitePageWithMultipleSteppers() throws Exception {
+		_assertPostSiteSitePageWithPageElementProblemException(
+			"A form can only contain one stepper",
+			PageElementsTestUtil.getMultipleStepperFormContainerPageElement(
+				testGroup.getGroupId()));
+	}
+
+	private void _testPostSiteSitePageWithNoninstanceableWidgetInCollection()
+		throws Exception {
+
+		_assertPostSiteSitePageWithPageElementProblemException(
+			"A noninstanceable widget cannot be placed inside a collection " +
+				"display",
+			PageElementsTestUtil.
+				getNoninstanceableWidgetCollectionDisplayPageElement(
+					testGroup.getGroupId()));
 	}
 
 	private void _testPostSiteSitePageWithPageElements() throws Exception {
@@ -3664,6 +3759,42 @@ public class SitePageResourceTest extends BaseSitePageResourceTestCase {
 				draftFragmentEntryLinkExternalReferenceCodes.contains(
 					draftFragmentOrWidgetInstanceExternalReferenceCode));
 		}
+	}
+
+	private void _testPostSiteSitePageWithStepperOutsideForm()
+		throws Exception {
+
+		_assertPostSiteSitePageWithPageElementProblemException(
+			"A stepper can only be placed inside a form container",
+			PageElementsTestUtil.getStepperFragmentPageElement(
+				testGroup.getGroupId()));
+	}
+
+	private void _testPostSiteSitePageWithUnmappedCollectionDisplay()
+		throws Exception {
+
+		_assertPostSiteSitePageWithPageElementProblemException(
+			"A fragment cannot be placed inside an unmapped collection display",
+			PageElementsTestUtil.getUnmappedCollectionDisplayPageElement(
+				StringUtil.toLowerCase(RandomTestUtil.randomString()),
+				testGroup.getGroupId()));
+	}
+
+	private void _testPostSiteSitePageWithUnmappedFormContainer()
+		throws Exception {
+
+		_assertPostSiteSitePageWithPageElementProblemException(
+			"A fragment cannot be placed inside an unmapped form container",
+			PageElementsTestUtil.getUnmappedFormContainerPageElement(
+				StringUtil.toLowerCase(RandomTestUtil.randomString()),
+				testGroup.getGroupId()));
+	}
+
+	private void _testPostSiteSitePageWithWidgetInForm() throws Exception {
+		_assertPostSiteSitePageWithPageElementProblemException(
+			"A widget cannot be placed inside a form container",
+			PageElementsTestUtil.getWidgetFormContainerPageElement(
+				testGroup.getGroupId()));
 	}
 
 	private void _testPostSiteSitePageWithWidgetPageSettings()

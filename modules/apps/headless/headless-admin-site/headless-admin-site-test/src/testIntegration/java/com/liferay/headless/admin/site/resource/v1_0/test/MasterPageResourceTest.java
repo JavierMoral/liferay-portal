@@ -55,6 +55,7 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsValues;
@@ -451,6 +452,8 @@ public class MasterPageResourceTest extends BaseMasterPageResourceTestCase {
 				getDisplayPageLayoutPageTemplateEntry(serviceContext));
 
 		_testPostSiteMasterPagePageSpecificationWithInvalidPageExperiences();
+		_testPostSiteMasterPagePageSpecificationWithoutDropZone();
+		_testPostSiteMasterPagePageSpecificationWithTwoDropZones();
 	}
 
 	@Override
@@ -539,6 +542,28 @@ public class MasterPageResourceTest extends BaseMasterPageResourceTestCase {
 
 		return testGetSiteMasterPagesPage_addMasterPage(
 			testGroup.getExternalReferenceCode(), masterPage);
+	}
+
+	private ContentPageSpecification _addDropZonePageElement(
+			ContentPageSpecification contentPageSpecification)
+		throws Exception {
+
+		for (PageExperience pageExperience :
+				contentPageSpecification.getPageExperiences()) {
+
+			PageElement[] pageElements = pageExperience.getPageElements();
+
+			PageElement dropZonePageElement =
+				PageElementsTestUtil.getDropZonePageElement(
+					RandomTestUtil.randomString(), testGroup.getGroupId());
+
+			dropZonePageElement.setPosition(pageElements.length);
+
+			pageExperience.setPageElements(
+				ArrayUtil.append(pageElements, dropZonePageElement));
+		}
+
+		return contentPageSpecification;
 	}
 
 	private void _assertContentPageSpecificationPageElements(
@@ -1120,13 +1145,15 @@ public class MasterPageResourceTest extends BaseMasterPageResourceTestCase {
 		MasterPage masterPage = randomMasterPage();
 
 		ContentPageSpecification draftContentPageSpecification =
-			PageSpecificationsTestUtil.getContentPageSpecification(
-				null, testGroup.getGroupId(), oldDraftLayoutStatus);
+			_addDropZonePageElement(
+				PageSpecificationsTestUtil.getContentPageSpecification(
+					null, testGroup.getGroupId(), oldDraftLayoutStatus));
 
 		ContentPageSpecification publishedContentPageSpecification =
-			PageSpecificationsTestUtil.getContentPageSpecification(
-				draftContentPageSpecification.getExternalReferenceCode(),
-				testGroup.getGroupId(), oldPublishedLayoutStatus);
+			_addDropZonePageElement(
+				PageSpecificationsTestUtil.getContentPageSpecification(
+					draftContentPageSpecification.getExternalReferenceCode(),
+					testGroup.getGroupId(), oldPublishedLayoutStatus));
 
 		masterPage.setPageSpecifications(
 			() -> new PageSpecification[] {
@@ -1177,6 +1204,13 @@ public class MasterPageResourceTest extends BaseMasterPageResourceTestCase {
 				PageSpecificationsTestUtil.getPatchPageSpecifications(
 					postMasterPage.getPageSpecifications(),
 					testGroup.getGroupId());
+
+			for (PageSpecification pageSpecification :
+					patchPageSpecifications) {
+
+				_addDropZonePageElement(
+					(ContentPageSpecification)pageSpecification);
+			}
 
 			MasterPage patchMasterPage = masterPageResource.patchSiteMasterPage(
 				testGroup.getExternalReferenceCode(),
@@ -1341,6 +1375,101 @@ public class MasterPageResourceTest extends BaseMasterPageResourceTestCase {
 							RandomTestUtil.randomString())
 					},
 					testGroup.getGroupId(), PageSpecification.Status.DRAFT)));
+	}
+
+	private void _testPostSiteMasterPagePageSpecificationWithoutDropZone()
+		throws Exception {
+
+		MasterPageResource masterPageResource = _getMasterPageResource();
+
+		MasterPage masterPage = masterPageResource.postSiteMasterPage(
+			testGroup.getExternalReferenceCode(), randomMasterPage());
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_layoutPageTemplateEntryLocalService.
+				getLayoutPageTemplateEntryByExternalReferenceCode(
+					masterPage.getExternalReferenceCode(),
+					testGroup.getGroupId());
+
+		Layout layout = _layoutLocalService.getLayout(
+			layoutPageTemplateEntry.getPlid());
+
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		PageSpecification[] pageSpecifications =
+			masterPage.getPageSpecifications();
+
+		ContentPageSpecification draftContentPageSpecification =
+			(ContentPageSpecification)pageSpecifications[1];
+
+		draftContentPageSpecification.setExternalReferenceCode(
+			draftLayout.getExternalReferenceCode());
+		draftContentPageSpecification.setStatus(PageSpecification.Status.DRAFT);
+
+		PageExperience[] pageExperiences =
+			draftContentPageSpecification.getPageExperiences();
+
+		PageExperience defaultPageExperience = pageExperiences[0];
+
+		defaultPageExperience.setPageElements(
+			new PageElement[] {_getContainerPageElement()});
+
+		ProblemExceptionTestUtil.assertProblemException(
+			"BAD_REQUEST", "A master page must contain exactly one drop zone",
+			() -> masterPageResource.postSiteMasterPagePageSpecification(
+				testGroup.getExternalReferenceCode(),
+				masterPage.getExternalReferenceCode(),
+				draftContentPageSpecification));
+	}
+
+	private void _testPostSiteMasterPagePageSpecificationWithTwoDropZones()
+		throws Exception {
+
+		MasterPageResource masterPageResource = _getMasterPageResource();
+
+		MasterPage masterPage = masterPageResource.postSiteMasterPage(
+			testGroup.getExternalReferenceCode(), randomMasterPage());
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_layoutPageTemplateEntryLocalService.
+				getLayoutPageTemplateEntryByExternalReferenceCode(
+					masterPage.getExternalReferenceCode(),
+					testGroup.getGroupId());
+
+		Layout layout = _layoutLocalService.getLayout(
+			layoutPageTemplateEntry.getPlid());
+
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		PageSpecification[] pageSpecifications =
+			masterPage.getPageSpecifications();
+
+		ContentPageSpecification draftContentPageSpecification =
+			(ContentPageSpecification)pageSpecifications[1];
+
+		draftContentPageSpecification.setExternalReferenceCode(
+			draftLayout.getExternalReferenceCode());
+		draftContentPageSpecification.setStatus(PageSpecification.Status.DRAFT);
+
+		PageExperience[] pageExperiences =
+			draftContentPageSpecification.getPageExperiences();
+
+		PageExperience defaultPageExperience = pageExperiences[0];
+
+		defaultPageExperience.setPageElements(
+			new PageElement[] {
+				PageElementsTestUtil.getDropZonePageElement(
+					RandomTestUtil.randomString(), testGroup.getGroupId()),
+				PageElementsTestUtil.getDropZonePageElement(
+					RandomTestUtil.randomString(), testGroup.getGroupId())
+			});
+
+		ProblemExceptionTestUtil.assertProblemException(
+			"BAD_REQUEST", "A master page must contain exactly one drop zone",
+			() -> masterPageResource.postSiteMasterPagePageSpecification(
+				testGroup.getExternalReferenceCode(),
+				masterPage.getExternalReferenceCode(),
+				draftContentPageSpecification));
 	}
 
 	private void _testPostSiteMasterPageWithDropZonePageElement()
@@ -1775,13 +1904,15 @@ public class MasterPageResourceTest extends BaseMasterPageResourceTestCase {
 		MasterPage masterPage = randomMasterPage();
 
 		ContentPageSpecification draftContentPageSpecification =
-			PageSpecificationsTestUtil.getContentPageSpecification(
-				null, testGroup.getGroupId(), oldDraftLayoutStatus);
+			_addDropZonePageElement(
+				PageSpecificationsTestUtil.getContentPageSpecification(
+					null, testGroup.getGroupId(), oldDraftLayoutStatus));
 
 		ContentPageSpecification publishedContentPageSpecification =
-			PageSpecificationsTestUtil.getContentPageSpecification(
-				draftContentPageSpecification.getExternalReferenceCode(),
-				testGroup.getGroupId(), oldPublishedLayoutStatus);
+			_addDropZonePageElement(
+				PageSpecificationsTestUtil.getContentPageSpecification(
+					draftContentPageSpecification.getExternalReferenceCode(),
+					testGroup.getGroupId(), oldPublishedLayoutStatus));
 
 		masterPage.setPageSpecifications(
 			() -> new PageSpecification[] {
