@@ -5518,6 +5518,9 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/DisplayPageTemplate"
+                409:
+                    description:
+                        "A display page template with the same name or key already exists."
             # @review
             tags: ["DisplayPageTemplate"]
     "/sites/{siteExternalReferenceCode}/display-page-template-folders/{displayPageTemplateFolderExternalReferenceCode}/permissions":
@@ -5667,6 +5670,9 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/DisplayPageTemplate"
+                409:
+                    description:
+                        "A display page template with the same name or key already exists."
             # @review
             tags: ["DisplayPageTemplate"]
     "/sites/{siteExternalReferenceCode}/display-page-templates/{displayPageTemplateExternalReferenceCode}":
@@ -5821,6 +5827,9 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/DisplayPageTemplate"
+                409:
+                    description:
+                        "The default display page template must be published first, or a display page template with the same name or key already exists."
             tags: ["DisplayPageTemplate"]
     "/sites/{siteExternalReferenceCode}/display-page-templates/{displayPageTemplateExternalReferenceCode}/friendly-url-history":
         get:
