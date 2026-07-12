@@ -223,8 +223,11 @@ public class FormContainerLayoutStructureItemImporter
 				));
 		}
 
-		formStyledLayoutStructureItem.setNumberOfSteps(
-			formContainerConfig.getNumberOfSteps());
+		Integer numberOfSteps = formContainerConfig.getNumberOfSteps();
+
+		if (numberOfSteps != null) {
+			formStyledLayoutStructureItem.setNumberOfSteps(numberOfSteps);
+		}
 
 		_setSuccessMessageJSONObject(
 			formStyledLayoutStructureItem, layoutStructureItemImporterContext,

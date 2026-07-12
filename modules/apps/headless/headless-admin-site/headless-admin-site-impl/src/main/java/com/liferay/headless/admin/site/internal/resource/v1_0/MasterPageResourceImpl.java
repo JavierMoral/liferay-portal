@@ -29,6 +29,8 @@ import com.liferay.layout.page.template.constants.LayoutPageTemplateConstants;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
+import com.liferay.layout.provider.LayoutStructureProvider;
+import com.liferay.layout.validator.LayoutStructureValidator;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.search.Field;
@@ -47,6 +49,7 @@ import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.SearchUtil;
+import com.liferay.segments.service.SegmentsExperienceLocalService;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.tags.Tags;
@@ -196,19 +199,23 @@ public class MasterPageResourceImpl
 				"The external reference code does not point to a master page");
 		}
 
+		Layout layout = LayoutUtil.addDraftToLayout(
+			_cetManager, contentPageSpecification,
+			_fragmentEntryProcessorRegistry, _infoItemServiceRegistry,
+			_layoutLocalService.getLayout(layoutPageTemplateEntry.getPlid()),
+			_layoutStructureValidator,
+			ServiceContextUtil.createServiceContext(
+				layoutPageTemplateEntry.getGroupId(), contextHttpServletRequest,
+				contextUser.getUserId()));
+
+		_validateMasterPage(layout);
+
 		return (ContentPageSpecification)_pageSpecificationDTOConverter.toDTO(
 			DTOConverterContextUtil.getDTOConverterContext(
 				contextAcceptLanguage, _dtoConverterRegistry,
 				contextHttpServletRequest, layoutPageTemplateEntry.getPlid(),
 				contextUriInfo, contextUser),
-			LayoutUtil.addDraftToLayout(
-				_cetManager, contentPageSpecification,
-				_fragmentEntryProcessorRegistry, _infoItemServiceRegistry,
-				_layoutLocalService.getLayout(
-					layoutPageTemplateEntry.getPlid()),
-				ServiceContextUtil.createServiceContext(
-					layoutPageTemplateEntry.getGroupId(),
-					contextHttpServletRequest, contextUser.getUserId())));
+			layout);
 	}
 
 	@Override
@@ -347,11 +354,14 @@ public class MasterPageResourceImpl
 
 		layout = LayoutUtil.updateContentLayout(
 			_cetManager, _fragmentEntryProcessorRegistry,
-			_infoItemServiceRegistry, layout, layout.getNameMap(),
-			layout.getTitleMap(), layout.getDescriptionMap(),
-			layout.getKeywordsMap(), layout.getRobotsMap(),
-			layout.getFriendlyURLMap(), layout.getTypeSettingsProperties(),
+			_infoItemServiceRegistry, layout, _layoutStructureValidator,
+			layout.getNameMap(), layout.getTitleMap(),
+			layout.getDescriptionMap(), layout.getKeywordsMap(),
+			layout.getRobotsMap(), layout.getFriendlyURLMap(),
+			layout.getTypeSettingsProperties(),
 			masterPage.getPageSpecifications(), serviceContext);
+
+		_validateMasterPage(layout);
 
 		if (!layoutPageTemplateEntry.isApproved() && layout.isPublished()) {
 			layoutPageTemplateEntry =
@@ -491,7 +501,8 @@ public class MasterPageResourceImpl
 
 		Layout layout = LayoutUtil.addContentLayout(
 			_cetManager, _fragmentEntryProcessorRegistry, groupId,
-			_infoItemServiceRegistry, masterPage.getPageSpecifications(), true,
+			_infoItemServiceRegistry, _layoutStructureValidator,
+			masterPage.getPageSpecifications(), true,
 			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, nameMap, null, null, null,
 			null, LayoutConstants.TYPE_CONTENT, null, true, true,
 			Collections.emptyMap(), WorkflowConstants.STATUS_APPROVED,
@@ -510,6 +521,15 @@ public class MasterPageResourceImpl
 			masterPage.getDateModified(),
 			masterPage.getTaxonomyCategoryBriefs(), contextUser.getUserId(),
 			masterPage.getUuid());
+	}
+
+	private void _validateMasterPage(Layout layout) throws Exception {
+		_layoutStructureValidator.validate(
+			_layoutStructureProvider.getLayoutStructure(
+				layout.getPlid(),
+				_segmentsExperienceLocalService.
+					fetchDefaultSegmentsExperienceId(layout.getPlid())),
+			true);
 	}
 
 	private static final EntityModel _entityModel = new MasterPageEntityModel();
@@ -532,6 +552,12 @@ public class MasterPageResourceImpl
 	@Reference
 	private LayoutPageTemplateEntryService _layoutPageTemplateEntryService;
 
+	@Reference
+	private LayoutStructureProvider _layoutStructureProvider;
+
+	@Reference
+	private LayoutStructureValidator _layoutStructureValidator;
+
 	@Reference(
 		target = "(component.name=com.liferay.headless.admin.site.internal.dto.v1_0.converter.MasterPageDTOConverter)"
 	)
@@ -546,5 +572,8 @@ public class MasterPageResourceImpl
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
 
 }

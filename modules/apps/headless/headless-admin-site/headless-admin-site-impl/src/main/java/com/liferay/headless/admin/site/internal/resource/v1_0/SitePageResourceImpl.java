@@ -57,6 +57,7 @@ import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.layout.seo.model.LayoutSEOEntryCustomMetaTagProperty;
 import com.liferay.layout.seo.service.LayoutSEOEntryService;
+import com.liferay.layout.validator.LayoutStructureValidator;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -301,7 +302,7 @@ public class SitePageResourceImpl
 			LayoutUtil.addDraftToLayout(
 				_cetManager, contentPageSpecification,
 				_fragmentEntryProcessorRegistry, _infoItemServiceRegistry,
-				layout,
+				layout, _layoutStructureValidator,
 				ServiceContextUtil.createServiceContext(
 					layout.getGroupId(), contextHttpServletRequest,
 					contextUser.getUserId())));
@@ -606,9 +607,9 @@ public class SitePageResourceImpl
 		if (Objects.equals(sitePage.getType(), SitePage.Type.CONTENT_PAGE)) {
 			layout = LayoutUtil.addContentLayout(
 				_cetManager, _fragmentEntryProcessorRegistry, groupId,
-				_infoItemServiceRegistry, sitePage.getPageSpecifications(),
-				privateLayout, parentLayoutId, nameMap, titleMap,
-				descriptionMap, keywordsMap, robotsMap,
+				_infoItemServiceRegistry, _layoutStructureValidator,
+				sitePage.getPageSpecifications(), privateLayout, parentLayoutId,
+				nameMap, titleMap, descriptionMap, keywordsMap, robotsMap,
 				SitePageTypeUtil.toInternalType(sitePage.getType()),
 				typeSettingsUnicodeProperties,
 				_isHiddenFromNavigation(false, sitePage.getPageSettings()),
@@ -641,9 +642,10 @@ public class SitePageResourceImpl
 		else {
 			layout = LayoutUtil.addPortletLayout(
 				_cetManager, sitePage.getExternalReferenceCode(),
-				_infoItemServiceRegistry, groupId, privateLayout,
-				parentLayoutId, nameMap, titleMap, descriptionMap, keywordsMap,
-				robotsMap, typeSettingsUnicodeProperties,
+				_infoItemServiceRegistry, _layoutStructureValidator, groupId,
+				privateLayout, parentLayoutId, nameMap, titleMap,
+				descriptionMap, keywordsMap, robotsMap,
+				typeSettingsUnicodeProperties,
 				_isHiddenFromNavigation(false, sitePage.getPageSettings()),
 				LocalizedMapUtil.getLocalizedMap(
 					sitePage.getFriendlyUrlPath_i18n()),
@@ -1121,8 +1123,9 @@ public class SitePageResourceImpl
 		if (Objects.equals(sitePage.getType(), SitePage.Type.CONTENT_PAGE)) {
 			layout = LayoutUtil.updateContentLayout(
 				_cetManager, _fragmentEntryProcessorRegistry,
-				_infoItemServiceRegistry, layout, nameMap, titleMap,
-				descriptionMap, keywordsMap, robotsMap, friendlyURLMap,
+				_infoItemServiceRegistry, layout, _layoutStructureValidator,
+				nameMap, titleMap, descriptionMap, keywordsMap, robotsMap,
+				friendlyURLMap,
 				_getTypeSettingsUnicodeProperties(
 					layout.getGroupId(), sitePage),
 				sitePage.getPageSpecifications(), serviceContext);
@@ -1495,6 +1498,9 @@ public class SitePageResourceImpl
 
 	@Reference
 	private LayoutService _layoutService;
+
+	@Reference
+	private LayoutStructureValidator _layoutStructureValidator;
 
 	@Reference(
 		target = "(component.name=com.liferay.headless.admin.site.internal.dto.v1_0.converter.PageSpecificationDTOConverter)"

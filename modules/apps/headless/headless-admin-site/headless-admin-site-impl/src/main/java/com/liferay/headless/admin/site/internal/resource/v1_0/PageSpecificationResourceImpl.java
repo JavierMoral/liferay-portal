@@ -33,6 +33,7 @@ import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServ
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
 import com.liferay.layout.utility.page.model.LayoutUtilityPageEntry;
 import com.liferay.layout.utility.page.service.LayoutUtilityPageEntryService;
+import com.liferay.layout.validator.LayoutStructureValidator;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Layout;
@@ -419,11 +420,11 @@ public class PageSpecificationResourceImpl
 					contextUser),
 				LayoutUtil.updateLayout(
 					_cetManager, _fragmentEntryProcessorRegistry,
-					_infoItemServiceRegistry, layout, layout.getNameMap(),
-					layout.getTitleMap(), layout.getDescriptionMap(),
-					layout.getKeywordsMap(), layout.getRobotsMap(),
-					layout.getFriendlyURLMap(), pageSpecification,
-					layout.getStatus(), serviceContext));
+					_infoItemServiceRegistry, layout, _layoutStructureValidator,
+					layout.getNameMap(), layout.getTitleMap(),
+					layout.getDescriptionMap(), layout.getKeywordsMap(),
+					layout.getRobotsMap(), layout.getFriendlyURLMap(),
+					pageSpecification, layout.getStatus(), serviceContext));
 		}
 
 		if (!Objects.equals(
@@ -446,11 +447,12 @@ public class PageSpecificationResourceImpl
 				contextUser),
 			LayoutUtil.updateLayout(
 				_cetManager, _fragmentEntryProcessorRegistry,
-				_infoItemServiceRegistry, layout, layout.getNameMap(),
-				layout.getTitleMap(), layout.getDescriptionMap(),
-				layout.getKeywordsMap(), layout.getRobotsMap(),
-				layout.getFriendlyURLMap(), pageSpecification,
-				WorkflowConstants.STATUS_DRAFT, serviceContext));
+				_infoItemServiceRegistry, layout, _layoutStructureValidator,
+				layout.getNameMap(), layout.getTitleMap(),
+				layout.getDescriptionMap(), layout.getKeywordsMap(),
+				layout.getRobotsMap(), layout.getFriendlyURLMap(),
+				pageSpecification, WorkflowConstants.STATUS_DRAFT,
+				serviceContext));
 	}
 
 	@Override
@@ -622,6 +624,9 @@ public class PageSpecificationResourceImpl
 
 	@Reference
 	private LayoutService _layoutService;
+
+	@Reference
+	private LayoutStructureValidator _layoutStructureValidator;
 
 	@Reference
 	private LayoutUtilityPageEntryService _layoutUtilityPageEntryService;

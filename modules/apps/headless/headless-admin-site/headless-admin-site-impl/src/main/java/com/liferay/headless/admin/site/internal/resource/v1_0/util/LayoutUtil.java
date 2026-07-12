@@ -43,6 +43,7 @@ import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil;
 import com.liferay.layout.util.LayoutServiceContextHelperUtil;
 import com.liferay.layout.util.UpdateLayoutModifiedDateThreadLocal;
+import com.liferay.layout.validator.LayoutStructureValidator;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
@@ -107,6 +108,7 @@ public class LayoutUtil {
 			CETManager cetManager,
 			FragmentEntryProcessorRegistry fragmentEntryProcessorRegistry,
 			long groupId, InfoItemServiceRegistry infoItemServiceRegistry,
+			LayoutStructureValidator layoutStructureValidator,
 			PageSpecification[] pageSpecifications, boolean privateLayout,
 			long parentLayoutId, Map<Locale, String> nameMap,
 			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
@@ -246,16 +248,17 @@ public class LayoutUtil {
 
 		updateLayout(
 			cetManager, fragmentEntryProcessorRegistry, infoItemServiceRegistry,
-			draftLayout, draftLayout.getNameMap(), draftLayout.getTitleMap(),
-			draftLayout.getDescriptionMap(), draftLayout.getKeywordsMap(),
-			draftLayout.getRobotsMap(), draftLayout.getFriendlyURLMap(),
-			draftContentPageSpecification, draftLayoutStatus, serviceContext);
+			draftLayout, layoutStructureValidator, draftLayout.getNameMap(),
+			draftLayout.getTitleMap(), draftLayout.getDescriptionMap(),
+			draftLayout.getKeywordsMap(), draftLayout.getRobotsMap(),
+			draftLayout.getFriendlyURLMap(), draftContentPageSpecification,
+			draftLayoutStatus, serviceContext);
 
 		return updateLayout(
 			cetManager, fragmentEntryProcessorRegistry, infoItemServiceRegistry,
-			layout, nameMap, titleMap, descriptionMap, keywordsMap, robotsMap,
-			friendlyURLMap, publishedContentPageSpecification, status,
-			serviceContext);
+			layout, layoutStructureValidator, nameMap, titleMap, descriptionMap,
+			keywordsMap, robotsMap, friendlyURLMap,
+			publishedContentPageSpecification, status, serviceContext);
 	}
 
 	public static Layout addDraftToLayout(
@@ -263,6 +266,7 @@ public class LayoutUtil {
 			ContentPageSpecification contentPageSpecification,
 			FragmentEntryProcessorRegistry fragmentEntryProcessorRegistry,
 			InfoItemServiceRegistry infoItemServiceRegistry, Layout layout,
+			LayoutStructureValidator layoutStructureValidator,
 			ServiceContext serviceContext)
 		throws Exception {
 
@@ -293,11 +297,11 @@ public class LayoutUtil {
 
 		return updateLayout(
 			cetManager, fragmentEntryProcessorRegistry, infoItemServiceRegistry,
-			draftLayout, layout.getNameMap(), layout.getTitleMap(),
-			layout.getDescriptionMap(), draftLayout.getKeywordsMap(),
-			draftLayout.getRobotsMap(), draftLayout.getFriendlyURLMap(),
-			contentPageSpecification, WorkflowConstants.STATUS_DRAFT,
-			serviceContext);
+			draftLayout, layoutStructureValidator, layout.getNameMap(),
+			layout.getTitleMap(), layout.getDescriptionMap(),
+			draftLayout.getKeywordsMap(), draftLayout.getRobotsMap(),
+			draftLayout.getFriendlyURLMap(), contentPageSpecification,
+			WorkflowConstants.STATUS_DRAFT, serviceContext);
 	}
 
 	public static Layout addLayout(
@@ -324,7 +328,8 @@ public class LayoutUtil {
 
 	public static Layout addPortletLayout(
 			CETManager cetManager, String externalReferenceCode,
-			InfoItemServiceRegistry infoItemServiceRegistry, long groupId,
+			InfoItemServiceRegistry infoItemServiceRegistry,
+			LayoutStructureValidator layoutStructureValidator, long groupId,
 			boolean privateLayout, long parentLayoutId,
 			Map<Locale, String> nameMap, Map<Locale, String> titleMap,
 			Map<Locale, String> descriptionMap, Map<Locale, String> keywordsMap,
@@ -351,7 +356,7 @@ public class LayoutUtil {
 
 		layout = updateLayout(
 			cetManager, null, infoItemServiceRegistry, layout,
-			layout.getNameMap(), layout.getTitleMap(),
+			layoutStructureValidator, layout.getNameMap(), layout.getTitleMap(),
 			layout.getDescriptionMap(), layout.getKeywordsMap(),
 			layout.getRobotsMap(), layout.getFriendlyURLMap(),
 			widgetPageSpecification, layout.getStatus(), serviceContext);
@@ -429,6 +434,7 @@ public class LayoutUtil {
 			CETManager cetManager,
 			FragmentEntryProcessorRegistry fragmentEntryProcessorRegistry,
 			InfoItemServiceRegistry infoItemServiceRegistry, Layout layout,
+			LayoutStructureValidator layoutStructureValidator,
 			Map<Locale, String> nameMap, Map<Locale, String> titleMap,
 			Map<Locale, String> descriptionMap, Map<Locale, String> keywordsMap,
 			Map<Locale, String> robotsMap, Map<Locale, String> friendlyURLMap,
@@ -502,21 +508,23 @@ public class LayoutUtil {
 
 		updateLayout(
 			cetManager, fragmentEntryProcessorRegistry, infoItemServiceRegistry,
-			draftLayout, nameMap, titleMap, descriptionMap, keywordsMap,
-			robotsMap, draftLayout.getFriendlyURLMap(),
-			draftContentPageSpecification, draftLayoutStatus, serviceContext);
+			draftLayout, layoutStructureValidator, nameMap, titleMap,
+			descriptionMap, keywordsMap, robotsMap,
+			draftLayout.getFriendlyURLMap(), draftContentPageSpecification,
+			draftLayoutStatus, serviceContext);
 
 		return updateLayout(
 			cetManager, fragmentEntryProcessorRegistry, infoItemServiceRegistry,
-			layout, nameMap, titleMap, descriptionMap, keywordsMap, robotsMap,
-			friendlyURLMap, publishedContentPageSpecification, status,
-			serviceContext);
+			layout, layoutStructureValidator, nameMap, titleMap, descriptionMap,
+			keywordsMap, robotsMap, friendlyURLMap,
+			publishedContentPageSpecification, status, serviceContext);
 	}
 
 	public static Layout updateLayout(
 			CETManager cetManager,
 			FragmentEntryProcessorRegistry fragmentEntryProcessorRegistry,
 			InfoItemServiceRegistry infoItemServiceRegistry, Layout layout,
+			LayoutStructureValidator layoutStructureValidator,
 			Map<Locale, String> nameMap, Map<Locale, String> titleMap,
 			Map<Locale, String> descriptionMap, Map<Locale, String> keywordsMap,
 			Map<Locale, String> robotsMap, Map<Locale, String> friendlyURLMap,
@@ -533,6 +541,7 @@ public class LayoutUtil {
 
 			_updatePageExperiences(
 				fragmentEntryProcessorRegistry, infoItemServiceRegistry, layout,
+				layoutStructureValidator,
 				contentPageSpecification.getPageExperiences(), serviceContext);
 		}
 
@@ -1208,6 +1217,7 @@ public class LayoutUtil {
 	private static void _updatePageExperiences(
 			FragmentEntryProcessorRegistry fragmentEntryProcessorRegistry,
 			InfoItemServiceRegistry infoItemServiceRegistry, Layout layout,
+			LayoutStructureValidator layoutStructureValidator,
 			PageExperience[] pageExperiences, ServiceContext serviceContext)
 		throws Exception {
 
@@ -1266,16 +1276,18 @@ public class LayoutUtil {
 						pageExperience.getExternalReferenceCode(),
 						SegmentsExperienceUtil.addSegmentsExperience(
 							fragmentEntryProcessorRegistry,
-							infoItemServiceRegistry, layout, pageExperience,
-							priority, serviceContext));
+							infoItemServiceRegistry, layout,
+							layoutStructureValidator, pageExperience, priority,
+							serviceContext));
 				}
 				else {
 					actualSegmentsExperiencesMap.put(
 						pageExperience.getExternalReferenceCode(),
 						SegmentsExperienceUtil.updateSegmentsExperience(
 							fragmentEntryProcessorRegistry,
-							infoItemServiceRegistry, layout, pageExperience,
-							priority, oldSegmentsExperience, serviceContext));
+							infoItemServiceRegistry, layout,
+							layoutStructureValidator, pageExperience, priority,
+							oldSegmentsExperience, serviceContext));
 				}
 			}
 

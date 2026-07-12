@@ -19,6 +19,7 @@ import com.liferay.layout.page.template.model.LayoutPageTemplateStructureRel;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureRelLocalService;
 import com.liferay.layout.util.LayoutServiceContextHelper;
+import com.liferay.layout.validator.LayoutStructureValidator;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Layout;
@@ -243,8 +244,8 @@ public class PageExperienceResourceImpl extends BasePageExperienceResourceImpl {
 			return _toPageExperience(
 				SegmentsExperienceUtil.updateSegmentsExperience(
 					_fragmentEntryProcessorRegistry, _infoItemServiceRegistry,
-					layout, pageExperience, pageExperience.getPriority(),
-					segmentsExperience,
+					layout, _layoutStructureValidator, pageExperience,
+					pageExperience.getPriority(), segmentsExperience,
 					ServiceContextUtil.createServiceContext(
 						groupId, contextHttpServletRequest,
 						contextUser.getUserId())));
@@ -282,7 +283,8 @@ public class PageExperienceResourceImpl extends BasePageExperienceResourceImpl {
 			return _toPageExperience(
 				SegmentsExperienceUtil.addSegmentsExperience(
 					_fragmentEntryProcessorRegistry, _infoItemServiceRegistry,
-					layout, pageExperience, pageExperience.getPriority(),
+					layout, _layoutStructureValidator, pageExperience,
+					pageExperience.getPriority(),
 					ServiceContextUtil.createServiceContext(
 						groupId, contextHttpServletRequest,
 						contextUser.getUserId(), pageExperience.getUuid())));
@@ -351,6 +353,9 @@ public class PageExperienceResourceImpl extends BasePageExperienceResourceImpl {
 
 	@Reference
 	private LayoutServiceContextHelper _layoutServiceContextHelper;
+
+	@Reference
+	private LayoutStructureValidator _layoutStructureValidator;
 
 	@Reference(
 		target = "(component.name=com.liferay.headless.admin.site.internal.dto.v1_0.converter.PageExperienceDTOConverter)"

@@ -41,6 +41,7 @@ import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
+import com.liferay.layout.validator.LayoutStructureValidator;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -271,6 +272,7 @@ public class PageTemplateResourceImpl
 				_fragmentEntryProcessorRegistry, _infoItemServiceRegistry,
 				_layoutLocalService.getLayout(
 					layoutPageTemplateEntry.getPlid()),
+				_layoutStructureValidator,
 				ServiceContextUtil.createServiceContext(
 					layoutPageTemplateEntry.getGroupId(),
 					contextHttpServletRequest, contextUser.getUserId())));
@@ -740,7 +742,7 @@ public class PageTemplateResourceImpl
 
 		Layout layout = LayoutUtil.addContentLayout(
 			_cetManager, _fragmentEntryProcessorRegistry, groupId,
-			_infoItemServiceRegistry,
+			_infoItemServiceRegistry, _layoutStructureValidator,
 			contentPageTemplate.getPageSpecifications(), true,
 			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, nameMap, null, null, null,
 			null, LayoutConstants.TYPE_CONTENT, null, true, true,
@@ -921,10 +923,11 @@ public class PageTemplateResourceImpl
 
 		layout = LayoutUtil.updateContentLayout(
 			_cetManager, _fragmentEntryProcessorRegistry,
-			_infoItemServiceRegistry, layout, layout.getNameMap(),
-			layout.getTitleMap(), layout.getDescriptionMap(),
-			layout.getKeywordsMap(), layout.getRobotsMap(),
-			layout.getFriendlyURLMap(), layout.getTypeSettingsProperties(),
+			_infoItemServiceRegistry, layout, _layoutStructureValidator,
+			layout.getNameMap(), layout.getTitleMap(),
+			layout.getDescriptionMap(), layout.getKeywordsMap(),
+			layout.getRobotsMap(), layout.getFriendlyURLMap(),
+			layout.getTypeSettingsProperties(),
 			contentPageTemplate.getPageSpecifications(), serviceContext);
 
 		if (layout.isPublished() && !layoutPageTemplateEntry.isApproved()) {
@@ -1032,6 +1035,9 @@ public class PageTemplateResourceImpl
 
 	@Reference
 	private LayoutPrototypeService _layoutPrototypeService;
+
+	@Reference
+	private LayoutStructureValidator _layoutStructureValidator;
 
 	@Reference(
 		target = "(component.name=com.liferay.headless.admin.site.internal.dto.v1_0.converter.PageSpecificationDTOConverter)"

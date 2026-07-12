@@ -43,6 +43,7 @@ import com.liferay.layout.page.template.model.LayoutPageTemplateCollection;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
+import com.liferay.layout.validator.LayoutStructureValidator;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.lazy.referencing.LazyReferencingThreadLocal;
 import com.liferay.portal.kernel.model.ClassName;
@@ -310,6 +311,7 @@ public class DisplayPageTemplateResourceImpl
 				_fragmentEntryProcessorRegistry, _infoItemServiceRegistry,
 				_layoutLocalService.getLayout(
 					layoutPageTemplateEntry.getPlid()),
+				_layoutStructureValidator,
 				ServiceContextUtil.createServiceContext(
 					layoutPageTemplateEntry.getGroupId(),
 					contextHttpServletRequest, contextUser.getUserId())));
@@ -499,9 +501,9 @@ public class DisplayPageTemplateResourceImpl
 
 		layout = LayoutUtil.updateContentLayout(
 			_cetManager, _fragmentEntryProcessorRegistry,
-			_infoItemServiceRegistry, layout, layout.getNameMap(),
-			layout.getTitleMap(), layout.getDescriptionMap(),
-			layout.getKeywordsMap(),
+			_infoItemServiceRegistry, layout, _layoutStructureValidator,
+			layout.getNameMap(), layout.getTitleMap(),
+			layout.getDescriptionMap(), layout.getKeywordsMap(),
 			_getRobotsMap(displayPageTemplate.getDisplayPageTemplateSettings()),
 			LocalizedMapUtil.getLocalizedMap(
 				displayPageTemplate.getFriendlyUrlPath_i18n()),
@@ -637,7 +639,7 @@ public class DisplayPageTemplateResourceImpl
 
 		Layout layout = LayoutUtil.addContentLayout(
 			_cetManager, _fragmentEntryProcessorRegistry, groupId,
-			_infoItemServiceRegistry,
+			_infoItemServiceRegistry, _layoutStructureValidator,
 			displayPageTemplate.getPageSpecifications(), false,
 			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, nameMap, null, null, null,
 			_getRobotsMap(displayPageTemplateSettings),
@@ -879,6 +881,9 @@ public class DisplayPageTemplateResourceImpl
 
 	@Reference
 	private LayoutPageTemplateEntryService _layoutPageTemplateEntryService;
+
+	@Reference
+	private LayoutStructureValidator _layoutStructureValidator;
 
 	@Reference(
 		target = "(component.name=com.liferay.headless.admin.site.internal.dto.v1_0.converter.PageSpecificationDTOConverter)"

@@ -16,6 +16,7 @@ import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil;
 import com.liferay.layout.util.structure.LayoutStructure;
+import com.liferay.layout.validator.LayoutStructureValidator;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
@@ -41,6 +42,7 @@ public class SegmentsExperienceUtil {
 	public static SegmentsExperience addSegmentsExperience(
 			FragmentEntryProcessorRegistry fragmentEntryProcessorRegistry,
 			InfoItemServiceRegistry infoItemServiceRegistry, Layout layout,
+			LayoutStructureValidator layoutStructureValidator,
 			PageExperience pageExperience, Integer priority,
 			ServiceContext serviceContext)
 		throws Exception {
@@ -76,8 +78,8 @@ public class SegmentsExperienceUtil {
 		LayoutLocalServiceUtil.updateLayoutContent(
 			_getData(
 				fragmentEntryProcessorRegistry, infoItemServiceRegistry, layout,
-				pageExperience, segmentsExperience.getSegmentsExperienceId(),
-				serviceContext),
+				layoutStructureValidator, pageExperience,
+				segmentsExperience.getSegmentsExperienceId(), serviceContext),
 			layout, segmentsExperience.getSegmentsExperienceId());
 
 		return segmentsExperience;
@@ -102,6 +104,7 @@ public class SegmentsExperienceUtil {
 	public static SegmentsExperience updateSegmentsExperience(
 			FragmentEntryProcessorRegistry fragmentEntryProcessorRegistry,
 			InfoItemServiceRegistry infoItemServiceRegistry, Layout layout,
+			LayoutStructureValidator layoutStructureValidator,
 			PageExperience pageExperience, Integer priority,
 			SegmentsExperience segmentsExperience,
 			ServiceContext serviceContext)
@@ -110,8 +113,8 @@ public class SegmentsExperienceUtil {
 		LayoutLocalServiceUtil.updateLayoutContent(
 			_getData(
 				fragmentEntryProcessorRegistry, infoItemServiceRegistry, layout,
-				pageExperience, segmentsExperience.getSegmentsExperienceId(),
-				serviceContext),
+				layoutStructureValidator, pageExperience,
+				segmentsExperience.getSegmentsExperienceId(), serviceContext),
 			layout, segmentsExperience.getSegmentsExperienceId());
 
 		int segmentsExperiencePriority = getPriority(
@@ -169,6 +172,7 @@ public class SegmentsExperienceUtil {
 	private static String _getData(
 			FragmentEntryProcessorRegistry fragmentEntryProcessorRegistry,
 			InfoItemServiceRegistry infoItemServiceRegistry, Layout layout,
+			LayoutStructureValidator layoutStructureValidator,
 			PageExperience pageExperience, long segmentsExperienceId,
 			ServiceContext serviceContext)
 		throws Exception {
@@ -192,6 +196,22 @@ public class SegmentsExperienceUtil {
 			LayoutStructureUtil.addLayoutStructureItem(
 				layoutStructure, layoutStructureItemImporterContext,
 				pageElement);
+		}
+
+		// A drop zone belongs only to a master page's structure (CS-02); a
+		// content page's own structure never contains one, since a master is
+		// applied by reference and merged in at read time. Enforce that for
+		// plain content site pages. A page-template-entry layout (master,
+		// basic, or display page) owns its structure, so it runs the
+		// structural rules alone.
+
+		if (Objects.equals(layout.getType(), LayoutConstants.TYPE_CONTENT) &&
+			!_isLayoutPageTemplateEntryLayout(layout, serviceContext)) {
+
+			layoutStructureValidator.validate(layoutStructure, false);
+		}
+		else {
+			layoutStructureValidator.validate(layoutStructure);
 		}
 
 		return layoutStructure.toString();
@@ -232,6 +252,32 @@ public class SegmentsExperienceUtil {
 		}
 
 		return segmentsEntryReference;
+	}
+
+	private static boolean _isLayoutPageTemplateEntryLayout(
+		Layout layout, ServiceContext serviceContext) {
+
+		if (serviceContext.getAttribute("layout.page.template.entry.type") !=
+				null) {
+
+			return true;
+		}
+
+		long plid = layout.getPlid();
+
+		if (layout.getClassPK() > 0) {
+			plid = layout.getClassPK();
+		}
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			LayoutPageTemplateEntryLocalServiceUtil.
+				fetchLayoutPageTemplateEntryByPlid(plid);
+
+		if (layoutPageTemplateEntry != null) {
+			return true;
+		}
+
+		return false;
 	}
 
 	private static class SegmentsEntryReference {

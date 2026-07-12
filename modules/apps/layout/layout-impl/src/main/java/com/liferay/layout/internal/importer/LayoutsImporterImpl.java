@@ -95,6 +95,7 @@ import com.liferay.layout.utility.page.converter.LayoutUtilityPageEntryTypeConve
 import com.liferay.layout.utility.page.model.LayoutUtilityPageEntry;
 import com.liferay.layout.utility.page.service.LayoutUtilityPageEntryLocalService;
 import com.liferay.layout.utility.page.service.LayoutUtilityPageEntryService;
+import com.liferay.layout.validator.LayoutStructureValidator;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
@@ -1024,6 +1025,8 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 			LayoutStructureConstants.LATEST_PAGE_DEFINITION_VERSION,
 			pageElement, parentItemId, position, preserveItemIds,
 			segmentsExperienceId, new HashSet<>());
+
+		_layoutStructureValidator.validate(layoutStructure);
 
 		consumer.accept(layoutStructure);
 
@@ -2006,6 +2009,8 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 			layoutStructure.addRootLayoutStructureItem();
 		}
 
+		_layoutStructureValidator.validate(layoutStructure);
+
 		_updateLayoutPageTemplateStructure(draftLayout, layoutStructure);
 
 		_publishLayout(draftLayout, layout, userId);
@@ -2527,6 +2532,9 @@ public class LayoutsImporterImpl implements LayoutsImporter {
 
 	private final EnumMap<PageElement.Type, LayoutStructureItemImporter>
 		_layoutStructureItemImporters = new EnumMap<>(PageElement.Type.class);
+
+	@Reference
+	private LayoutStructureValidator _layoutStructureValidator;
 
 	@Reference
 	private LayoutUtilityPageEntryLocalService

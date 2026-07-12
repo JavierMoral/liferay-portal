@@ -28,6 +28,7 @@ import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
 import com.liferay.layout.utility.page.kernel.constants.LayoutUtilityPageEntryConstants;
 import com.liferay.layout.utility.page.model.LayoutUtilityPageEntry;
 import com.liferay.layout.utility.page.service.LayoutUtilityPageEntryService;
+import com.liferay.layout.validator.LayoutStructureValidator;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.search.Field;
@@ -186,6 +187,7 @@ public class UtilityPageResourceImpl
 				_cetManager, contentPageSpecification,
 				_fragmentEntryProcessorRegistry, _infoItemServiceRegistry,
 				_layoutLocalService.getLayout(layoutUtilityPageEntry.getPlid()),
+				_layoutStructureValidator,
 				ServiceContextUtil.createServiceContext(
 					layoutUtilityPageEntry.getGroupId(),
 					contextHttpServletRequest, contextUser.getUserId())));
@@ -321,8 +323,9 @@ public class UtilityPageResourceImpl
 
 		LayoutUtil.updateContentLayout(
 			_cetManager, _fragmentEntryProcessorRegistry,
-			_infoItemServiceRegistry, layout, layout.getNameMap(), titleMap,
-			descriptionMap, layout.getKeywordsMap(), layout.getRobotsMap(),
+			_infoItemServiceRegistry, layout, _layoutStructureValidator,
+			layout.getNameMap(), titleMap, descriptionMap,
+			layout.getKeywordsMap(), layout.getRobotsMap(),
 			LocalizedMapUtil.getLocalizedMap(
 				utilityPage.getFriendlyUrlPath_i18n()),
 			layout.getTypeSettingsProperties(),
@@ -471,8 +474,9 @@ public class UtilityPageResourceImpl
 
 		Layout layout = LayoutUtil.addContentLayout(
 			_cetManager, _fragmentEntryProcessorRegistry, groupId,
-			_infoItemServiceRegistry, utilityPage.getPageSpecifications(),
-			false, LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, nameMap, titleMap,
+			_infoItemServiceRegistry, _layoutStructureValidator,
+			utilityPage.getPageSpecifications(), false,
+			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID, nameMap, titleMap,
 			descriptionMap, null, null, LayoutConstants.TYPE_UTILITY, null,
 			true, true,
 			LocalizedMapUtil.getLocalizedMap(
@@ -560,6 +564,9 @@ public class UtilityPageResourceImpl
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;
+
+	@Reference
+	private LayoutStructureValidator _layoutStructureValidator;
 
 	@Reference
 	private LayoutUtilityPageEntryService _layoutUtilityPageEntryService;
