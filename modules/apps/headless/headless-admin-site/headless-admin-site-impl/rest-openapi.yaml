@@ -8476,6 +8476,9 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/SitePage"
+                409:
+                    description:
+                        "A site page with the same external reference code already exists, a page experience key is duplicated, the page conflicts with a layout type constraint, or the friendly URL is already in use or conflicts with a reserved keyword."
             # @review
             tags: ["SitePage"]
     "/sites/{siteExternalReferenceCode}/site-pages/{sitePageExternalReferenceCode}":
@@ -8500,6 +8503,12 @@ paths:
                     content:
                         application/json: {}
                         application/xml: {}
+                404:
+                    description:
+                        "The requested site page could not be found."
+                409:
+                    description:
+                        "The page is required and cannot be deleted, or the page is locked by another user."
             tags: ["SitePage"]
         get:
             # @review
@@ -8538,6 +8547,9 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/SitePage"
+                404:
+                    description:
+                        "The requested site page could not be found."
             tags: ["SitePage"]
         patch:
             # @review
@@ -8589,6 +8601,12 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/SitePage"
+                404:
+                    description:
+                        "The requested site page could not be found."
+                409:
+                    description:
+                        "A page experience key is duplicated, the page conflicts with a layout type constraint, the page is locked by another user, or the friendly URL is already in use or conflicts with a reserved keyword."
             tags: ["SitePage"]
         put:
             # @review
@@ -8640,6 +8658,9 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/SitePage"
+                409:
+                    description:
+                        "A site page with the same external reference code already exists, a page experience key is duplicated, the page conflicts with a layout type constraint, the page is locked by another user, or the friendly URL is already in use or conflicts with a reserved keyword."
             tags: ["SitePage"]
     "/sites/{siteExternalReferenceCode}/site-pages/{sitePageExternalReferenceCode}/friendly-url-history":
         get:
