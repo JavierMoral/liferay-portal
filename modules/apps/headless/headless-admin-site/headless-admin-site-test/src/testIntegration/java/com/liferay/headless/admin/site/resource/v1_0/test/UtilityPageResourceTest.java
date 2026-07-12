@@ -19,13 +19,14 @@ import com.liferay.headless.admin.site.client.resource.v1_0.UtilityPageResource;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.FileEntryTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.LayoutUtilityPageEntryTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.PageSpecificationsTestUtil;
+import com.liferay.headless.admin.site.resource.v1_0.test.util.ProblemExceptionTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.ThumbnailHttpServer;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.ThumbnailURLReferenceUtil;
 import com.liferay.layout.test.util.ContentLayoutTestUtil;
 import com.liferay.layout.utility.page.model.LayoutUtilityPageEntry;
 import com.liferay.layout.utility.page.service.LayoutUtilityPageEntryLocalService;
-import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.io.StreamUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
@@ -147,8 +148,11 @@ public class UtilityPageResourceTest extends BaseUtilityPageResourceTestCase {
 					postUtilityPage.getExternalReferenceCode(),
 					testGroup.getGroupId()));
 
-		_assertProblemException(
-			"NOT_FOUND", null,
+		ProblemExceptionTestUtil.assertProblemException(
+			"NOT_FOUND",
+			StringBundler.concat(
+				"No utility page exists with the external reference code \"",
+				postUtilityPage.getExternalReferenceCode(), "\""),
 			() -> utilityPageResource.deleteSiteUtilityPage(
 				testGroup.getExternalReferenceCode(),
 				postUtilityPage.getExternalReferenceCode()));
@@ -171,11 +175,15 @@ public class UtilityPageResourceTest extends BaseUtilityPageResourceTestCase {
 		assertEquals(postUtilityPage, getUtilityPage);
 		assertValid(getUtilityPage);
 
-		_assertProblemException(
-			"NOT_FOUND", null,
+		String externalReferenceCode = RandomTestUtil.randomString();
+
+		ProblemExceptionTestUtil.assertProblemException(
+			"NOT_FOUND",
+			StringBundler.concat(
+				"No utility page exists with the external reference code \"",
+				externalReferenceCode, "\""),
 			() -> utilityPageResource.getSiteUtilityPage(
-				testGroup.getExternalReferenceCode(),
-				RandomTestUtil.randomString()));
+				testGroup.getExternalReferenceCode(), externalReferenceCode));
 
 		LayoutUtilityPageEntry layoutUtilityPageEntry =
 			_layoutUtilityPageEntryLocalService.
@@ -320,11 +328,16 @@ public class UtilityPageResourceTest extends BaseUtilityPageResourceTestCase {
 		_testPatchSiteUtilityPageWithPageSpecifications();
 		_testPatchSiteUtilityPageWithThumbnail();
 
-		_assertProblemException(
-			"NOT_FOUND", null,
+		String externalReferenceCode = RandomTestUtil.randomString();
+
+		ProblemExceptionTestUtil.assertProblemException(
+			"NOT_FOUND",
+			StringBundler.concat(
+				"No utility page exists with the external reference code \"",
+				externalReferenceCode, "\""),
 			() -> utilityPageResource.patchSiteUtilityPage(
-				testGroup.getExternalReferenceCode(),
-				RandomTestUtil.randomString(), randomUtilityPage()));
+				testGroup.getExternalReferenceCode(), externalReferenceCode,
+				randomUtilityPage()));
 	}
 
 	@Override
@@ -391,10 +404,11 @@ public class UtilityPageResourceTest extends BaseUtilityPageResourceTestCase {
 
 		Assert.assertFalse(layout.isPublished());
 
-		_assertProblemException(
-			"BAD_REQUEST", null,
-			() -> _testPutSiteUtilityPage(
-				Boolean.TRUE,
+		ProblemExceptionTestUtil.assertProblemException(
+			"CONFLICT", "The default utility page must be published first",
+			() -> utilityPageResource.putSiteUtilityPage(
+				testGroup.getExternalReferenceCode(),
+				layoutUtilityPageEntry.getExternalReferenceCode(),
 				_getUtilityPage(
 					null, Boolean.TRUE,
 					layoutUtilityPageEntry.getExternalReferenceCode())));
@@ -566,24 +580,6 @@ public class UtilityPageResourceTest extends BaseUtilityPageResourceTestCase {
 		PageSpecificationsTestUtil.assertPageSpecifications(
 			draftContentPageSpecification, publishedContentPageSpecification,
 			utilityPage.getPageSpecifications(), layout, status);
-	}
-
-	private void _assertProblemException(
-			String expectedStatus, String expectedTitle,
-			UnsafeRunnable<Exception> unsafeRunnable)
-		throws Exception {
-
-		try {
-			unsafeRunnable.run();
-
-			Assert.fail();
-		}
-		catch (Problem.ProblemException problemException) {
-			Problem problem = problemException.getProblem();
-
-			Assert.assertEquals(expectedStatus, problem.getStatus());
-			Assert.assertEquals(expectedTitle, problem.getTitle());
-		}
 	}
 
 	private void _assertThumbnailFileEntryId(
@@ -942,7 +938,7 @@ public class UtilityPageResourceTest extends BaseUtilityPageResourceTestCase {
 
 			PageSpecification pageSpecification = pageSpecifications[0];
 
-			_assertProblemException(
+			ProblemExceptionTestUtil.assertProblemException(
 				"BAD_REQUEST", "Utility pages do not support custom fields",
 				() -> utilityPageResource.patchSiteUtilityPage(
 					testGroup.getExternalReferenceCode(),
@@ -1099,7 +1095,7 @@ public class UtilityPageResourceTest extends BaseUtilityPageResourceTestCase {
 				() -> PageSpecificationsTestUtil.getContentPageSpecifications(
 					RandomTestUtil.randomString(), testGroup.getGroupId()));
 
-			_assertProblemException(
+			ProblemExceptionTestUtil.assertProblemException(
 				"BAD_REQUEST", "Utility pages do not support custom fields",
 				() -> utilityPageResource.postSiteUtilityPage(
 					testGroup.getExternalReferenceCode(), utilityPage));
@@ -1385,7 +1381,7 @@ public class UtilityPageResourceTest extends BaseUtilityPageResourceTestCase {
 					pageSpecification.getExternalReferenceCode(),
 					testGroup.getGroupId()));
 
-			_assertProblemException(
+			ProblemExceptionTestUtil.assertProblemException(
 				"BAD_REQUEST", "Utility pages do not support custom fields",
 				() -> utilityPageResource.patchSiteUtilityPage(
 					testGroup.getExternalReferenceCode(),

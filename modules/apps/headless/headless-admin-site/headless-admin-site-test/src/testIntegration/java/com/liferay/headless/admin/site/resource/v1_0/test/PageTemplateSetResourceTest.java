@@ -9,9 +9,8 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.exportimport.kernel.service.StagingLocalService;
 import com.liferay.headless.admin.site.client.dto.v1_0.PageTemplateSet;
 import com.liferay.headless.admin.site.client.pagination.Page;
-import com.liferay.headless.admin.site.client.problem.Problem;
+import com.liferay.headless.admin.site.resource.v1_0.test.util.ProblemExceptionTestUtil;
 import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionLocalService;
-import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
@@ -85,8 +84,8 @@ public class PageTemplateSetResourceTest
 
 		_enableLocalStaging(irrelevantGroup);
 
-		_assertProblemException(
-			"BAD_REQUEST", null,
+		ProblemExceptionTestUtil.assertProblemException(
+			"BAD_REQUEST", "The site does not support this operation",
 			() -> pageTemplateSetResource.deleteSitePageTemplateSet(
 				irrelevantGroup.getExternalReferenceCode(),
 				liveGroupPageTemplateSet.getExternalReferenceCode()));
@@ -222,8 +221,8 @@ public class PageTemplateSetResourceTest
 
 		_enableLocalStaging();
 
-		_assertProblemException(
-			"BAD_REQUEST", null,
+		ProblemExceptionTestUtil.assertProblemException(
+			"BAD_REQUEST", "The site does not support this operation",
 			() -> pageTemplateSetResource.patchSitePageTemplateSet(
 				testGroup.getExternalReferenceCode(),
 				pageTemplateSet.getExternalReferenceCode(), pageTemplateSet));
@@ -273,6 +272,8 @@ public class PageTemplateSetResourceTest
 			key,
 			StringBundler.concat(
 				"Key ", key, " must have fewer than 75 characters"));
+
+		_testPostSitePageTemplateSetWithDuplicateName();
 	}
 
 	@Override
@@ -290,8 +291,8 @@ public class PageTemplateSetResourceTest
 
 		_enableLocalStaging();
 
-		_assertProblemException(
-			"BAD_REQUEST", null,
+		ProblemExceptionTestUtil.assertProblemException(
+			"BAD_REQUEST", "The site does not support this operation",
 			() -> pageTemplateSetResource.putSitePageTemplateSet(
 				testGroup.getExternalReferenceCode(),
 				pageTemplateSet.getExternalReferenceCode(), pageTemplateSet));
@@ -329,24 +330,6 @@ public class PageTemplateSetResourceTest
 			testGroup.getExternalReferenceCode(), pageTemplateSet);
 	}
 
-	private void _assertProblemException(
-			String status, String title,
-			UnsafeRunnable<Exception> unsafeRunnable)
-		throws Exception {
-
-		try {
-			unsafeRunnable.run();
-
-			Assert.fail();
-		}
-		catch (Problem.ProblemException problemException) {
-			Problem problem = problemException.getProblem();
-
-			Assert.assertEquals(status, problem.getStatus());
-			Assert.assertEquals(title, problem.getTitle());
-		}
-	}
-
 	private void _enableLocalStaging() throws Exception {
 		_enableLocalStaging(testGroup);
 	}
@@ -374,7 +357,7 @@ public class PageTemplateSetResourceTest
 
 		pageTemplateSet.setKey(key);
 
-		_assertProblemException(
+		ProblemExceptionTestUtil.assertProblemException(
 			"CONFLICT", title,
 			() -> pageTemplateSetResource.postSitePageTemplateSet(
 				testGroup.getExternalReferenceCode(), pageTemplateSet));
@@ -403,6 +386,25 @@ public class PageTemplateSetResourceTest
 		assertValid(postPageTemplateSet);
 
 		return postPageTemplateSet;
+	}
+
+	private void _testPostSitePageTemplateSetWithDuplicateName()
+		throws Exception {
+
+		PageTemplateSet pageTemplateSet1 = _testPostSitePageTemplateSet(
+			randomPageTemplateSet());
+
+		PageTemplateSet pageTemplateSet2 = randomPageTemplateSet();
+
+		pageTemplateSet2.setName(pageTemplateSet1.getName());
+
+		ProblemExceptionTestUtil.assertProblemException(
+			"CONFLICT",
+			StringBundler.concat(
+				"A page template set with name ", pageTemplateSet1.getName(),
+				" already exists"),
+			() -> pageTemplateSetResource.postSitePageTemplateSet(
+				testGroup.getExternalReferenceCode(), pageTemplateSet2));
 	}
 
 	@Inject
