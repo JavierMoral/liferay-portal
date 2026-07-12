@@ -7,7 +7,7 @@ package com.liferay.headless.admin.site.internal.vulcan.problem;
 
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.exception.LayoutPageTemplateEntryDefaultTemplateException;
-import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.vulcan.problem.Problem;
 import com.liferay.portal.vulcan.problem.ProblemMapper;
 
@@ -37,9 +37,8 @@ public class DisplayPageTemplateMarkAsDefaultExceptionProblemMapper
 		}
 
 		return ProblemUtil.getProblem(
-			StringUtil.replace(
-				layoutPageTemplateEntryDefaultTemplateException.getMessage(),
-				"layout page template entry", name),
+			StringBundler.concat(
+				"The default ", name, " must be published first"),
 			Problem.Status.CONFLICT,
 			layoutPageTemplateEntryDefaultTemplateException);
 	}

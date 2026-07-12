@@ -21,6 +21,7 @@ import com.liferay.headless.admin.site.dto.v1_0.SitemapSettings;
 import com.liferay.headless.admin.site.dto.v1_0.util.FileEntryUtil;
 import com.liferay.headless.admin.site.internal.dto.v1_0.util.DTOConverterContextUtil;
 import com.liferay.headless.admin.site.internal.dto.v1_0.util.SubtypeUtil;
+import com.liferay.headless.admin.site.internal.exception.NoSuchEntityException;
 import com.liferay.headless.admin.site.internal.odata.entity.v1_0.DisplayPageTemplateEntityModel;
 import com.liferay.headless.admin.site.internal.resource.v1_0.util.DisplayPageTemplateFolderUtil;
 import com.liferay.headless.admin.site.internal.resource.v1_0.util.LayoutUtil;
@@ -108,10 +109,22 @@ public class DisplayPageTemplateResourceImpl
 
 		EnabledUtil.checkEnabled(contextCompany);
 
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_layoutPageTemplateEntryService.
+				fetchLayoutPageTemplateEntryByExternalReferenceCode(
+					displayPageTemplateExternalReferenceCode,
+					GroupUtil.getStagingAwareGroupId(
+						contextCompany.getCompanyId(),
+						siteExternalReferenceCode));
+
+		if (layoutPageTemplateEntry == null) {
+			throw new NoSuchEntityException(
+				"display page template",
+				displayPageTemplateExternalReferenceCode);
+		}
+
 		_layoutPageTemplateEntryService.deleteLayoutPageTemplateEntry(
-			displayPageTemplateExternalReferenceCode,
-			GroupUtil.getStagingAwareGroupId(
-				contextCompany.getCompanyId(), siteExternalReferenceCode));
+			layoutPageTemplateEntry.getLayoutPageTemplateEntryId());
 	}
 
 	@Override
@@ -273,6 +286,11 @@ public class DisplayPageTemplateResourceImpl
 						contextCompany.getCompanyId(),
 						siteExternalReferenceCode));
 
+		if (layoutPageTemplateEntry == null) {
+			throw new NoSuchEntityException(
+				"display page template", pageTemplateExternalReferenceCode);
+		}
+
 		if (!Objects.equals(
 				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE,
 				layoutPageTemplateEntry.getType())) {
@@ -307,11 +325,17 @@ public class DisplayPageTemplateResourceImpl
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryService.
-				getLayoutPageTemplateEntryByExternalReferenceCode(
+				fetchLayoutPageTemplateEntryByExternalReferenceCode(
 					displayPageTemplateExternalReferenceCode,
 					GroupUtil.getGroupId(
 						true, contextCompany.getCompanyId(),
 						siteExternalReferenceCode));
+
+		if (layoutPageTemplateEntry == null) {
+			throw new NoSuchEntityException(
+				"display page template",
+				displayPageTemplateExternalReferenceCode);
+		}
 
 		if (!Objects.equals(
 				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE,
@@ -505,15 +529,16 @@ public class DisplayPageTemplateResourceImpl
 						displayPageTemplate.getMarkedAsDefault()));
 		}
 
+		long layoutPageTemplateEntryId =
+			layoutPageTemplateEntry.getLayoutPageTemplateEntryId();
+
 		return _displayPageTemplateDTOConverter.toDTO(
 			DTOConverterContextUtil.getDTOConverterContext(
 				contextAcceptLanguage, _dtoConverterRegistry,
-				contextHttpServletRequest,
-				layoutPageTemplateEntry.getLayoutPageTemplateEntryId(),
+				contextHttpServletRequest, layoutPageTemplateEntryId,
 				contextUriInfo, contextUser),
 			_layoutPageTemplateEntryService.updateLayoutPageTemplateEntry(
-				layoutPageTemplateEntry.getLayoutPageTemplateEntryId(),
-				displayPageTemplate.getName()));
+				layoutPageTemplateEntryId, displayPageTemplate.getName()));
 	}
 
 	@Override
@@ -523,9 +548,14 @@ public class DisplayPageTemplateResourceImpl
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryService.
-				getLayoutPageTemplateEntryByExternalReferenceCode(
+				fetchLayoutPageTemplateEntryByExternalReferenceCode(
 					externalReferenceCode,
 					getPermissionCheckerGroupId(groupExternalReferenceCode));
+
+		if (layoutPageTemplateEntry == null) {
+			throw new NoSuchEntityException(
+				"display page template", externalReferenceCode);
+		}
 
 		return layoutPageTemplateEntry.getPrimaryKey();
 	}
