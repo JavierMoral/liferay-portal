@@ -5901,6 +5901,9 @@ paths:
                                 items:
                                     $ref: "#/components/schemas/PageSpecification"
                                 type: array
+                404:
+                    description:
+                        "The requested display page template could not be found."
             # @review
             tags: ["PageSpecification"]
         post:
@@ -5948,6 +5951,9 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/ContentPageSpecification"
+                404:
+                    description:
+                        "The requested display page template could not be found."
             # @review
             tags: ["DisplayPageTemplate"]
     "/sites/{siteExternalReferenceCode}/display-page-templates/{displayPageTemplateExternalReferenceCode}/permissions":
@@ -6293,6 +6299,9 @@ paths:
                                 items:
                                     $ref: "#/components/schemas/PageSpecification"
                                 type: array
+                404:
+                    description:
+                        "The requested master page could not be found."
             # @review
             tags: ["PageSpecification"]
         post:
@@ -6340,6 +6349,12 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/ContentPageSpecification"
+                404:
+                    description:
+                        "The requested master page could not be found."
+                409:
+                    description:
+                        "A page experience key is duplicated."
             # @review
             tags: ["MasterPage"]
     "/sites/{siteExternalReferenceCode}/master-pages/{masterPageExternalReferenceCode}/permissions":
@@ -6849,6 +6864,12 @@ paths:
                     content:
                         application/json: {}
                         application/xml: {}
+                404:
+                    description:
+                        "The requested page specification could not be found."
+                409:
+                    description:
+                        "The page is locked."
             tags: ["PageSpecification"]
         get:
             # @review
@@ -6887,6 +6908,9 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/PageSpecification"
+                404:
+                    description:
+                        "The requested page specification could not be found."
             tags: ["PageSpecification"]
         patch:
             # @review
@@ -6933,6 +6957,12 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/PageSpecification"
+                404:
+                    description:
+                        "The requested page specification could not be found."
+                409:
+                    description:
+                        "A page experience key is duplicated, a page experience is used by an A/B test, or the page is locked by another user."
             tags: ["PageSpecification"]
         put:
             # @review
@@ -6979,6 +7009,12 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/PageSpecification"
+                404:
+                    description:
+                        "The requested page specification could not be found."
+                409:
+                    description:
+                        "A page experience key is duplicated, a page experience is used by an A/B test, or the page is locked by another user."
             tags: ["PageSpecification"]
     "/sites/{siteExternalReferenceCode}/page-specifications/{pageSpecificationExternalReferenceCode}/page-experiences":
         get:
@@ -7590,6 +7626,9 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/PageTemplateSet"
+                409:
+                    description:
+                        "A page template set with the same name already exists."
             # @review
             tags: ["PageTemplateSet"]
     "/sites/{siteExternalReferenceCode}/page-template-sets/{pageTemplateSetExternalReferenceCode}":
@@ -8183,6 +8222,9 @@ paths:
                                 items:
                                     $ref: "#/components/schemas/PageSpecification"
                                 type: array
+                404:
+                    description:
+                        "The requested page template could not be found."
             # @review
             tags: ["PageSpecification"]
         post:
@@ -8678,6 +8720,9 @@ paths:
                                 items:
                                     $ref: "#/components/schemas/PageSpecification"
                                 type: array
+                404:
+                    description:
+                        "The requested site page could not be found."
             # @review
             tags: ["PageSpecification"]
         post:
@@ -8724,6 +8769,12 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/ContentPageSpecification"
+                404:
+                    description:
+                        "The requested site page could not be found."
+                409:
+                    description:
+                        "A page experience key is duplicated, or the page is locked by another user."
             # @review
             tags: ["SitePage"]
     "/sites/{siteExternalReferenceCode}/site-pages/{sitePageExternalReferenceCode}/permissions":
@@ -9555,6 +9606,9 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/UtilityPage"
+                409:
+                    description:
+                        "The default utility page must be published first."
             tags: ["UtilityPage"]
     "/sites/{siteExternalReferenceCode}/utility-pages/{utilityPageExternalReferenceCode}/friendly-url-history":
         get:
@@ -9635,6 +9689,9 @@ paths:
                                 items:
                                     $ref: "#/components/schemas/PageSpecification"
                                 type: array
+                404:
+                    description:
+                        "The requested utility page could not be found."
             # @review
             tags: ["PageSpecification"]
         post:
