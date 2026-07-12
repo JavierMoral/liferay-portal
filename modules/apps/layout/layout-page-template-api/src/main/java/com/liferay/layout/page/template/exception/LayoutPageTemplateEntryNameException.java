@@ -5,6 +5,7 @@
 
 package com.liferay.layout.page.template.exception;
 
+import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
 
@@ -14,31 +15,46 @@ import com.liferay.portal.kernel.exception.PortalException;
 public class LayoutPageTemplateEntryNameException extends PortalException {
 
 	public LayoutPageTemplateEntryNameException() {
+		_type = LayoutPageTemplateEntryTypeConstants.BASIC;
 	}
 
 	public LayoutPageTemplateEntryNameException(String msg) {
 		super(msg);
+
+		_type = LayoutPageTemplateEntryTypeConstants.BASIC;
 	}
 
 	public LayoutPageTemplateEntryNameException(
 		String msg, Throwable throwable) {
 
 		super(msg, throwable);
+
+		_type = LayoutPageTemplateEntryTypeConstants.BASIC;
 	}
 
 	public LayoutPageTemplateEntryNameException(Throwable throwable) {
 		super(throwable);
+
+		_type = LayoutPageTemplateEntryTypeConstants.BASIC;
+	}
+
+	public int getType() {
+		return _type;
 	}
 
 	public static class MustNotBeDuplicate
 		extends LayoutPageTemplateEntryNameException {
 
 		public MustNotBeDuplicate(long groupId, String name) {
+			this(groupId, name, LayoutPageTemplateEntryTypeConstants.BASIC);
+		}
+
+		public MustNotBeDuplicate(long groupId, String name, int type) {
 			super(
-				String.format(
-					StringBundler.concat(
-						"Duplicate layout page template for group ", groupId,
-						" with name ", name)));
+				StringBundler.concat(
+					"Duplicate layout page template for group ", groupId,
+					" with name ", name),
+				type);
 		}
 
 	}
@@ -73,5 +89,13 @@ public class LayoutPageTemplateEntryNameException extends PortalException {
 		}
 
 	}
+
+	private LayoutPageTemplateEntryNameException(String msg, int type) {
+		super(msg);
+
+		_type = type;
+	}
+
+	private final int _type;
 
 }

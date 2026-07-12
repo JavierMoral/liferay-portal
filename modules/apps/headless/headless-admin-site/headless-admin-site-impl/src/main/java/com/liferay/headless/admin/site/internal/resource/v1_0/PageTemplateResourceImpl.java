@@ -41,6 +41,7 @@ import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.lazy.referencing.LazyReferencingThreadLocal;
@@ -119,6 +120,18 @@ public class PageTemplateResourceImpl
 		if (layoutPageTemplateEntry == null) {
 			throw new NoSuchEntityException(
 				"page template", pageTemplateExternalReferenceCode);
+		}
+
+		if (!Objects.equals(
+				LayoutPageTemplateEntryTypeConstants.BASIC,
+				layoutPageTemplateEntry.getType()) &&
+			!Objects.equals(
+				LayoutPageTemplateEntryTypeConstants.WIDGET_PAGE,
+				layoutPageTemplateEntry.getType())) {
+
+			throw new IllegalArgumentException(
+				"The external reference code does not point to a page " +
+					"template");
 		}
 
 		_layoutPageTemplateEntryService.deleteLayoutPageTemplateEntry(
@@ -412,7 +425,8 @@ public class PageTemplateResourceImpl
 			 !(pageTemplate instanceof WidgetPageTemplate))) {
 
 			throw new IllegalArgumentException(
-				"The page template must be of type basic or widget");
+				"The page template type does not match the target page " +
+					"template type");
 		}
 
 		long layoutPageTemplateCollectionId =
@@ -756,8 +770,10 @@ public class PageTemplateResourceImpl
 		if (layoutPageTemplateCollection == null) {
 			if (!LazyReferencingThreadLocal.isEnabled()) {
 				throw new IllegalArgumentException(
-					"The provided external reference code does not point to " +
-						"a display page template folder");
+					StringBundler.concat(
+						"The external reference code \"",
+						pageTemplateSet.getExternalReferenceCode(),
+						"\" does not point to a page template set"));
 			}
 
 			layoutPageTemplateCollection =
@@ -769,7 +785,7 @@ public class PageTemplateResourceImpl
 					layoutPageTemplateCollection.getType())) {
 
 			throw new IllegalArgumentException(
-				"The display page template folder must be of type basic");
+				"The page template set must be of type basic");
 		}
 
 		return layoutPageTemplateCollection;

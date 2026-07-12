@@ -1325,7 +1325,7 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 			(type == LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT)) {
 
 			throw new LayoutPageTemplateEntryNameException.MustNotBeDuplicate(
-				groupId, name);
+				groupId, name, type);
 		}
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
@@ -1334,7 +1334,7 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 
 		if (layoutPageTemplateEntry != null) {
 			throw new LayoutPageTemplateEntryNameException.MustNotBeDuplicate(
-				groupId, name);
+				groupId, name, type);
 		}
 	}
 

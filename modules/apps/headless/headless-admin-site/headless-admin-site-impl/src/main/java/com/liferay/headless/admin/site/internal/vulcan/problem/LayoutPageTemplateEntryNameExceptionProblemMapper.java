@@ -5,6 +5,7 @@
 
 package com.liferay.headless.admin.site.internal.vulcan.problem;
 
+import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.exception.LayoutPageTemplateEntryNameException;
 import com.liferay.portal.vulcan.problem.Problem;
 import com.liferay.portal.vulcan.problem.ProblemMapper;
@@ -24,8 +25,21 @@ public class LayoutPageTemplateEntryNameExceptionProblemMapper
 		LayoutPageTemplateEntryNameException.MustNotBeDuplicate
 			mustNotBeDuplicate) {
 
+		String name = "page template";
+
+		if (mustNotBeDuplicate.getType() ==
+				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE) {
+
+			name = "display page template";
+		}
+		else if (mustNotBeDuplicate.getType() ==
+					LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT) {
+
+			name = "master page";
+		}
+
 		return ProblemUtil.getProblem(
-			"A page template with the same name already exists",
+			"A " + name + " with the same name already exists",
 			Problem.Status.CONFLICT, mustNotBeDuplicate);
 	}
 
