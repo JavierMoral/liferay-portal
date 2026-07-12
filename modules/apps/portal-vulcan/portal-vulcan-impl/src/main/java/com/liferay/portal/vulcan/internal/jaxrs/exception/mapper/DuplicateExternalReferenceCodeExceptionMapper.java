@@ -12,7 +12,6 @@ import com.liferay.portal.vulcan.jaxrs.exception.mapper.BaseExceptionMapper;
 import com.liferay.portal.vulcan.jaxrs.exception.mapper.Problem;
 
 import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.Response;
 
 /**
  * @author Murilo Stodolni
@@ -29,11 +28,7 @@ public class DuplicateExternalReferenceCodeExceptionMapper
 		DuplicateExternalReferenceCodeException
 			duplicateExternalReferenceCodeException) {
 
-		return new Problem(
-			Response.Status.BAD_REQUEST,
-			_language.get(
-				_acceptLanguage.getPreferredLocale(),
-				"this-external-reference-code-is-already-in-use"));
+		return new Problem(duplicateExternalReferenceCodeException);
 	}
 
 	@Context

@@ -85,6 +85,7 @@ import com.liferay.segments.service.SegmentsExperienceLocalServiceUtil;
 import com.liferay.style.book.model.StyleBookEntry;
 import com.liferay.style.book.service.StyleBookEntryLocalServiceUtil;
 
+import java.io.IOException;
 import java.io.Serializable;
 
 import java.util.Arrays;
@@ -415,6 +416,10 @@ public class LayoutUtil {
 
 		Layout draftLayout = layout.fetchDraftLayout();
 
+		if (draftLayout == null) {
+			return layout.isApproved();
+		}
+
 		return GetterUtil.getBoolean(
 			draftLayout.getTypeSettingsProperty(
 				LayoutTypeSettingsConstants.KEY_PUBLISHED));
@@ -680,7 +685,13 @@ public class LayoutUtil {
 			return null;
 		}
 
-		return URLUtil.getByteArray(iconImageURL.getUrl());
+		try {
+			return URLUtil.getByteArray(iconImageURL.getUrl());
+		}
+		catch (IOException ioException) {
+			throw new IllegalArgumentException(
+				"The icon image URL could not be read", ioException);
+		}
 	}
 
 	private static String _getMasterLayoutPageTemplateEntryERC(
@@ -703,8 +714,8 @@ public class LayoutUtil {
 
 		if (itemExternalReference.getScope() != null) {
 			throw new IllegalArgumentException(
-				"The master page references do not belong to the same scope " +
-					"as the current page");
+				"The master page reference does not belong to the same scope " +
+					"as the target page");
 		}
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
@@ -731,7 +742,10 @@ public class LayoutUtil {
 				layoutPageTemplateEntry.getType())) {
 
 			throw new IllegalArgumentException(
-				"The master page reference does not point to a master page");
+				StringBundler.concat(
+					"The external reference code \"",
+					itemExternalReference.getExternalReferenceCode(),
+					"\" does not point to a master page"));
 		}
 
 		if (layoutPageTemplateEntry == null) {
@@ -1355,17 +1369,20 @@ public class LayoutUtil {
 					setUpdateLayoutModifiedDateWithSafeCloseable(false)) {
 
 			for (WidgetPageSection widgetPageSection : widgetPageSections) {
+				if (!columns.contains(widgetPageSection.getId())) {
+					throw new IllegalArgumentException(
+						"The widget page section " + widgetPageSection.getId() +
+							" does not exist");
+				}
+
 				boolean customizable = GetterUtil.getBoolean(
 					unicodeProperties.get(
 						CustomizedPages.namespaceColumnId(
 							widgetPageSection.getId())));
 
-				if (!columns.contains(widgetPageSection.getId()) ||
-					(!layoutCustomizable && customizable)) {
-
+				if (!layoutCustomizable && customizable) {
 					throw new IllegalArgumentException(
-						"The widget page section is missing, or the page is " +
-							"not customizable");
+						"The page is not customizable");
 				}
 
 				for (WidgetPageWidgetInstance widgetPageWidgetInstance :
