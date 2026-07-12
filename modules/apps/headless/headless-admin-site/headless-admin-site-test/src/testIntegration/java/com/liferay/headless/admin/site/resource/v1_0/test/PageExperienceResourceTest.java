@@ -7,9 +7,10 @@ package com.liferay.headless.admin.site.resource.v1_0.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.headless.admin.site.client.dto.v1_0.PageExperience;
-import com.liferay.headless.admin.site.client.problem.Problem;
+import com.liferay.headless.admin.site.resource.v1_0.test.util.LayoutPageTemplateEntryTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.PageElementsTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.PageExperiencesTestUtil;
+import com.liferay.headless.admin.site.resource.v1_0.test.util.ProblemExceptionTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.ReferencesTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.function.UnsafeRunnable;
@@ -19,11 +20,15 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.test.log.LogCapture;
 import com.liferay.portal.test.log.LogEntry;
 import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
+import com.liferay.segments.constants.SegmentsExperienceConstants;
+import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 import com.liferay.segments.test.util.SegmentsTestUtil;
 
@@ -86,21 +91,16 @@ public class PageExperienceResourceTest
 					postPageExperience.getExternalReferenceCode(),
 					testGroup.getGroupId()));
 
+		_testDeleteSitePageExperienceWithDefaultPageExperience();
 		_testDeleteSitePageExperienceWithPriority();
 
-		try {
-			pageExperienceResource.deleteSitePageExperience(
+		ProblemExceptionTestUtil.assertProblemException(
+			"NOT_FOUND",
+			"No page experience exists with the external reference code \"" +
+				postPageExperience.getExternalReferenceCode() + "\"",
+			() -> pageExperienceResource.deleteSitePageExperience(
 				testGroup.getExternalReferenceCode(),
-				postPageExperience.getExternalReferenceCode());
-
-			Assert.fail();
-		}
-		catch (Problem.ProblemException problemException) {
-			Problem problem = problemException.getProblem();
-
-			Assert.assertEquals("NOT_FOUND", problem.getStatus());
-			Assert.assertNull(problem.getTitle());
-		}
+				postPageExperience.getExternalReferenceCode()));
 	}
 
 	@Override
@@ -118,19 +118,18 @@ public class PageExperienceResourceTest
 		assertEquals(postPageExperience, getPageExperience);
 		assertValid(getPageExperience);
 
-		try {
-			pageExperienceResource.getSitePageExperience(
+		String pageExperienceExternalReferenceCode =
+			RandomTestUtil.randomString();
+
+		ProblemExceptionTestUtil.assertProblemException(
+			"NOT_FOUND",
+			"No page experience exists with the external reference code \"" +
+				pageExperienceExternalReferenceCode + "\"",
+			() -> pageExperienceResource.getSitePageExperience(
 				testGroup.getExternalReferenceCode(),
-				RandomTestUtil.randomString());
+				pageExperienceExternalReferenceCode));
 
-			Assert.fail();
-		}
-		catch (Problem.ProblemException problemException) {
-			Problem problem = problemException.getProblem();
-
-			Assert.assertEquals("NOT_FOUND", problem.getStatus());
-			Assert.assertNull(problem.getTitle());
-		}
+		_testGetSitePageExperienceWithMissingLayoutStructureRel();
 	}
 
 	@Override
@@ -159,19 +158,16 @@ public class PageExperienceResourceTest
 
 		_testPatchSitePageExperienceWithPriority();
 
-		try {
-			pageExperienceResource.patchSitePageExperience(
+		String pageExperienceExternalReferenceCode =
+			RandomTestUtil.randomString();
+
+		ProblemExceptionTestUtil.assertProblemException(
+			"NOT_FOUND",
+			"No page experience exists with the external reference code \"" +
+				pageExperienceExternalReferenceCode + "\"",
+			() -> pageExperienceResource.patchSitePageExperience(
 				testGroup.getExternalReferenceCode(),
-				RandomTestUtil.randomString(), randomPageExperience());
-
-			Assert.fail();
-		}
-		catch (Problem.ProblemException problemException) {
-			Problem problem = problemException.getProblem();
-
-			Assert.assertEquals("NOT_FOUND", problem.getStatus());
-			Assert.assertNull(problem.getTitle());
-		}
+				pageExperienceExternalReferenceCode, randomPageExperience()));
 	}
 
 	@Override
@@ -214,7 +210,12 @@ public class PageExperienceResourceTest
 					testGroup.getGroupId(), RandomTestUtil.randomString(),
 					null)));
 
+		_testPostSitePageSpecificationPageExperienceWithDisplayPageTemplate();
+		_testPostSitePageSpecificationPageExperienceWithPageTemplate();
 		_testPostSitePageSpecificationPageExperienceWithPriority();
+		_testPostSitePageSpecificationPageExperienceWithPublishedPageSpecification();
+		_testPostSitePageSpecificationPageExperienceWithReservedKey();
+		_testPostSitePageSpecificationPageExperienceWithReservedPriority();
 	}
 
 	@Override
@@ -246,7 +247,13 @@ public class PageExperienceResourceTest
 			testGroup.getExternalReferenceCode(),
 			pageExperience.getExternalReferenceCode());
 
+		_testPutSitePageExperienceWithDefaultPageExperience();
+		_testPutSitePageExperienceWithDisplayPageTemplate();
+		_testPutSitePageExperienceWithMismatchedPageSpecification();
+		_testPutSitePageExperienceWithPageTemplate();
 		_testPutSitePageExperienceWithPriority();
+		_testPutSitePageExperienceWithPublishedPageSpecification();
+		_testPutSitePageExperienceWithReservedPriority();
 	}
 
 	@Override
@@ -435,6 +442,21 @@ public class PageExperienceResourceTest
 		return pageExperience;
 	}
 
+	private void _testDeleteSitePageExperienceWithDefaultPageExperience()
+		throws Exception {
+
+		SegmentsExperience defaultSegmentsExperience =
+			_segmentsExperienceLocalService.fetchDefaultSegmentsExperience(
+				_draftLayout.getPlid());
+
+		ProblemExceptionTestUtil.assertProblemException(
+			"BAD_REQUEST",
+			"The default page experience cannot be deleted or modified",
+			() -> pageExperienceResource.deleteSitePageExperience(
+				testGroup.getExternalReferenceCode(),
+				defaultSegmentsExperience.getExternalReferenceCode()));
+	}
+
 	private void _testDeleteSitePageExperienceWithPriority() throws Exception {
 		PageExperience pageExperience1 = _addPageExperience(1);
 		PageExperience pageExperience2 = _addPageExperience(2);
@@ -448,6 +470,22 @@ public class PageExperienceResourceTest
 			1, pageExperience1.getExternalReferenceCode());
 		_assertPageExperiencePriority(
 			2, pageExperience3.getExternalReferenceCode());
+	}
+
+	private void _testGetSitePageExperienceWithMissingLayoutStructureRel()
+		throws Exception {
+
+		SegmentsExperience segmentsExperience =
+			SegmentsTestUtil.addSegmentsExperience(
+				testGroup.getGroupId(), _draftLayout.getPlid());
+
+		ProblemExceptionTestUtil.assertProblemException(
+			"NOT_FOUND",
+			"No page experience exists with the external reference code \"" +
+				segmentsExperience.getExternalReferenceCode() + "\"",
+			() -> pageExperienceResource.getSitePageExperience(
+				testGroup.getExternalReferenceCode(),
+				segmentsExperience.getExternalReferenceCode()));
 	}
 
 	private void _testPatchSitePageExperienceWithPriority() throws Exception {
@@ -510,6 +548,29 @@ public class PageExperienceResourceTest
 		assertValid(postPageExperience);
 	}
 
+	private void _testPostSitePageSpecificationPageExperienceWithDisplayPageTemplate()
+		throws Exception {
+
+		Layout layout =
+			LayoutPageTemplateEntryTestUtil.
+				getDisplayPageLayoutPageTemplateEntryLayout(
+					ServiceContextTestUtil.getServiceContext(
+						testGroup.getGroupId(), TestPropsValues.getUserId()));
+
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		ProblemExceptionTestUtil.assertProblemException(
+			"BAD_REQUEST",
+			"Only site pages can define additional page experiences",
+			() ->
+				pageExperienceResource.postSitePageSpecificationPageExperience(
+					testGroup.getExternalReferenceCode(),
+					draftLayout.getExternalReferenceCode(),
+					PageExperiencesTestUtil.getPageExperience(
+						draftLayout.getExternalReferenceCode(), 1,
+						testGroup.getGroupId(), null)));
+	}
+
 	private void
 			_testPostSitePageSpecificationPageExperienceWithMissingOptionalReference(
 				int count, UnsafeRunnable<Exception> unsafeRunnable)
@@ -535,6 +596,29 @@ public class PageExperienceResourceTest
 						"Optional reference generated for missing"));
 			}
 		}
+	}
+
+	private void _testPostSitePageSpecificationPageExperienceWithPageTemplate()
+		throws Exception {
+
+		Layout layout =
+			LayoutPageTemplateEntryTestUtil.
+				getBasicLayoutPageTemplateEntryLayout(
+					ServiceContextTestUtil.getServiceContext(
+						testGroup.getGroupId(), TestPropsValues.getUserId()));
+
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		ProblemExceptionTestUtil.assertProblemException(
+			"BAD_REQUEST",
+			"Only site pages can define additional page experiences",
+			() ->
+				pageExperienceResource.postSitePageSpecificationPageExperience(
+					testGroup.getExternalReferenceCode(),
+					draftLayout.getExternalReferenceCode(),
+					PageExperiencesTestUtil.getPageExperience(
+						draftLayout.getExternalReferenceCode(), 1,
+						testGroup.getGroupId(), null)));
 	}
 
 	private void _testPostSitePageSpecificationPageExperienceWithPriority()
@@ -575,6 +659,59 @@ public class PageExperienceResourceTest
 			Integer.valueOf(-1), inactivePageExperience.getPriority());
 	}
 
+	private void _testPostSitePageSpecificationPageExperienceWithPublishedPageSpecification()
+		throws Exception {
+
+		PageExperience pageExperience =
+			PageExperiencesTestUtil.getPageExperience(
+				_layout.getExternalReferenceCode(), 1, testGroup.getGroupId(),
+				null);
+
+		ProblemExceptionTestUtil.assertProblemException(
+			"BAD_REQUEST",
+			"Page experiences can only be modified on a draft page " +
+				"specification",
+			() ->
+				pageExperienceResource.postSitePageSpecificationPageExperience(
+					testGroup.getExternalReferenceCode(),
+					_layout.getExternalReferenceCode(), pageExperience));
+	}
+
+	private void _testPostSitePageSpecificationPageExperienceWithReservedKey()
+		throws Exception {
+
+		PageExperience pageExperience =
+			PageExperiencesTestUtil.getPageExperience(
+				_draftLayout.getExternalReferenceCode(), 1,
+				testGroup.getGroupId(), null);
+
+		pageExperience.setKey(SegmentsExperienceConstants.KEY_DEFAULT);
+
+		ProblemExceptionTestUtil.assertProblemException(
+			"BAD_REQUEST",
+			"Only the default page experience can use the segments " +
+				"experience key \"Default\"",
+			() ->
+				pageExperienceResource.postSitePageSpecificationPageExperience(
+					testGroup.getExternalReferenceCode(),
+					_draftLayout.getExternalReferenceCode(), pageExperience));
+	}
+
+	private void _testPostSitePageSpecificationPageExperienceWithReservedPriority()
+		throws Exception {
+
+		ProblemExceptionTestUtil.assertProblemException(
+			"BAD_REQUEST",
+			"Only the default page experience can have a priority of 0",
+			() ->
+				pageExperienceResource.postSitePageSpecificationPageExperience(
+					testGroup.getExternalReferenceCode(),
+					_draftLayout.getExternalReferenceCode(),
+					PageExperiencesTestUtil.getPageExperience(
+						_draftLayout.getExternalReferenceCode(), 0,
+						testGroup.getGroupId(), null)));
+	}
+
 	private PageExperience _testPutSitePageExperience(
 			PageExperience pageExperience)
 		throws Exception {
@@ -588,6 +725,97 @@ public class PageExperienceResourceTest
 		assertValid(putSitePageExperience);
 
 		return putSitePageExperience;
+	}
+
+	private void _testPutSitePageExperienceWithDefaultPageExperience()
+		throws Exception {
+
+		SegmentsExperience defaultSegmentsExperience =
+			_segmentsExperienceLocalService.fetchDefaultSegmentsExperience(
+				_draftLayout.getPlid());
+
+		ProblemExceptionTestUtil.assertProblemException(
+			"BAD_REQUEST",
+			"The default page experience cannot be deleted or modified",
+			() -> pageExperienceResource.putSitePageExperience(
+				testGroup.getExternalReferenceCode(),
+				defaultSegmentsExperience.getExternalReferenceCode(),
+				PageExperiencesTestUtil.getPageExperience(
+					_draftLayout.getExternalReferenceCode(), 1,
+					testGroup.getGroupId(), null)));
+	}
+
+	private void _testPutSitePageExperienceWithDisplayPageTemplate()
+		throws Exception {
+
+		Layout layout =
+			LayoutPageTemplateEntryTestUtil.
+				getDisplayPageLayoutPageTemplateEntryLayout(
+					ServiceContextTestUtil.getServiceContext(
+						testGroup.getGroupId(), TestPropsValues.getUserId()));
+
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		ProblemExceptionTestUtil.assertProblemException(
+			"BAD_REQUEST",
+			"Only site pages can define additional page experiences",
+			() -> pageExperienceResource.putSitePageExperience(
+				testGroup.getExternalReferenceCode(),
+				RandomTestUtil.randomString(),
+				PageExperiencesTestUtil.getPageExperience(
+					draftLayout.getExternalReferenceCode(), 1,
+					testGroup.getGroupId(), null)));
+	}
+
+	private void _testPutSitePageExperienceWithMismatchedPageSpecification()
+		throws Exception {
+
+		Layout layout1 = LayoutTestUtil.addTypeContentLayout(testGroup);
+
+		Layout draftLayout1 = layout1.fetchDraftLayout();
+
+		PageExperience pageExperience =
+			testPostSitePageSpecificationPageExperience_addPageExperience(
+				PageExperiencesTestUtil.getPageExperience(
+					draftLayout1.getExternalReferenceCode(), 1,
+					testGroup.getGroupId(), null));
+
+		Layout layout2 = LayoutTestUtil.addTypeContentLayout(testGroup);
+
+		Layout draftLayout2 = layout2.fetchDraftLayout();
+
+		PageExperience mismatchedPageExperience =
+			PageExperiencesTestUtil.getPageExperience(
+				draftLayout2.getExternalReferenceCode(), 1,
+				testGroup.getGroupId(), null);
+
+		ProblemExceptionTestUtil.assertProblemException(
+			"BAD_REQUEST",
+			"The page experience does not belong to this page specification",
+			() -> pageExperienceResource.putSitePageExperience(
+				testGroup.getExternalReferenceCode(),
+				pageExperience.getExternalReferenceCode(),
+				mismatchedPageExperience));
+	}
+
+	private void _testPutSitePageExperienceWithPageTemplate() throws Exception {
+		Layout layout =
+			LayoutPageTemplateEntryTestUtil.
+				getBasicLayoutPageTemplateEntryLayout(
+					ServiceContextTestUtil.getServiceContext(
+						testGroup.getGroupId(), TestPropsValues.getUserId()));
+
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		ProblemExceptionTestUtil.assertProblemException(
+			"BAD_REQUEST",
+			"Only site pages can define additional page experiences",
+			() -> pageExperienceResource.putSitePageExperience(
+				testGroup.getExternalReferenceCode(),
+				RandomTestUtil.randomString(),
+				PageExperiencesTestUtil.getPageExperience(
+					draftLayout.getExternalReferenceCode(), 1,
+					testGroup.getGroupId(), null)));
 	}
 
 	private void _testPutSitePageExperienceWithPriority() throws Exception {
@@ -611,6 +839,46 @@ public class PageExperienceResourceTest
 			2, pageExperience3.getExternalReferenceCode());
 		_assertPageExperiencePriority(
 			3, pageExperience1.getExternalReferenceCode());
+	}
+
+	private void _testPutSitePageExperienceWithPublishedPageSpecification()
+		throws Exception {
+
+		PageExperience pageExperience =
+			PageExperiencesTestUtil.getPageExperience(
+				_layout.getExternalReferenceCode(), 1, testGroup.getGroupId(),
+				null);
+
+		ProblemExceptionTestUtil.assertProblemException(
+			"BAD_REQUEST",
+			"Page experiences can only be modified on a draft page " +
+				"specification",
+			() -> pageExperienceResource.putSitePageExperience(
+				testGroup.getExternalReferenceCode(),
+				RandomTestUtil.randomString(), pageExperience));
+	}
+
+	private void _testPutSitePageExperienceWithReservedPriority()
+		throws Exception {
+
+		Layout layout = LayoutTestUtil.addTypeContentLayout(testGroup);
+
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		PageExperience pageExperience =
+			testPostSitePageSpecificationPageExperience_addPageExperience(
+				PageExperiencesTestUtil.getPageExperience(
+					draftLayout.getExternalReferenceCode(), 1,
+					testGroup.getGroupId(), null));
+
+		pageExperience.setPriority(0);
+
+		ProblemExceptionTestUtil.assertProblemException(
+			"BAD_REQUEST",
+			"Only the default page experience can have a priority of 0",
+			() -> pageExperienceResource.putSitePageExperience(
+				testGroup.getExternalReferenceCode(),
+				pageExperience.getExternalReferenceCode(), pageExperience));
 	}
 
 	private Layout _draftLayout;
