@@ -6257,6 +6257,9 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/MasterPage"
+                409:
+                    description:
+                        "The default master page must be published first."
             tags: ["MasterPage"]
     "/sites/{siteExternalReferenceCode}/master-pages/{masterPageExternalReferenceCode}/page-specifications":
         get:
