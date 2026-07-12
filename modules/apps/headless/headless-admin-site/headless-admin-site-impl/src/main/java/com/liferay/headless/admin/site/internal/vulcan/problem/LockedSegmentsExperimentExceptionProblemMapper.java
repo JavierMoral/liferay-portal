@@ -5,9 +5,9 @@
 
 package com.liferay.headless.admin.site.internal.vulcan.problem;
 
-import com.liferay.layout.page.template.exception.LayoutPageTemplateCollectionNameException;
 import com.liferay.portal.vulcan.problem.Problem;
 import com.liferay.portal.vulcan.problem.ProblemMapper;
+import com.liferay.segments.exception.LockedSegmentsExperimentException;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -15,16 +15,17 @@ import org.osgi.service.component.annotations.Component;
  * @author Javier Moral
  */
 @Component(service = ProblemMapper.class)
-public class PageTemplateSetNameExceptionProblemMapper
-	implements ProblemMapper<LayoutPageTemplateCollectionNameException> {
+public class LockedSegmentsExperimentExceptionProblemMapper
+	implements ProblemMapper<LockedSegmentsExperimentException> {
 
 	@Override
 	public Problem getProblem(
-		LayoutPageTemplateCollectionNameException
-			layoutPageTemplateCollectionNameException) {
+		LockedSegmentsExperimentException lockedSegmentsExperimentException) {
 
 		return ProblemUtil.getProblem(
-			layoutPageTemplateCollectionNameException);
+			"The page experience cannot be modified while it is used by an " +
+				"active A/B test",
+			Problem.Status.CONFLICT, lockedSegmentsExperimentException);
 	}
 
 }

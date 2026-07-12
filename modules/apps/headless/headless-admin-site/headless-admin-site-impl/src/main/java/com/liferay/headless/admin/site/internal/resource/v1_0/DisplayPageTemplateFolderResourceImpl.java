@@ -240,13 +240,15 @@ public class DisplayPageTemplateFolderResourceImpl
 						parentLayoutPageTemplateCollectionId);
 		}
 
-		return _toDisplayPageTemplateFolder(
+		layoutPageTemplateCollection =
 			_layoutPageTemplateCollectionService.
 				updateLayoutPageTemplateCollection(
 					layoutPageTemplateCollection.
 						getLayoutPageTemplateCollectionId(),
 					displayPageTemplateFolder.getName(),
-					displayPageTemplateFolder.getDescription()));
+					displayPageTemplateFolder.getDescription());
+
+		return _toDisplayPageTemplateFolder(layoutPageTemplateCollection);
 	}
 
 	@Override

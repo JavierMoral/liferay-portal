@@ -26,6 +26,7 @@ import com.liferay.headless.admin.site.dto.v1_0.WidgetPageSection;
 import com.liferay.headless.admin.site.dto.v1_0.WidgetPageSpecification;
 import com.liferay.headless.admin.site.dto.v1_0.WidgetPageWidgetInstance;
 import com.liferay.headless.admin.site.internal.dto.v1_0.util.ItemScopeUtil;
+import com.liferay.headless.admin.site.internal.exception.NoSuchEntityException;
 import com.liferay.headless.admin.site.internal.resource.v1_0.util.LayoutUtil;
 import com.liferay.layout.admin.kernel.model.LayoutTypePortletConstants;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
@@ -206,7 +207,9 @@ public class PageSpecificationDTOConverter
 							segmentsExperience.getSegmentsExperienceId());
 
 				if (layoutPageTemplateStructureRel == null) {
-					throw new UnsupportedOperationException();
+					throw new NoSuchEntityException(
+						"page experience",
+						segmentsExperience.getExternalReferenceCode());
 				}
 
 				return _pageExperienceDTOConverter.toDTO(

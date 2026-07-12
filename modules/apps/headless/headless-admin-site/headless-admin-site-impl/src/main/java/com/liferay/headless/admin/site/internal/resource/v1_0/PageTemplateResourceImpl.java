@@ -21,6 +21,7 @@ import com.liferay.headless.admin.site.dto.v1_0.WidgetPageTemplate;
 import com.liferay.headless.admin.site.dto.v1_0.WidgetPageTemplateSettings;
 import com.liferay.headless.admin.site.dto.v1_0.util.FileEntryUtil;
 import com.liferay.headless.admin.site.internal.dto.v1_0.util.DTOConverterContextUtil;
+import com.liferay.headless.admin.site.internal.exception.NoSuchEntityException;
 import com.liferay.headless.admin.site.internal.odata.entity.v1_0.PageTemplateEntityModel;
 import com.liferay.headless.admin.site.internal.resource.v1_0.util.LayoutUtil;
 import com.liferay.headless.admin.site.internal.resource.v1_0.util.PageSpecificationUtil;
@@ -35,7 +36,6 @@ import com.liferay.layout.page.template.admin.constants.LayoutPageTemplateAdminP
 import com.liferay.layout.page.template.constants.LayoutPageTemplateCollectionTypeConstants;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateConstants;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
-import com.liferay.layout.page.template.exception.LayoutPageTemplateEntryLayoutPageTemplateCollectionIdException;
 import com.liferay.layout.page.template.model.LayoutPageTemplateCollection;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionService;
@@ -108,11 +108,21 @@ public class PageTemplateResourceImpl
 
 		EnabledUtil.checkEnabled(contextCompany);
 
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_layoutPageTemplateEntryService.
+				fetchLayoutPageTemplateEntryByExternalReferenceCode(
+					pageTemplateExternalReferenceCode,
+					GroupUtil.getGroupId(
+						true, false, contextCompany.getCompanyId(),
+						siteExternalReferenceCode));
+
+		if (layoutPageTemplateEntry == null) {
+			throw new NoSuchEntityException(
+				"page template", pageTemplateExternalReferenceCode);
+		}
+
 		_layoutPageTemplateEntryService.deleteLayoutPageTemplateEntry(
-			pageTemplateExternalReferenceCode,
-			GroupUtil.getGroupId(
-				true, false, contextCompany.getCompanyId(),
-				siteExternalReferenceCode));
+			layoutPageTemplateEntry.getLayoutPageTemplateEntryId());
 	}
 
 	@Override
@@ -294,11 +304,16 @@ public class PageTemplateResourceImpl
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryService.
-				getLayoutPageTemplateEntryByExternalReferenceCode(
+				fetchLayoutPageTemplateEntryByExternalReferenceCode(
 					pageTemplateExternalReferenceCode,
 					GroupUtil.getGroupId(
 						true, true, contextCompany.getCompanyId(),
 						siteExternalReferenceCode));
+
+		if (layoutPageTemplateEntry == null) {
+			throw new NoSuchEntityException(
+				"page template", pageTemplateExternalReferenceCode);
+		}
 
 		if (!Objects.equals(
 				LayoutPageTemplateEntryTypeConstants.BASIC,
@@ -455,9 +470,14 @@ public class PageTemplateResourceImpl
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryService.
-				getLayoutPageTemplateEntryByExternalReferenceCode(
+				fetchLayoutPageTemplateEntryByExternalReferenceCode(
 					externalReferenceCode,
 					getPermissionCheckerGroupId(groupExternalReferenceCode));
+
+		if (layoutPageTemplateEntry == null) {
+			throw new NoSuchEntityException(
+				"page template", externalReferenceCode);
+		}
 
 		return layoutPageTemplateEntry.getPrimaryKey();
 	}
@@ -575,7 +595,8 @@ public class PageTemplateResourceImpl
 					PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT) ^
 			  (groupId != contextCompany.getGroupId()))) {
 
-			throw new LayoutPageTemplateEntryLayoutPageTemplateCollectionIdException();
+			throw new IllegalArgumentException(
+				"The page template set does not belong to this site");
 		}
 
 		ServiceContext serviceContext = _getServiceContext(

@@ -12,6 +12,7 @@ import com.liferay.headless.admin.site.dto.v1_0.DisplayPageTemplate;
 import com.liferay.headless.admin.site.dto.v1_0.FriendlyUrlHistory;
 import com.liferay.headless.admin.site.dto.v1_0.SitePage;
 import com.liferay.headless.admin.site.dto.v1_0.UtilityPage;
+import com.liferay.headless.admin.site.internal.exception.NoSuchEntityException;
 import com.liferay.headless.admin.site.internal.resource.v1_0.util.LayoutUtil;
 import com.liferay.headless.admin.site.internal.util.EnabledUtil;
 import com.liferay.headless.admin.site.resource.v1_0.FriendlyUrlHistoryResource;
@@ -67,11 +68,17 @@ public class FriendlyUrlHistoryResourceImpl
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_layoutPageTemplateEntryService.
-				getLayoutPageTemplateEntryByExternalReferenceCode(
+				fetchLayoutPageTemplateEntryByExternalReferenceCode(
 					displayPageTemplateExternalReferenceCode,
 					GroupUtil.getGroupId(
 						true, contextCompany.getCompanyId(),
 						siteExternalReferenceCode));
+
+		if (layoutPageTemplateEntry == null) {
+			throw new NoSuchEntityException(
+				"display page template",
+				displayPageTemplateExternalReferenceCode);
+		}
 
 		if (layoutPageTemplateEntry.getType() !=
 				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE) {
@@ -133,11 +140,16 @@ public class FriendlyUrlHistoryResourceImpl
 
 		LayoutUtilityPageEntry layoutUtilityPageEntry =
 			_layoutUtilityPageEntryService.
-				getLayoutUtilityPageEntryByExternalReferenceCode(
+				fetchLayoutUtilityPageEntryByExternalReferenceCode(
 					utilityPageExternalReferenceCode,
 					GroupUtil.getGroupId(
 						true, contextCompany.getCompanyId(),
 						siteExternalReferenceCode));
+
+		if (layoutUtilityPageEntry == null) {
+			throw new NoSuchEntityException(
+				"utility page", utilityPageExternalReferenceCode);
+		}
 
 		return _toFriendlyUrlHistory(
 			_layoutLocalService.getLayout(layoutUtilityPageEntry.getPlid()));

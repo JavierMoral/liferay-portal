@@ -16,6 +16,7 @@ import com.liferay.headless.admin.site.dto.v1_0.UtilityPageSEOSettings;
 import com.liferay.headless.admin.site.dto.v1_0.UtilityPageSettings;
 import com.liferay.headless.admin.site.dto.v1_0.util.FileEntryUtil;
 import com.liferay.headless.admin.site.internal.dto.v1_0.util.DTOConverterContextUtil;
+import com.liferay.headless.admin.site.internal.exception.NoSuchEntityException;
 import com.liferay.headless.admin.site.internal.odata.entity.v1_0.UtilityPageEntityModel;
 import com.liferay.headless.admin.site.internal.resource.v1_0.util.LayoutUtil;
 import com.liferay.headless.admin.site.internal.resource.v1_0.util.ServiceContextUtil;
@@ -83,10 +84,21 @@ public class UtilityPageResourceImpl
 
 		EnabledUtil.checkEnabled(contextCompany);
 
+		LayoutUtilityPageEntry layoutUtilityPageEntry =
+			_layoutUtilityPageEntryService.
+				fetchLayoutUtilityPageEntryByExternalReferenceCode(
+					utilityPageExternalReferenceCode,
+					GroupUtil.getStagingAwareGroupId(
+						contextCompany.getCompanyId(),
+						siteExternalReferenceCode));
+
+		if (layoutUtilityPageEntry == null) {
+			throw new NoSuchEntityException(
+				"utility page", utilityPageExternalReferenceCode);
+		}
+
 		_layoutUtilityPageEntryService.deleteLayoutUtilityPageEntry(
-			utilityPageExternalReferenceCode,
-			GroupUtil.getStagingAwareGroupId(
-				contextCompany.getCompanyId(), siteExternalReferenceCode));
+			layoutUtilityPageEntry.getLayoutUtilityPageEntryId());
 	}
 
 	@Override
@@ -154,11 +166,16 @@ public class UtilityPageResourceImpl
 
 		LayoutUtilityPageEntry layoutUtilityPageEntry =
 			_layoutUtilityPageEntryService.
-				getLayoutUtilityPageEntryByExternalReferenceCode(
+				fetchLayoutUtilityPageEntryByExternalReferenceCode(
 					utilityPageExternalReferenceCode,
 					GroupUtil.getStagingAwareGroupId(
 						contextCompany.getCompanyId(),
 						siteExternalReferenceCode));
+
+		if (layoutUtilityPageEntry == null) {
+			throw new NoSuchEntityException(
+				"utility page", utilityPageExternalReferenceCode);
+		}
 
 		return (ContentPageSpecification)_pageSpecificationDTOConverter.toDTO(
 			DTOConverterContextUtil.getDTOConverterContext(
@@ -184,11 +201,16 @@ public class UtilityPageResourceImpl
 
 		LayoutUtilityPageEntry layoutUtilityPageEntry =
 			_layoutUtilityPageEntryService.
-				getLayoutUtilityPageEntryByExternalReferenceCode(
+				fetchLayoutUtilityPageEntryByExternalReferenceCode(
 					utilityPageExternalReferenceCode,
 					GroupUtil.getGroupId(
 						true, contextCompany.getCompanyId(),
 						siteExternalReferenceCode));
+
+		if (layoutUtilityPageEntry == null) {
+			throw new NoSuchEntityException(
+				"utility page", utilityPageExternalReferenceCode);
+		}
 
 		return _utilityPageDTOConverter.toDTO(
 			DTOConverterContextUtil.getDTOConverterContext(
@@ -348,9 +370,14 @@ public class UtilityPageResourceImpl
 
 		LayoutUtilityPageEntry layoutUtilityPageEntry =
 			_layoutUtilityPageEntryService.
-				getLayoutUtilityPageEntryByExternalReferenceCode(
+				fetchLayoutUtilityPageEntryByExternalReferenceCode(
 					externalReferenceCode,
 					getPermissionCheckerGroupId(groupExternalReferenceCode));
+
+		if (layoutUtilityPageEntry == null) {
+			throw new NoSuchEntityException(
+				"utility page", externalReferenceCode);
+		}
 
 		return layoutUtilityPageEntry.getPrimaryKey();
 	}

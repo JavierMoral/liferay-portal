@@ -5,27 +5,24 @@
 
 package com.liferay.headless.admin.site.internal.vulcan.problem;
 
-import com.liferay.layout.utility.page.exception.DefaultLayoutUtilityPageEntryException;
+import com.liferay.portal.kernel.exception.LockedLayoutException;
 import com.liferay.portal.vulcan.problem.Problem;
 import com.liferay.portal.vulcan.problem.ProblemMapper;
 
 import org.osgi.service.component.annotations.Component;
 
 /**
- * @author Lourdes Fernández Besada
+ * @author Javier Moral
  */
 @Component(service = ProblemMapper.class)
-public class UtilityPageMarkAsDefaultExceptionProblemMapper
-	implements ProblemMapper<DefaultLayoutUtilityPageEntryException> {
+public class LockedLayoutExceptionProblemMapper
+	implements ProblemMapper<LockedLayoutException> {
 
 	@Override
-	public Problem getProblem(
-		DefaultLayoutUtilityPageEntryException
-			defaultLayoutUtilityPageEntryException) {
-
+	public Problem getProblem(LockedLayoutException lockedLayoutException) {
 		return ProblemUtil.getProblem(
-			"The default utility page must be published first",
-			Problem.Status.CONFLICT, defaultLayoutUtilityPageEntryException);
+			"The page is locked by another user", Problem.Status.CONFLICT,
+			lockedLayoutException);
 	}
 
 }

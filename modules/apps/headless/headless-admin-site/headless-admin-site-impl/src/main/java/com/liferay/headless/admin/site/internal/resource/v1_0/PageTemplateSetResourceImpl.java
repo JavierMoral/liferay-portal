@@ -219,13 +219,15 @@ public class PageTemplateSetResourceImpl
 					groupId, contextHttpServletRequest, pageTemplateSet));
 		}
 
-		return _toPageTemplateSet(
+		layoutPageTemplateCollection =
 			_layoutPageTemplateCollectionService.
 				updateLayoutPageTemplateCollection(
 					layoutPageTemplateCollection.
 						getLayoutPageTemplateCollectionId(),
 					pageTemplateSet.getName(),
-					pageTemplateSet.getDescription()));
+					pageTemplateSet.getDescription());
+
+		return _toPageTemplateSet(layoutPageTemplateCollection);
 	}
 
 	@Override
