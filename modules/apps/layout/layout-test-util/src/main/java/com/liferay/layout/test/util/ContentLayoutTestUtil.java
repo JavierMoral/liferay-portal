@@ -22,6 +22,7 @@ import com.liferay.layout.taglib.servlet.taglib.RenderLayoutStructureTag;
 import com.liferay.layout.util.LayoutServiceContextHelper;
 import com.liferay.layout.util.constants.LayoutDataItemTypeConstants;
 import com.liferay.layout.util.structure.CollectionStyledLayoutStructureItem;
+import com.liferay.layout.util.structure.FormStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.petra.string.StringBundler;
@@ -48,6 +49,7 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -158,12 +160,20 @@ public class ContentLayoutTestUtil {
 			long segmentsExperienceId, InfoField... infoFields)
 		throws Exception {
 
+		JSONObject itemConfigJSONObject = JSONUtil.put(
+			"classNameId", classNameId
+		).put(
+			"classTypeId", classTypeId
+		);
+
+		if (GetterUtil.getLong(classNameId) > 0) {
+			itemConfigJSONObject.put(
+				"formConfig",
+				FormStyledLayoutStructureItem.FORM_CONFIG_OTHER_ITEM_TYPE);
+		}
+
 		JSONObject jsonObject = addItemToLayout(
-			JSONUtil.put(
-				"classNameId", classNameId
-			).put(
-				"classTypeId", classTypeId
-			).toString(),
+			itemConfigJSONObject.toString(),
 			LayoutDataItemTypeConstants.TYPE_FORM, layout,
 			layoutStructureProvider, segmentsExperienceId);
 
