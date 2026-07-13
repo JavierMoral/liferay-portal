@@ -574,9 +574,15 @@ public class SegmentsExperienceLocalServiceImpl
 
 		_checkUnlockedLayout(segmentsExperience.getPlid(), userId);
 
-		if ((newPriority == 0) && !segmentsExperience.isDefault()) {
-			throw new DefaultSegmentsExperiencePriorityException(
-				"Only the default segments experience can have priority 0");
+		boolean swap = true;
+
+		if ((newPriority == 0) && (segmentsExperience.getPriority() > 0)) {
+			newPriority = -1;
+			swap = false;
+		}
+		else if ((newPriority == 0) && (segmentsExperience.getPriority() < 0)) {
+			newPriority = 1;
+			swap = false;
 		}
 
 		SegmentsExperience swapSegmentsExperience =
@@ -604,10 +610,12 @@ public class SegmentsExperienceLocalServiceImpl
 			segmentsExperiencePersistence.findByPrimaryKey(
 				segmentsExperience.getSegmentsExperienceId()));
 
-		_updateSegmentsExperiencePriorityAndFlush(
-			oldPriority,
-			segmentsExperiencePersistence.findByPrimaryKey(
-				swapSegmentsExperience.getSegmentsExperienceId()));
+		if (swap) {
+			_updateSegmentsExperiencePriorityAndFlush(
+				oldPriority,
+				segmentsExperiencePersistence.findByPrimaryKey(
+					swapSegmentsExperience.getSegmentsExperienceId()));
+		}
 
 		_compactSegmentsExperiencesPriorities(segmentsExperience);
 
