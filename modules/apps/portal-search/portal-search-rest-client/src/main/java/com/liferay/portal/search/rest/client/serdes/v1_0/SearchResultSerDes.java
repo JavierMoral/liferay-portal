@@ -190,6 +190,20 @@ public class SearchResultSerDes {
 			sb.append("\"");
 		}
 
+		if (searchResult.getType() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"type\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(searchResult.getType()));
+
+			sb.append("\"");
+		}
+
 		sb.append("}");
 
 		return sb.toString();
@@ -291,6 +305,13 @@ public class SearchResultSerDes {
 			map.put("title", String.valueOf(searchResult.getTitle()));
 		}
 
+		if (searchResult.getType() == null) {
+			map.put("type", null);
+		}
+		else {
+			map.put("type", String.valueOf(searchResult.getType()));
+		}
+
 		return map;
 	}
 
@@ -337,6 +358,9 @@ public class SearchResultSerDes {
 				return false;
 			}
 			else if (Objects.equals(jsonParserFieldName, "title")) {
+				return false;
+			}
+			else if (Objects.equals(jsonParserFieldName, "type")) {
 				return false;
 			}
 
@@ -402,6 +426,11 @@ public class SearchResultSerDes {
 			else if (Objects.equals(jsonParserFieldName, "title")) {
 				if (jsonParserFieldValue != null) {
 					searchResult.setTitle((String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "type")) {
+				if (jsonParserFieldValue != null) {
+					searchResult.setType((String)jsonParserFieldValue);
 				}
 			}
 		}
@@ -485,4 +514,4 @@ public class SearchResultSerDes {
 	}
 
 }
-// LIFERAY-REST-BUILDER-HASH:159395730
+// LIFERAY-REST-BUILDER-HASH:-778977789
