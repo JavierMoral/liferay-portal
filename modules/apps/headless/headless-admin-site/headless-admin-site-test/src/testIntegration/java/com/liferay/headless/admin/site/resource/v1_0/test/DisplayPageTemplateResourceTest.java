@@ -7,6 +7,9 @@ package com.liferay.headless.admin.site.resource.v1_0.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.asset.kernel.model.AssetCategory;
+import com.liferay.depot.constants.DepotConstants;
+import com.liferay.depot.model.DepotEntry;
+import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
 import com.liferay.exportimport.kernel.service.StagingLocalService;
@@ -59,6 +62,7 @@ import com.liferay.layout.page.template.model.LayoutPageTemplateCollection;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionLocalService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
+import com.liferay.layout.page.template.test.util.DisplayPageTemplateTestUtil;
 import com.liferay.layout.provider.LayoutStructureProvider;
 import com.liferay.layout.test.util.ContentLayoutTestUtil;
 import com.liferay.layout.util.LayoutServiceContextHelper;
@@ -85,6 +89,8 @@ import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.util.FeatureFlagTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
@@ -104,6 +110,7 @@ import com.liferay.portal.test.log.LogCapture;
 import com.liferay.portal.test.log.LogEntry;
 import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.FeatureFlag;
+import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -116,6 +123,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -126,6 +134,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Ignore;
@@ -137,7 +146,9 @@ import org.junit.runner.RunWith;
  * @author Rubén Pulido
  * @author Lourdes Fernández Besada
  */
-@FeatureFlag("LPD-35443")
+@FeatureFlags(
+	featureFlags = {@FeatureFlag("LPD-35443"), @FeatureFlag("LPD-57283")}
+)
 @RunWith(Arquillian.class)
 public class DisplayPageTemplateResourceTest
 	extends BaseDisplayPageTemplateResourceTestCase {
@@ -171,11 +182,34 @@ public class DisplayPageTemplateResourceTest
 		}
 	}
 
+	@Before
+	@Override
+	public void setUp() throws Exception {
+		super.setUp();
+
+		FeatureFlagTestUtil.invokeFeatureFlagListeners(
+			TestPropsValues.getCompanyId(), true, "LPD-57283");
+
+		_assetLibraryDepotEntry = _addDepotEntry(
+			DepotConstants.TYPE_ASSET_LIBRARY);
+		_designLibraryDepotEntry = _addDepotEntry(
+			DepotConstants.TYPE_DESIGN_LIBRARY);
+	}
+
 	@Ignore
 	@Override
 	@Test
 	public void testBatchEngineDeleteImportTask() throws Exception {
 		super.testBatchEngineDeleteImportTask();
+	}
+
+	@Override
+	@Test
+	@TestInfo("LPD-81651")
+	public void testDeleteDesignLibraryDisplayPageTemplate() throws Exception {
+		super.testDeleteDesignLibraryDisplayPageTemplate();
+
+		_testDeleteDesignLibraryDisplayPageTemplateWithSiteExternalReferenceCode();
 	}
 
 	@Override
@@ -219,6 +253,16 @@ public class DisplayPageTemplateResourceTest
 			() -> displayPageTemplateResource.deleteSiteDisplayPageTemplate(
 				irrelevantGroup.getExternalReferenceCode(),
 				liveGroupDisplayPageTemplate.getExternalReferenceCode()));
+	}
+
+	@Override
+	@Test
+	@TestInfo("LPD-81651")
+	public void testGetDesignLibraryDisplayPageTemplate() throws Exception {
+		super.testGetDesignLibraryDisplayPageTemplate();
+
+		_testGetDesignLibraryDisplayPageTemplateWithAssetLibraryExternalReferenceCode();
+		_testGetDesignLibraryDisplayPageTemplateWithSiteExternalReferenceCode();
 	}
 
 	@Override
@@ -579,6 +623,64 @@ public class DisplayPageTemplateResourceTest
 
 	@Override
 	protected DisplayPageTemplate
+			testDeleteDesignLibraryDisplayPageTemplate_addDisplayPageTemplate()
+		throws Exception {
+
+		return _addDesignLibraryDisplayPageTemplate();
+	}
+
+	@Override
+	protected String
+			testDeleteDesignLibraryDisplayPageTemplate_getDesignLibraryExternalReferenceCode()
+		throws Exception {
+
+		return _getDesignLibraryExternalReferenceCode();
+	}
+
+	@Override
+	protected DisplayPageTemplate
+			testGetDesignLibraryDisplayPageTemplate_addDisplayPageTemplate()
+		throws Exception {
+
+		return _addDesignLibraryDisplayPageTemplate();
+	}
+
+	@Override
+	protected String
+			testGetDesignLibraryDisplayPageTemplate_getDesignLibraryExternalReferenceCode()
+		throws Exception {
+
+		return _getDesignLibraryExternalReferenceCode();
+	}
+
+	@Override
+	protected DisplayPageTemplate
+			testGetDesignLibraryDisplayPageTemplatesPage_addDisplayPageTemplate(
+				String designLibraryExternalReferenceCode,
+				DisplayPageTemplate displayPageTemplate)
+		throws Exception {
+
+		return _addDesignLibraryDisplayPageTemplate();
+	}
+
+	@Override
+	protected String
+			testGetDesignLibraryDisplayPageTemplatesPage_getDesignLibraryExternalReferenceCode()
+		throws Exception {
+
+		return _getDesignLibraryExternalReferenceCode();
+	}
+
+	@Override
+	protected Map<String, Map<String, String>>
+		testGetDesignLibraryDisplayPageTemplatesPage_getExpectedActions(
+			String designLibraryExternalReferenceCode) {
+
+		return new HashMap<>();
+	}
+
+	@Override
+	protected DisplayPageTemplate
 			testGetSiteDisplayPageTemplateFolderDisplayPageTemplatesPage_addDisplayPageTemplate(
 				String siteExternalReferenceCode,
 				String displayPageTemplateFolderExternalReferenceCode,
@@ -637,6 +739,29 @@ public class DisplayPageTemplateResourceTest
 
 		return testGetSiteDisplayPageTemplatesPage_addDisplayPageTemplate(
 			testGroup.getExternalReferenceCode(), displayPageTemplate);
+	}
+
+	private DepotEntry _addDepotEntry(int type) throws Exception {
+		return _depotEntryLocalService.addDepotEntry(
+			Collections.singletonMap(
+				LocaleUtil.getDefault(), RandomTestUtil.randomString()),
+			null, type,
+			ServiceContextTestUtil.getServiceContext(
+				testGroup.getGroupId(), TestPropsValues.getUserId()));
+	}
+
+	private DisplayPageTemplate _addDesignLibraryDisplayPageTemplate()
+		throws Exception {
+
+		Group group = _designLibraryDepotEntry.getGroup();
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
+				group.getGroupId());
+
+		return displayPageTemplateResource.getDesignLibraryDisplayPageTemplate(
+			group.getExternalReferenceCode(),
+			layoutPageTemplateEntry.getExternalReferenceCode());
 	}
 
 	private void _assertNestedFields(DisplayPageTemplate displayPageTemplate)
@@ -930,6 +1055,12 @@ public class DisplayPageTemplateResourceTest
 			itemExternalReference);
 
 		return classSubtypeReference;
+	}
+
+	private String _getDesignLibraryExternalReferenceCode() throws Exception {
+		Group group = _designLibraryDepotEntry.getGroup();
+
+		return group.getExternalReferenceCode();
 	}
 
 	private DisplayPageTemplate _getDisplayPageTemplate(
@@ -1321,6 +1452,45 @@ public class DisplayPageTemplateResourceTest
 							getExternalReferenceCode(),
 						testGroup.getGroupId()));
 		}
+	}
+
+	private void _testDeleteDesignLibraryDisplayPageTemplateWithSiteExternalReferenceCode()
+		throws Exception {
+
+		DisplayPageTemplate displayPageTemplate =
+			_addDesignLibraryDisplayPageTemplate();
+
+		_assertProblemException(
+			"BAD_REQUEST", null,
+			() ->
+				displayPageTemplateResource.
+					deleteDesignLibraryDisplayPageTemplate(
+						testGroup.getExternalReferenceCode(),
+						displayPageTemplate.getExternalReferenceCode()));
+	}
+
+	private void _testGetDesignLibraryDisplayPageTemplateWithAssetLibraryExternalReferenceCode()
+		throws Exception {
+
+		Group group = _assetLibraryDepotEntry.getGroup();
+
+		_assertProblemException(
+			"BAD_REQUEST", null,
+			() ->
+				displayPageTemplateResource.getDesignLibraryDisplayPageTemplate(
+					group.getExternalReferenceCode(),
+					RandomTestUtil.randomString()));
+	}
+
+	private void _testGetDesignLibraryDisplayPageTemplateWithSiteExternalReferenceCode()
+		throws Exception {
+
+		_assertProblemException(
+			"BAD_REQUEST", null,
+			() ->
+				displayPageTemplateResource.getDesignLibraryDisplayPageTemplate(
+					testGroup.getExternalReferenceCode(),
+					RandomTestUtil.randomString()));
 	}
 
 	private void _testGetSiteDisplayPageTemplate(
@@ -2717,6 +2887,15 @@ public class DisplayPageTemplateResourceTest
 	private static byte[] _thumbnail2Bytes;
 	private static String _thumbnail2URL;
 	private static ThumbnailHttpServer _thumbnailHttpServer;
+
+	@DeleteAfterTestRun
+	private DepotEntry _assetLibraryDepotEntry;
+
+	@Inject
+	private DepotEntryLocalService _depotEntryLocalService;
+
+	@DeleteAfterTestRun
+	private DepotEntry _designLibraryDepotEntry;
 
 	@Inject
 	private InfoItemServiceRegistry _infoItemServiceRegistry;
