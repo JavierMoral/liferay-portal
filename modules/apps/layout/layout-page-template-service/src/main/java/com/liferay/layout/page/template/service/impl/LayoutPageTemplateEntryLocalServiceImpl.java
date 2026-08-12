@@ -6,6 +6,9 @@
 package com.liferay.layout.page.template.service.impl;
 
 import com.liferay.asset.kernel.NoSuchClassTypeException;
+import com.liferay.depot.constants.DepotConstants;
+import com.liferay.depot.model.DepotEntry;
+import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.dynamic.data.mapping.info.item.provider.DDMStructureInfoItemFormVariationsProvider;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLinkLocalService;
 import com.liferay.info.item.InfoItemFormVariation;
@@ -35,6 +38,7 @@ import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.LockedLayoutException;
 import com.liferay.portal.kernel.exception.NoSuchClassNameException;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.license.util.LicenseManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -1220,13 +1224,34 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 			String.valueOf(classTypeId));
 	}
 
+	private boolean _isDesignLibraryDisplayPage(Group group, int type) {
+		if (!Objects.equals(
+				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, type) ||
+			!FeatureFlagManagerUtil.isEnabled(
+				group.getCompanyId(), "LPD-57283")) {
+
+			return false;
+		}
+
+		DepotEntry depotEntry = _depotEntryLocalService.fetchGroupDepotEntry(
+			group.getGroupId());
+
+		if ((depotEntry == null) ||
+			(depotEntry.getType() != DepotConstants.TYPE_DESIGN_LIBRARY)) {
+
+			return false;
+		}
+
+		return true;
+	}
+
 	private void _validate(
 			long groupId, long layoutPageTemplateCollectionId, int type)
 		throws PortalException {
 
 		Group group = _groupLocalService.getGroup(groupId);
 
-		if (group.isDepot()) {
+		if (group.isDepot() && !_isDesignLibraryDisplayPage(group, type)) {
 			throw new LayoutPageTemplateEntryGroupIdException();
 		}
 
@@ -1451,6 +1476,9 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 
 	@Reference
 	private DDMStructureLinkLocalService _ddmStructureLinkLocalService;
+
+	@Reference
+	private DepotEntryLocalService _depotEntryLocalService;
 
 	@Reference
 	private File _file;
