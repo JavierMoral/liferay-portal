@@ -7,6 +7,8 @@
 
 export {default as ActionsComponentPropsTransformer} from './ActionsComponentPropsTransformer';
 
+export {default as DesignLibraryAddDisplayPageTemplate} from './DesignLibraryAddDisplayPageTemplate';
+
 export {default as ImportPageTemplates} from './ImportPageTemplates';
 
 // @ts-ignore
