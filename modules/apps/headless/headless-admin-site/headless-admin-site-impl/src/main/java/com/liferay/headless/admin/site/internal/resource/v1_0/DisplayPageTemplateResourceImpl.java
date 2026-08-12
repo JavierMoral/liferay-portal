@@ -6,6 +6,7 @@
 package com.liferay.headless.admin.site.internal.resource.v1_0;
 
 import com.liferay.client.extension.type.manager.CETManager;
+import com.liferay.depot.constants.DepotConstants;
 import com.liferay.exportimport.constants.ExportImportConstants;
 import com.liferay.exportimport.vulcan.batch.engine.ExportImportVulcanBatchEngineTaskItemDelegate;
 import com.liferay.fragment.processor.FragmentEntryProcessorRegistry;
@@ -97,6 +98,19 @@ public class DisplayPageTemplateResourceImpl
 		<DisplayPageTemplate> {
 
 	@Override
+	public void deleteDesignLibraryDisplayPageTemplate(
+			String designLibraryExternalReferenceCode,
+			String displayPageTemplateExternalReferenceCode)
+		throws Exception {
+
+		EnabledUtil.checkDesignLibrariesEnabled(contextCompany);
+
+		_layoutPageTemplateEntryService.deleteLayoutPageTemplateEntry(
+			displayPageTemplateExternalReferenceCode,
+			_getDesignLibraryGroupId(designLibraryExternalReferenceCode));
+	}
+
+	@Override
 	public void deleteSiteDisplayPageTemplate(
 			String siteExternalReferenceCode,
 			String displayPageTemplateExternalReferenceCode)
@@ -108,6 +122,34 @@ public class DisplayPageTemplateResourceImpl
 			displayPageTemplateExternalReferenceCode,
 			GroupUtil.getStagingAwareGroupId(
 				contextCompany.getCompanyId(), siteExternalReferenceCode));
+	}
+
+	@Override
+	public DisplayPageTemplate getDesignLibraryDisplayPageTemplate(
+			String designLibraryExternalReferenceCode,
+			String displayPageTemplateExternalReferenceCode)
+		throws Exception {
+
+		EnabledUtil.checkDesignLibrariesEnabled(contextCompany);
+
+		return _getDisplayPageTemplate(
+			displayPageTemplateExternalReferenceCode,
+			_getDesignLibraryGroupId(designLibraryExternalReferenceCode));
+	}
+
+	@Override
+	public Page<DisplayPageTemplate> getDesignLibraryDisplayPageTemplatesPage(
+			String designLibraryExternalReferenceCode, String search,
+			Aggregation aggregation, Filter filter, Pagination pagination,
+			Sort[] sorts)
+		throws Exception {
+
+		EnabledUtil.checkDesignLibrariesEnabled(contextCompany);
+
+		return _getDisplayPageTemplatesPage(
+			filter,
+			_getDesignLibraryGroupId(designLibraryExternalReferenceCode),
+			pagination, search, sorts);
 	}
 
 	@Override
@@ -301,30 +343,11 @@ public class DisplayPageTemplateResourceImpl
 
 		EnabledUtil.checkEnabled(contextCompany);
 
-		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			_layoutPageTemplateEntryService.
-				getLayoutPageTemplateEntryByExternalReferenceCode(
-					displayPageTemplateExternalReferenceCode,
-					GroupUtil.getGroupId(
-						true, contextCompany.getCompanyId(),
-						siteExternalReferenceCode));
-
-		if (!Objects.equals(
-				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE,
-				layoutPageTemplateEntry.getType())) {
-
-			throw new IllegalArgumentException(
-				"The display page template type does not match the display " +
-					"page type");
-		}
-
-		return _displayPageTemplateDTOConverter.toDTO(
-			DTOConverterContextUtil.getDTOConverterContext(
-				contextAcceptLanguage, _dtoConverterRegistry,
-				contextHttpServletRequest,
-				layoutPageTemplateEntry.getLayoutPageTemplateEntryId(),
-				contextUriInfo, contextUser),
-			layoutPageTemplateEntry);
+		return _getDisplayPageTemplate(
+			displayPageTemplateExternalReferenceCode,
+			GroupUtil.getGroupId(
+				true, contextCompany.getCompanyId(),
+				siteExternalReferenceCode));
 	}
 
 	@Override
@@ -336,30 +359,11 @@ public class DisplayPageTemplateResourceImpl
 
 		EnabledUtil.checkEnabled(contextCompany);
 
-		long groupId = GroupUtil.getGroupId(
-			true, contextCompany.getCompanyId(), siteExternalReferenceCode);
-
-		return SearchUtil.search(
-			Collections.emptyMap(),
-			booleanQuery -> {
-			},
-			filter, LayoutPageTemplateEntry.class.getName(), search, pagination,
-			queryConfig -> queryConfig.setSelectedFieldNames(
-				Field.ENTRY_CLASS_PK),
-			searchContext -> {
-				searchContext.setAttribute(
-					"types",
-					new String[] {
-						String.valueOf(
-							LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE)
-					});
-				searchContext.setCompanyId(contextCompany.getCompanyId());
-				searchContext.setGroupIds(new long[] {groupId});
-			},
-			sorts,
-			document -> _displayPageTemplateDTOConverter.toDTO(
-				_layoutPageTemplateEntryService.fetchLayoutPageTemplateEntry(
-					GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)))));
+		return _getDisplayPageTemplatesPage(
+			filter,
+			GroupUtil.getGroupId(
+				true, contextCompany.getCompanyId(), siteExternalReferenceCode),
+			pagination, search, sorts);
 	}
 
 	@Override
@@ -656,6 +660,70 @@ public class DisplayPageTemplateResourceImpl
 		LogUtil.logOptionalReference(contentTypeClassName);
 
 		return _portal.getClassNameId(contentTypeClassName);
+	}
+
+	private long _getDesignLibraryGroupId(
+			String designLibraryExternalReferenceCode)
+		throws Exception {
+
+		return GroupUtil.getDepotGroupId(
+			contextCompany.getCompanyId(), designLibraryExternalReferenceCode,
+			DepotConstants.TYPE_DESIGN_LIBRARY);
+	}
+
+	private DisplayPageTemplate _getDisplayPageTemplate(
+			String externalReferenceCode, long groupId)
+		throws Exception {
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_layoutPageTemplateEntryService.
+				getLayoutPageTemplateEntryByExternalReferenceCode(
+					externalReferenceCode, groupId);
+
+		if (!Objects.equals(
+				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE,
+				layoutPageTemplateEntry.getType())) {
+
+			throw new IllegalArgumentException(
+				"The display page template type does not match the display " +
+					"page type");
+		}
+
+		return _displayPageTemplateDTOConverter.toDTO(
+			DTOConverterContextUtil.getDTOConverterContext(
+				contextAcceptLanguage, _dtoConverterRegistry,
+				contextHttpServletRequest,
+				layoutPageTemplateEntry.getLayoutPageTemplateEntryId(),
+				contextUriInfo, contextUser),
+			layoutPageTemplateEntry);
+	}
+
+	private Page<DisplayPageTemplate> _getDisplayPageTemplatesPage(
+			Filter filter, long groupId, Pagination pagination, String search,
+			Sort[] sorts)
+		throws Exception {
+
+		return SearchUtil.search(
+			Collections.emptyMap(),
+			booleanQuery -> {
+			},
+			filter, LayoutPageTemplateEntry.class.getName(), search, pagination,
+			queryConfig -> queryConfig.setSelectedFieldNames(
+				Field.ENTRY_CLASS_PK),
+			searchContext -> {
+				searchContext.setAttribute(
+					"types",
+					new String[] {
+						String.valueOf(
+							LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE)
+					});
+				searchContext.setCompanyId(contextCompany.getCompanyId());
+				searchContext.setGroupIds(new long[] {groupId});
+			},
+			sorts,
+			document -> _displayPageTemplateDTOConverter.toDTO(
+				_layoutPageTemplateEntryService.fetchLayoutPageTemplateEntry(
+					GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)))));
 	}
 
 	private long _getLayoutPageTemplateCollectionId(
