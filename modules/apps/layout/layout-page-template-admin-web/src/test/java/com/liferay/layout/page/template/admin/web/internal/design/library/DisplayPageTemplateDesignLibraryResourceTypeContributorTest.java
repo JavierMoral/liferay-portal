@@ -7,6 +7,7 @@ package com.liferay.layout.page.template.admin.web.internal.design.library;
 
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateActionKeys;
+import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
@@ -43,12 +44,11 @@ public class DisplayPageTemplateDesignLibraryResourceTypeContributorTest {
 	@Test
 	public void testGetType() {
 
-		// The guard in LayoutPageTemplateEntryLocalServiceImpl only admits
-		// display page templates in a Design Library, so every entry listed
-		// from a library group is one and the entry class name identifies the
-		// type on its own
+		// Masters, page templates and widget templates share the entry class
+		// name, so the type is what tells a display page template apart
 
-		Assert.assertNull(
+		Assert.assertEquals(
+			String.valueOf(LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE),
 			_createContributor(
 				Mockito.mock(PortletResourcePermission.class)
 			).getType());
