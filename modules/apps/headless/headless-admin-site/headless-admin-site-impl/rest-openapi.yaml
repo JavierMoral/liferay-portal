@@ -713,6 +713,19 @@ components:
             description:
                 A display page template.
             properties:
+                actions:
+                    additionalProperties:
+                        additionalProperties:
+                            description:
+                                The action's properties.
+                            type: string
+                        description:
+                            The action's name.
+                        type: object
+                    description:
+                        The actions and their permissions for this display page template.
+                    readOnly: true
+                    type: object
                 contentTypeReference:
                     $ref: "#/components/schemas/ClassSubtypeReference"
                     description:
