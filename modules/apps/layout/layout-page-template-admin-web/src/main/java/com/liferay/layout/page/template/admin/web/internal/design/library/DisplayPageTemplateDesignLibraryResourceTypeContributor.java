@@ -18,6 +18,7 @@ import com.liferay.info.permission.provider.InfoPermissionProvider;
 import com.liferay.layout.page.template.admin.constants.LayoutPageTemplateAdminPortletKeys;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateActionKeys;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateConstants;
+import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.info.item.capability.DisplayPageInfoItemCapability;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.petra.string.StringBundler;
@@ -164,6 +165,12 @@ public class DisplayPageTemplateDesignLibraryResourceTypeContributor
 	@Override
 	public String getLabel(Locale locale) {
 		return LanguageUtil.get(locale, "display-page-template");
+	}
+
+	@Override
+	public String getType() {
+		return String.valueOf(
+			LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE);
 	}
 
 	@Override
