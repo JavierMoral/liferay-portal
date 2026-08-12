@@ -21,7 +21,6 @@ import com.liferay.layout.page.template.constants.LayoutPageTemplateConstants;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.info.item.capability.DisplayPageInfoItemCapability;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
-import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
@@ -143,11 +142,7 @@ public class DisplayPageTemplateDesignLibraryResourceTypeContributor
 				"pencil", "edit", LanguageUtil.get(httpServletRequest, "edit"),
 				null, null, "link"),
 			new FDSActionDropdownItem(
-				StringBundler.concat(
-					"/o/headless-admin-site/v1.0/design-libraries/",
-					depotGroup.getExternalReferenceCode(),
-					"/display-page-templates/{embedded.externalReferenceCode}"),
-				"trash", "delete",
+				"{actions.delete.href}", "trash", "delete",
 				LanguageUtil.get(httpServletRequest, "delete"), "delete",
 				"delete", "async"));
 	}

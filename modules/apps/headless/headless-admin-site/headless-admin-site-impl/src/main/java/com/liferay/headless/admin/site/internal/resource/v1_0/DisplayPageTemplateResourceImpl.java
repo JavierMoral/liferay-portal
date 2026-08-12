@@ -23,6 +23,7 @@ import com.liferay.headless.admin.site.dto.v1_0.util.FileEntryUtil;
 import com.liferay.headless.admin.site.internal.dto.v1_0.util.DTOConverterContextUtil;
 import com.liferay.headless.admin.site.internal.dto.v1_0.util.SubtypeUtil;
 import com.liferay.headless.admin.site.internal.odata.entity.v1_0.DisplayPageTemplateEntityModel;
+import com.liferay.headless.admin.site.internal.resource.v1_0.util.DisplayPageTemplateActionUtil;
 import com.liferay.headless.admin.site.internal.resource.v1_0.util.DisplayPageTemplateFolderUtil;
 import com.liferay.headless.admin.site.internal.resource.v1_0.util.LayoutUtil;
 import com.liferay.headless.admin.site.internal.resource.v1_0.util.PageSpecificationUtil;
@@ -46,12 +47,15 @@ import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.lazy.referencing.LazyReferencingThreadLocal;
 import com.liferay.portal.kernel.model.ClassName;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -138,9 +142,18 @@ public class DisplayPageTemplateResourceImpl
 
 		EnabledUtil.checkDesignLibrariesEnabled(contextCompany);
 
-		return _getDisplayPageTemplate(
-			displayPageTemplateExternalReferenceCode,
-			_getDesignLibraryGroupId(designLibraryExternalReferenceCode));
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_getLayoutPageTemplateEntry(
+				displayPageTemplateExternalReferenceCode,
+				_getDesignLibraryGroupId(designLibraryExternalReferenceCode));
+
+		return _toDisplayPageTemplate(
+			DisplayPageTemplateActionUtil.getDesignLibraryActions(
+				contextScopeChecker, designLibraryExternalReferenceCode,
+				layoutPageTemplateEntry,
+				_layoutPageTemplateEntryModelResourcePermission,
+				contextUriInfo),
+			layoutPageTemplateEntry);
 	}
 
 	@Override
@@ -224,8 +237,28 @@ public class DisplayPageTemplateResourceImpl
 
 	@Override
 	public DisplayPageTemplate getItem(Long id) throws Exception {
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_layoutPageTemplateEntryService.fetchLayoutPageTemplateEntry(id);
+
+		if (layoutPageTemplateEntry == null) {
+			return null;
+		}
+
+		Group group = _groupLocalService.getGroup(
+			layoutPageTemplateEntry.getGroupId());
+
+		if (!group.isDepot()) {
+			return _toDisplayPageTemplate(
+				Collections.emptyMap(), layoutPageTemplateEntry);
+		}
+
 		return _toDisplayPageTemplate(
-			_layoutPageTemplateEntryService.fetchLayoutPageTemplateEntry(id));
+			DisplayPageTemplateActionUtil.getDesignLibraryActions(
+				contextScopeChecker, group.getExternalReferenceCode(),
+				layoutPageTemplateEntry,
+				_layoutPageTemplateEntryModelResourcePermission,
+				contextUriInfo),
+			layoutPageTemplateEntry);
 	}
 
 	@Override
@@ -355,11 +388,13 @@ public class DisplayPageTemplateResourceImpl
 
 		EnabledUtil.checkEnabled(contextCompany);
 
-		return _getDisplayPageTemplate(
-			displayPageTemplateExternalReferenceCode,
-			GroupUtil.getGroupId(
-				true, contextCompany.getCompanyId(),
-				siteExternalReferenceCode));
+		return _toDisplayPageTemplate(
+			Collections.emptyMap(),
+			_getLayoutPageTemplateEntry(
+				displayPageTemplateExternalReferenceCode,
+				GroupUtil.getGroupId(
+					true, contextCompany.getCompanyId(),
+					siteExternalReferenceCode)));
 	}
 
 	@Override
@@ -683,27 +718,6 @@ public class DisplayPageTemplateResourceImpl
 			DepotConstants.TYPE_DESIGN_LIBRARY);
 	}
 
-	private DisplayPageTemplate _getDisplayPageTemplate(
-			String externalReferenceCode, long groupId)
-		throws Exception {
-
-		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			_layoutPageTemplateEntryService.
-				getLayoutPageTemplateEntryByExternalReferenceCode(
-					externalReferenceCode, groupId);
-
-		if (!Objects.equals(
-				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE,
-				layoutPageTemplateEntry.getType())) {
-
-			throw new IllegalArgumentException(
-				"The display page template type does not match the display " +
-					"page type");
-		}
-
-		return _toDisplayPageTemplate(layoutPageTemplateEntry);
-	}
-
 	private Page<DisplayPageTemplate> _getDisplayPageTemplatesPage(
 			Filter filter, long groupId, Pagination pagination, String search,
 			Sort[] sorts)
@@ -772,6 +786,27 @@ public class DisplayPageTemplateResourceImpl
 		}
 
 		return layoutPageTemplateCollection.getLayoutPageTemplateCollectionId();
+	}
+
+	private LayoutPageTemplateEntry _getLayoutPageTemplateEntry(
+			String externalReferenceCode, long groupId)
+		throws Exception {
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_layoutPageTemplateEntryService.
+				getLayoutPageTemplateEntryByExternalReferenceCode(
+					externalReferenceCode, groupId);
+
+		if (!Objects.equals(
+				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE,
+				layoutPageTemplateEntry.getType())) {
+
+			throw new IllegalArgumentException(
+				"The display page template type does not match the display " +
+					"page type");
+		}
+
+		return layoutPageTemplateEntry;
 	}
 
 	private Map<Locale, String> _getRobotsMap(
@@ -887,17 +922,14 @@ public class DisplayPageTemplateResourceImpl
 	}
 
 	private DisplayPageTemplate _toDisplayPageTemplate(
+			Map<String, Map<String, String>> actions,
 			LayoutPageTemplateEntry layoutPageTemplateEntry)
 		throws Exception {
 
-		if (layoutPageTemplateEntry == null) {
-			return null;
-		}
-
 		return _displayPageTemplateDTOConverter.toDTO(
 			DTOConverterContextUtil.getDTOConverterContext(
-				contextAcceptLanguage, _dtoConverterRegistry,
-				contextHttpServletRequest,
+				contextAcceptLanguage, actions, Collections.emptyMap(),
+				_dtoConverterRegistry, contextHttpServletRequest,
 				layoutPageTemplateEntry.getLayoutPageTemplateEntryId(),
 				contextUriInfo, contextUser),
 			layoutPageTemplateEntry);
@@ -925,6 +957,9 @@ public class DisplayPageTemplateResourceImpl
 	private FragmentEntryProcessorRegistry _fragmentEntryProcessorRegistry;
 
 	@Reference
+	private GroupLocalService _groupLocalService;
+
+	@Reference
 	private InfoItemServiceRegistry _infoItemServiceRegistry;
 
 	@Reference
@@ -933,6 +968,12 @@ public class DisplayPageTemplateResourceImpl
 	@Reference
 	private LayoutPageTemplateCollectionService
 		_layoutPageTemplateCollectionService;
+
+	@Reference(
+		target = "(model.class.name=com.liferay.layout.page.template.model.LayoutPageTemplateEntry)"
+	)
+	private ModelResourcePermission<LayoutPageTemplateEntry>
+		_layoutPageTemplateEntryModelResourcePermission;
 
 	@Reference
 	private LayoutPageTemplateEntryService _layoutPageTemplateEntryService;
