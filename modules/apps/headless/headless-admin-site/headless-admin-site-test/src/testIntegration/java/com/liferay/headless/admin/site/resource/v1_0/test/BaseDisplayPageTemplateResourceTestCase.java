@@ -1933,6 +1933,14 @@ public abstract class BaseDisplayPageTemplateResourceTestCase {
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
 
+			if (Objects.equals("actions", additionalAssertFieldName)) {
+				if (displayPageTemplate.getActions() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals(
 					"contentTypeReference", additionalAssertFieldName)) {
 
@@ -2241,6 +2249,17 @@ public abstract class BaseDisplayPageTemplateResourceTestCase {
 
 		for (String additionalAssertFieldName :
 				getAdditionalAssertFieldNames()) {
+
+			if (Objects.equals("actions", additionalAssertFieldName)) {
+				if (!equals(
+						(Map)displayPageTemplate1.getActions(),
+						(Map)displayPageTemplate2.getActions())) {
+
+					return false;
+				}
+
+				continue;
+			}
 
 			if (Objects.equals(
 					"contentTypeReference", additionalAssertFieldName)) {
@@ -2608,6 +2627,11 @@ public abstract class BaseDisplayPageTemplateResourceTestCase {
 		sb.append(" ");
 		sb.append(operator);
 		sb.append(" ");
+
+		if (entityFieldName.equals("actions")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
 
 		if (entityFieldName.equals("contentTypeReference")) {
 			throw new IllegalArgumentException(
@@ -3275,4 +3299,4 @@ public abstract class BaseDisplayPageTemplateResourceTestCase {
 			DisplayPageTemplateResource _displayPageTemplateResource;
 
 }
-// LIFERAY-REST-BUILDER-HASH:1922998833
+// LIFERAY-REST-BUILDER-HASH:-1160356892
