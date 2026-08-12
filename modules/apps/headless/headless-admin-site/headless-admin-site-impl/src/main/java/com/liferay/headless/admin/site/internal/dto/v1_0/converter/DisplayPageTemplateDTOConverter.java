@@ -40,7 +40,10 @@ import org.osgi.service.component.annotations.Reference;
  * @author Lourdes Fernández Besada
  */
 @Component(
-	property = "dto.class.name=com.liferay.layout.page.template.model.LayoutPageTemplateEntry",
+	property = {
+		"dto.class.name=com.liferay.layout.page.template.model.LayoutPageTemplateEntry",
+		"service.ranking:Integer=100"
+	},
 	service = DTOConverter.class
 )
 public class DisplayPageTemplateDTOConverter
