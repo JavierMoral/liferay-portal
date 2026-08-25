@@ -724,6 +724,46 @@ public class LayoutPageTemplateEntryServiceImpl
 	}
 
 	@Override
+	public List<LayoutPageTemplateEntry> getLayoutPageTemplateEntries(
+		long[] groupIds, long classNameId, long classTypeId, int type,
+		int status, int start, int end,
+		OrderByComparator<LayoutPageTemplateEntry> orderByComparator) {
+
+		if (status == WorkflowConstants.STATUS_ANY) {
+			return layoutPageTemplateEntryPersistence.filterFindByG_C_C_T(
+				groupIds, classNameId,
+				_getClassTypeKey(classNameId, classTypeId, groupIds), type,
+				start, end, orderByComparator);
+		}
+
+		return layoutPageTemplateEntryPersistence.filterFindByG_C_C_T_S(
+			groupIds, classNameId,
+			_getClassTypeKey(classNameId, classTypeId, groupIds), type, status,
+			start, end, orderByComparator);
+	}
+
+	@Override
+	public List<LayoutPageTemplateEntry> getLayoutPageTemplateEntries(
+		long[] groupIds, long classNameId, long classTypeId, String name,
+		int type, int status, int start, int end,
+		OrderByComparator<LayoutPageTemplateEntry> orderByComparator) {
+
+		if (status == WorkflowConstants.STATUS_ANY) {
+			return layoutPageTemplateEntryPersistence.filterFindByG_C_C_LikeN_T(
+				groupIds, classNameId,
+				_getClassTypeKey(classNameId, classTypeId, groupIds),
+				_customSQL.keywords(name, false, WildcardMode.SURROUND)[0],
+				type, start, end, orderByComparator);
+		}
+
+		return layoutPageTemplateEntryPersistence.filterFindByG_C_C_LikeN_T_S(
+			groupIds, classNameId,
+			_getClassTypeKey(classNameId, classTypeId, groupIds),
+			_customSQL.keywords(name, false, WildcardMode.SURROUND)[0], type,
+			status, start, end, orderByComparator);
+	}
+
+	@Override
 	public List<LayoutPageTemplateEntry> getLayoutPageTemplateEntriesByType(
 		long groupId, long layoutPageTemplateCollectionId, int type, int start,
 		int end, OrderByComparator<LayoutPageTemplateEntry> orderByComparator) {
@@ -916,6 +956,43 @@ public class LayoutPageTemplateEntryServiceImpl
 	}
 
 	@Override
+	public int getLayoutPageTemplateEntriesCount(
+		long[] groupIds, long classNameId, long classTypeId, int type,
+		int status) {
+
+		if (status == WorkflowConstants.STATUS_ANY) {
+			return layoutPageTemplateEntryPersistence.filterCountByG_C_C_T(
+				groupIds, classNameId,
+				_getClassTypeKey(classNameId, classTypeId, groupIds), type);
+		}
+
+		return layoutPageTemplateEntryPersistence.filterCountByG_C_C_T_S(
+			groupIds, classNameId,
+			_getClassTypeKey(classNameId, classTypeId, groupIds), type, status);
+	}
+
+	@Override
+	public int getLayoutPageTemplateEntriesCount(
+		long[] groupIds, long classNameId, long classTypeId, String name,
+		int type, int status) {
+
+		if (status == WorkflowConstants.STATUS_ANY) {
+			return layoutPageTemplateEntryPersistence.
+				filterCountByG_C_C_LikeN_T(
+					groupIds, classNameId,
+					_getClassTypeKey(classNameId, classTypeId, groupIds),
+					_customSQL.keywords(name, false, WildcardMode.SURROUND)[0],
+					type);
+		}
+
+		return layoutPageTemplateEntryPersistence.filterCountByG_C_C_LikeN_T_S(
+			groupIds, classNameId,
+			_getClassTypeKey(classNameId, classTypeId, groupIds),
+			_customSQL.keywords(name, false, WildcardMode.SURROUND)[0], type,
+			status);
+	}
+
+	@Override
 	public int getLayoutPageTemplateEntriesCountByType(
 		long groupId, long layoutPageTemplateCollectionId, int type) {
 
@@ -1055,6 +1132,13 @@ public class LayoutPageTemplateEntryServiceImpl
 
 		return layoutPageTemplateEntryLocalService.updateStatus(
 			getUserId(), layoutPageTemplateEntryId, status);
+	}
+
+	private String _getClassTypeKey(
+		long classNameId, long classTypeId, long[] groupIds) {
+
+		return LayoutPageTemplateEntryUtil.getClassTypeKey(
+			classNameId, classTypeId, groupIds[0]);
 	}
 
 	private List<Object>
