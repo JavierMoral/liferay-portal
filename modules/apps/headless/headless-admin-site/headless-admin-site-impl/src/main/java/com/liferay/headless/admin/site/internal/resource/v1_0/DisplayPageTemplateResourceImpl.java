@@ -308,6 +308,44 @@ public class DisplayPageTemplateResourceImpl
 
 	@Override
 	public DisplayPageTemplate
+			postDesignLibraryDisplayPageTemplateMarkAsDefault(
+				String designLibraryExternalReferenceCode,
+				String displayPageTemplateExternalReferenceCode)
+		throws Exception {
+
+		EnabledUtil.checkDesignLibrariesEnabled(contextCompany);
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_getLayoutPageTemplateEntry(
+				displayPageTemplateExternalReferenceCode,
+				_getDesignLibraryGroupId(designLibraryExternalReferenceCode));
+
+		if (!layoutPageTemplateEntry.isApproved()) {
+			throw new IllegalArgumentException(
+				"A draft display page template cannot be marked as default");
+		}
+
+		if (Validator.isNull(layoutPageTemplateEntry.getClassName())) {
+			throw new IllegalArgumentException(
+				"A display page template without a content type cannot be " +
+					"marked as default");
+		}
+
+		layoutPageTemplateEntry =
+			_layoutPageTemplateEntryService.updateLayoutPageTemplateEntry(
+				layoutPageTemplateEntry.getLayoutPageTemplateEntryId(), true);
+
+		return _toDisplayPageTemplate(
+			DisplayPageTemplateActionUtil.getDesignLibraryActions(
+				contextScopeChecker, designLibraryExternalReferenceCode,
+				layoutPageTemplateEntry,
+				_layoutPageTemplateEntryModelResourcePermission,
+				contextUriInfo),
+			layoutPageTemplateEntry);
+	}
+
+	@Override
+	public DisplayPageTemplate
 			postSiteDisplayPageTemplateFolderDisplayPageTemplate(
 				String siteExternalReferenceCode,
 				String displayPageTemplateFolderExternalReferenceCode,

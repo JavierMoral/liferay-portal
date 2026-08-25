@@ -10,6 +10,7 @@ import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.vulcan.util.ActionUtil;
 
 import jakarta.ws.rs.core.UriInfo;
@@ -49,6 +50,19 @@ public class DisplayPageTemplateActionUtil {
 				ActionKeys.VIEW, contextScopeChecker,
 				"getDesignLibraryDisplayPageTemplate", layoutPageTemplateEntry,
 				modelResourcePermission, templateParameterMap, uriInfo)
+		).put(
+			() -> {
+				if (_isMarkableAsDefault(layoutPageTemplateEntry)) {
+					return "markAsDefault";
+				}
+
+				return null;
+			},
+			_addAction(
+				ActionKeys.UPDATE, contextScopeChecker,
+				"postDesignLibraryDisplayPageTemplateMarkAsDefault",
+				layoutPageTemplateEntry, modelResourcePermission,
+				templateParameterMap, uriInfo)
 		).build();
 	}
 
@@ -64,6 +78,18 @@ public class DisplayPageTemplateActionUtil {
 			layoutPageTemplateEntry.getLayoutPageTemplateEntryId(), methodName,
 			contextScopeChecker, modelResourcePermission, templateParameterMap,
 			uriInfo);
+	}
+
+	private static boolean _isMarkableAsDefault(
+		LayoutPageTemplateEntry layoutPageTemplateEntry) {
+
+		if (!layoutPageTemplateEntry.isApproved() ||
+			Validator.isNull(layoutPageTemplateEntry.getClassName())) {
+
+			return false;
+		}
+
+		return true;
 	}
 
 }
