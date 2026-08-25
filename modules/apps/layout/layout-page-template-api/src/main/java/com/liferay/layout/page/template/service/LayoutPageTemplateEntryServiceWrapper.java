@@ -478,6 +478,15 @@ public class LayoutPageTemplateEntryServiceWrapper
 	@Override
 	public java.util.List<LayoutPageTemplateEntry> getLayoutPageTemplateEntries(
 		long[] groupIds, long classNameId, long classTypeId, int type,
+		int status) {
+
+		return _layoutPageTemplateEntryService.getLayoutPageTemplateEntries(
+			groupIds, classNameId, classTypeId, type, status);
+	}
+
+	@Override
+	public java.util.List<LayoutPageTemplateEntry> getLayoutPageTemplateEntries(
+		long[] groupIds, long classNameId, long classTypeId, int type,
 		int status, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator
 			<LayoutPageTemplateEntry> orderByComparator) {
@@ -788,4 +797,4 @@ public class LayoutPageTemplateEntryServiceWrapper
 	private LayoutPageTemplateEntryService _layoutPageTemplateEntryService;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:321545247
+// LIFERAY-SERVICE-BUILDER-HASH:-1284887437

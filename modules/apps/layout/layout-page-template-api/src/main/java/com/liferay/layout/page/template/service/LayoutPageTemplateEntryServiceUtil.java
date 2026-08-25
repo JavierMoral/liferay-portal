@@ -414,6 +414,14 @@ public class LayoutPageTemplateEntryServiceUtil {
 
 	public static List<LayoutPageTemplateEntry> getLayoutPageTemplateEntries(
 		long[] groupIds, long classNameId, long classTypeId, int type,
+		int status) {
+
+		return getService().getLayoutPageTemplateEntries(
+			groupIds, classNameId, classTypeId, type, status);
+	}
+
+	public static List<LayoutPageTemplateEntry> getLayoutPageTemplateEntries(
+		long[] groupIds, long classNameId, long classTypeId, int type,
 		int status, int start, int end,
 		OrderByComparator<LayoutPageTemplateEntry> orderByComparator) {
 
@@ -673,4 +681,4 @@ public class LayoutPageTemplateEntryServiceUtil {
 			LayoutPageTemplateEntryService.class);
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:1418837
+// LIFERAY-SERVICE-BUILDER-HASH:1312832501
