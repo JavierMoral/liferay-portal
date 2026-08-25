@@ -146,6 +146,10 @@ public class DisplayPageTemplateDesignLibraryResourceTypeContributor
 				LanguageUtil.get(httpServletRequest, "mark-as-default"), "post",
 				"markAsDefault", "async"),
 			new FDSActionDropdownItem(
+				"{actions.unmarkAsDefault.href}", "star-o", "unmarkAsDefault",
+				LanguageUtil.get(httpServletRequest, "unmark-as-default"),
+				"post", "unmarkAsDefault", "async"),
+			new FDSActionDropdownItem(
 				"{actions.delete.href}", "trash", "delete",
 				LanguageUtil.get(httpServletRequest, "delete"), "delete",
 				"delete", "async"));
