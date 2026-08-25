@@ -35,6 +35,14 @@ public class DisplayPageTemplateActionUtil {
 		).put(
 			"displayPageTemplateExternalReferenceCode",
 			layoutPageTemplateEntry.getExternalReferenceCode()
+		).put(
+
+			// The permissions of a display page template are read through the
+			// site scoped resource, which resolves its group by external
+			// reference code without requiring the group to be a site. A
+			// design library is a group, so its own code resolves there.
+
+			"siteExternalReferenceCode", designLibraryExternalReferenceCode
 		).build();
 
 		return HashMapBuilder.<String, Map<String, String>>put(
@@ -50,6 +58,13 @@ public class DisplayPageTemplateActionUtil {
 				ActionKeys.VIEW, contextScopeChecker,
 				"getDesignLibraryDisplayPageTemplate", layoutPageTemplateEntry,
 				modelResourcePermission, templateParameterMap, uriInfo)
+		).put(
+			"permissions",
+			_addAction(
+				ActionKeys.PERMISSIONS, contextScopeChecker,
+				"getSiteDisplayPageTemplatePermissionsPage",
+				layoutPageTemplateEntry, modelResourcePermission,
+				templateParameterMap, uriInfo)
 		).put(
 			() -> {
 				if (_isMarkableAsDefault(layoutPageTemplateEntry)) {
