@@ -63,6 +63,19 @@ public class DisplayPageTemplateActionUtil {
 				"postDesignLibraryDisplayPageTemplateMarkAsDefault",
 				layoutPageTemplateEntry, modelResourcePermission,
 				templateParameterMap, uriInfo)
+		).put(
+			() -> {
+				if (layoutPageTemplateEntry.isDefaultTemplate()) {
+					return "unmarkAsDefault";
+				}
+
+				return null;
+			},
+			_addAction(
+				ActionKeys.UPDATE, contextScopeChecker,
+				"postDesignLibraryDisplayPageTemplateUnmarkAsDefault",
+				layoutPageTemplateEntry, modelResourcePermission,
+				templateParameterMap, uriInfo)
 		).build();
 	}
 
@@ -84,6 +97,7 @@ public class DisplayPageTemplateActionUtil {
 		LayoutPageTemplateEntry layoutPageTemplateEntry) {
 
 		if (!layoutPageTemplateEntry.isApproved() ||
+			layoutPageTemplateEntry.isDefaultTemplate() ||
 			Validator.isNull(layoutPageTemplateEntry.getClassName())) {
 
 			return false;

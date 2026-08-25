@@ -331,9 +331,48 @@ public class DisplayPageTemplateResourceImpl
 					"marked as default");
 		}
 
+		if (layoutPageTemplateEntry.isDefaultTemplate()) {
+			throw new IllegalArgumentException(
+				"The display page template already is the default for its " +
+					"content type");
+		}
+
 		layoutPageTemplateEntry =
 			_layoutPageTemplateEntryService.updateLayoutPageTemplateEntry(
 				layoutPageTemplateEntry.getLayoutPageTemplateEntryId(), true);
+
+		return _toDisplayPageTemplate(
+			DisplayPageTemplateActionUtil.getDesignLibraryActions(
+				contextScopeChecker, designLibraryExternalReferenceCode,
+				layoutPageTemplateEntry,
+				_layoutPageTemplateEntryModelResourcePermission,
+				contextUriInfo),
+			layoutPageTemplateEntry);
+	}
+
+	@Override
+	public DisplayPageTemplate
+			postDesignLibraryDisplayPageTemplateUnmarkAsDefault(
+				String designLibraryExternalReferenceCode,
+				String displayPageTemplateExternalReferenceCode)
+		throws Exception {
+
+		EnabledUtil.checkDesignLibrariesEnabled(contextCompany);
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_getLayoutPageTemplateEntry(
+				displayPageTemplateExternalReferenceCode,
+				_getDesignLibraryGroupId(designLibraryExternalReferenceCode));
+
+		if (!layoutPageTemplateEntry.isDefaultTemplate()) {
+			throw new IllegalArgumentException(
+				"The display page template is not the default for its " +
+					"content type");
+		}
+
+		layoutPageTemplateEntry =
+			_layoutPageTemplateEntryService.updateLayoutPageTemplateEntry(
+				layoutPageTemplateEntry.getLayoutPageTemplateEntryId(), false);
 
 		return _toDisplayPageTemplate(
 			DisplayPageTemplateActionUtil.getDesignLibraryActions(
