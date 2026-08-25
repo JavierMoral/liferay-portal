@@ -6,6 +6,9 @@
 package com.liferay.asset.display.page.internal.portlet;
 
 import com.liferay.asset.display.page.portlet.BaseAssetDisplayPageFriendlyURLResolver;
+import com.liferay.depot.constants.DepotConstants;
+import com.liferay.depot.model.DepotEntry;
+import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.info.item.ClassPKInfoItemIdentifier;
 import com.liferay.info.item.ERCInfoItemIdentifier;
 import com.liferay.info.item.InfoItemIdentifier;
@@ -15,10 +18,15 @@ import com.liferay.layout.display.page.LayoutDisplayPageProvider;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.FriendlyURLResolver;
 import com.liferay.portal.kernel.portlet.constants.FriendlyURLResolverConstants;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -30,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Víctor Galán
@@ -113,8 +122,14 @@ public class CustomAssetDisplayPageFriendlyURLResolver
 			return null;
 		}
 
-		return layoutLocalService.fetchLayoutByFriendlyURL(
+		Layout layout = layoutLocalService.fetchLayoutByFriendlyURL(
 			groupId, false, StringPool.SLASH + parts[0]);
+
+		if (layout != null) {
+			return layout;
+		}
+
+		return _fetchDesignLibraryLayout(groupId, parts[0]);
 	}
 
 	@Override
@@ -137,6 +152,35 @@ public class CustomAssetDisplayPageFriendlyURLResolver
 		return false;
 	}
 
+	private Layout _fetchDesignLibraryLayout(long groupId, String friendlyURL) {
+		if (!FeatureFlagManagerUtil.isEnabled(
+				CompanyThreadLocal.getCompanyId(), "LPD-57283")) {
+
+			return null;
+		}
+
+		try {
+			for (DepotEntry depotEntry :
+					_depotEntryLocalService.getGroupConnectedDepotEntries(
+						groupId, DepotConstants.TYPE_DESIGN_LIBRARY,
+						QueryUtil.ALL_POS, QueryUtil.ALL_POS)) {
+
+				Layout layout = layoutLocalService.fetchLayoutByFriendlyURL(
+					depotEntry.getGroupId(), false,
+					StringPool.SLASH + friendlyURL);
+
+				if (layout != null) {
+					return layout;
+				}
+			}
+		}
+		catch (PortalException portalException) {
+			_log.error(portalException);
+		}
+
+		return null;
+	}
+
 	private String[] _getPathParts(String path) {
 		String urlSeparator = getURLSeparator();
 
@@ -153,5 +197,11 @@ public class CustomAssetDisplayPageFriendlyURLResolver
 
 		return new String[] {friendlyURL, classNameId, identifier};
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		CustomAssetDisplayPageFriendlyURLResolver.class);
+
+	@Reference
+	private DepotEntryLocalService _depotEntryLocalService;
 
 }
