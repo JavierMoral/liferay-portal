@@ -142,6 +142,10 @@ public class DisplayPageTemplateDesignLibraryResourceTypeContributor
 				"pencil", "edit", LanguageUtil.get(httpServletRequest, "edit"),
 				null, null, "link"),
 			new FDSActionDropdownItem(
+				"{actions.markAsDefault.href}", "star", "markAsDefault",
+				LanguageUtil.get(httpServletRequest, "mark-as-default"), "post",
+				"markAsDefault", "async"),
+			new FDSActionDropdownItem(
 				"{actions.delete.href}", "trash", "delete",
 				LanguageUtil.get(httpServletRequest, "delete"), "delete",
 				"delete", "async"));
