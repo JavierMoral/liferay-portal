@@ -6,16 +6,26 @@
 package com.liferay.asset.display.page.item.selector.web.internal.display.context;
 
 import com.liferay.asset.display.page.item.selector.AssetDisplayPageItemSelectorCriterion;
+import com.liferay.depot.constants.DepotConstants;
+import com.liferay.depot.model.DepotEntry;
+import com.liferay.depot.service.DepotEntryLocalServiceUtil;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryServiceUtil;
 import com.liferay.layout.page.template.util.comparator.LayoutPageTemplateEntryCreateDateComparator;
 import com.liferay.layout.page.template.util.comparator.LayoutPageTemplateEntryNameComparator;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -78,7 +88,7 @@ public class AssetDisplayPagesItemSelectorViewDisplayContext {
 				() ->
 					LayoutPageTemplateEntryServiceUtil.
 						getLayoutPageTemplateEntries(
-							_getGroupId(),
+							_getGroupIds(),
 							_assetDisplayPageItemSelectorCriterion.
 								getClassNameId(),
 							_assetDisplayPageItemSelectorCriterion.
@@ -92,7 +102,7 @@ public class AssetDisplayPagesItemSelectorViewDisplayContext {
 								getOrderByComparator()),
 				LayoutPageTemplateEntryServiceUtil.
 					getLayoutPageTemplateEntriesCount(
-						_getGroupId(),
+						_getGroupIds(),
 						_assetDisplayPageItemSelectorCriterion.getClassNameId(),
 						_assetDisplayPageItemSelectorCriterion.getClassTypeId(),
 						_getKeywords(),
@@ -104,7 +114,7 @@ public class AssetDisplayPagesItemSelectorViewDisplayContext {
 				() ->
 					LayoutPageTemplateEntryServiceUtil.
 						getLayoutPageTemplateEntries(
-							_getGroupId(),
+							_getGroupIds(),
 							_assetDisplayPageItemSelectorCriterion.
 								getClassNameId(),
 							_assetDisplayPageItemSelectorCriterion.
@@ -117,7 +127,7 @@ public class AssetDisplayPagesItemSelectorViewDisplayContext {
 								getOrderByComparator()),
 				LayoutPageTemplateEntryServiceUtil.
 					getLayoutPageTemplateEntriesCount(
-						_getGroupId(),
+						_getGroupIds(),
 						_assetDisplayPageItemSelectorCriterion.getClassNameId(),
 						_assetDisplayPageItemSelectorCriterion.getClassTypeId(),
 						LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE,
@@ -149,6 +159,37 @@ public class AssetDisplayPagesItemSelectorViewDisplayContext {
 			_httpServletRequest, "groupId", _themeDisplay.getScopeGroupId());
 
 		return _groupId;
+	}
+
+	private long[] _getGroupIds() {
+		if (_groupIds != null) {
+			return _groupIds;
+		}
+
+		long groupId = _getGroupId();
+
+		_groupIds = new long[] {groupId};
+
+		if (!FeatureFlagManagerUtil.isEnabled(
+				_themeDisplay.getCompanyId(), "LPD-57283")) {
+
+			return _groupIds;
+		}
+
+		try {
+			_groupIds = ArrayUtil.append(
+				_groupIds,
+				ListUtil.toLongArray(
+					DepotEntryLocalServiceUtil.getGroupConnectedDepotEntries(
+						groupId, DepotConstants.TYPE_DESIGN_LIBRARY,
+						QueryUtil.ALL_POS, QueryUtil.ALL_POS),
+					DepotEntry::getGroupId));
+		}
+		catch (PortalException portalException) {
+			_log.error(portalException);
+		}
+
+		return _groupIds;
 	}
 
 	private String _getKeywords() {
@@ -209,11 +250,15 @@ public class AssetDisplayPagesItemSelectorViewDisplayContext {
 		).buildPortletURL();
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		AssetDisplayPagesItemSelectorViewDisplayContext.class);
+
 	private final AssetDisplayPageItemSelectorCriterion
 		_assetDisplayPageItemSelectorCriterion;
 	private SearchContainer<LayoutPageTemplateEntry>
 		_assetDisplayPageSearchContainer;
 	private Long _groupId;
+	private long[] _groupIds;
 	private final HttpServletRequest _httpServletRequest;
 	private String _keywords;
 	private String _orderByCol;
