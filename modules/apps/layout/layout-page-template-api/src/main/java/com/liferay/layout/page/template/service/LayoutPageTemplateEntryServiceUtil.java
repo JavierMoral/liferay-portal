@@ -412,6 +412,26 @@ public class LayoutPageTemplateEntryServiceUtil {
 			groupId, name, types, start, end, orderByComparator);
 	}
 
+	public static List<LayoutPageTemplateEntry> getLayoutPageTemplateEntries(
+		long[] groupIds, long classNameId, long classTypeId, int type,
+		int status, int start, int end,
+		OrderByComparator<LayoutPageTemplateEntry> orderByComparator) {
+
+		return getService().getLayoutPageTemplateEntries(
+			groupIds, classNameId, classTypeId, type, status, start, end,
+			orderByComparator);
+	}
+
+	public static List<LayoutPageTemplateEntry> getLayoutPageTemplateEntries(
+		long[] groupIds, long classNameId, long classTypeId, String name,
+		int type, int status, int start, int end,
+		OrderByComparator<LayoutPageTemplateEntry> orderByComparator) {
+
+		return getService().getLayoutPageTemplateEntries(
+			groupIds, classNameId, classTypeId, name, type, status, start, end,
+			orderByComparator);
+	}
+
 	public static List<LayoutPageTemplateEntry>
 		getLayoutPageTemplateEntriesByType(
 			long groupId, long layoutPageTemplateCollectionId, int type,
@@ -537,6 +557,22 @@ public class LayoutPageTemplateEntryServiceUtil {
 			groupId, name, types, status);
 	}
 
+	public static int getLayoutPageTemplateEntriesCount(
+		long[] groupIds, long classNameId, long classTypeId, int type,
+		int status) {
+
+		return getService().getLayoutPageTemplateEntriesCount(
+			groupIds, classNameId, classTypeId, type, status);
+	}
+
+	public static int getLayoutPageTemplateEntriesCount(
+		long[] groupIds, long classNameId, long classTypeId, String name,
+		int type, int status) {
+
+		return getService().getLayoutPageTemplateEntriesCount(
+			groupIds, classNameId, classTypeId, name, type, status);
+	}
+
 	public static int getLayoutPageTemplateEntriesCountByType(
 		long groupId, long layoutPageTemplateCollectionId, int type) {
 
@@ -637,4 +673,4 @@ public class LayoutPageTemplateEntryServiceUtil {
 			LayoutPageTemplateEntryService.class);
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-1008902933
+// LIFERAY-SERVICE-BUILDER-HASH:1418837
