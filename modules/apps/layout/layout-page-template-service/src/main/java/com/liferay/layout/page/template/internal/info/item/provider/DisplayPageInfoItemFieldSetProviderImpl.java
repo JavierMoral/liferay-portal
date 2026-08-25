@@ -9,6 +9,9 @@ import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvide
 import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
 import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
+import com.liferay.depot.constants.DepotConstants;
+import com.liferay.depot.model.DepotEntry;
+import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.info.field.InfoField;
 import com.liferay.info.field.InfoFieldSet;
 import com.liferay.info.field.InfoFieldSetEntry;
@@ -29,6 +32,9 @@ import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -36,8 +42,10 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.FriendlyURLResolver;
 import com.liferay.portal.kernel.portlet.FriendlyURLResolverRegistryUtil;
 import com.liferay.portal.kernel.portlet.constants.FriendlyURLResolverConstants;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -110,7 +118,7 @@ public class DisplayPageInfoItemFieldSetProviderImpl
 
 		List<LayoutPageTemplateEntry> layoutPageTemplateEntries =
 			_layoutPageTemplateEntryService.getLayoutPageTemplateEntries(
-				themeDisplay.getScopeGroupId(),
+				_getGroupIds(themeDisplay.getScopeGroupId()),
 				_portal.getClassNameId(infoItemReference.getClassName()),
 				GetterUtil.getLong(infoItemFormVariationKey),
 				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE,
@@ -205,6 +213,31 @@ public class DisplayPageInfoItemFieldSetProviderImpl
 			externalReferenceCode);
 	}
 
+	private long[] _getGroupIds(long groupId) {
+		long[] groupIds = {groupId};
+
+		if (!FeatureFlagManagerUtil.isEnabled(
+				CompanyThreadLocal.getCompanyId(), "LPD-57283")) {
+
+			return groupIds;
+		}
+
+		try {
+			return ArrayUtil.append(
+				groupIds,
+				ListUtil.toLongArray(
+					_depotEntryLocalService.getGroupConnectedDepotEntries(
+						groupId, DepotConstants.TYPE_DESIGN_LIBRARY,
+						QueryUtil.ALL_POS, QueryUtil.ALL_POS),
+					DepotEntry::getGroupId));
+		}
+		catch (PortalException portalException) {
+			_log.error(portalException);
+
+			return groupIds;
+		}
+	}
+
 	private List<InfoFieldSetEntry> _getInfoFieldSetEntries(
 		String itemClassName, String infoItemFormVariationKey, String namespace,
 		long scopeGroupId) {
@@ -215,7 +248,8 @@ public class DisplayPageInfoItemFieldSetProviderImpl
 
 		List<LayoutPageTemplateEntry> layoutPageTemplateEntries =
 			_layoutPageTemplateEntryService.getLayoutPageTemplateEntries(
-				scopeGroupId, _portal.getClassNameId(itemClassName),
+				_getGroupIds(scopeGroupId),
+				_portal.getClassNameId(itemClassName),
 				GetterUtil.getLong(infoItemFormVariationKey),
 				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE,
 				WorkflowConstants.STATUS_APPROVED);
@@ -360,6 +394,9 @@ public class DisplayPageInfoItemFieldSetProviderImpl
 	@Reference
 	private AssetDisplayPageFriendlyURLProvider
 		_assetDisplayPageFriendlyURLProvider;
+
+	@Reference
+	private DepotEntryLocalService _depotEntryLocalService;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;
