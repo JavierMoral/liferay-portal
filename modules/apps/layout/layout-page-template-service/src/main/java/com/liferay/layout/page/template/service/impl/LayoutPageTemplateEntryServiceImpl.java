@@ -724,6 +724,23 @@ public class LayoutPageTemplateEntryServiceImpl
 	}
 
 	@Override
+	@ThreadLocalCachable
+	public List<LayoutPageTemplateEntry> getLayoutPageTemplateEntries(
+		long[] groupIds, long classNameId, long classTypeId, int type,
+		int status) {
+
+		if (status == WorkflowConstants.STATUS_ANY) {
+			return layoutPageTemplateEntryPersistence.filterFindByG_C_C_T(
+				groupIds, classNameId,
+				_getClassTypeKey(classNameId, classTypeId, groupIds), type);
+		}
+
+		return layoutPageTemplateEntryPersistence.filterFindByG_C_C_T_S(
+			groupIds, classNameId,
+			_getClassTypeKey(classNameId, classTypeId, groupIds), type, status);
+	}
+
+	@Override
 	public List<LayoutPageTemplateEntry> getLayoutPageTemplateEntries(
 		long[] groupIds, long classNameId, long classTypeId, int type,
 		int status, int start, int end,
