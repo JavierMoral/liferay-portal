@@ -97,6 +97,43 @@ public class DesignLibraryUtilTest {
 		Assert.assertTrue(DesignLibraryUtil.isDesignLibraryScope(group));
 	}
 
+	@Test
+	public void testIsDesignLibraryScopeWithGroupId() {
+		long groupId = RandomTestUtil.randomLong();
+
+		_depotEntryLocalServiceUtilMockedStatic.when(
+			() -> DepotEntryLocalServiceUtil.fetchGroupDepotEntry(groupId)
+		).thenReturn(
+			null
+		);
+
+		Assert.assertFalse(DesignLibraryUtil.isDesignLibraryScope(groupId));
+
+		DepotEntry depotEntry = Mockito.mock(DepotEntry.class);
+
+		Mockito.when(
+			depotEntry.getType()
+		).thenReturn(
+			DepotConstants.TYPE_ASSET_LIBRARY
+		);
+
+		_depotEntryLocalServiceUtilMockedStatic.when(
+			() -> DepotEntryLocalServiceUtil.fetchGroupDepotEntry(groupId)
+		).thenReturn(
+			depotEntry
+		);
+
+		Assert.assertFalse(DesignLibraryUtil.isDesignLibraryScope(groupId));
+
+		Mockito.when(
+			depotEntry.getType()
+		).thenReturn(
+			DepotConstants.TYPE_DESIGN_LIBRARY
+		);
+
+		Assert.assertTrue(DesignLibraryUtil.isDesignLibraryScope(groupId));
+	}
+
 	private final MockedStatic<DepotEntryLocalServiceUtil>
 		_depotEntryLocalServiceUtilMockedStatic = Mockito.mockStatic(
 			DepotEntryLocalServiceUtil.class);
