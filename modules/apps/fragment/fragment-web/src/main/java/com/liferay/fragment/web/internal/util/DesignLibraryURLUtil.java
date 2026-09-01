@@ -5,7 +5,6 @@
 
 package com.liferay.fragment.web.internal.util;
 
-import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalServiceUtil;
 import com.liferay.design.library.constants.DesignLibraryAdminPortletKeys;
@@ -20,7 +19,7 @@ import jakarta.servlet.http.HttpServletRequest;
 /**
  * @author Lourdes Fernández Besada
  */
-public class DesignLibraryUtil {
+public class DesignLibraryURLUtil {
 
 	public static String getDesignLibraryResourcesURL(
 		Group depotGroup, HttpServletRequest httpServletRequest) {
@@ -42,23 +41,6 @@ public class DesignLibraryUtil {
 		).setParameter(
 			"designLibraryEntryId", depotEntry.getDepotEntryId()
 		).buildString();
-	}
-
-	public static boolean isDesignLibraryScope(Group group) {
-		if ((group == null) || !group.isDepot()) {
-			return false;
-		}
-
-		DepotEntry depotEntry = DepotEntryLocalServiceUtil.fetchGroupDepotEntry(
-			group.getGroupId());
-
-		if ((depotEntry == null) ||
-			(depotEntry.getType() != DepotConstants.TYPE_DESIGN_LIBRARY)) {
-
-			return false;
-		}
-
-		return true;
 	}
 
 }

@@ -5,6 +5,7 @@
 
 package com.liferay.fragment.web.internal.display.context;
 
+import com.liferay.design.library.util.DesignLibraryUtil;
 import com.liferay.fragment.constants.FragmentActionKeys;
 import com.liferay.fragment.constants.FragmentPortletKeys;
 import com.liferay.fragment.contributor.FragmentCollectionContributor;
@@ -18,7 +19,7 @@ import com.liferay.fragment.util.comparator.FragmentCollectionContributorNameCom
 import com.liferay.fragment.util.comparator.FragmentCompositionFragmentEntryNameComparator;
 import com.liferay.fragment.web.internal.constants.FragmentTypeConstants;
 import com.liferay.fragment.web.internal.security.permission.resource.FragmentPermission;
-import com.liferay.fragment.web.internal.util.DesignLibraryUtil;
+import com.liferay.fragment.web.internal.util.DesignLibraryURLUtil;
 import com.liferay.fragment.web.internal.util.FragmentPortletUtil;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
@@ -1111,7 +1112,7 @@ public class FragmentDisplayContext {
 		}
 
 		if (Validator.isNull(backURL)) {
-			backURL = DesignLibraryUtil.getDesignLibraryResourcesURL(
+			backURL = DesignLibraryURLUtil.getDesignLibraryResourcesURL(
 				_themeDisplay.getScopeGroup(), _httpServletRequest);
 		}
 
