@@ -5,9 +5,11 @@
 
 package com.liferay.design.library.web.internal.portlet;
 
+import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.constants.DepotRolesConstants;
+import com.liferay.depot.model.DepotEntry;
+import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.design.library.constants.DesignLibraryAdminPortletKeys;
-import com.liferay.design.library.util.DesignLibraryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.Role;
@@ -51,8 +53,12 @@ public class DesignLibraryAdminControlPanelEntry extends BaseControlPanelEntry {
 				continue;
 			}
 
-			if (DesignLibraryUtil.isDesignLibraryScope(
-					userGroupRole.getGroupId())) {
+			DepotEntry depotEntry =
+				_depotEntryLocalService.fetchGroupDepotEntry(
+					userGroupRole.getGroupId());
+
+			if ((depotEntry != null) &&
+				(depotEntry.getType() == DepotConstants.TYPE_DESIGN_LIBRARY)) {
 
 				return true;
 			}
@@ -75,6 +81,9 @@ public class DesignLibraryAdminControlPanelEntry extends BaseControlPanelEntry {
 
 		return designLibraryRoleIds;
 	}
+
+	@Reference
+	private DepotEntryLocalService _depotEntryLocalService;
 
 	@Reference
 	private RoleLocalService _roleLocalService;
