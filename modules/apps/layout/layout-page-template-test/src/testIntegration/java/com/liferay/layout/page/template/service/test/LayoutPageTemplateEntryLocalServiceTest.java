@@ -52,6 +52,7 @@ import com.liferay.portal.kernel.service.SystemEventLocalService;
 import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.util.FeatureFlagTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
@@ -338,6 +339,9 @@ public class LayoutPageTemplateEntryLocalServiceTest {
 	public void testAddLayoutPageTemplateEntryInDesignLibrary()
 		throws Exception {
 
+		FeatureFlagTestUtil.invokeFeatureFlagListeners(
+			TestPropsValues.getCompanyId(), true, "LPD-57283");
+
 		Group depotGroup = _addDepotGroup(DepotConstants.TYPE_DESIGN_LIBRARY);
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
@@ -378,6 +382,19 @@ public class LayoutPageTemplateEntryLocalServiceTest {
 				depotGroup.getGroupId(),
 				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE);
 		}
+
+		Group assetLibraryDepotGroup = _addDepotGroup(
+			DepotConstants.TYPE_ASSET_LIBRARY);
+
+		_testAddLayoutPageTemplateEntryLayoutPageTemplateEntryGroupIdException(
+			assetLibraryDepotGroup.getGroupId(),
+			LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE);
+
+		Group spaceDepotGroup = _addDepotGroup(DepotConstants.TYPE_SPACE);
+
+		_testAddLayoutPageTemplateEntryLayoutPageTemplateEntryGroupIdException(
+			spaceDepotGroup.getGroupId(),
+			LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE);
 	}
 
 	@Test
@@ -697,10 +714,10 @@ public class LayoutPageTemplateEntryLocalServiceTest {
 		_testUpdateLayoutPageTemplateEntryClassNameId();
 	}
 
-	private Group _addDepotGroup(int type) throws PortalException {
+	private Group _addDepotGroup(int depotType) throws PortalException {
 		DepotEntry depotEntry = _depotEntryLocalService.addDepotEntry(
 			RandomTestUtil.randomLocaleStringMap(),
-			RandomTestUtil.randomLocaleStringMap(), type, _serviceContext);
+			RandomTestUtil.randomLocaleStringMap(), depotType, _serviceContext);
 
 		_depotEntries.add(depotEntry);
 
@@ -1207,7 +1224,7 @@ public class LayoutPageTemplateEntryLocalServiceTest {
 	private DDMStructureLinkLocalService _ddmStructureLinkLocalService;
 
 	@DeleteAfterTestRun
-	private List<DepotEntry> _depotEntries = new ArrayList<>();
+	private final List<DepotEntry> _depotEntries = new ArrayList<>();
 
 	@Inject
 	private DepotEntryLocalService _depotEntryLocalService;
