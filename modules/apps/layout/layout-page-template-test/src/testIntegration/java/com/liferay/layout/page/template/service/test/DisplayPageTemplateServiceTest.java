@@ -66,7 +66,16 @@ public class DisplayPageTemplateServiceTest {
 
 	@Test
 	public void testDeleteLayoutPageTemplateEntry() throws Exception {
-		_testDeleteLayoutPageTemplateEntry();
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
+				_group1.getGroupId());
+
+		_layoutPageTemplateEntryService.deleteLayoutPageTemplateEntry(
+			layoutPageTemplateEntry.getLayoutPageTemplateEntryId());
+
+		Assert.assertNull(
+			_layoutPageTemplateEntryService.fetchLayoutPageTemplateEntry(
+				layoutPageTemplateEntry.getLayoutPageTemplateEntryId()));
 	}
 
 	@Test
@@ -119,19 +128,6 @@ public class DisplayPageTemplateServiceTest {
 		Assert.assertThrows(
 			NoSuchClassNameException.class,
 			() -> _createDisplayPageEntry(0, RandomTestUtil.randomString()));
-	}
-
-	private void _testDeleteLayoutPageTemplateEntry() throws Exception {
-		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
-				_group1.getGroupId());
-
-		_layoutPageTemplateEntryService.deleteLayoutPageTemplateEntry(
-			layoutPageTemplateEntry.getLayoutPageTemplateEntryId());
-
-		Assert.assertNull(
-			_layoutPageTemplateEntryService.fetchLayoutPageTemplateEntry(
-				layoutPageTemplateEntry.getLayoutPageTemplateEntryId()));
 	}
 
 	private void _testGetLayoutPageTemplateEntriesAcrossGroups()
