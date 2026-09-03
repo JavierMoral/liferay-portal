@@ -54,10 +54,48 @@ public class DisplayPageTemplateServiceTest {
 	@Before
 	public void setUp() throws Exception {
 		_group1 = GroupTestUtil.addGroup();
+		_group2 = GroupTestUtil.addGroup();
 	}
 
 	@Test
-	public void testAddDisplayPageTemplate() throws PortalException {
+	public void testAddLayoutPageTemplateEntry() throws Exception {
+		_testAddLayoutPageTemplateEntry();
+
+		_testAddLayoutPageTemplateEntryWithInvalidClassNameId();
+	}
+
+	@Test
+	public void testDeleteLayoutPageTemplateEntry() throws Exception {
+		_testDeleteLayoutPageTemplateEntry();
+	}
+
+	@Test
+	public void testGetLayoutPageTemplateEntries() throws Exception {
+		_testGetLayoutPageTemplateEntriesAcrossGroups();
+		_testGetLayoutPageTemplateEntriesAcrossGroupsWithName();
+		_testGetLayoutPageTemplateEntriesAcrossGroupsWithPagination();
+		_testGetLayoutPageTemplateEntriesWithoutGroups();
+	}
+
+	@Test
+	public void testGetLayoutPageTemplateEntriesCount() throws Exception {
+		_testGetLayoutPageTemplateEntriesCountAcrossGroups();
+		_testGetLayoutPageTemplateEntriesCountAcrossGroupsWithName();
+		_testGetLayoutPageTemplateEntriesCountWithoutGroups();
+	}
+
+	private LayoutPageTemplateEntry _createDisplayPageEntry(
+			long classNameId, String classTypeKey)
+		throws PortalException {
+
+		return _layoutPageTemplateEntryService.addLayoutPageTemplateEntry(
+			null, _group1.getGroupId(), 0, null, classNameId, classTypeKey,
+			RandomTestUtil.randomString(), 0, WorkflowConstants.STATUS_DRAFT,
+			ServiceContextTestUtil.getServiceContext(
+				_group1.getGroupId(), TestPropsValues.getUserId()));
+	}
+
+	private void _testAddLayoutPageTemplateEntry() throws Exception {
 		String name = RandomTestUtil.randomString();
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
@@ -75,15 +113,15 @@ public class DisplayPageTemplateServiceTest {
 		Assert.assertEquals(name, persistedLayoutPageTemplateEntry.getName());
 	}
 
-	@Test(expected = NoSuchClassNameException.class)
-	public void testAddDisplayPageWithInvalidClassNameId()
-		throws PortalException {
+	private void _testAddLayoutPageTemplateEntryWithInvalidClassNameId()
+		throws Exception {
 
-		_createDisplayPageEntry(0, RandomTestUtil.randomString());
+		Assert.assertThrows(
+			NoSuchClassNameException.class,
+			() -> _createDisplayPageEntry(0, RandomTestUtil.randomString()));
 	}
 
-	@Test
-	public void testDeleteDisplayPageTemplate() throws PortalException {
+	private void _testDeleteLayoutPageTemplateEntry() throws Exception {
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
 				_group1.getGroupId());
@@ -96,11 +134,8 @@ public class DisplayPageTemplateServiceTest {
 				layoutPageTemplateEntry.getLayoutPageTemplateEntryId()));
 	}
 
-	@Test
-	public void testGetLayoutPageTemplateEntriesAcrossGroups()
+	private void _testGetLayoutPageTemplateEntriesAcrossGroups()
 		throws Exception {
-
-		_group2 = GroupTestUtil.addGroup();
 
 		DDMStructure ddmStructure = DDMStructureTestUtil.addStructure(
 			_group1.getGroupId(), JournalArticle.class.getName());
@@ -169,11 +204,8 @@ public class DisplayPageTemplateServiceTest {
 			layoutPageTemplateEntry1, layoutPageTemplateEntries.get(0));
 	}
 
-	@Test
-	public void testGetLayoutPageTemplateEntriesAcrossGroupsWithName()
+	private void _testGetLayoutPageTemplateEntriesAcrossGroupsWithName()
 		throws Exception {
-
-		_group2 = GroupTestUtil.addGroup();
 
 		DDMStructure ddmStructure = DDMStructureTestUtil.addStructure(
 			_group1.getGroupId(), JournalArticle.class.getName());
@@ -256,11 +288,8 @@ public class DisplayPageTemplateServiceTest {
 			layoutPageTemplateEntry1, layoutPageTemplateEntries.get(0));
 	}
 
-	@Test
-	public void testGetLayoutPageTemplateEntriesAcrossGroupsWithPagination()
+	private void _testGetLayoutPageTemplateEntriesAcrossGroupsWithPagination()
 		throws Exception {
-
-		_group2 = GroupTestUtil.addGroup();
 
 		DDMStructure ddmStructure = DDMStructureTestUtil.addStructure(
 			_group1.getGroupId(), JournalArticle.class.getName());
@@ -320,11 +349,8 @@ public class DisplayPageTemplateServiceTest {
 			layoutPageTemplateEntries.size());
 	}
 
-	@Test
-	public void testGetLayoutPageTemplateEntriesCountAcrossGroups()
+	private void _testGetLayoutPageTemplateEntriesCountAcrossGroups()
 		throws Exception {
-
-		_group2 = GroupTestUtil.addGroup();
 
 		DDMStructure ddmStructure = DDMStructureTestUtil.addStructure(
 			_group1.getGroupId(), JournalArticle.class.getName());
@@ -371,11 +397,8 @@ public class DisplayPageTemplateServiceTest {
 				WorkflowConstants.STATUS_APPROVED));
 	}
 
-	@Test
-	public void testGetLayoutPageTemplateEntriesCountAcrossGroupsWithName()
+	private void _testGetLayoutPageTemplateEntriesCountAcrossGroupsWithName()
 		throws Exception {
-
-		_group2 = GroupTestUtil.addGroup();
 
 		DDMStructure ddmStructure = DDMStructureTestUtil.addStructure(
 			_group1.getGroupId(), JournalArticle.class.getName());
@@ -433,8 +456,36 @@ public class DisplayPageTemplateServiceTest {
 				WorkflowConstants.STATUS_APPROVED));
 	}
 
-	@Test
-	public void testGetLayoutPageTemplateEntriesWithoutGroups()
+	private void _testGetLayoutPageTemplateEntriesCountWithoutGroups()
+		throws Exception {
+
+		DDMStructure ddmStructure = DDMStructureTestUtil.addStructure(
+			_group1.getGroupId(), JournalArticle.class.getName());
+
+		DisplayPageTemplateTestUtil.addDisplayPageTemplate(
+			_group1.getGroupId(),
+			_portal.getClassNameId(JournalArticle.class.getName()),
+			ddmStructure.getStructureKey());
+
+		Assert.assertEquals(
+			0,
+			_layoutPageTemplateEntryService.getLayoutPageTemplateEntriesCount(
+				new long[0],
+				_portal.getClassNameId(JournalArticle.class.getName()),
+				ddmStructure.getStructureKey(),
+				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE,
+				WorkflowConstants.STATUS_APPROVED));
+		Assert.assertEquals(
+			0,
+			_layoutPageTemplateEntryService.getLayoutPageTemplateEntriesCount(
+				new long[0],
+				_portal.getClassNameId(JournalArticle.class.getName()),
+				ddmStructure.getStructureKey(), RandomTestUtil.randomString(),
+				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE,
+				WorkflowConstants.STATUS_APPROVED));
+	}
+
+	private void _testGetLayoutPageTemplateEntriesWithoutGroups()
 		throws Exception {
 
 		DDMStructure ddmStructure = DDMStructureTestUtil.addStructure(
@@ -482,34 +533,6 @@ public class DisplayPageTemplateServiceTest {
 		Assert.assertEquals(
 			layoutPageTemplateEntries.toString(), 0,
 			layoutPageTemplateEntries.size());
-
-		Assert.assertEquals(
-			0,
-			_layoutPageTemplateEntryService.getLayoutPageTemplateEntriesCount(
-				new long[0],
-				_portal.getClassNameId(JournalArticle.class.getName()),
-				ddmStructure.getStructureKey(),
-				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE,
-				WorkflowConstants.STATUS_APPROVED));
-		Assert.assertEquals(
-			0,
-			_layoutPageTemplateEntryService.getLayoutPageTemplateEntriesCount(
-				new long[0],
-				_portal.getClassNameId(JournalArticle.class.getName()),
-				ddmStructure.getStructureKey(), RandomTestUtil.randomString(),
-				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE,
-				WorkflowConstants.STATUS_APPROVED));
-	}
-
-	private LayoutPageTemplateEntry _createDisplayPageEntry(
-			long classNameId, String classTypeKey)
-		throws PortalException {
-
-		return _layoutPageTemplateEntryService.addLayoutPageTemplateEntry(
-			null, _group1.getGroupId(), 0, null, classNameId, classTypeKey,
-			RandomTestUtil.randomString(), 0, WorkflowConstants.STATUS_DRAFT,
-			ServiceContextTestUtil.getServiceContext(
-				_group1.getGroupId(), TestPropsValues.getUserId()));
 	}
 
 	@DeleteAfterTestRun
