@@ -153,17 +153,6 @@ public class CustomAssetDisplayPageFriendlyURLResolverTest {
 		_testGetLayoutDisplayPageObjectProviderLayoutWhenDisconnected();
 	}
 
-	private Group _addConnectedDesignLibraryGroup(Group group)
-		throws Exception {
-
-		DepotEntry depotEntry = _addDesignLibraryDepotEntry();
-
-		_depotEntryGroupRelLocalService.addDepotEntryGroupRel(
-			depotEntry.getDepotEntryId(), group.getGroupId());
-
-		return depotEntry.getGroup();
-	}
-
 	private DepotEntry _addDesignLibraryDepotEntry() throws Exception {
 		DepotEntry depotEntry = _depotEntryLocalService.addDepotEntry(
 			RandomTestUtil.randomLocaleStringMap(),
@@ -254,12 +243,15 @@ public class CustomAssetDisplayPageFriendlyURLResolverTest {
 
 		ObjectEntry objectEntry = _addObjectEntry();
 
-		Group designLibraryGroup = _addConnectedDesignLibraryGroup(_group);
+		DepotEntry depotEntry = _addDesignLibraryDepotEntry();
+
+		_depotEntryGroupRelLocalService.addDepotEntryGroupRel(
+			depotEntry.getDepotEntryId(), _group.getGroupId());
 
 		String name = RandomTestUtil.randomString();
 
 		Layout designLibraryLayout = _addDisplayPageTemplateLayout(
-			designLibraryGroup.getGroupId(), name);
+			depotEntry.getGroupId(), name);
 
 		String layoutFriendlyURL = designLibraryLayout.getFriendlyURL();
 
