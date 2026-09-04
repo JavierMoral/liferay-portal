@@ -84,7 +84,7 @@ public class CustomAssetDisplayPageFriendlyURLResolverTest {
 
 	@Before
 	public void setUp() throws Exception {
-		_group = _addGroup();
+		_group = GroupTestUtil.addGroup();
 
 		_objectDefinition = ObjectDefinitionTestUtil.publishObjectDefinition(
 			ListUtil.fromArray(
@@ -159,6 +159,15 @@ public class CustomAssetDisplayPageFriendlyURLResolverTest {
 	private Group _addConnectedDesignLibraryGroup(Group group)
 		throws Exception {
 
+		DepotEntry depotEntry = _addDesignLibraryDepotEntry();
+
+		_depotEntryGroupRelLocalService.addDepotEntryGroupRel(
+			depotEntry.getDepotEntryId(), group.getGroupId());
+
+		return depotEntry.getGroup();
+	}
+
+	private DepotEntry _addDesignLibraryDepotEntry() throws Exception {
 		DepotEntry depotEntry = _depotEntryLocalService.addDepotEntry(
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomLocaleStringMap(),
@@ -167,10 +176,7 @@ public class CustomAssetDisplayPageFriendlyURLResolverTest {
 
 		_depotEntries.add(depotEntry);
 
-		_depotEntryGroupRelLocalService.addDepotEntryGroupRel(
-			depotEntry.getDepotEntryId(), group.getGroupId());
-
-		return depotEntry.getGroup();
+		return depotEntry;
 	}
 
 	private Layout _addDisplayPageTemplateLayout(long groupId, String name)
@@ -183,14 +189,6 @@ public class CustomAssetDisplayPageFriendlyURLResolverTest {
 				false, null, name, WorkflowConstants.STATUS_APPROVED);
 
 		return _layoutLocalService.getLayout(layoutPageTemplateEntry.getPlid());
-	}
-
-	private Group _addGroup() throws Exception {
-		Group group = GroupTestUtil.addGroup();
-
-		_groups.add(group);
-
-		return group;
 	}
 
 	private ObjectEntry _addObjectEntry() throws Exception {
@@ -281,10 +279,10 @@ public class CustomAssetDisplayPageFriendlyURLResolverTest {
 
 		ObjectEntry objectEntry = _addObjectEntry();
 
-		Group designLibraryGroup = _addConnectedDesignLibraryGroup(_addGroup());
+		DepotEntry depotEntry = _addDesignLibraryDepotEntry();
 
 		Layout designLibraryLayout = _addDisplayPageTemplateLayout(
-			designLibraryGroup.getGroupId(), RandomTestUtil.randomString());
+			depotEntry.getGroupId(), RandomTestUtil.randomString());
 
 		_assertLayout(null, designLibraryLayout.getFriendlyURL(), objectEntry);
 	}
@@ -323,10 +321,8 @@ public class CustomAssetDisplayPageFriendlyURLResolverTest {
 	)
 	private FriendlyURLResolver _friendlyURLResolver;
 
-	private Group _group;
-
 	@DeleteAfterTestRun
-	private final List<Group> _groups = new ArrayList<>();
+	private Group _group;
 
 	@Inject
 	private LayoutDisplayPageProviderRegistry
