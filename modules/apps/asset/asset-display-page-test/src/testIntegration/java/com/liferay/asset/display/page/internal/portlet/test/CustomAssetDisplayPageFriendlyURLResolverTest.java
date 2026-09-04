@@ -27,7 +27,6 @@ import com.liferay.object.test.util.ObjectDefinitionTestUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.feature.flag.constants.FeatureFlagConstants;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutFriendlyURLComposite;
@@ -47,7 +46,6 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.props.test.util.PropsTemporarySwapper;
 import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -153,7 +151,6 @@ public class CustomAssetDisplayPageFriendlyURLResolverTest {
 		_testGetLayoutDisplayPageObjectProviderLayout();
 
 		_testGetLayoutDisplayPageObjectProviderLayoutWhenDisconnected();
-		_testGetLayoutDisplayPageObjectProviderLayoutWhenFlagDisabled();
 	}
 
 	private Group _addConnectedDesignLibraryGroup(Group group)
@@ -285,26 +282,6 @@ public class CustomAssetDisplayPageFriendlyURLResolverTest {
 			depotEntry.getGroupId(), RandomTestUtil.randomString());
 
 		_assertLayout(null, designLibraryLayout.getFriendlyURL(), objectEntry);
-	}
-
-	private void _testGetLayoutDisplayPageObjectProviderLayoutWhenFlagDisabled()
-		throws Exception {
-
-		ObjectEntry objectEntry = _addObjectEntry();
-
-		Group designLibraryGroup = _addConnectedDesignLibraryGroup(_group);
-
-		Layout designLibraryLayout = _addDisplayPageTemplateLayout(
-			designLibraryGroup.getGroupId(), RandomTestUtil.randomString());
-
-		try (PropsTemporarySwapper propsTemporarySwapper =
-				new PropsTemporarySwapper(
-					FeatureFlagConstants.getKey("LPD-57283"),
-					Boolean.FALSE.toString())) {
-
-			_assertLayout(
-				null, designLibraryLayout.getFriendlyURL(), objectEntry);
-		}
 	}
 
 	@DeleteAfterTestRun
