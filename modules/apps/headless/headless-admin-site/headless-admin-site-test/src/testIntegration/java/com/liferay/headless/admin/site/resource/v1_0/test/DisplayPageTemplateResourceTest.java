@@ -66,6 +66,7 @@ import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
@@ -85,12 +86,14 @@ import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.util.HTTPTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -219,6 +222,51 @@ public class DisplayPageTemplateResourceTest
 			() -> displayPageTemplateResource.deleteSiteDisplayPageTemplate(
 				irrelevantGroup.getExternalReferenceCode(),
 				liveGroupDisplayPageTemplate.getExternalReferenceCode()));
+	}
+
+	@Test
+	public void testGetItem() throws Exception {
+		DisplayPageTemplate displayPageTemplate =
+			testPostSiteDisplayPageTemplate_addDisplayPageTemplate(
+				randomDisplayPageTemplate());
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_layoutPageTemplateEntryLocalService.
+				getLayoutPageTemplateEntryByExternalReferenceCode(
+					displayPageTemplate.getExternalReferenceCode(),
+					testGroup.getGroupId());
+
+		JSONObject embeddedJSONObject = IdempotentRetryAssert.retryAssert(
+			30, TimeUnit.SECONDS, 500, TimeUnit.MILLISECONDS,
+			() -> {
+				JSONObject jsonObject = _fetchEmbeddedJSONObject(
+					displayPageTemplate.getExternalReferenceCode());
+
+				Assert.assertNotNull(jsonObject);
+
+				return jsonObject;
+			});
+
+		Assert.assertEquals(
+			layoutPageTemplateEntry.getName(),
+			embeddedJSONObject.getString("name"));
+
+		User user = _userLocalService.getUser(
+			layoutPageTemplateEntry.getUserId());
+
+		JSONObject creatorJSONObject = embeddedJSONObject.getJSONObject(
+			"creator");
+
+		Assert.assertEquals(
+			user.getFullName(), creatorJSONObject.getString("name"));
+
+		// Of the four converters sharing the entry class name, only
+		// DisplayPageTemplateDTOConverter contributes a content type
+		// reference, so its presence is what proves the class name lookup
+		// reached it
+
+		Assert.assertNotNull(
+			embeddedJSONObject.getJSONObject("contentTypeReference"));
 	}
 
 	@Override
@@ -863,6 +911,40 @@ public class DisplayPageTemplateResourceTest
 		}
 
 		Assert.assertTrue(group.hasStagingGroup());
+	}
+
+	private JSONObject _fetchEmbeddedJSONObject(String externalReferenceCode)
+		throws Exception {
+
+		JSONObject jsonObject = HTTPTestUtil.invokeToJSONObject(
+			null,
+			StringBundler.concat(
+				"search/v1.0/search?emptySearch=true&entryClassNames=",
+				LayoutPageTemplateEntry.class.getName(),
+				"&nestedFields=embedded&scope=", testGroup.getGroupId()),
+			Http.Method.GET);
+
+		JSONArray jsonArray = jsonObject.getJSONArray("items");
+
+		for (int i = 0; i < jsonArray.length(); i++) {
+			JSONObject itemJSONObject = jsonArray.getJSONObject(i);
+
+			JSONObject embeddedJSONObject = itemJSONObject.getJSONObject(
+				"embedded");
+
+			if (embeddedJSONObject == null) {
+				continue;
+			}
+
+			if (Objects.equals(
+					externalReferenceCode,
+					embeddedJSONObject.getString("externalReferenceCode"))) {
+
+				return embeddedJSONObject;
+			}
+		}
+
+		return null;
 	}
 
 	private ClassSubtypeReference _getClassSubtypeReference(String className) {
