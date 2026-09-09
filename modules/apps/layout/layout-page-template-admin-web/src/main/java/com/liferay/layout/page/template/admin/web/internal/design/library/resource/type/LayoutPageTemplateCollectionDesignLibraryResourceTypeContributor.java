@@ -67,12 +67,12 @@ public class LayoutPageTemplateCollectionDesignLibraryResourceTypeContributor
 
 		return ListUtil.fromArray(
 			_newCreationItem(
-				baseModuleProps, httpServletRequest, "add-page-template-set",
-				"new-page-template-set", "set"),
-			_newCreationItem(
 				baseModuleProps, httpServletRequest,
 				"add-content-page-template", "new-content-page-template",
-				"page-template"));
+				"page-template"),
+			_newCreationItem(
+				baseModuleProps, httpServletRequest, "add-page-template-set",
+				"new-page-template-set", "set"));
 	}
 
 	@Override
