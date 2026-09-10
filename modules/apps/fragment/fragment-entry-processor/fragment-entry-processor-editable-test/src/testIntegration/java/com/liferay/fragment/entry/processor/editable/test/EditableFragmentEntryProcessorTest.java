@@ -1697,7 +1697,7 @@ public class EditableFragmentEntryProcessorTest {
 	}
 
 	@Test
-	@TestInfo("LPP-65509")
+	@TestInfo("LPD-105357")
 	public void testFragmentEntryProcessorEditableHTMLWithCharacterReferences()
 		throws Exception {
 
@@ -1973,7 +1973,7 @@ public class EditableFragmentEntryProcessorTest {
 	}
 
 	@Test
-	@TestInfo({"LPD-72706", "LPP-65509"})
+	@TestInfo({"LPD-72706", "LPD-105357"})
 	public void testFragmentEntryProcessorEditableMappedTextIsNotDoubleEscaped()
 		throws Exception {
 
