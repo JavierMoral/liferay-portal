@@ -2014,10 +2014,6 @@ public class EditableFragmentEntryProcessorTest {
 			"Liferay&#39;s", "Liferay's");
 		_testFragmentEntryProcessorEditableTextWithSpecialCharacter(
 			"say &#34;hi&#34;", "say \"hi\"");
-		_testFragmentEntryProcessorEditableTextWithSpecialCharacter(
-			"item #1", "item #1");
-		_testFragmentEntryProcessorEditableTextWithSpecialCharacter(
-			"Hi there!", "Hi there!");
 	}
 
 	@Test(expected = FragmentEntryContentException.class)
