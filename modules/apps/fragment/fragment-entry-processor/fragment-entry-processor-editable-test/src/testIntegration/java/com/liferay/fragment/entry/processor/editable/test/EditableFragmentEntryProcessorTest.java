@@ -1972,6 +1972,32 @@ public class EditableFragmentEntryProcessorTest {
 			GetterUtil.getLong(element.attr("data-fileentryid")));
 	}
 
+	@Test
+	@TestInfo({"LPD-72706", "LPP-65509"})
+	public void testFragmentEntryProcessorEditableMappedTextIsNotDoubleEscaped()
+		throws Exception {
+
+		JournalArticle journalArticle = JournalTestUtil.addArticle(
+			_group.getGroupId(), "<script>alert(456)</script>",
+			RandomTestUtil.randomString());
+
+		String editableValues = StringUtil.replace(
+			_readJSONFileToString(
+				"fragment_entry_link_mapped_asset_field.json"),
+			new String[] {"CLASS_NAME_ID", "CLASS_PK"},
+			new String[] {
+				String.valueOf(_portal.getClassNameId(JournalArticle.class)),
+				String.valueOf(journalArticle.getResourcePrimKey())
+			});
+
+		Element element = _getElement(
+			"data-lfr-editable-id", "editable_text", editableValues,
+			"fragment_entry_editable_text.html", LocaleUtil.US,
+			FragmentEntryLinkConstants.VIEW);
+
+		Assert.assertEquals("<script>alert(456)</script>", element.text());
+	}
+
 	@Test(expected = FragmentEntryContentException.class)
 	public void testFragmentEntryProcessorEditableWithDuplicateIds()
 		throws Exception {
