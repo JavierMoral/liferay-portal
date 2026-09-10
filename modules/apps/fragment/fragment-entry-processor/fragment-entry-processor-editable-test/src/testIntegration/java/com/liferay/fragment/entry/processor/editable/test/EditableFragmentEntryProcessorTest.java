@@ -1703,8 +1703,8 @@ public class EditableFragmentEntryProcessorTest {
 
 		Element element = _getElement(
 			"data-lfr-editable-id", "editable_html",
-			_readJSONFileToString(
-				"fragment_entry_link_editable_values_html.json"),
+			_getSpecialCharactersEditableValues(
+				"10&nbsp;kg &mdash; 50&hellip;100", "editable_html"),
 			"fragment_entry_editable_html.html", LocaleUtil.US,
 			FragmentEntryLinkConstants.VIEW);
 
@@ -2891,6 +2891,17 @@ public class EditableFragmentEntryProcessorTest {
 		return bodyElement.html();
 	}
 
+	private String _getSpecialCharactersEditableValues(
+			String defaultValue, String editableId)
+		throws Exception {
+
+		return StringUtil.replace(
+			_readJSONFileToString(
+				"fragment_entry_link_editable_values_special_characters.json"),
+			new String[] {"DEFAULT_VALUE", "EDITABLE_ID"},
+			new String[] {defaultValue, editableId});
+	}
+
 	private String _readFileToString(String fileName) throws Exception {
 		Class<?> clazz = getClass();
 
@@ -2977,13 +2988,9 @@ public class EditableFragmentEntryProcessorTest {
 			String defaultValue, String expectedText)
 		throws Exception {
 
-		String editableValues = StringUtil.replace(
-			_readJSONFileToString(
-				"fragment_entry_link_editable_values_special_characters.json"),
-			"DEFAULT_VALUE", defaultValue);
-
 		Element element = _getElement(
-			"data-lfr-editable-id", "editable_text", editableValues,
+			"data-lfr-editable-id", "editable_text",
+			_getSpecialCharactersEditableValues(defaultValue, "editable_text"),
 			"fragment_entry_editable_text.html", LocaleUtil.US,
 			FragmentEntryLinkConstants.VIEW);
 

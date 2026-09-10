@@ -1,6 +1,6 @@
 {
 	"com.liferay.fragment.entry.processor.editable.EditableFragmentEntryProcessor": {
-		"editable_text": {
+		"EDITABLE_ID": {
 			"defaultValue": "DEFAULT_VALUE"
 		}
 	}
