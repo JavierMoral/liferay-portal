@@ -1,0 +1,7 @@
+{
+	"com.liferay.fragment.entry.processor.editable.EditableFragmentEntryProcessor": {
+		"editable_text": {
+			"defaultValue": "Tom &amp; Jerry&#39;s &#34;hit&#34; #1!"
+		}
+	}
+}
