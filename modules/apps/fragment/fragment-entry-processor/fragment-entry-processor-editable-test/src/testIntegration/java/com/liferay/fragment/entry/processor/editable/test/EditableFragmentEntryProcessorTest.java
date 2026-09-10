@@ -1998,6 +1998,26 @@ public class EditableFragmentEntryProcessorTest {
 		Assert.assertEquals("<script>alert(456)</script>", element.text());
 	}
 
+	@Test
+	@TestInfo(
+		{
+			"LPP-62541", "LPP-62715", "LPP-63269", "LPP-64040", "LRHC-145598",
+			"LRHC-146097"
+		}
+	)
+	public void testFragmentEntryProcessorEditableTextWithSpecialCharacters()
+		throws Exception {
+
+		Element element = _getElement(
+			"data-lfr-editable-id", "editable_text",
+			_readJSONFileToString(
+				"fragment_entry_link_editable_values_special_characters.json"),
+			"fragment_entry_editable_text.html", LocaleUtil.US,
+			FragmentEntryLinkConstants.VIEW);
+
+		Assert.assertEquals("Tom & Jerry's \"hit\" #1!", element.text());
+	}
+
 	@Test(expected = FragmentEntryContentException.class)
 	public void testFragmentEntryProcessorEditableWithDuplicateIds()
 		throws Exception {
