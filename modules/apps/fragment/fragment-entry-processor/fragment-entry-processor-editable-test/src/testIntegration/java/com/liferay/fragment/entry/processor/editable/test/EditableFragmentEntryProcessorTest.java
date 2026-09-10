@@ -1704,8 +1704,7 @@ public class EditableFragmentEntryProcessorTest {
 		Element element = _getElement(
 			"data-lfr-editable-id", "editable_html",
 			_getEditableValues(
-				"10&nbsp;kg &mdash; 50&hellip;100", "editable_html",
-				"fragment_entry_link_editable_values_special_characters.json"),
+				"10&nbsp;kg &mdash; 50&hellip;100", "editable_html"),
 			"fragment_entry_editable_html.html", LocaleUtil.US,
 			FragmentEntryLinkConstants.VIEW);
 
@@ -1978,37 +1977,33 @@ public class EditableFragmentEntryProcessorTest {
 	public void testFragmentEntryProcessorEditableMappedTextIsNotDoubleEscaped()
 		throws Exception {
 
-		JournalArticle journalArticle = JournalTestUtil.addArticle(
-			_group.getGroupId(), "<script>alert(456)</script>",
-			RandomTestUtil.randomString());
+		String title = "<script>alert(456)</script>";
 
-		String editableValues = StringUtil.replace(
-			_readJSONFileToString(
-				"fragment_entry_link_mapped_asset_field.json"),
-			new String[] {"CLASS_NAME_ID", "CLASS_PK"},
-			new String[] {
-				String.valueOf(_portal.getClassNameId(JournalArticle.class)),
-				String.valueOf(journalArticle.getResourcePrimKey())
-			});
+		JournalArticle journalArticle = JournalTestUtil.addArticle(
+			_group.getGroupId(), title, RandomTestUtil.randomString());
 
 		Element element = _getElement(
-			"data-lfr-editable-id", "editable_text", editableValues,
+			"data-lfr-editable-id", "editable_text",
+			_getEditableFieldValues(
+				_portal.getClassNameId(JournalArticle.class),
+				journalArticle.getResourcePrimKey(), "title",
+				"fragment_entry_link_mapped_asset_field.json"),
 			"fragment_entry_editable_text.html", LocaleUtil.US,
 			FragmentEntryLinkConstants.VIEW);
 
-		Assert.assertEquals("<script>alert(456)</script>", element.text());
+		Assert.assertEquals(title, element.text());
 	}
 
 	@Test
 	@TestInfo({"LPD-72706", "LPD-105357"})
-	public void testFragmentEntryProcessorEditableTextWithSpecialCharacters()
+	public void testFragmentEntryProcessorEditableTextWithCharacterReferences()
 		throws Exception {
 
-		_testFragmentEntryProcessorEditableTextWithSpecialCharacter(
-			"Tom &amp; Jerry", "Tom & Jerry");
-		_testFragmentEntryProcessorEditableTextWithSpecialCharacter(
+		_testFragmentEntryProcessorEditableTextWithCharacterReference(
 			"Liferay&#39;s", "Liferay's");
-		_testFragmentEntryProcessorEditableTextWithSpecialCharacter(
+		_testFragmentEntryProcessorEditableTextWithCharacterReference(
+			"Tom &amp; Jerry", "Tom & Jerry");
+		_testFragmentEntryProcessorEditableTextWithCharacterReference(
 			"say &#34;hi&#34;", "say \"hi\"");
 	}
 
@@ -2804,14 +2799,14 @@ public class EditableFragmentEntryProcessorTest {
 			});
 	}
 
-	private String _getEditableValues(
-			String defaultValue, String editableId, String fileName)
-		throws Exception {
+	private String _getEditableValues(String defaultValue, String editableId) {
+		JSONObject jsonObject = JSONUtil.put(
+			FragmentEntryProcessorConstants.
+				KEY_EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
+			JSONUtil.put(
+				editableId, JSONUtil.put("defaultValue", defaultValue)));
 
-		return StringUtil.replace(
-			_readJSONFileToString(fileName),
-			new String[] {"DEFAULT_VALUE", "EDITABLE_ID"},
-			new String[] {defaultValue, editableId});
+		return jsonObject.toString();
 	}
 
 	private Element _getElement(
@@ -2984,15 +2979,13 @@ public class EditableFragmentEntryProcessorTest {
 			"Default Editable Values Link Text", element.text());
 	}
 
-	private void _testFragmentEntryProcessorEditableTextWithSpecialCharacter(
+	private void _testFragmentEntryProcessorEditableTextWithCharacterReference(
 			String defaultValue, String expectedText)
 		throws Exception {
 
 		Element element = _getElement(
 			"data-lfr-editable-id", "editable_text",
-			_getEditableValues(
-				defaultValue, "editable_text",
-				"fragment_entry_link_editable_values_special_characters.json"),
+			_getEditableValues(defaultValue, "editable_text"),
 			"fragment_entry_editable_text.html", LocaleUtil.US,
 			FragmentEntryLinkConstants.VIEW);
 
