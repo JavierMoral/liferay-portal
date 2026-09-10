@@ -1697,6 +1697,21 @@ public class EditableFragmentEntryProcessorTest {
 	}
 
 	@Test
+	@TestInfo("LPP-65509")
+	public void testFragmentEntryProcessorEditableHTMLWithCharacterReferences()
+		throws Exception {
+
+		Element element = _getElement(
+			"data-lfr-editable-id", "editable_html",
+			_readJSONFileToString(
+				"fragment_entry_link_editable_values_html.json"),
+			"fragment_entry_editable_html.html", LocaleUtil.US,
+			FragmentEntryLinkConstants.VIEW);
+
+		Assert.assertEquals("10&nbsp;kg — 50…100", element.html());
+	}
+
+	@Test
 	@TestInfo("LPD-34747")
 	public void testFragmentEntryProcessorEditableLinkInlineValueEditMode()
 		throws Exception {

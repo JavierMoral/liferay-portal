@@ -1,0 +1,7 @@
+{
+	"com.liferay.fragment.entry.processor.editable.EditableFragmentEntryProcessor": {
+		"editable_html": {
+			"defaultValue": "10&nbsp;kg &mdash; 50&hellip;100"
+		}
+	}
+}
