@@ -2008,14 +2008,16 @@ public class EditableFragmentEntryProcessorTest {
 	public void testFragmentEntryProcessorEditableTextWithSpecialCharacters()
 		throws Exception {
 
-		Element element = _getElement(
-			"data-lfr-editable-id", "editable_text",
-			_readJSONFileToString(
-				"fragment_entry_link_editable_values_special_characters.json"),
-			"fragment_entry_editable_text.html", LocaleUtil.US,
-			FragmentEntryLinkConstants.VIEW);
-
-		Assert.assertEquals("Tom & Jerry's \"hit\" #1!", element.text());
+		_testFragmentEntryProcessorEditableTextWithSpecialCharacter(
+			"Tom &amp; Jerry", "Tom & Jerry");
+		_testFragmentEntryProcessorEditableTextWithSpecialCharacter(
+			"Liferay&#39;s", "Liferay's");
+		_testFragmentEntryProcessorEditableTextWithSpecialCharacter(
+			"say &#34;hi&#34;", "say \"hi\"");
+		_testFragmentEntryProcessorEditableTextWithSpecialCharacter(
+			"item #1", "item #1");
+		_testFragmentEntryProcessorEditableTextWithSpecialCharacter(
+			"Hi there!", "Hi there!");
 	}
 
 	@Test(expected = FragmentEntryContentException.class)
@@ -2978,6 +2980,23 @@ public class EditableFragmentEntryProcessorTest {
 		Assert.assertEquals(expectedHref, element.attr("href"));
 		Assert.assertEquals(
 			"Default Editable Values Link Text", element.text());
+	}
+
+	private void _testFragmentEntryProcessorEditableTextWithSpecialCharacter(
+			String defaultValue, String expectedText)
+		throws Exception {
+
+		String editableValues = StringUtil.replace(
+			_readJSONFileToString(
+				"fragment_entry_link_editable_values_special_characters.json"),
+			"DEFAULT_VALUE", defaultValue);
+
+		Element element = _getElement(
+			"data-lfr-editable-id", "editable_text", editableValues,
+			"fragment_entry_editable_text.html", LocaleUtil.US,
+			FragmentEntryLinkConstants.VIEW);
+
+		Assert.assertEquals(expectedText, element.text());
 	}
 
 	private String _toJSON(FileEntry fileEntry) {
