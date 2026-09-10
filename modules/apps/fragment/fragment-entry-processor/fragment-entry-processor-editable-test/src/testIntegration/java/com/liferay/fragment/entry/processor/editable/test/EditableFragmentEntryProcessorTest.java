@@ -1999,12 +1999,7 @@ public class EditableFragmentEntryProcessorTest {
 	}
 
 	@Test
-	@TestInfo(
-		{
-			"LPP-62541", "LPP-62715", "LPP-63269", "LPP-64040", "LRHC-145598",
-			"LRHC-146097"
-		}
-	)
+	@TestInfo({"LPD-72706", "LPD-105357"})
 	public void testFragmentEntryProcessorEditableTextWithSpecialCharacters()
 		throws Exception {
 
