@@ -1697,21 +1697,6 @@ public class EditableFragmentEntryProcessorTest {
 	}
 
 	@Test
-	@TestInfo("LPD-105357")
-	public void testFragmentEntryProcessorEditableHTMLWithCharacterReferences()
-		throws Exception {
-
-		Element element = _getElement(
-			"data-lfr-editable-id", "editable_html",
-			_getEditableValues(
-				"10&nbsp;kg &mdash; 50&hellip;100", "editable_html"),
-			"fragment_entry_editable_html.html", LocaleUtil.US,
-			FragmentEntryLinkConstants.VIEW);
-
-		Assert.assertEquals("10&nbsp;kg — 50…100", element.html());
-	}
-
-	@Test
 	@TestInfo("LPD-34747")
 	public void testFragmentEntryProcessorEditableLinkInlineValueEditMode()
 		throws Exception {
@@ -1974,37 +1959,12 @@ public class EditableFragmentEntryProcessorTest {
 
 	@Test
 	@TestInfo({"LPD-72706", "LPD-105357"})
-	public void testFragmentEntryProcessorEditableMappedTextIsNotDoubleEscaped()
+	public void testFragmentEntryProcessorEditableWithCharacterReferences()
 		throws Exception {
 
-		String title = "<script>alert(456)</script>";
-
-		JournalArticle journalArticle = JournalTestUtil.addArticle(
-			_group.getGroupId(), title, RandomTestUtil.randomString());
-
-		Element element = _getElement(
-			"data-lfr-editable-id", "editable_text",
-			_getEditableFieldValues(
-				_portal.getClassNameId(JournalArticle.class),
-				journalArticle.getResourcePrimKey(), "title",
-				"fragment_entry_link_mapped_asset_field.json"),
-			"fragment_entry_editable_text.html", LocaleUtil.US,
-			FragmentEntryLinkConstants.VIEW);
-
-		Assert.assertEquals(title, element.text());
-	}
-
-	@Test
-	@TestInfo({"LPD-72706", "LPD-105357"})
-	public void testFragmentEntryProcessorEditableTextWithCharacterReferences()
-		throws Exception {
-
-		_testFragmentEntryProcessorEditableTextWithCharacterReference(
-			"Liferay&#39;s", "Liferay's");
-		_testFragmentEntryProcessorEditableTextWithCharacterReference(
-			"Tom &amp; Jerry", "Tom & Jerry");
-		_testFragmentEntryProcessorEditableTextWithCharacterReference(
-			"say &#34;hi&#34;", "say \"hi\"");
+		_testFragmentEntryProcessorEditableWithCharacterReferencesInHTML();
+		_testFragmentEntryProcessorEditableWithCharacterReferencesInMappedText();
+		_testFragmentEntryProcessorEditableWithCharacterReferencesInText();
 	}
 
 	@Test(expected = FragmentEntryContentException.class)
@@ -2680,6 +2640,18 @@ public class EditableFragmentEntryProcessorTest {
 		}
 	}
 
+	private void _assertEditableText(String defaultValue, String expectedText)
+		throws Exception {
+
+		Element element = _getElement(
+			"data-lfr-editable-id", "editable_text",
+			_getEditableValues(defaultValue, "editable_text"),
+			"fragment_entry_editable_text.html", LocaleUtil.US,
+			FragmentEntryLinkConstants.VIEW);
+
+		Assert.assertEquals(expectedText, element.text());
+	}
+
 	private void _assertElementAttribute(
 		String attributeName, long attributeValue, Element element) {
 
@@ -2979,17 +2951,45 @@ public class EditableFragmentEntryProcessorTest {
 			"Default Editable Values Link Text", element.text());
 	}
 
-	private void _testFragmentEntryProcessorEditableTextWithCharacterReference(
-			String defaultValue, String expectedText)
+	private void _testFragmentEntryProcessorEditableWithCharacterReferencesInHTML()
 		throws Exception {
 
 		Element element = _getElement(
+			"data-lfr-editable-id", "editable_html",
+			_getEditableValues(
+				"10&nbsp;kg &mdash; 50&hellip;100", "editable_html"),
+			"fragment_entry_editable_html.html", LocaleUtil.US,
+			FragmentEntryLinkConstants.VIEW);
+
+		Assert.assertEquals("10&nbsp;kg — 50…100", element.html());
+	}
+
+	private void _testFragmentEntryProcessorEditableWithCharacterReferencesInMappedText()
+		throws Exception {
+
+		String title = "<script>alert(456)</script>";
+
+		JournalArticle journalArticle = JournalTestUtil.addArticle(
+			_group.getGroupId(), title, RandomTestUtil.randomString());
+
+		Element element = _getElement(
 			"data-lfr-editable-id", "editable_text",
-			_getEditableValues(defaultValue, "editable_text"),
+			_getEditableFieldValues(
+				_portal.getClassNameId(JournalArticle.class),
+				journalArticle.getResourcePrimKey(), "title",
+				"fragment_entry_link_mapped_asset_field.json"),
 			"fragment_entry_editable_text.html", LocaleUtil.US,
 			FragmentEntryLinkConstants.VIEW);
 
-		Assert.assertEquals(expectedText, element.text());
+		Assert.assertEquals(title, element.text());
+	}
+
+	private void _testFragmentEntryProcessorEditableWithCharacterReferencesInText()
+		throws Exception {
+
+		_assertEditableText("Liferay&#39;s", "Liferay's");
+		_assertEditableText("Tom &amp; Jerry", "Tom & Jerry");
+		_assertEditableText("say &#34;hi&#34;", "say \"hi\"");
 	}
 
 	private String _toJSON(FileEntry fileEntry) {
