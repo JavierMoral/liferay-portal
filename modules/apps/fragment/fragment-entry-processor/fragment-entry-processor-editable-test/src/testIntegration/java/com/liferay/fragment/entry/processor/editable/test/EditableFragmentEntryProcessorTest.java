@@ -1703,8 +1703,9 @@ public class EditableFragmentEntryProcessorTest {
 
 		Element element = _getElement(
 			"data-lfr-editable-id", "editable_html",
-			_getSpecialCharactersEditableValues(
-				"10&nbsp;kg &mdash; 50&hellip;100", "editable_html"),
+			_getEditableValues(
+				"10&nbsp;kg &mdash; 50&hellip;100", "editable_html",
+				"fragment_entry_link_editable_values_special_characters.json"),
 			"fragment_entry_editable_html.html", LocaleUtil.US,
 			FragmentEntryLinkConstants.VIEW);
 
@@ -2803,6 +2804,16 @@ public class EditableFragmentEntryProcessorTest {
 			});
 	}
 
+	private String _getEditableValues(
+			String defaultValue, String editableId, String fileName)
+		throws Exception {
+
+		return StringUtil.replace(
+			_readJSONFileToString(fileName),
+			new String[] {"DEFAULT_VALUE", "EDITABLE_ID"},
+			new String[] {defaultValue, editableId});
+	}
+
 	private Element _getElement(
 			String dataAttributeName, String editableId,
 			FragmentEntryLink fragmentEntryLink, Locale locale, String mode)
@@ -2889,17 +2900,6 @@ public class EditableFragmentEntryProcessorTest {
 		Element bodyElement = document.body();
 
 		return bodyElement.html();
-	}
-
-	private String _getSpecialCharactersEditableValues(
-			String defaultValue, String editableId)
-		throws Exception {
-
-		return StringUtil.replace(
-			_readJSONFileToString(
-				"fragment_entry_link_editable_values_special_characters.json"),
-			new String[] {"DEFAULT_VALUE", "EDITABLE_ID"},
-			new String[] {defaultValue, editableId});
 	}
 
 	private String _readFileToString(String fileName) throws Exception {
@@ -2990,7 +2990,9 @@ public class EditableFragmentEntryProcessorTest {
 
 		Element element = _getElement(
 			"data-lfr-editable-id", "editable_text",
-			_getSpecialCharactersEditableValues(defaultValue, "editable_text"),
+			_getEditableValues(
+				defaultValue, "editable_text",
+				"fragment_entry_link_editable_values_special_characters.json"),
 			"fragment_entry_editable_text.html", LocaleUtil.US,
 			FragmentEntryLinkConstants.VIEW);
 
