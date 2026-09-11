@@ -71,7 +71,6 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.portal.vulcan.util.SearchUtil;
 
-import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.MultivaluedMap;
 
 import java.util.Collections;
@@ -192,7 +191,9 @@ public class DisplayPageTemplateResourceImpl
 				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE,
 				layoutPageTemplateEntry.getType())) {
 
-			throw new NotFoundException();
+			throw new IllegalArgumentException(
+				"The display page template type does not match the display " +
+					"page type");
 		}
 
 		Group group = _groupLocalService.getGroup(
