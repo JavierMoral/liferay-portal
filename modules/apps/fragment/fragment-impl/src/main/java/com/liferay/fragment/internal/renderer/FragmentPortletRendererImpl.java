@@ -45,7 +45,8 @@ public class FragmentPortletRendererImpl implements FragmentPortletRenderer {
 				WebKeys.THEME_DISPLAY);
 
 		if ((themeDisplay != null) &&
-			(fragmentEntryLink.getPlid() != themeDisplay.getPlid())) {
+			(fragmentEntryLink.getPlid() != themeDisplay.getPlid()) &&
+			!fragmentEntryLink.isTypePortlet()) {
 
 			inheritedFromMaster = true;
 		}
