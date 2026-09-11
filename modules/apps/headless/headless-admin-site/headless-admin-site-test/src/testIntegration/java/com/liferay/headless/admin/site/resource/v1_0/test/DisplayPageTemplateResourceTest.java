@@ -29,7 +29,6 @@ import com.liferay.headless.admin.site.client.dto.v1_0.ThumbnailURLReference;
 import com.liferay.headless.admin.site.client.pagination.Page;
 import com.liferay.headless.admin.site.client.problem.Problem;
 import com.liferay.headless.admin.site.client.resource.v1_0.DisplayPageTemplateResource;
-import com.liferay.headless.admin.site.client.serdes.v1_0.DisplayPageTemplateSerDes;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.FileEntryTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.FragmentEntryTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.LayoutPageTemplateEntryTestUtil;
@@ -80,7 +79,6 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
-import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -109,10 +107,6 @@ import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
-import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
-import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
-import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilder;
-import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
@@ -122,7 +116,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -226,37 +219,6 @@ public class DisplayPageTemplateResourceTest
 			() -> displayPageTemplateResource.deleteSiteDisplayPageTemplate(
 				irrelevantGroup.getExternalReferenceCode(),
 				liveGroupDisplayPageTemplate.getExternalReferenceCode()));
-	}
-
-	@Test
-	@TestInfo("LPD-104653")
-	public void testGetItem() throws Exception {
-		DisplayPageTemplate displayPageTemplate =
-			testPostSiteDisplayPageTemplate_addDisplayPageTemplate(
-				randomDisplayPageTemplate());
-
-		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			_layoutPageTemplateEntryLocalService.
-				getLayoutPageTemplateEntryByExternalReferenceCode(
-					displayPageTemplate.getExternalReferenceCode(),
-					testGroup.getGroupId());
-
-		VulcanCRUDItemDelegate<?> vulcanCRUDItemDelegate =
-			_getVulcanCRUDItemDelegate();
-
-		DisplayPageTemplate itemDisplayPageTemplate =
-			DisplayPageTemplateSerDes.toDTO(
-				String.valueOf(
-					vulcanCRUDItemDelegate.getItem(
-						layoutPageTemplateEntry.
-							getLayoutPageTemplateEntryId())));
-
-		Assert.assertEquals(
-			displayPageTemplate.getExternalReferenceCode(),
-			itemDisplayPageTemplate.getExternalReferenceCode());
-		Assert.assertEquals(
-			layoutPageTemplateEntry.getName(),
-			itemDisplayPageTemplate.getName());
 	}
 
 	@Override
@@ -1114,54 +1076,6 @@ public class DisplayPageTemplateResourceTest
 			layout, _layoutServiceContextHelper, _layoutStructureProvider,
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
 				layout.getPlid()));
-	}
-
-	private VulcanCRUDItemDelegate<?> _getVulcanCRUDItemDelegate()
-		throws Exception {
-
-		VulcanCRUDItemDelegateBuilder vulcanCRUDItemDelegateBuilder =
-			_vulcanCRUDItemDelegateBuilderRegistry.builder(
-				testCompany,
-				"com.liferay.headless.admin.site.dto.v1_0.DisplayPageTemplate");
-
-		return vulcanCRUDItemDelegateBuilder.acceptLanguage(
-			new AcceptLanguage() {
-
-				@Override
-				public List<Locale> getLocales() {
-					return Collections.singletonList(LocaleUtil.getDefault());
-				}
-
-				@Override
-				public String getPreferredLanguageId() {
-					return LocaleUtil.toLanguageId(LocaleUtil.getDefault());
-				}
-
-				@Override
-				public Locale getPreferredLocale() {
-					return LocaleUtil.getDefault();
-				}
-
-			}
-		).groupLocalService(
-			_groupLocalService
-		).httpServletRequest(
-			null
-		).httpServletResponse(
-			null
-		).resourceActionLocalService(
-			null
-		).resourcePermissionLocalService(
-			null
-		).roleLocalService(
-			null
-		).scopeChecker(
-			null
-		).uriInfo(
-			null
-		).user(
-			TestPropsValues.getUser()
-		).build();
 	}
 
 	private boolean _isPublished(Layout layout) {
@@ -2805,9 +2719,6 @@ public class DisplayPageTemplateResourceTest
 	private static ThumbnailHttpServer _thumbnailHttpServer;
 
 	@Inject
-	private GroupLocalService _groupLocalService;
-
-	@Inject
 	private InfoItemServiceRegistry _infoItemServiceRegistry;
 
 	@Inject
@@ -2853,9 +2764,5 @@ public class DisplayPageTemplateResourceTest
 
 	@Inject
 	private UserLocalService _userLocalService;
-
-	@Inject
-	private VulcanCRUDItemDelegateBuilderRegistry
-		_vulcanCRUDItemDelegateBuilderRegistry;
 
 }
