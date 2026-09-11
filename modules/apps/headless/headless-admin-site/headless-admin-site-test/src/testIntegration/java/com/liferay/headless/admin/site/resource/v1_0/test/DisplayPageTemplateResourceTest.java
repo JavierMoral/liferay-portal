@@ -225,6 +225,7 @@ public class DisplayPageTemplateResourceTest
 	}
 
 	@Test
+	@TestInfo("LPD-104653")
 	public void testGetItem() throws Exception {
 		DisplayPageTemplate displayPageTemplate =
 			testPostSiteDisplayPageTemplate_addDisplayPageTemplate(
@@ -263,7 +264,7 @@ public class DisplayPageTemplateResourceTest
 		// Of the four converters sharing the entry class name, only
 		// DisplayPageTemplateDTOConverter contributes a content type
 		// reference, so its presence is what proves the class name lookup
-		// reached it
+		// reached it.
 
 		Assert.assertNotNull(
 			embeddedJSONObject.getJSONObject("contentTypeReference"));
@@ -925,6 +926,8 @@ public class DisplayPageTemplateResourceTest
 			Http.Method.GET);
 
 		JSONArray jsonArray = jsonObject.getJSONArray("items");
+
+		Assert.assertNotNull(jsonObject.toString(), jsonArray);
 
 		for (int i = 0; i < jsonArray.length(); i++) {
 			JSONObject itemJSONObject = jsonArray.getJSONObject(i);
