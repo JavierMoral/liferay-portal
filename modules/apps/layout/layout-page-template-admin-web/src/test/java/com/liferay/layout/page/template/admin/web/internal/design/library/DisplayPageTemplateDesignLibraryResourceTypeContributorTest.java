@@ -48,11 +48,6 @@ public class DisplayPageTemplateDesignLibraryResourceTypeContributorTest {
 
 	@Test
 	public void testGetType() {
-
-		// Masters, content page templates and widget page templates share the
-		// entry class name, so the type is what tells a display page template
-		// apart.
-
 		Assert.assertEquals(
 			String.valueOf(LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE),
 			_displayPageTemplateDesignLibraryResourceTypeContributor.getType());
