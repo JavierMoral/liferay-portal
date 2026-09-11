@@ -7,6 +7,7 @@ package com.liferay.layout.page.template.admin.web.internal.design.library;
 
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateActionKeys;
+import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
@@ -43,6 +44,18 @@ public class DisplayPageTemplateDesignLibraryResourceTypeContributorTest {
 		ReflectionTestUtil.setFieldValue(
 			_displayPageTemplateDesignLibraryResourceTypeContributor,
 			"_portletResourcePermission", _portletResourcePermission);
+	}
+
+	@Test
+	public void testGetType() {
+
+		// Masters, content page templates and widget page templates share the
+		// entry class name, so the type is what tells a display page template
+		// apart.
+
+		Assert.assertEquals(
+			String.valueOf(LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE),
+			_displayPageTemplateDesignLibraryResourceTypeContributor.getType());
 	}
 
 	@Test
