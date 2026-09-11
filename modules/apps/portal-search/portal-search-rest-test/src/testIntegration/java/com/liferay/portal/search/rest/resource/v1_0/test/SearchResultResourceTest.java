@@ -20,6 +20,9 @@ import com.liferay.journal.model.JournalFolder;
 import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.service.JournalFolderLocalService;
 import com.liferay.journal.test.util.JournalTestUtil;
+import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
+import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
+import com.liferay.layout.page.template.test.util.LayoutPageTemplateTestUtil;
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.constants.ObjectEntryFolderConstants;
 import com.liferay.object.field.builder.TextObjectFieldBuilder;
@@ -33,6 +36,7 @@ import com.liferay.object.service.ObjectRelationshipLocalService;
 import com.liferay.object.test.util.ObjectDefinitionTestUtil;
 import com.liferay.object.test.util.ObjectRelationshipTestUtil;
 import com.liferay.petra.function.UnsafeTriConsumer;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -118,6 +122,7 @@ import org.junit.runner.RunWith;
 /**
  * @author Petteri Karttunen
  * @author Almir Ferreira
+ * @author Javier Moral
  */
 @RunWith(Arquillian.class)
 public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
@@ -154,6 +159,7 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 
 	@Override
 	@Test
+	@TestInfo("LPD-105550")
 	public void testGetSearchPage() throws Exception {
 		String scope = String.valueOf(testGroup.getGroupId());
 
@@ -191,6 +197,11 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 			(List<com.liferay.portal.search.rest.client.dto.v1_0.SearchResult>)
 				page.getItems());
 		assertValid(page, testGetSearchPage_getExpectedActions());
+
+		_addLayoutPageTemplateEntries();
+
+		_testGetSearchPageWithType();
+		_testGetSearchPageWithTypeFilter();
 	}
 
 	@Override
@@ -592,6 +603,17 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 			_ddmStructure.getStructureId(), null, _serviceContext);
 	}
 
+	private void _addLayoutPageTemplateEntries() throws Exception {
+		LayoutPageTemplateTestUtil.addLayoutPageTemplateEntry(
+			testGroup.getGroupId(),
+			LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE,
+			WorkflowConstants.STATUS_APPROVED);
+		LayoutPageTemplateTestUtil.addLayoutPageTemplateEntry(
+			testGroup.getGroupId(),
+			LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT,
+			WorkflowConstants.STATUS_APPROVED);
+	}
+
 	private SXPBlueprint _addSXPBlueprint(boolean highlightingEnabled)
 		throws Exception {
 
@@ -791,6 +813,16 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 		return map;
 	}
 
+	private List<String> _getTypes(
+		Page<com.liferay.portal.search.rest.client.dto.v1_0.SearchResult>
+			page) {
+
+		return ListUtil.sort(
+			TransformUtil.transform(
+				page.getItems(),
+				searchResult -> GetterUtil.getString(searchResult.getType())));
+	}
+
 	private String _getUserHighlightedFullName() {
 		Version version = _getSearchEngineVersion();
 
@@ -872,6 +904,39 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 				"search", keywords
 			).build(),
 			searchRequestBody);
+	}
+
+	private void _testGetSearchPageWithType() throws Exception {
+		Page<com.liferay.portal.search.rest.client.dto.v1_0.SearchResult> page =
+			searchResultResource.getSearchPage(
+				null, true, LayoutPageTemplateEntry.class.getName(),
+				String.valueOf(testGroup.getGroupId()), null, null, null, null);
+
+		Assert.assertEquals(
+			page.toString(),
+			Arrays.asList(
+				String.valueOf(
+					LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE),
+				String.valueOf(
+					LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT)),
+			_getTypes(page));
+	}
+
+	private void _testGetSearchPageWithTypeFilter() throws Exception {
+		Page<com.liferay.portal.search.rest.client.dto.v1_0.SearchResult> page =
+			searchResultResource.getSearchPage(
+				null, true, LayoutPageTemplateEntry.class.getName(),
+				String.valueOf(testGroup.getGroupId()), null,
+				"type eq '" +
+					LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE + "'",
+				null, null);
+
+		Assert.assertEquals(
+			page.toString(),
+			Collections.singletonList(
+				String.valueOf(
+					LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE)),
+			_getTypes(page));
 	}
 
 	private void _testPostSearchPageAggregationNameAsFacetName()
