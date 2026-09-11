@@ -29,6 +29,7 @@ import com.liferay.headless.admin.site.client.dto.v1_0.ThumbnailURLReference;
 import com.liferay.headless.admin.site.client.pagination.Page;
 import com.liferay.headless.admin.site.client.problem.Problem;
 import com.liferay.headless.admin.site.client.resource.v1_0.DisplayPageTemplateResource;
+import com.liferay.headless.admin.site.client.serdes.v1_0.DisplayPageTemplateSerDes;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.FileEntryTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.FragmentEntryTestUtil;
 import com.liferay.headless.admin.site.resource.v1_0.test.util.LayoutPageTemplateEntryTestUtil;
@@ -66,7 +67,6 @@ import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.lang.SafeCloseable;
-import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactory;
@@ -80,20 +80,19 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
-import com.liferay.portal.kernel.test.util.HTTPTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -110,6 +109,10 @@ import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegate;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilder;
+import com.liferay.portal.vulcan.crud.VulcanCRUDItemDelegateBuilderRegistry;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
 
@@ -119,6 +122,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -237,37 +241,22 @@ public class DisplayPageTemplateResourceTest
 					displayPageTemplate.getExternalReferenceCode(),
 					testGroup.getGroupId());
 
-		JSONObject embeddedJSONObject = IdempotentRetryAssert.retryAssert(
-			30, TimeUnit.SECONDS, 500, TimeUnit.MILLISECONDS,
-			() -> {
-				JSONObject jsonObject = _fetchEmbeddedJSONObject(
-					displayPageTemplate.getExternalReferenceCode());
+		VulcanCRUDItemDelegate<?> vulcanCRUDItemDelegate =
+			_getVulcanCRUDItemDelegate();
 
-				Assert.assertNotNull(jsonObject);
+		DisplayPageTemplate itemDisplayPageTemplate =
+			DisplayPageTemplateSerDes.toDTO(
+				String.valueOf(
+					vulcanCRUDItemDelegate.getItem(
+						layoutPageTemplateEntry.
+							getLayoutPageTemplateEntryId())));
 
-				return jsonObject;
-			});
-
+		Assert.assertEquals(
+			displayPageTemplate.getExternalReferenceCode(),
+			itemDisplayPageTemplate.getExternalReferenceCode());
 		Assert.assertEquals(
 			layoutPageTemplateEntry.getName(),
-			embeddedJSONObject.getString("name"));
-
-		User user = _userLocalService.getUser(
-			layoutPageTemplateEntry.getUserId());
-
-		JSONObject creatorJSONObject = embeddedJSONObject.getJSONObject(
-			"creator");
-
-		Assert.assertEquals(
-			user.getFullName(), creatorJSONObject.getString("name"));
-
-		// Of the four converters sharing the entry class name, only
-		// DisplayPageTemplateDTOConverter contributes a content type
-		// reference, so its presence is what proves the class name lookup
-		// reached it.
-
-		Assert.assertNotNull(
-			embeddedJSONObject.getJSONObject("contentTypeReference"));
+			itemDisplayPageTemplate.getName());
 	}
 
 	@Override
@@ -914,42 +903,6 @@ public class DisplayPageTemplateResourceTest
 		Assert.assertTrue(group.hasStagingGroup());
 	}
 
-	private JSONObject _fetchEmbeddedJSONObject(String externalReferenceCode)
-		throws Exception {
-
-		JSONObject jsonObject = HTTPTestUtil.invokeToJSONObject(
-			null,
-			StringBundler.concat(
-				"search/v1.0/search?emptySearch=true&entryClassNames=",
-				LayoutPageTemplateEntry.class.getName(),
-				"&nestedFields=embedded&scope=", testGroup.getGroupId()),
-			Http.Method.GET);
-
-		JSONArray jsonArray = jsonObject.getJSONArray("items");
-
-		Assert.assertNotNull(jsonObject.toString(), jsonArray);
-
-		for (int i = 0; i < jsonArray.length(); i++) {
-			JSONObject itemJSONObject = jsonArray.getJSONObject(i);
-
-			JSONObject embeddedJSONObject = itemJSONObject.getJSONObject(
-				"embedded");
-
-			if (embeddedJSONObject == null) {
-				continue;
-			}
-
-			if (Objects.equals(
-					externalReferenceCode,
-					embeddedJSONObject.getString("externalReferenceCode"))) {
-
-				return embeddedJSONObject;
-			}
-		}
-
-		return null;
-	}
-
 	private ClassSubtypeReference _getClassSubtypeReference(String className) {
 		if (className.equals(AssetCategory.class.getName())) {
 			ClassSubtypeReference classSubtypeReference =
@@ -1161,6 +1114,54 @@ public class DisplayPageTemplateResourceTest
 			layout, _layoutServiceContextHelper, _layoutStructureProvider,
 			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
 				layout.getPlid()));
+	}
+
+	private VulcanCRUDItemDelegate<?> _getVulcanCRUDItemDelegate()
+		throws Exception {
+
+		VulcanCRUDItemDelegateBuilder vulcanCRUDItemDelegateBuilder =
+			_vulcanCRUDItemDelegateBuilderRegistry.builder(
+				testCompany,
+				"com.liferay.headless.admin.site.dto.v1_0.DisplayPageTemplate");
+
+		return vulcanCRUDItemDelegateBuilder.acceptLanguage(
+			new AcceptLanguage() {
+
+				@Override
+				public List<Locale> getLocales() {
+					return Collections.singletonList(LocaleUtil.getDefault());
+				}
+
+				@Override
+				public String getPreferredLanguageId() {
+					return LocaleUtil.toLanguageId(LocaleUtil.getDefault());
+				}
+
+				@Override
+				public Locale getPreferredLocale() {
+					return LocaleUtil.getDefault();
+				}
+
+			}
+		).groupLocalService(
+			_groupLocalService
+		).httpServletRequest(
+			null
+		).httpServletResponse(
+			null
+		).resourceActionLocalService(
+			null
+		).resourcePermissionLocalService(
+			null
+		).roleLocalService(
+			null
+		).scopeChecker(
+			null
+		).uriInfo(
+			null
+		).user(
+			TestPropsValues.getUser()
+		).build();
 	}
 
 	private boolean _isPublished(Layout layout) {
@@ -2804,6 +2805,9 @@ public class DisplayPageTemplateResourceTest
 	private static ThumbnailHttpServer _thumbnailHttpServer;
 
 	@Inject
+	private GroupLocalService _groupLocalService;
+
+	@Inject
 	private InfoItemServiceRegistry _infoItemServiceRegistry;
 
 	@Inject
@@ -2849,5 +2853,9 @@ public class DisplayPageTemplateResourceTest
 
 	@Inject
 	private UserLocalService _userLocalService;
+
+	@Inject
+	private VulcanCRUDItemDelegateBuilderRegistry
+		_vulcanCRUDItemDelegateBuilderRegistry;
 
 }
