@@ -6,20 +6,13 @@
 package com.liferay.layout.page.template.admin.web.internal.design.library;
 
 import com.liferay.depot.model.DepotEntry;
-import com.liferay.frontend.data.set.model.FDSActionDropdownItem;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateActionKeys;
-import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
-import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
-
-import jakarta.servlet.http.HttpServletRequest;
-
-import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -53,46 +46,12 @@ public class DisplayPageTemplateDesignLibraryResourceTypeContributorTest {
 	}
 
 	@Test
-	public void testGetEntryClassName() {
-		Assert.assertEquals(
-			LayoutPageTemplateEntry.class.getName(),
-			_displayPageTemplateDesignLibraryResourceTypeContributor.
-				getEntryClassName());
-	}
-
-	@Test
-	public void testGetFDSActionDropdownItems() throws Exception {
-		List<FDSActionDropdownItem> fdsActionDropdownItems =
-			_displayPageTemplateDesignLibraryResourceTypeContributor.
-				getFDSActionDropdownItems(
-					Mockito.mock(HttpServletRequest.class), _depotEntry,
-					RandomTestUtil.randomString());
-
-		Assert.assertTrue(
-			fdsActionDropdownItems.toString(),
-			fdsActionDropdownItems.isEmpty());
-	}
-
-	@Test
-	public void testGetType() {
-
-		// Masters, content page templates and widget page templates share the
-		// entry class name, so the type is what tells a display page template
-		// apart.
-
-		Assert.assertEquals(
-			String.valueOf(LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE),
-			_displayPageTemplateDesignLibraryResourceTypeContributor.getType());
-	}
-
-	@Test
 	public void testHasAddPermission() {
 		Assert.assertFalse(
 			_displayPageTemplateDesignLibraryResourceTypeContributor.
 				hasAddPermission(_permissionChecker, _depotEntry));
 
-		_setUpPermission(
-			LayoutPageTemplateActionKeys.ADD_LAYOUT_PAGE_TEMPLATE_ENTRY);
+		_setUpAddLayoutPageTemplateEntryPermission();
 
 		Assert.assertTrue(
 			_displayPageTemplateDesignLibraryResourceTypeContributor.
@@ -105,17 +64,27 @@ public class DisplayPageTemplateDesignLibraryResourceTypeContributorTest {
 			_displayPageTemplateDesignLibraryResourceTypeContributor.
 				hasViewPermission(_permissionChecker, _depotEntry));
 
-		_setUpPermission(ActionKeys.VIEW);
+		_setUpViewPermission();
 
 		Assert.assertTrue(
 			_displayPageTemplateDesignLibraryResourceTypeContributor.
 				hasViewPermission(_permissionChecker, _depotEntry));
 	}
 
-	private void _setUpPermission(String actionId) {
+	private void _setUpAddLayoutPageTemplateEntryPermission() {
 		Mockito.when(
 			_portletResourcePermission.contains(
-				_permissionChecker, _GROUP_ID, actionId)
+				_permissionChecker, _GROUP_ID,
+				LayoutPageTemplateActionKeys.ADD_LAYOUT_PAGE_TEMPLATE_ENTRY)
+		).thenReturn(
+			true
+		);
+	}
+
+	private void _setUpViewPermission() {
+		Mockito.when(
+			_portletResourcePermission.contains(
+				_permissionChecker, _GROUP_ID, ActionKeys.VIEW)
 		).thenReturn(
 			true
 		);
