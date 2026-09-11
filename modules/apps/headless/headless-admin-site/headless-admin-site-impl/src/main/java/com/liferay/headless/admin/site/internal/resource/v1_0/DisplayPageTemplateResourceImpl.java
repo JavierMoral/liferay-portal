@@ -522,12 +522,7 @@ public class DisplayPageTemplateResourceImpl
 						displayPageTemplate.getMarkedAsDefault()));
 		}
 
-		return _displayPageTemplateDTOConverter.toDTO(
-			DTOConverterContextUtil.getDTOConverterContext(
-				contextAcceptLanguage, _dtoConverterRegistry,
-				contextHttpServletRequest,
-				layoutPageTemplateEntry.getLayoutPageTemplateEntryId(),
-				contextUriInfo, contextUser),
+		return _toDisplayPageTemplate(
 			_layoutPageTemplateEntryService.updateLayoutPageTemplateEntry(
 				layoutPageTemplateEntry.getLayoutPageTemplateEntryId(),
 				displayPageTemplate.getName()));
