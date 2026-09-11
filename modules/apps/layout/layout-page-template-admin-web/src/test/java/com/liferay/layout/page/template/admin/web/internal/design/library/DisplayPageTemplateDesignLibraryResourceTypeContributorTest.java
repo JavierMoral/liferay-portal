@@ -6,11 +6,11 @@
 package com.liferay.layout.page.template.admin.web.internal.design.library;
 
 import com.liferay.depot.model.DepotEntry;
-import com.liferay.design.library.resource.type.DesignLibraryResourceCreationItem;
 import com.liferay.frontend.data.set.model.FDSActionDropdownItem;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateActionKeys;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
@@ -22,6 +22,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -38,38 +39,34 @@ public class DisplayPageTemplateDesignLibraryResourceTypeContributorTest {
 	public static final LiferayUnitTestRule liferayUnitTestRule =
 		LiferayUnitTestRule.INSTANCE;
 
-	@Test
-	public void testGetCreationItems() throws Exception {
-		List<DesignLibraryResourceCreationItem>
-			designLibraryResourceCreationItems = _createContributor(
-				Mockito.mock(PortletResourcePermission.class)
-			).getCreationItems(
-				Mockito.mock(HttpServletRequest.class),
-				Mockito.mock(DepotEntry.class), RandomTestUtil.randomString()
-			);
+	@Before
+	public void setUp() {
+		Mockito.when(
+			_depotEntry.getGroupId()
+		).thenReturn(
+			_GROUP_ID
+		);
 
-		Assert.assertTrue(
-			designLibraryResourceCreationItems.toString(),
-			designLibraryResourceCreationItems.isEmpty());
+		ReflectionTestUtil.setFieldValue(
+			_displayPageTemplateDesignLibraryResourceTypeContributor,
+			"_portletResourcePermission", _portletResourcePermission);
 	}
 
 	@Test
 	public void testGetEntryClassName() {
 		Assert.assertEquals(
 			LayoutPageTemplateEntry.class.getName(),
-			_createContributor(
-				Mockito.mock(PortletResourcePermission.class)
-			).getEntryClassName());
+			_displayPageTemplateDesignLibraryResourceTypeContributor.
+				getEntryClassName());
 	}
 
 	@Test
 	public void testGetFDSActionDropdownItems() throws Exception {
-		List<FDSActionDropdownItem> fdsActionDropdownItems = _createContributor(
-			Mockito.mock(PortletResourcePermission.class)
-		).getFDSActionDropdownItems(
-			Mockito.mock(HttpServletRequest.class),
-			Mockito.mock(DepotEntry.class), RandomTestUtil.randomString()
-		);
+		List<FDSActionDropdownItem> fdsActionDropdownItems =
+			_displayPageTemplateDesignLibraryResourceTypeContributor.
+				getFDSActionDropdownItems(
+					Mockito.mock(HttpServletRequest.class), _depotEntry,
+					RandomTestUtil.randomString());
 
 		Assert.assertTrue(
 			fdsActionDropdownItems.toString(),
@@ -79,74 +76,60 @@ public class DisplayPageTemplateDesignLibraryResourceTypeContributorTest {
 	@Test
 	public void testGetType() {
 
-		// Masters, page templates and widget templates share the entry class
-		// name, so the type is what tells a display page template apart
+		// Masters, content page templates and widget page templates share the
+		// entry class name, so the type is what tells a display page template
+		// apart.
 
 		Assert.assertEquals(
 			String.valueOf(LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE),
-			_createContributor(
-				Mockito.mock(PortletResourcePermission.class)
-			).getType());
+			_displayPageTemplateDesignLibraryResourceTypeContributor.getType());
 	}
 
 	@Test
 	public void testHasAddPermission() {
-		_testHasPermission(false);
-		_testHasPermission(true);
+		Assert.assertFalse(
+			_displayPageTemplateDesignLibraryResourceTypeContributor.
+				hasAddPermission(_permissionChecker, _depotEntry));
+
+		_setUpPermission(
+			LayoutPageTemplateActionKeys.ADD_LAYOUT_PAGE_TEMPLATE_ENTRY);
+
+		Assert.assertTrue(
+			_displayPageTemplateDesignLibraryResourceTypeContributor.
+				hasAddPermission(_permissionChecker, _depotEntry));
 	}
 
-	private DisplayPageTemplateDesignLibraryResourceTypeContributor
-		_createContributor(
-			PortletResourcePermission portletResourcePermission) {
+	@Test
+	public void testHasViewPermission() {
+		Assert.assertFalse(
+			_displayPageTemplateDesignLibraryResourceTypeContributor.
+				hasViewPermission(_permissionChecker, _depotEntry));
 
-		DisplayPageTemplateDesignLibraryResourceTypeContributor
-			displayPageTemplateDesignLibraryResourceTypeContributor =
-				new DisplayPageTemplateDesignLibraryResourceTypeContributor();
+		_setUpPermission(ActionKeys.VIEW);
 
-		ReflectionTestUtil.setFieldValue(
-			displayPageTemplateDesignLibraryResourceTypeContributor,
-			"_portletResourcePermission", portletResourcePermission);
-
-		return displayPageTemplateDesignLibraryResourceTypeContributor;
+		Assert.assertTrue(
+			_displayPageTemplateDesignLibraryResourceTypeContributor.
+				hasViewPermission(_permissionChecker, _depotEntry));
 	}
 
-	private void _testHasPermission(boolean contains) {
-		long groupId = RandomTestUtil.randomLong();
-
-		DepotEntry depotEntry = Mockito.mock(DepotEntry.class);
-
+	private void _setUpPermission(String actionId) {
 		Mockito.when(
-			depotEntry.getGroupId()
+			_portletResourcePermission.contains(
+				_permissionChecker, _GROUP_ID, actionId)
 		).thenReturn(
-			groupId
+			true
 		);
-
-		PermissionChecker permissionChecker = Mockito.mock(
-			PermissionChecker.class);
-
-		PortletResourcePermission portletResourcePermission = Mockito.mock(
-			PortletResourcePermission.class);
-
-		Mockito.when(
-			portletResourcePermission.contains(
-				permissionChecker, groupId,
-				LayoutPageTemplateActionKeys.ADD_LAYOUT_PAGE_TEMPLATE_ENTRY)
-		).thenReturn(
-			contains
-		);
-
-		DisplayPageTemplateDesignLibraryResourceTypeContributor
-			displayPageTemplateDesignLibraryResourceTypeContributor =
-				_createContributor(portletResourcePermission);
-
-		Assert.assertEquals(
-			contains,
-			displayPageTemplateDesignLibraryResourceTypeContributor.
-				hasAddPermission(permissionChecker, depotEntry));
-		Assert.assertEquals(
-			contains,
-			displayPageTemplateDesignLibraryResourceTypeContributor.
-				hasViewPermission(permissionChecker, depotEntry));
 	}
+
+	private static final long _GROUP_ID = RandomTestUtil.randomLong();
+
+	private final DepotEntry _depotEntry = Mockito.mock(DepotEntry.class);
+	private final DisplayPageTemplateDesignLibraryResourceTypeContributor
+		_displayPageTemplateDesignLibraryResourceTypeContributor =
+			new DisplayPageTemplateDesignLibraryResourceTypeContributor();
+	private final PermissionChecker _permissionChecker = Mockito.mock(
+		PermissionChecker.class);
+	private final PortletResourcePermission _portletResourcePermission =
+		Mockito.mock(PortletResourcePermission.class);
 
 }
