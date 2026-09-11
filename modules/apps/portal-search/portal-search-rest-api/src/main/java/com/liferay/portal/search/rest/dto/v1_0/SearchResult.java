@@ -510,7 +510,7 @@ public class SearchResult implements Serializable {
 	private Supplier<String> _titleSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "Type of the item within its entry class name, for the entities whose class name covers more than one type. Content page templates, display page templates, widget page templates, and masters are all com.liferay.layout.page.template.model.LayoutPageTemplateEntry and differ only by this value. The vocabulary belongs to the entity that indexes the type rather than to the search API, so a value is only meaningful against the entry class name that produced it, and it is always a string even where the underlying type is numeric - '1' for a display page template, 'content' for a page. Entities that index no type omit the property."
+		description = "Type of the item within its entry class name, which tells apart the items that share one. The vocabulary belongs to the entity that indexes the type rather than to the search API, so a value is only meaningful against the entry class name that produced it, and it is always a string even where the underlying type is numeric. Entities that index no type omit the property."
 	)
 	public String getType() {
 		if (_typeSupplier != null) {
@@ -544,7 +544,7 @@ public class SearchResult implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "Type of the item within its entry class name, for the entities whose class name covers more than one type. Content page templates, display page templates, widget page templates, and masters are all com.liferay.layout.page.template.model.LayoutPageTemplateEntry and differ only by this value. The vocabulary belongs to the entity that indexes the type rather than to the search API, so a value is only meaningful against the entry class name that produced it, and it is always a string even where the underlying type is numeric - '1' for a display page template, 'content' for a page. Entities that index no type omit the property."
+		description = "Type of the item within its entry class name, which tells apart the items that share one. The vocabulary belongs to the entity that indexes the type rather than to the search API, so a value is only meaningful against the entry class name that produced it, and it is always a string even where the underlying type is numeric. Entities that index no type omit the property."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String type;
@@ -868,4 +868,4 @@ public class SearchResult implements Serializable {
 	private Map<String, Serializable> _extendedProperties;
 
 }
-// LIFERAY-REST-BUILDER-HASH:736348411
+// LIFERAY-REST-BUILDER-HASH:1635362667
