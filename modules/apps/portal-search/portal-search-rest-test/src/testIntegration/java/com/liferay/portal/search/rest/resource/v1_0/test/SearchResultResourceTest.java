@@ -813,16 +813,6 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 		return map;
 	}
 
-	private List<String> _getTypes(
-		Page<com.liferay.portal.search.rest.client.dto.v1_0.SearchResult>
-			page) {
-
-		return ListUtil.sort(
-			TransformUtil.transform(
-				page.getItems(),
-				searchResult -> GetterUtil.getString(searchResult.getType())));
-	}
-
 	private String _getUserHighlightedFullName() {
 		Version version = _getSearchEngineVersion();
 
@@ -918,7 +908,11 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 					LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE),
 				String.valueOf(
 					LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT)),
-			_getTypes(page));
+			ListUtil.sort(
+				TransformUtil.transform(
+					page.getItems(),
+					searchResult -> GetterUtil.getString(
+						searchResult.getType()))));
 	}
 
 	private void _testGetSearchPageWithTypeFilter() throws Exception {
@@ -934,7 +928,11 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 			Collections.singletonList(
 				String.valueOf(
 					LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE)),
-			_getTypes(page));
+			ListUtil.sort(
+				TransformUtil.transform(
+					page.getItems(),
+					searchResult -> GetterUtil.getString(
+						searchResult.getType()))));
 	}
 
 	private void _testPostSearchPageAggregationNameAsFacetName()
