@@ -198,7 +198,14 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 				page.getItems());
 		assertValid(page, testGetSearchPage_getExpectedActions());
 
-		_addLayoutPageTemplateEntries();
+		LayoutPageTemplateTestUtil.addLayoutPageTemplateEntry(
+			testGroup.getGroupId(),
+			LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE,
+			WorkflowConstants.STATUS_APPROVED);
+		LayoutPageTemplateTestUtil.addLayoutPageTemplateEntry(
+			testGroup.getGroupId(),
+			LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT,
+			WorkflowConstants.STATUS_APPROVED);
 
 		_testGetSearchPageType();
 		_testGetSearchPageTypeFilter();
@@ -602,17 +609,6 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 			).build(),
 			DDMStructureTestUtil.getSampleStructuredContent("test"),
 			_ddmStructure.getStructureId(), null, _serviceContext);
-	}
-
-	private void _addLayoutPageTemplateEntries() throws Exception {
-		LayoutPageTemplateTestUtil.addLayoutPageTemplateEntry(
-			testGroup.getGroupId(),
-			LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE,
-			WorkflowConstants.STATUS_APPROVED);
-		LayoutPageTemplateTestUtil.addLayoutPageTemplateEntry(
-			testGroup.getGroupId(),
-			LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT,
-			WorkflowConstants.STATUS_APPROVED);
 	}
 
 	private SXPBlueprint _addSXPBlueprint(boolean highlightingEnabled)
