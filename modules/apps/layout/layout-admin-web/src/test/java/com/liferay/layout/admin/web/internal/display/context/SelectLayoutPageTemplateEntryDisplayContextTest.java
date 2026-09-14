@@ -13,6 +13,8 @@ import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionLoca
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryServiceUtil;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -64,10 +66,12 @@ public class SelectLayoutPageTemplateEntryDisplayContextTest {
 			_layoutPageTemplateCollection
 		);
 
+		_themeDisplay = Mockito.mock(ThemeDisplay.class);
+
 		_mockHttpServletRequest = new MockHttpServletRequest();
 
 		_mockHttpServletRequest.setAttribute(
-			WebKeys.THEME_DISPLAY, Mockito.mock(ThemeDisplay.class));
+			WebKeys.THEME_DISPLAY, _themeDisplay);
 	}
 
 	@Test
@@ -320,6 +324,46 @@ public class SelectLayoutPageTemplateEntryDisplayContextTest {
 		}
 	}
 
+	@Test(expected = PrincipalException.MustHavePermission.class)
+	@TestInfo("LPD-105567")
+	public void testGetLayoutPageTemplateEntriesWithUnconnectedDesignLibraryGroup()
+		throws Exception {
+
+		Mockito.when(
+			_layoutPageTemplateCollection.getGroupId()
+		).thenReturn(
+			RandomTestUtil.randomLong()
+		);
+
+		Mockito.when(
+			_themeDisplay.getPermissionChecker()
+		).thenReturn(
+			Mockito.mock(PermissionChecker.class)
+		);
+
+		try (MockedStatic<DesignLibraryUtil>
+				designLibraryGroupUtilMockedStatic = Mockito.mockStatic(
+					DesignLibraryUtil.class);
+			MockedStatic<FeatureFlagManagerUtil>
+				featureFlagManagerUtilMockedStatic = Mockito.mockStatic(
+					FeatureFlagManagerUtil.class)) {
+
+			featureFlagManagerUtilMockedStatic.when(
+				() -> FeatureFlagManagerUtil.isEnabled(
+					Mockito.anyLong(), Mockito.eq("LPD-76864"))
+			).thenReturn(
+				true
+			);
+
+			SelectLayoutPageTemplateEntryDisplayContext
+				selectLayoutPageTemplateEntryDisplayContext =
+					_getSelectLayoutPageTemplateEntryDisplayContext();
+
+			selectLayoutPageTemplateEntryDisplayContext.
+				getLayoutPageTemplateEntries(0, 10);
+		}
+	}
+
 	private SelectLayoutPageTemplateEntryDisplayContext
 		_getSelectLayoutPageTemplateEntryDisplayContext() {
 
@@ -335,5 +379,6 @@ public class SelectLayoutPageTemplateEntryDisplayContextTest {
 
 	private LayoutPageTemplateCollection _layoutPageTemplateCollection;
 	private MockHttpServletRequest _mockHttpServletRequest;
+	private ThemeDisplay _themeDisplay;
 
 }
