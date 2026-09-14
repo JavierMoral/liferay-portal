@@ -913,7 +913,6 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 				String.valueOf(testGroup.getGroupId()), null, null, null, null);
 
 		Assert.assertEquals(
-			page.toString(),
 			Arrays.asList(
 				String.valueOf(
 					LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE),
@@ -932,7 +931,6 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 				null, null);
 
 		Assert.assertEquals(
-			page.toString(),
 			Collections.singletonList(
 				String.valueOf(
 					LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE)),
