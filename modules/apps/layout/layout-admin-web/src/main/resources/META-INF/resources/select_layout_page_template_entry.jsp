@@ -78,6 +78,37 @@ renderResponse.setTitle(LanguageUtil.get(request, "select-template"));
 									</c:when>
 								</c:choose>
 							</span>
+
+							<%
+							Group designLibraryGroup = selectLayoutPageTemplateEntryDisplayContext.getDesignLibraryGroup();
+							%>
+
+							<c:if test="<%= designLibraryGroup != null %>">
+
+								<%
+								String designLibraryName = designLibraryGroup.getDescriptiveName(locale);
+								%>
+
+								<clay:label
+									aria-label='<%= LanguageUtil.format(request, "page-template-set-from-x-design-library", designLibraryName) %>'
+									cssClass="c-ml-2"
+									displayType="content-5"
+									large="<%= true %>"
+								>
+									<clay:label-item-before>
+										<clay:sticker
+											cssClass="bg-white rounded"
+											icon="books"
+											inline="<%= true %>"
+											size="xs"
+										/>
+									</clay:label-item-before>
+
+									<clay:label-item-expand>
+										<%= HtmlUtil.escape(designLibraryName) %>
+									</clay:label-item-expand>
+								</clay:label>
+							</c:if>
 						</clay:content-col>
 					</clay:content-row>
 				</h2>
