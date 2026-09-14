@@ -5,6 +5,7 @@
 
 package com.liferay.layout.admin.web.internal.portlet.action;
 
+import com.liferay.design.library.util.DesignLibraryUtil;
 import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateCollection;
@@ -21,6 +22,8 @@ import com.liferay.portal.kernel.model.LayoutPrototype;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCResourceCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
+import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutPrototypeLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -124,7 +127,8 @@ public class GetLayoutPageTemplateEntryListMVCResourceCommand
 	}
 
 	private long _getGroupId(
-		long layoutPageTemplateCollectionId, ThemeDisplay themeDisplay) {
+			long layoutPageTemplateCollectionId, ThemeDisplay themeDisplay)
+		throws Exception {
 
 		LayoutPageTemplateCollection layoutPageTemplateCollection =
 			_layoutPageTemplateCollectionLocalService.
@@ -136,6 +140,17 @@ public class GetLayoutPageTemplateEntryListMVCResourceCommand
 				themeDisplay.getScopeGroupId())) {
 
 			return themeDisplay.getScopeGroupId();
+		}
+
+		if (!DesignLibraryUtil.isConnectedDesignLibraryGroupId(
+				themeDisplay.getCompanyId(),
+				layoutPageTemplateCollection.getGroupId(),
+				themeDisplay.getScopeGroupId())) {
+
+			throw new PrincipalException.MustHavePermission(
+				themeDisplay.getPermissionChecker(),
+				LayoutPageTemplateCollection.class.getName(),
+				layoutPageTemplateCollectionId, ActionKeys.VIEW);
 		}
 
 		return layoutPageTemplateCollection.getGroupId();

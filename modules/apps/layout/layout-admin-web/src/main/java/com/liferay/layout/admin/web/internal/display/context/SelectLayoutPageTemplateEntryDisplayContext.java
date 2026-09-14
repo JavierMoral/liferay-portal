@@ -5,6 +5,7 @@
 
 package com.liferay.layout.admin.web.internal.display.context;
 
+import com.liferay.design.library.util.DesignLibraryUtil;
 import com.liferay.layout.admin.web.internal.util.LayoutPageTemplatePortletUtil;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateCollection;
@@ -24,6 +25,8 @@ import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -136,7 +139,8 @@ public class SelectLayoutPageTemplateEntryDisplayContext {
 	}
 
 	public List<LayoutPageTemplateEntry> getLayoutPageTemplateEntries(
-		int start, int end) {
+			int start, int end)
+		throws PortalException {
 
 		if (!_isWidgetPageFeatureFlagEnabled()) {
 			return LayoutPageTemplateEntryServiceUtil.
@@ -151,7 +155,7 @@ public class SelectLayoutPageTemplateEntryDisplayContext {
 			WorkflowConstants.STATUS_APPROVED, start, end);
 	}
 
-	public int getLayoutPageTemplateEntriesCount() {
+	public int getLayoutPageTemplateEntriesCount() throws PortalException {
 		if (!_isWidgetPageFeatureFlagEnabled()) {
 			return LayoutPageTemplateEntryServiceUtil.
 				getLayoutPageTemplateEntriesCountByType(
@@ -390,7 +394,7 @@ public class SelectLayoutPageTemplateEntryDisplayContext {
 		return false;
 	}
 
-	private long _getGroupId() {
+	private long _getGroupId() throws PortalException {
 		if (_groupId != null) {
 			return _groupId;
 		}
@@ -407,6 +411,19 @@ public class SelectLayoutPageTemplateEntryDisplayContext {
 			_groupId = _themeDisplay.getScopeGroupId();
 
 			return _groupId;
+		}
+
+		if (!DesignLibraryUtil.isConnectedDesignLibraryGroupId(
+				_themeDisplay.getCompanyId(),
+				layoutPageTemplateCollection.getGroupId(),
+				_themeDisplay.getScopeGroupId())) {
+
+			throw new PrincipalException.MustHavePermission(
+				_themeDisplay.getPermissionChecker(),
+				LayoutPageTemplateCollection.class.getName(),
+				layoutPageTemplateCollection.
+					getLayoutPageTemplateCollectionId(),
+				ActionKeys.VIEW);
 		}
 
 		_groupId = layoutPageTemplateCollection.getGroupId();
