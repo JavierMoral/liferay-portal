@@ -13,6 +13,8 @@ import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionLoca
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryServiceUtil;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -64,10 +66,12 @@ public class SelectLayoutPageTemplateEntryDisplayContextTest {
 			_layoutPageTemplateCollection
 		);
 
+		_themeDisplay = Mockito.mock(ThemeDisplay.class);
+
 		_mockHttpServletRequest = new MockHttpServletRequest();
 
 		_mockHttpServletRequest.setAttribute(
-			WebKeys.THEME_DISPLAY, Mockito.mock(ThemeDisplay.class));
+			WebKeys.THEME_DISPLAY, _themeDisplay);
 	}
 
 	@Test
@@ -121,10 +125,11 @@ public class SelectLayoutPageTemplateEntryDisplayContextTest {
 	}
 
 	@Test
-	@TestInfo({"LPD-89086", "LPD-105566"})
+	@TestInfo({"LPD-89086", "LPD-105566", "LPD-105567"})
 	public void testGetLayoutPageTemplateEntries() throws Exception {
 		_testGetLayoutPageTemplateEntries();
 		_testGetLayoutPageTemplateEntriesWithDesignLibraryGroup();
+		_testGetLayoutPageTemplateEntriesWithUnconnectedDesignLibraryGroup();
 	}
 
 	@Test
@@ -328,6 +333,46 @@ public class SelectLayoutPageTemplateEntryDisplayContextTest {
 		}
 	}
 
+	private void _testGetLayoutPageTemplateEntriesWithUnconnectedDesignLibraryGroup()
+		throws Exception {
+
+		Mockito.when(
+			_layoutPageTemplateCollection.getGroupId()
+		).thenReturn(
+			RandomTestUtil.randomLong()
+		);
+
+		Mockito.when(
+			_themeDisplay.getPermissionChecker()
+		).thenReturn(
+			Mockito.mock(PermissionChecker.class)
+		);
+
+		try (MockedStatic<DesignLibraryUtil> designLibraryUtilMockedStatic =
+				Mockito.mockStatic(DesignLibraryUtil.class);
+			MockedStatic<FeatureFlagManagerUtil>
+				featureFlagManagerUtilMockedStatic = Mockito.mockStatic(
+					FeatureFlagManagerUtil.class)) {
+
+			featureFlagManagerUtilMockedStatic.when(
+				() -> FeatureFlagManagerUtil.isEnabled(
+					Mockito.anyLong(), Mockito.eq("LPD-76864"))
+			).thenReturn(
+				true
+			);
+
+			SelectLayoutPageTemplateEntryDisplayContext
+				selectLayoutPageTemplateEntryDisplayContext =
+					_getSelectLayoutPageTemplateEntryDisplayContext();
+
+			Assert.assertThrows(
+				PrincipalException.MustHavePermission.class,
+				() ->
+					selectLayoutPageTemplateEntryDisplayContext.
+						getLayoutPageTemplateEntries(0, 10));
+		}
+	}
+
 	private static final MockedStatic
 		<LayoutPageTemplateCollectionLocalServiceUtil>
 			_layoutPageTemplateCollectionLocalServiceUtilMockedStatic =
@@ -336,5 +381,6 @@ public class SelectLayoutPageTemplateEntryDisplayContextTest {
 
 	private LayoutPageTemplateCollection _layoutPageTemplateCollection;
 	private MockHttpServletRequest _mockHttpServletRequest;
+	private ThemeDisplay _themeDisplay;
 
 }
