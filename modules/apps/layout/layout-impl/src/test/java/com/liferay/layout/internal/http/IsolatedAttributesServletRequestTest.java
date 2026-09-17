@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-package com.liferay.portal.kernel.servlet;
+package com.liferay.layout.internal.http;
 
 import com.liferay.portal.kernel.util.JavaConstants;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -13,6 +14,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -21,6 +23,10 @@ import org.springframework.mock.web.MockHttpServletRequest;
  * @author Javier Moral
  */
 public class IsolatedAttributesServletRequestTest {
+
+	@ClassRule
+	public static LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Test
 	public void testGetAttribute() {
@@ -38,6 +44,7 @@ public class IsolatedAttributesServletRequestTest {
 
 		Assert.assertEquals(
 			"2", isolatedAttributesServletRequest.getAttribute("alpha"));
+
 		Assert.assertEquals("1", httpServletRequest.getAttribute("alpha"));
 	}
 
@@ -73,6 +80,7 @@ public class IsolatedAttributesServletRequestTest {
 
 		Assert.assertNull(
 			isolatedAttributesServletRequest.getAttribute("alpha"));
+
 		Assert.assertEquals("1", httpServletRequest.getAttribute("alpha"));
 	}
 
@@ -93,6 +101,7 @@ public class IsolatedAttributesServletRequestTest {
 
 		Assert.assertEquals(
 			"1", isolatedAttributesServletRequest.getAttribute("alpha"));
+
 		Assert.assertNull(httpServletRequest.getAttribute("alpha"));
 	}
 
