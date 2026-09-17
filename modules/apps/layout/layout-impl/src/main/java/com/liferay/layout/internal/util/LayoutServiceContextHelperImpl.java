@@ -5,6 +5,7 @@
 
 package com.liferay.layout.internal.util;
 
+import com.liferay.layout.internal.http.IsolatedAttributesServletRequest;
 import com.liferay.layout.util.LayoutServiceContextHelper;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -37,7 +38,6 @@ import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.servlet.DirectRequestDispatcherFactoryUtil;
 import com.liferay.portal.kernel.servlet.DummyHttpServletResponse;
 import com.liferay.portal.kernel.servlet.HttpMethods;
-import com.liferay.portal.kernel.servlet.IsolatedAttributesServletRequest;
 import com.liferay.portal.kernel.servlet.ServletContextPool;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ConcurrentHashMapBuilder;
