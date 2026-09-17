@@ -5,6 +5,7 @@
 
 package com.liferay.layout.internal.servlet;
 
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
@@ -32,56 +33,69 @@ public class IsolatedAttributesServletRequestTest {
 	public void testGetAttribute() {
 		HttpServletRequest httpServletRequest = new MockHttpServletRequest();
 
-		httpServletRequest.setAttribute("alpha", "1");
+		String name = RandomTestUtil.randomString();
+		String value1 = RandomTestUtil.randomString();
+
+		httpServletRequest.setAttribute(name, value1);
 
 		IsolatedAttributesServletRequest isolatedAttributesServletRequest =
 			new IsolatedAttributesServletRequest(httpServletRequest);
 
 		Assert.assertEquals(
-			"1", isolatedAttributesServletRequest.getAttribute("alpha"));
+			value1, isolatedAttributesServletRequest.getAttribute(name));
 
-		isolatedAttributesServletRequest.setAttribute("alpha", "2");
+		String value2 = RandomTestUtil.randomString();
+
+		isolatedAttributesServletRequest.setAttribute(name, value2);
 
 		Assert.assertEquals(
-			"2", isolatedAttributesServletRequest.getAttribute("alpha"));
+			value2, isolatedAttributesServletRequest.getAttribute(name));
 
-		Assert.assertEquals("1", httpServletRequest.getAttribute("alpha"));
+		Assert.assertEquals(value1, httpServletRequest.getAttribute(name));
 	}
 
 	@Test
 	public void testGetAttributeNames() {
 		HttpServletRequest httpServletRequest = new MockHttpServletRequest();
 
-		httpServletRequest.setAttribute("alpha", "1");
+		String name1 = RandomTestUtil.randomString();
+
+		httpServletRequest.setAttribute(name1, RandomTestUtil.randomString());
 
 		IsolatedAttributesServletRequest isolatedAttributesServletRequest =
 			new IsolatedAttributesServletRequest(httpServletRequest);
 
-		isolatedAttributesServletRequest.removeAttribute("alpha");
-		isolatedAttributesServletRequest.setAttribute("beta", "2");
+		isolatedAttributesServletRequest.removeAttribute(name1);
+
+		String name2 = RandomTestUtil.randomString();
+
+		isolatedAttributesServletRequest.setAttribute(
+			name2, RandomTestUtil.randomString());
 
 		List<String> names = Collections.list(
 			isolatedAttributesServletRequest.getAttributeNames());
 
 		Assert.assertEquals(names.toString(), 1, names.size());
-		Assert.assertEquals("beta", names.get(0));
+		Assert.assertEquals(name2, names.get(0));
 	}
 
 	@Test
 	public void testRemoveAttribute() {
 		HttpServletRequest httpServletRequest = new MockHttpServletRequest();
 
-		httpServletRequest.setAttribute("alpha", "1");
+		String name = RandomTestUtil.randomString();
+		String value = RandomTestUtil.randomString();
+
+		httpServletRequest.setAttribute(name, value);
 
 		IsolatedAttributesServletRequest isolatedAttributesServletRequest =
 			new IsolatedAttributesServletRequest(httpServletRequest);
 
-		isolatedAttributesServletRequest.removeAttribute("alpha");
+		isolatedAttributesServletRequest.removeAttribute(name);
 
-		Assert.assertNull(
-			isolatedAttributesServletRequest.getAttribute("alpha"));
+		Assert.assertNull(isolatedAttributesServletRequest.getAttribute(name));
 
-		Assert.assertEquals("1", httpServletRequest.getAttribute("alpha"));
+		Assert.assertEquals(value, httpServletRequest.getAttribute(name));
 	}
 
 	@Test
@@ -97,12 +111,15 @@ public class IsolatedAttributesServletRequestTest {
 		IsolatedAttributesServletRequest isolatedAttributesServletRequest =
 			new IsolatedAttributesServletRequest(httpServletRequest);
 
-		isolatedAttributesServletRequest.setAttribute("alpha", "1");
+		String name = RandomTestUtil.randomString();
+		String value = RandomTestUtil.randomString();
+
+		isolatedAttributesServletRequest.setAttribute(name, value);
 
 		Assert.assertEquals(
-			"1", isolatedAttributesServletRequest.getAttribute("alpha"));
+			value, isolatedAttributesServletRequest.getAttribute(name));
 
-		Assert.assertNull(httpServletRequest.getAttribute("alpha"));
+		Assert.assertNull(httpServletRequest.getAttribute(name));
 	}
 
 	private void _testSetAttributeWithRequestDispatcherAttribute() {
@@ -111,11 +128,13 @@ public class IsolatedAttributesServletRequestTest {
 		IsolatedAttributesServletRequest isolatedAttributesServletRequest =
 			new IsolatedAttributesServletRequest(httpServletRequest);
 
+		String value = RandomTestUtil.randomString();
+
 		isolatedAttributesServletRequest.setAttribute(
-			JavaConstants.JAKARTA_SERVLET_INCLUDE_REQUEST_URI, "/alpha");
+			JavaConstants.JAKARTA_SERVLET_INCLUDE_REQUEST_URI, value);
 
 		Assert.assertEquals(
-			"/alpha",
+			value,
 			httpServletRequest.getAttribute(
 				JavaConstants.JAKARTA_SERVLET_INCLUDE_REQUEST_URI));
 	}
