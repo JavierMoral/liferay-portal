@@ -5,7 +5,7 @@
 
 package com.liferay.layout.internal.util;
 
-import com.liferay.layout.internal.http.IsolatedAttributesServletRequest;
+import com.liferay.layout.internal.servlet.IsolatedAttributesServletRequest;
 import com.liferay.layout.util.LayoutServiceContextHelper;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
