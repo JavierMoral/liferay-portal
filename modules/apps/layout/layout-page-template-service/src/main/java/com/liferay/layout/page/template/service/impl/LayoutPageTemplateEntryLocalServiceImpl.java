@@ -160,6 +160,11 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 
 		long layoutPageTemplateEntryId = counterLocalService.increment();
 
+		if (defaultTemplate) {
+			_unsetDefaultLayoutPageTemplateEntry(
+				classNameId, classTypeKey, groupId, layoutPageTemplateEntryId);
+		}
+
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			layoutPageTemplateEntryPersistence.create(
 				layoutPageTemplateEntryId);
@@ -772,21 +777,12 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 				layoutPageTemplateEntry.getType());
 		}
 
-		LayoutPageTemplateEntry defaultLayoutPageTemplateEntry =
-			layoutPageTemplateEntryPersistence.fetchByG_C_C_D_First(
-				layoutPageTemplateEntry.getGroupId(),
+		if (defaultTemplate) {
+			_unsetDefaultLayoutPageTemplateEntry(
 				layoutPageTemplateEntry.getClassNameId(),
-				layoutPageTemplateEntry.getClassTypeKey(), true, null);
-
-		if (defaultTemplate && (defaultLayoutPageTemplateEntry != null) &&
-			(defaultLayoutPageTemplateEntry.getLayoutPageTemplateEntryId() !=
-				layoutPageTemplateEntryId)) {
-
-			layoutPageTemplateEntry.setModifiedDate(new Date());
-			defaultLayoutPageTemplateEntry.setDefaultTemplate(false);
-
-			layoutPageTemplateEntryLocalService.updateLayoutPageTemplateEntry(
-				defaultLayoutPageTemplateEntry);
+				layoutPageTemplateEntry.getClassTypeKey(),
+				layoutPageTemplateEntry.getGroupId(),
+				layoutPageTemplateEntryId);
 		}
 
 		layoutPageTemplateEntry.setModifiedDate(new Date());
@@ -1220,6 +1216,27 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 
 		return ddmStructureInfoItemFormVariationsProvider.getDDMStructureId(
 			String.valueOf(classTypeId));
+	}
+
+	private void _unsetDefaultLayoutPageTemplateEntry(
+		long classNameId, String classTypeKey, long groupId,
+		long layoutPageTemplateEntryId) {
+
+		LayoutPageTemplateEntry defaultLayoutPageTemplateEntry =
+			layoutPageTemplateEntryPersistence.fetchByG_C_C_D_First(
+				groupId, classNameId, classTypeKey, true, null);
+
+		if ((defaultLayoutPageTemplateEntry == null) ||
+			(defaultLayoutPageTemplateEntry.getLayoutPageTemplateEntryId() ==
+				layoutPageTemplateEntryId)) {
+
+			return;
+		}
+
+		defaultLayoutPageTemplateEntry.setDefaultTemplate(false);
+
+		layoutPageTemplateEntryLocalService.updateLayoutPageTemplateEntry(
+			defaultLayoutPageTemplateEntry);
 	}
 
 	private void _validate(
