@@ -36,6 +36,7 @@ import com.liferay.layout.display.page.constants.LayoutDisplayPageWebKeys;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
 import com.liferay.layout.seo.template.LayoutSEOTemplateProcessor;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
@@ -45,6 +46,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutFriendlyURLComposite;
 import com.liferay.portal.kernel.model.LayoutQueryStringComposite;
@@ -62,10 +64,12 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.kernel.util.comparator.GroupNameComparator;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -286,11 +290,20 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 		}
 
 		try {
-			return ListUtil.toLongArray(
+			List<Group> groups = TransformUtil.unsafeTransform(
 				depotEntryLocalService.getGroupConnectedDepotEntries(
 					groupId, DepotConstants.TYPE_DESIGN_LIBRARY,
 					QueryUtil.ALL_POS, QueryUtil.ALL_POS),
-				DepotEntry::getGroupId);
+				DepotEntry::getGroup);
+
+			if (groups.size() > 1) {
+				Comparator<Group> comparator = new GroupNameComparator(true);
+
+				ListUtil.sort(
+					groups, comparator.thenComparingLong(Group::getGroupId));
+			}
+
+			return ListUtil.toLongArray(groups, Group::getGroupId);
 		}
 		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
