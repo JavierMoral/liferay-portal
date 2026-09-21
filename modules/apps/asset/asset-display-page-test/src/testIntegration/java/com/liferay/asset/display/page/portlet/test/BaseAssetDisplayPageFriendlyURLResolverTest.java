@@ -210,21 +210,27 @@ public class BaseAssetDisplayPageFriendlyURLResolverTest {
 
 		JournalArticle journalArticle = _addJournalArticle();
 
+		Group designLibraryGroupC = _addConnectedDesignLibraryGroup(
+			_group, "C" + RandomTestUtil.randomString());
+
+		_addDisplayPageTemplate(
+			designLibraryGroupC.getGroupId(), journalArticle);
+
+		Group designLibraryGroupA = _addConnectedDesignLibraryGroup(
+			_group, "A" + RandomTestUtil.randomString());
+
+		LayoutPageTemplateEntry designLibraryGroupALayoutPageTemplateEntry =
+			_addDisplayPageTemplate(
+				designLibraryGroupA.getGroupId(), journalArticle);
+
 		Group designLibraryGroupB = _addConnectedDesignLibraryGroup(
 			_group, "B" + RandomTestUtil.randomString());
 
 		_addDisplayPageTemplate(
 			designLibraryGroupB.getGroupId(), journalArticle);
 
-		Group designLibraryGroupA = _addConnectedDesignLibraryGroup(
-			_group, "A" + RandomTestUtil.randomString());
-
-		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			_addDisplayPageTemplate(
-				designLibraryGroupA.getGroupId(), journalArticle);
-
 		_assertLayoutFriendlyURLComposite(
-			true, layoutPageTemplateEntry, journalArticle);
+			true, designLibraryGroupALayoutPageTemplateEntry, journalArticle);
 	}
 
 	private void _testGetLayoutFriendlyURLCompositeWhenNoDisplayPage()
