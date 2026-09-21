@@ -73,19 +73,29 @@ public class BaseAssetDisplayPageFriendlyURLResolverTest {
 	}
 
 	@Test
-	@TestInfo("LPD-104242")
+	@TestInfo({"LPD-104242", "LPD-106074"})
 	public void testGetLayoutFriendlyURLComposite() throws Exception {
 		_testGetLayoutFriendlyURLComposite();
 
 		_testGetLayoutFriendlyURLCompositeWhenDisconnected();
+		_testGetLayoutFriendlyURLCompositeWhenMultipleDesignLibraries();
 		_testGetLayoutFriendlyURLCompositeWhenNoDisplayPage();
 	}
 
 	private Group _addConnectedDesignLibraryGroup(Group group)
 		throws Exception {
 
+		return _addConnectedDesignLibraryGroup(
+			group, RandomTestUtil.randomString());
+	}
+
+	private Group _addConnectedDesignLibraryGroup(Group group, String name)
+		throws Exception {
+
 		DepotEntry depotEntry = _depotEntryLocalService.addDepotEntry(
-			RandomTestUtil.randomLocaleStringMap(),
+			HashMapBuilder.put(
+				LocaleUtil.getDefault(), name
+			).build(),
 			RandomTestUtil.randomLocaleStringMap(),
 			DepotConstants.TYPE_DESIGN_LIBRARY,
 			ServiceContextTestUtil.getServiceContext());
@@ -193,6 +203,28 @@ public class BaseAssetDisplayPageFriendlyURLResolverTest {
 			designLibraryGroup.getGroupId(), journalArticle);
 
 		_assertLayoutFriendlyURLComposite(true, null, journalArticle);
+	}
+
+	private void _testGetLayoutFriendlyURLCompositeWhenMultipleDesignLibraries()
+		throws Exception {
+
+		JournalArticle journalArticle = _addJournalArticle();
+
+		Group designLibraryGroupB = _addConnectedDesignLibraryGroup(
+			_group, "B" + RandomTestUtil.randomString());
+
+		_addDisplayPageTemplate(
+			designLibraryGroupB.getGroupId(), journalArticle);
+
+		Group designLibraryGroupA = _addConnectedDesignLibraryGroup(
+			_group, "A" + RandomTestUtil.randomString());
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_addDisplayPageTemplate(
+				designLibraryGroupA.getGroupId(), journalArticle);
+
+		_assertLayoutFriendlyURLComposite(
+			true, layoutPageTemplateEntry, journalArticle);
 	}
 
 	private void _testGetLayoutFriendlyURLCompositeWhenNoDisplayPage()
