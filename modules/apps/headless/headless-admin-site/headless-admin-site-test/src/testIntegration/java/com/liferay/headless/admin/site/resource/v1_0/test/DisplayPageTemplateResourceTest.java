@@ -7,6 +7,9 @@ package com.liferay.headless.admin.site.resource.v1_0.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.asset.kernel.model.AssetCategory;
+import com.liferay.depot.constants.DepotConstants;
+import com.liferay.depot.model.DepotEntry;
+import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
 import com.liferay.exportimport.kernel.service.StagingLocalService;
@@ -59,6 +62,7 @@ import com.liferay.layout.page.template.model.LayoutPageTemplateCollection;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionLocalService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
+import com.liferay.layout.page.template.test.util.DisplayPageTemplateTestUtil;
 import com.liferay.layout.provider.LayoutStructureProvider;
 import com.liferay.layout.test.util.ContentLayoutTestUtil;
 import com.liferay.layout.util.LayoutServiceContextHelper;
@@ -79,6 +83,7 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -104,6 +109,7 @@ import com.liferay.portal.test.log.LogCapture;
 import com.liferay.portal.test.log.LogEntry;
 import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.FeatureFlag;
+import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
@@ -116,6 +122,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -137,7 +144,9 @@ import org.junit.runner.RunWith;
  * @author Rubén Pulido
  * @author Lourdes Fernández Besada
  */
-@FeatureFlag("LPD-35443")
+@FeatureFlags(
+	featureFlags = {@FeatureFlag("LPD-35443"), @FeatureFlag("LPD-57283")}
+)
 @RunWith(Arquillian.class)
 public class DisplayPageTemplateResourceTest
 	extends BaseDisplayPageTemplateResourceTestCase {
@@ -219,6 +228,25 @@ public class DisplayPageTemplateResourceTest
 			() -> displayPageTemplateResource.deleteSiteDisplayPageTemplate(
 				irrelevantGroup.getExternalReferenceCode(),
 				liveGroupDisplayPageTemplate.getExternalReferenceCode()));
+	}
+
+	@Override
+	@Test
+	@TestInfo("LPD-106070")
+	public void testGetDesignLibraryDisplayPageTemplate() throws Exception {
+		super.testGetDesignLibraryDisplayPageTemplate();
+
+		DisplayPageTemplate displayPageTemplate =
+			_addDesignLibraryDisplayPageTemplate(
+				_getDesignLibraryExternalReferenceCode());
+
+		Map<String, Map<String, String>> actions =
+			displayPageTemplate.getActions();
+
+		Assert.assertTrue(actions.toString(), actions.containsKey("delete"));
+		Assert.assertTrue(actions.toString(), actions.containsKey("get"));
+		Assert.assertTrue(
+			actions.toString(), actions.containsKey("permissions"));
 	}
 
 	@Override
@@ -579,6 +607,76 @@ public class DisplayPageTemplateResourceTest
 
 	@Override
 	protected DisplayPageTemplate
+			testDeleteDesignLibraryDisplayPageTemplate_addDisplayPageTemplate()
+		throws Exception {
+
+		return _addDesignLibraryDisplayPageTemplate(
+			_getDesignLibraryExternalReferenceCode());
+	}
+
+	@Override
+	protected String
+			testDeleteDesignLibraryDisplayPageTemplate_getDesignLibraryExternalReferenceCode()
+		throws Exception {
+
+		return _getDesignLibraryExternalReferenceCode();
+	}
+
+	@Override
+	protected DisplayPageTemplate
+			testGetDesignLibraryDisplayPageTemplate_addDisplayPageTemplate()
+		throws Exception {
+
+		return _addDesignLibraryDisplayPageTemplate(
+			_getDesignLibraryExternalReferenceCode());
+	}
+
+	@Override
+	protected String
+			testGetDesignLibraryDisplayPageTemplate_getDesignLibraryExternalReferenceCode()
+		throws Exception {
+
+		return _getDesignLibraryExternalReferenceCode();
+	}
+
+	@Override
+	protected DisplayPageTemplate
+			testGetDesignLibraryDisplayPageTemplatePermissionsPage_addDisplayPageTemplate()
+		throws Exception {
+
+		return _addDesignLibraryDisplayPageTemplate(
+			_getDesignLibraryExternalReferenceCode());
+	}
+
+	@Override
+	protected DisplayPageTemplate
+			testGetDesignLibraryDisplayPageTemplatesPage_addDisplayPageTemplate(
+				String designLibraryExternalReferenceCode,
+				DisplayPageTemplate displayPageTemplate)
+		throws Exception {
+
+		return _addDesignLibraryDisplayPageTemplate(
+			designLibraryExternalReferenceCode);
+	}
+
+	@Override
+	protected String
+			testGetDesignLibraryDisplayPageTemplatesPage_getDesignLibraryExternalReferenceCode()
+		throws Exception {
+
+		return _getDesignLibraryExternalReferenceCode();
+	}
+
+	@Override
+	protected String
+			testGetDesignLibraryDisplayPageTemplatesPage_getIrrelevantDesignLibraryExternalReferenceCode()
+		throws Exception {
+
+		return _getIrrelevantDesignLibraryExternalReferenceCode();
+	}
+
+	@Override
+	protected DisplayPageTemplate
 			testGetSiteDisplayPageTemplateFolderDisplayPageTemplatesPage_addDisplayPageTemplate(
 				String siteExternalReferenceCode,
 				String displayPageTemplateFolderExternalReferenceCode,
@@ -637,6 +735,44 @@ public class DisplayPageTemplateResourceTest
 
 		return testGetSiteDisplayPageTemplatesPage_addDisplayPageTemplate(
 			testGroup.getExternalReferenceCode(), displayPageTemplate);
+	}
+
+	@Override
+	protected DisplayPageTemplate
+			testPutDesignLibraryDisplayPageTemplatePermissionsPage_addDisplayPageTemplate()
+		throws Exception {
+
+		return _addDesignLibraryDisplayPageTemplate(
+			_getDesignLibraryExternalReferenceCode());
+	}
+
+	private DisplayPageTemplate _addDesignLibraryDisplayPageTemplate(
+			String designLibraryExternalReferenceCode)
+		throws Exception {
+
+		Group group = _groupLocalService.getGroupByExternalReferenceCode(
+			designLibraryExternalReferenceCode, TestPropsValues.getCompanyId());
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
+				group.getGroupId());
+
+		return displayPageTemplateResource.getDesignLibraryDisplayPageTemplate(
+			designLibraryExternalReferenceCode,
+			layoutPageTemplateEntry.getExternalReferenceCode());
+	}
+
+	private Group _addDesignLibraryGroup() throws Exception {
+		DepotEntry depotEntry = _depotEntryLocalService.addDepotEntry(
+			Collections.singletonMap(
+				LocaleUtil.getDefault(), RandomTestUtil.randomString()),
+			Collections.singletonMap(
+				LocaleUtil.getDefault(), RandomTestUtil.randomString()),
+			DepotConstants.TYPE_DESIGN_LIBRARY,
+			ServiceContextTestUtil.getServiceContext(
+				testGroup.getGroupId(), TestPropsValues.getUserId()));
+
+		return depotEntry.getGroup();
 	}
 
 	private void _assertNestedFields(DisplayPageTemplate displayPageTemplate)
@@ -932,6 +1068,14 @@ public class DisplayPageTemplateResourceTest
 		return classSubtypeReference;
 	}
 
+	private String _getDesignLibraryExternalReferenceCode() throws Exception {
+		if (_designLibraryGroup == null) {
+			_designLibraryGroup = _addDesignLibraryGroup();
+		}
+
+		return _designLibraryGroup.getExternalReferenceCode();
+	}
+
 	private DisplayPageTemplate _getDisplayPageTemplate(
 		List<DisplayPageTemplate> displayPageTemplates,
 		String externalReferenceCode) {
@@ -1009,6 +1153,16 @@ public class DisplayPageTemplateResourceTest
 			});
 
 		return displayPageTemplate;
+	}
+
+	private String _getIrrelevantDesignLibraryExternalReferenceCode()
+		throws Exception {
+
+		if (_irrelevantDesignLibraryGroup == null) {
+			_irrelevantDesignLibraryGroup = _addDesignLibraryGroup();
+		}
+
+		return _irrelevantDesignLibraryGroup.getExternalReferenceCode();
 	}
 
 	private LayoutDisplayPageObjectProvider<?>
@@ -1336,57 +1490,6 @@ public class DisplayPageTemplateResourceTest
 		assertValid(getDisplayPageTemplate);
 	}
 
-	private void _testGetSiteDisplayPageTemplateWithNestedFields(
-			DisplayPageTemplate displayPageTemplate)
-		throws Exception {
-
-		DisplayPageTemplateResource displayPageTemplateResource =
-			_getDisplayPageTemplateResource(
-				"friendlyUrlHistory,pageSpecifications");
-
-		_assertNestedFields(
-			displayPageTemplateResource.getSiteDisplayPageTemplate(
-				testGroup.getExternalReferenceCode(),
-				displayPageTemplate.getExternalReferenceCode()));
-	}
-
-	private void _testGetSiteDisplayPageTemplateWithPageElementsWithTemplateEntries()
-		throws Exception {
-
-		FragmentEntry fragmentEntry =
-			FragmentEntryTestUtil.
-				addCompanyGroupFragmentEntryWithTextEditable();
-		JournalArticle journalArticle = _randomCompanyGroupJournalArticle();
-
-		DisplayPageTemplate displayPageTemplate =
-			_getDisplayPageTemplateWithPageElements(
-				PageElementsTestUtil.getDisplayPageTemplatePageElements(
-					testCompany, fragmentEntry.getFragmentEntryKey(),
-					journalArticle, testGroup.getGroupId()),
-				PageElementsTestUtil.getDisplayPageTemplatePageElements(
-					testCompany, fragmentEntry.getFragmentEntryKey(),
-					journalArticle, testGroup.getGroupId()));
-
-		DisplayPageTemplate postDisplayPageTemplate =
-			displayPageTemplateResource.postSiteDisplayPageTemplate(
-				testGroup.getExternalReferenceCode(), displayPageTemplate);
-
-		DisplayPageTemplateResource displayPageTemplateResource =
-			_getDisplayPageTemplateResource("pageSpecifications");
-
-		DisplayPageTemplate getDisplayPageTemplate =
-			displayPageTemplateResource.getSiteDisplayPageTemplate(
-				testGroup.getExternalReferenceCode(),
-				postDisplayPageTemplate.getExternalReferenceCode());
-
-		assertEquals(displayPageTemplate, getDisplayPageTemplate);
-		assertValid(getDisplayPageTemplate);
-
-		PageElementsTestUtil.assertFieldKeysWithTemplateEntries(
-			getDisplayPageTemplate.getPageSpecifications(),
-			displayPageTemplate.getPageSpecifications());
-	}
-
 	private void _testGetSiteDisplayPageTemplatesPageWithPageSpecificationsAsNestedFields()
 		throws Exception {
 
@@ -1500,6 +1603,57 @@ public class DisplayPageTemplateResourceTest
 					displayPageTemplate.getThumbnailURLReference());
 			}
 		}
+	}
+
+	private void _testGetSiteDisplayPageTemplateWithNestedFields(
+			DisplayPageTemplate displayPageTemplate)
+		throws Exception {
+
+		DisplayPageTemplateResource displayPageTemplateResource =
+			_getDisplayPageTemplateResource(
+				"friendlyUrlHistory,pageSpecifications");
+
+		_assertNestedFields(
+			displayPageTemplateResource.getSiteDisplayPageTemplate(
+				testGroup.getExternalReferenceCode(),
+				displayPageTemplate.getExternalReferenceCode()));
+	}
+
+	private void _testGetSiteDisplayPageTemplateWithPageElementsWithTemplateEntries()
+		throws Exception {
+
+		FragmentEntry fragmentEntry =
+			FragmentEntryTestUtil.
+				addCompanyGroupFragmentEntryWithTextEditable();
+		JournalArticle journalArticle = _randomCompanyGroupJournalArticle();
+
+		DisplayPageTemplate displayPageTemplate =
+			_getDisplayPageTemplateWithPageElements(
+				PageElementsTestUtil.getDisplayPageTemplatePageElements(
+					testCompany, fragmentEntry.getFragmentEntryKey(),
+					journalArticle, testGroup.getGroupId()),
+				PageElementsTestUtil.getDisplayPageTemplatePageElements(
+					testCompany, fragmentEntry.getFragmentEntryKey(),
+					journalArticle, testGroup.getGroupId()));
+
+		DisplayPageTemplate postDisplayPageTemplate =
+			displayPageTemplateResource.postSiteDisplayPageTemplate(
+				testGroup.getExternalReferenceCode(), displayPageTemplate);
+
+		DisplayPageTemplateResource displayPageTemplateResource =
+			_getDisplayPageTemplateResource("pageSpecifications");
+
+		DisplayPageTemplate getDisplayPageTemplate =
+			displayPageTemplateResource.getSiteDisplayPageTemplate(
+				testGroup.getExternalReferenceCode(),
+				postDisplayPageTemplate.getExternalReferenceCode());
+
+		assertEquals(displayPageTemplate, getDisplayPageTemplate);
+		assertValid(getDisplayPageTemplate);
+
+		PageElementsTestUtil.assertFieldKeysWithTemplateEntries(
+			getDisplayPageTemplate.getPageSpecifications(),
+			displayPageTemplate.getPageSpecifications());
 	}
 
 	private void _testPatchSiteDisplayPageTemplate(
@@ -2719,7 +2873,17 @@ public class DisplayPageTemplateResourceTest
 	private static ThumbnailHttpServer _thumbnailHttpServer;
 
 	@Inject
+	private DepotEntryLocalService _depotEntryLocalService;
+
+	private Group _designLibraryGroup;
+
+	@Inject
+	private GroupLocalService _groupLocalService;
+
+	@Inject
 	private InfoItemServiceRegistry _infoItemServiceRegistry;
+
+	private Group _irrelevantDesignLibraryGroup;
 
 	@Inject
 	private JSONFactory _jsonFactory;
