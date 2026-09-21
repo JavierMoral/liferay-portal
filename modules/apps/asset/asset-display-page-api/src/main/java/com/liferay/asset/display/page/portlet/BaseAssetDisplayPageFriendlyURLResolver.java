@@ -15,7 +15,6 @@ import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.service.AssetEntryService;
 import com.liferay.asset.util.LinkedAssetEntryIdsUtil;
 import com.liferay.depot.constants.DepotConstants;
-import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.friendly.url.provider.FriendlyURLSeparatorProvider;
 import com.liferay.info.constants.InfoDisplayWebKeys;
@@ -54,6 +53,7 @@ import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.portlet.FriendlyURLResolver;
 import com.liferay.portal.kernel.portlet.FriendlyURLResolverRegistryUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
@@ -284,17 +284,19 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 
 		DepotEntryLocalService depotEntryLocalService =
 			_depotEntryLocalServiceSnapshot.get();
+		GroupLocalService groupLocalService = _groupLocalServiceSnapshot.get();
 
-		if (depotEntryLocalService == null) {
+		if ((depotEntryLocalService == null) || (groupLocalService == null)) {
 			return GetterUtil.DEFAULT_LONG_VALUES;
 		}
 
 		try {
-			List<Group> groups = TransformUtil.unsafeTransform(
+			List<Group> groups = TransformUtil.transform(
 				depotEntryLocalService.getGroupConnectedDepotEntries(
 					groupId, DepotConstants.TYPE_DESIGN_LIBRARY,
 					QueryUtil.ALL_POS, QueryUtil.ALL_POS),
-				DepotEntry::getGroup);
+				depotEntry -> groupLocalService.fetchGroup(
+					depotEntry.getGroupId()));
 
 			if (groups.size() > 1) {
 				Comparator<Group> comparator = new GroupNameComparator(true);
@@ -659,5 +661,9 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 		_friendlyURLSeparatorProviderSnapshot = new Snapshot<>(
 			BaseAssetDisplayPageFriendlyURLResolver.class,
 			FriendlyURLSeparatorProvider.class);
+	private static final Snapshot<GroupLocalService>
+		_groupLocalServiceSnapshot = new Snapshot<>(
+			BaseAssetDisplayPageFriendlyURLResolver.class,
+			GroupLocalService.class);
 
 }
