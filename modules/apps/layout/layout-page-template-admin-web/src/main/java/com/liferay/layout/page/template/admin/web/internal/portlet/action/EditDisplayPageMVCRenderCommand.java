@@ -83,10 +83,6 @@ public class EditDisplayPageMVCRenderCommand implements MVCRenderCommand {
 	private String _getBackURL(
 		RenderRequest renderRequest, ThemeDisplay themeDisplay) {
 
-		// The back URL travels on the row action URL, so it has to be escaped
-		// before it reaches p_l_back_url, which the locked layout view follows
-		// without escaping it again
-
 		String backURL = _portal.escapeRedirect(
 			ParamUtil.getString(renderRequest, "redirect"));
 
