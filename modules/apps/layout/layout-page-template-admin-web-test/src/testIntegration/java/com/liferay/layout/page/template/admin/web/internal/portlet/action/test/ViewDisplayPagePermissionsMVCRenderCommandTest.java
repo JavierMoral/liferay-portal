@@ -65,49 +65,10 @@ public class ViewDisplayPagePermissionsMVCRenderCommandTest {
 
 	@Test
 	@TestInfo("LPD-106071")
-	public void testRenderRedirectsToThePermissionsModal() throws Exception {
-		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
-				_group.getGroupId());
-
-		MockLiferayPortletRenderResponse mockLiferayPortletRenderResponse =
-			new MockLiferayPortletRenderResponse();
-
-		Assert.assertEquals(
-			MVCRenderConstants.MVC_PATH_VALUE_SKIP_DISPATCH,
-			_render(
-				layoutPageTemplateEntry.getExternalReferenceCode(),
-				mockLiferayPortletRenderResponse));
-
-		String redirect = _getRedirect(mockLiferayPortletRenderResponse);
-
-		Assert.assertEquals(
-			String.valueOf(
-				layoutPageTemplateEntry.getLayoutPageTemplateEntryId()),
-			HttpComponentsUtil.getParameter(
-				redirect, "resourcePrimKey", false));
-		Assert.assertEquals(
-			LayoutPageTemplateEntry.class.getName(),
-			HttpComponentsUtil.getParameter(redirect, "modelResource", false));
-	}
-
-	@Test
-	@TestInfo("LPD-106071")
-	public void testRenderWithUnknownExternalReferenceCode() throws Exception {
-		Assert.assertEquals(
-			"/view.jsp",
-			_render(
-				RandomTestUtil.randomString(),
-				new MockLiferayPortletRenderResponse()));
-	}
-
-	@Test
-	@TestInfo("LPD-106071")
-	public void testRenderWithoutExternalReferenceCode() throws Exception {
-		Assert.assertEquals(
-			"/view.jsp", _render(null, new MockLiferayPortletRenderResponse()));
-		Assert.assertEquals(
-			"/view.jsp", _render("", new MockLiferayPortletRenderResponse()));
+	public void testRender() throws Exception {
+		_testRenderRedirectsToPermissionsModal();
+		_testRenderWithUnknownExternalReferenceCode();
+		_testRenderWithoutExternalReferenceCode();
 	}
 
 	private String _getRedirect(
@@ -149,6 +110,49 @@ public class ViewDisplayPagePermissionsMVCRenderCommandTest {
 
 		return _mvcRenderCommand.render(
 			mockLiferayPortletRenderRequest, mockLiferayPortletRenderResponse);
+	}
+
+	private void _testRenderRedirectsToPermissionsModal() throws Exception {
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
+				_group.getGroupId());
+
+		MockLiferayPortletRenderResponse mockLiferayPortletRenderResponse =
+			new MockLiferayPortletRenderResponse();
+
+		Assert.assertEquals(
+			MVCRenderConstants.MVC_PATH_VALUE_SKIP_DISPATCH,
+			_render(
+				layoutPageTemplateEntry.getExternalReferenceCode(),
+				mockLiferayPortletRenderResponse));
+
+		String redirect = _getRedirect(mockLiferayPortletRenderResponse);
+
+		Assert.assertEquals(
+			String.valueOf(
+				layoutPageTemplateEntry.getLayoutPageTemplateEntryId()),
+			HttpComponentsUtil.getParameter(
+				redirect, "resourcePrimKey", false));
+		Assert.assertEquals(
+			LayoutPageTemplateEntry.class.getName(),
+			HttpComponentsUtil.getParameter(redirect, "modelResource", false));
+	}
+
+	private void _testRenderWithUnknownExternalReferenceCode()
+		throws Exception {
+
+		Assert.assertEquals(
+			"/view.jsp",
+			_render(
+				RandomTestUtil.randomString(),
+				new MockLiferayPortletRenderResponse()));
+	}
+
+	private void _testRenderWithoutExternalReferenceCode() throws Exception {
+		Assert.assertEquals(
+			"/view.jsp", _render(null, new MockLiferayPortletRenderResponse()));
+		Assert.assertEquals(
+			"/view.jsp", _render("", new MockLiferayPortletRenderResponse()));
 	}
 
 	private Company _company;

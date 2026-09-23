@@ -84,50 +84,9 @@ public class AddDisplayPageMVCActionCommandTest {
 
 	@Test
 	@TestInfo("LPD-106071")
-	public void testGetRedirectURLFromADesignLibrary() throws Exception {
-		Group depotGroup = _addDesignLibraryGroup();
-
-		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
-				depotGroup.getGroupId());
-
-		MockLiferayPortletActionRequest mockLiferayPortletActionRequest =
-			_getMockLiferayPortletActionRequest(depotGroup);
-
-		String expectedBackURL = DesignLibraryUtil.getDesignLibraryResourcesURL(
-			depotGroup,
-			_portal.getHttpServletRequest(mockLiferayPortletActionRequest));
-
-		String expectedBackURLTitle = depotGroup.getDescriptiveName(
-			LocaleUtil.getSiteDefault());
-
-		String redirectURL = _getRedirectURL(
-			depotGroup, layoutPageTemplateEntry);
-
-		Assert.assertEquals(
-			expectedBackURL, _getDecodedParameter(redirectURL, "p_l_back_url"));
-		Assert.assertEquals(
-			expectedBackURLTitle,
-			_getDecodedParameter(redirectURL, "p_l_back_url_title"));
-		Assert.assertEquals(
-			Constants.EDIT, _getDecodedParameter(redirectURL, "p_l_mode"));
-	}
-
-	@Test
-	@TestInfo("LPD-106071")
-	public void testGetRedirectURLFromASite() throws Exception {
-		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
-				_group.getGroupId());
-
-		String redirectURL = _getRedirectURL(_group, layoutPageTemplateEntry);
-
-		Assert.assertEquals(
-			_language.get(
-				_portal.getSiteDefaultLocale(_group), "page-templates"),
-			_getDecodedParameter(redirectURL, "p_l_back_url_title"));
-		Assert.assertEquals(
-			Constants.EDIT, _getDecodedParameter(redirectURL, "p_l_mode"));
+	public void testGetRedirectURL() throws Exception {
+		_testGetRedirectURLFromADesignLibrary();
+		_testGetRedirectURLFromASite();
 	}
 
 	private Group _addDesignLibraryGroup() throws Exception {
@@ -182,6 +141,50 @@ public class AddDisplayPageMVCActionCommandTest {
 			new Class<?>[] {ActionRequest.class, LayoutPageTemplateEntry.class},
 			_getMockLiferayPortletActionRequest(group),
 			layoutPageTemplateEntry);
+	}
+
+	private void _testGetRedirectURLFromADesignLibrary() throws Exception {
+		Group depotGroup = _addDesignLibraryGroup();
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
+				depotGroup.getGroupId());
+
+		MockLiferayPortletActionRequest mockLiferayPortletActionRequest =
+			_getMockLiferayPortletActionRequest(depotGroup);
+
+		String expectedBackURL = DesignLibraryUtil.getDesignLibraryResourcesURL(
+			depotGroup,
+			_portal.getHttpServletRequest(mockLiferayPortletActionRequest));
+
+		String expectedBackURLTitle = depotGroup.getDescriptiveName(
+			LocaleUtil.getSiteDefault());
+
+		String redirectURL = _getRedirectURL(
+			depotGroup, layoutPageTemplateEntry);
+
+		Assert.assertEquals(
+			expectedBackURL, _getDecodedParameter(redirectURL, "p_l_back_url"));
+		Assert.assertEquals(
+			expectedBackURLTitle,
+			_getDecodedParameter(redirectURL, "p_l_back_url_title"));
+		Assert.assertEquals(
+			Constants.EDIT, _getDecodedParameter(redirectURL, "p_l_mode"));
+	}
+
+	private void _testGetRedirectURLFromASite() throws Exception {
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
+				_group.getGroupId());
+
+		String redirectURL = _getRedirectURL(_group, layoutPageTemplateEntry);
+
+		Assert.assertEquals(
+			_language.get(
+				_portal.getSiteDefaultLocale(_group), "page-templates"),
+			_getDecodedParameter(redirectURL, "p_l_back_url_title"));
+		Assert.assertEquals(
+			Constants.EDIT, _getDecodedParameter(redirectURL, "p_l_mode"));
 	}
 
 	private Company _company;

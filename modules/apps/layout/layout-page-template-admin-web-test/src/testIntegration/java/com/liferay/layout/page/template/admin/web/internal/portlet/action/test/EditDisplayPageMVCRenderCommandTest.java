@@ -66,53 +66,10 @@ public class EditDisplayPageMVCRenderCommandTest {
 
 	@Test
 	@TestInfo("LPD-106071")
-	public void testRenderRedirectsToTheDraftLayoutEditor() throws Exception {
-		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
-				_group.getGroupId());
-
-		MockLiferayPortletRenderResponse mockLiferayPortletRenderResponse =
-			new MockLiferayPortletRenderResponse();
-
-		Assert.assertEquals(
-			MVCRenderConstants.MVC_PATH_VALUE_SKIP_DISPATCH,
-			_render(
-				layoutPageTemplateEntry.getExternalReferenceCode(),
-				mockLiferayPortletRenderResponse));
-
-		Layout draftLayout = _layoutLocalService.fetchDraftLayout(
-			layoutPageTemplateEntry.getPlid());
-
-		Assert.assertNotNull(draftLayout);
-
-		String redirect = _getRedirect(mockLiferayPortletRenderResponse);
-
-		Assert.assertTrue(
-			redirect,
-			redirect.startsWith(
-				_portal.getLayoutFullURL(draftLayout, _getThemeDisplay())));
-		Assert.assertEquals(
-			Constants.EDIT,
-			HttpComponentsUtil.getParameter(redirect, "p_l_mode", false));
-	}
-
-	@Test
-	@TestInfo("LPD-106071")
-	public void testRenderWithUnknownExternalReferenceCode() throws Exception {
-		Assert.assertEquals(
-			"/view.jsp",
-			_render(
-				RandomTestUtil.randomString(),
-				new MockLiferayPortletRenderResponse()));
-	}
-
-	@Test
-	@TestInfo("LPD-106071")
-	public void testRenderWithoutExternalReferenceCode() throws Exception {
-		Assert.assertEquals(
-			"/view.jsp", _render(null, new MockLiferayPortletRenderResponse()));
-		Assert.assertEquals(
-			"/view.jsp", _render("", new MockLiferayPortletRenderResponse()));
+	public void testRender() throws Exception {
+		_testRenderRedirectsToDraftLayoutEditor();
+		_testRenderWithUnknownExternalReferenceCode();
+		_testRenderWithoutExternalReferenceCode();
 	}
 
 	private String _getRedirect(
@@ -149,6 +106,53 @@ public class EditDisplayPageMVCRenderCommandTest {
 
 		return _mvcRenderCommand.render(
 			mockLiferayPortletRenderRequest, mockLiferayPortletRenderResponse);
+	}
+
+	private void _testRenderRedirectsToDraftLayoutEditor() throws Exception {
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
+				_group.getGroupId());
+
+		MockLiferayPortletRenderResponse mockLiferayPortletRenderResponse =
+			new MockLiferayPortletRenderResponse();
+
+		Assert.assertEquals(
+			MVCRenderConstants.MVC_PATH_VALUE_SKIP_DISPATCH,
+			_render(
+				layoutPageTemplateEntry.getExternalReferenceCode(),
+				mockLiferayPortletRenderResponse));
+
+		Layout draftLayout = _layoutLocalService.fetchDraftLayout(
+			layoutPageTemplateEntry.getPlid());
+
+		Assert.assertNotNull(draftLayout);
+
+		String redirect = _getRedirect(mockLiferayPortletRenderResponse);
+
+		Assert.assertTrue(
+			redirect,
+			redirect.startsWith(
+				_portal.getLayoutFullURL(draftLayout, _getThemeDisplay())));
+		Assert.assertEquals(
+			Constants.EDIT,
+			HttpComponentsUtil.getParameter(redirect, "p_l_mode", false));
+	}
+
+	private void _testRenderWithUnknownExternalReferenceCode()
+		throws Exception {
+
+		Assert.assertEquals(
+			"/view.jsp",
+			_render(
+				RandomTestUtil.randomString(),
+				new MockLiferayPortletRenderResponse()));
+	}
+
+	private void _testRenderWithoutExternalReferenceCode() throws Exception {
+		Assert.assertEquals(
+			"/view.jsp", _render(null, new MockLiferayPortletRenderResponse()));
+		Assert.assertEquals(
+			"/view.jsp", _render("", new MockLiferayPortletRenderResponse()));
 	}
 
 	private Company _company;
