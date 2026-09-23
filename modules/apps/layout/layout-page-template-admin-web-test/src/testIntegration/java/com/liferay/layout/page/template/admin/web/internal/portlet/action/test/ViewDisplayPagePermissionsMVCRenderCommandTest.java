@@ -79,9 +79,6 @@ public class ViewDisplayPagePermissionsMVCRenderCommandTest {
 				layoutPageTemplateEntry.getExternalReferenceCode(),
 				mockLiferayPortletRenderResponse));
 
-		// The modal is keyed by the entry's primary key, which is what the
-		// command resolves the external reference code into
-
 		String redirect = _getRedirect(mockLiferayPortletRenderResponse);
 
 		Assert.assertEquals(

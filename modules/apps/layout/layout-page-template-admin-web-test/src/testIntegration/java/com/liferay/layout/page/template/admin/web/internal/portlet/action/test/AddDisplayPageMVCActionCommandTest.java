@@ -85,10 +85,6 @@ public class AddDisplayPageMVCActionCommandTest {
 	@Test
 	@TestInfo("LPD-106071")
 	public void testGetRedirectURLFromADesignLibrary() throws Exception {
-
-		// Without the Design Library branch the editor sends the author back
-		// to the site's page templates instead of the library they created from
-
 		Group depotGroup = _addDesignLibraryGroup();
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
@@ -110,11 +106,9 @@ public class AddDisplayPageMVCActionCommandTest {
 
 		Assert.assertEquals(
 			expectedBackURL, _getDecodedParameter(redirectURL, "p_l_back_url"));
-
 		Assert.assertEquals(
 			expectedBackURLTitle,
 			_getDecodedParameter(redirectURL, "p_l_back_url_title"));
-
 		Assert.assertEquals(
 			Constants.EDIT, _getDecodedParameter(redirectURL, "p_l_mode"));
 	}
