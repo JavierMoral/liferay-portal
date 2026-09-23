@@ -121,8 +121,84 @@ public class SelectLayoutPageTemplateEntryDisplayContextTest {
 	}
 
 	@Test
-	@TestInfo("LPD-89086")
+	@TestInfo({"LPD-89086", "LPD-105566"})
 	public void testGetLayoutPageTemplateEntries() throws Exception {
+		_testGetLayoutPageTemplateEntries();
+		_testGetLayoutPageTemplateEntriesWithDesignLibraryGroup();
+	}
+
+	@Test
+	@TestInfo("LPD-89086")
+	public void testGetLayoutPageTemplateEntriesCount() throws Exception {
+		int count = RandomTestUtil.randomInt();
+		int countByType = RandomTestUtil.randomInt();
+		SelectLayoutPageTemplateEntryDisplayContext
+			selectLayoutPageTemplateEntryDisplayContext =
+				_getSelectLayoutPageTemplateEntryDisplayContext();
+
+		try (MockedStatic<LayoutPageTemplateEntryServiceUtil>
+				layoutPageTemplateEntryServiceUtilMockedStatic =
+					Mockito.mockStatic(
+						LayoutPageTemplateEntryServiceUtil.class)) {
+
+			layoutPageTemplateEntryServiceUtilMockedStatic.when(
+				() ->
+					LayoutPageTemplateEntryServiceUtil.
+						getLayoutPageTemplateEntriesCountByType(
+							Mockito.anyLong(), Mockito.anyLong(),
+							Mockito.eq(
+								LayoutPageTemplateEntryTypeConstants.BASIC))
+			).thenReturn(
+				countByType
+			);
+
+			layoutPageTemplateEntryServiceUtilMockedStatic.when(
+				() ->
+					LayoutPageTemplateEntryServiceUtil.
+						getLayoutPageTemplateEntriesCount(
+							Mockito.anyLong(), Mockito.anyLong(),
+							Mockito.eq(WorkflowConstants.STATUS_APPROVED))
+			).thenReturn(
+				count
+			);
+
+			for (boolean featureFlagEnabled : new boolean[] {false, true}) {
+				try (MockedStatic<FeatureFlagManagerUtil>
+						featureFlagManagerUtilMockedStatic = Mockito.mockStatic(
+							FeatureFlagManagerUtil.class)) {
+
+					featureFlagManagerUtilMockedStatic.when(
+						() -> FeatureFlagManagerUtil.isEnabled(
+							Mockito.anyLong(), Mockito.eq("LPD-76864"))
+					).thenReturn(
+						featureFlagEnabled
+					);
+
+					if (featureFlagEnabled) {
+						Assert.assertEquals(
+							count,
+							selectLayoutPageTemplateEntryDisplayContext.
+								getLayoutPageTemplateEntriesCount());
+					}
+					else {
+						Assert.assertEquals(
+							countByType,
+							selectLayoutPageTemplateEntryDisplayContext.
+								getLayoutPageTemplateEntriesCount());
+					}
+				}
+			}
+		}
+	}
+
+	private SelectLayoutPageTemplateEntryDisplayContext
+		_getSelectLayoutPageTemplateEntryDisplayContext() {
+
+		return new SelectLayoutPageTemplateEntryDisplayContext(
+			_mockHttpServletRequest, null);
+	}
+
+	private void _testGetLayoutPageTemplateEntries() throws Exception {
 		List<LayoutPageTemplateEntry> layoutPageTemplateEntries =
 			Collections.singletonList(
 				Mockito.mock(LayoutPageTemplateEntry.class));
@@ -190,73 +266,7 @@ public class SelectLayoutPageTemplateEntryDisplayContextTest {
 		}
 	}
 
-	@Test
-	@TestInfo("LPD-89086")
-	public void testGetLayoutPageTemplateEntriesCount() throws Exception {
-		int count = RandomTestUtil.randomInt();
-		int countByType = RandomTestUtil.randomInt();
-		SelectLayoutPageTemplateEntryDisplayContext
-			selectLayoutPageTemplateEntryDisplayContext =
-				_getSelectLayoutPageTemplateEntryDisplayContext();
-
-		try (MockedStatic<LayoutPageTemplateEntryServiceUtil>
-				layoutPageTemplateEntryServiceUtilMockedStatic =
-					Mockito.mockStatic(
-						LayoutPageTemplateEntryServiceUtil.class)) {
-
-			layoutPageTemplateEntryServiceUtilMockedStatic.when(
-				() ->
-					LayoutPageTemplateEntryServiceUtil.
-						getLayoutPageTemplateEntriesCountByType(
-							Mockito.anyLong(), Mockito.anyLong(),
-							Mockito.eq(
-								LayoutPageTemplateEntryTypeConstants.BASIC))
-			).thenReturn(
-				countByType
-			);
-
-			layoutPageTemplateEntryServiceUtilMockedStatic.when(
-				() ->
-					LayoutPageTemplateEntryServiceUtil.
-						getLayoutPageTemplateEntriesCount(
-							Mockito.anyLong(), Mockito.anyLong(),
-							Mockito.eq(WorkflowConstants.STATUS_APPROVED))
-			).thenReturn(
-				count
-			);
-
-			for (boolean featureFlagEnabled : new boolean[] {false, true}) {
-				try (MockedStatic<FeatureFlagManagerUtil>
-						featureFlagManagerUtilMockedStatic = Mockito.mockStatic(
-							FeatureFlagManagerUtil.class)) {
-
-					featureFlagManagerUtilMockedStatic.when(
-						() -> FeatureFlagManagerUtil.isEnabled(
-							Mockito.anyLong(), Mockito.eq("LPD-76864"))
-					).thenReturn(
-						featureFlagEnabled
-					);
-
-					if (featureFlagEnabled) {
-						Assert.assertEquals(
-							count,
-							selectLayoutPageTemplateEntryDisplayContext.
-								getLayoutPageTemplateEntriesCount());
-					}
-					else {
-						Assert.assertEquals(
-							countByType,
-							selectLayoutPageTemplateEntryDisplayContext.
-								getLayoutPageTemplateEntriesCount());
-					}
-				}
-			}
-		}
-	}
-
-	@Test
-	@TestInfo("LPD-105566")
-	public void testGetLayoutPageTemplateEntriesWithDesignLibraryGroup()
+	private void _testGetLayoutPageTemplateEntriesWithDesignLibraryGroup()
 		throws Exception {
 
 		long designLibraryGroupId = RandomTestUtil.randomLong();
@@ -316,13 +326,6 @@ public class SelectLayoutPageTemplateEntryDisplayContextTest {
 				selectLayoutPageTemplateEntryDisplayContext.
 					getLayoutPageTemplateEntries(0, 10));
 		}
-	}
-
-	private SelectLayoutPageTemplateEntryDisplayContext
-		_getSelectLayoutPageTemplateEntryDisplayContext() {
-
-		return new SelectLayoutPageTemplateEntryDisplayContext(
-			_mockHttpServletRequest, null);
 	}
 
 	private static final MockedStatic
