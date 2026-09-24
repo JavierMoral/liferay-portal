@@ -62,7 +62,7 @@ public class LayoutPageTemplateDepotRolePermissionsContributor
 		depotRolePermissions.add(
 			new DepotRolePermission(
 				roleName, LayoutPageTemplateEntry.class.getName(),
-				ActionKeys.DELETE, ActionKeys.UPDATE));
+				ActionKeys.DELETE, ActionKeys.PERMISSIONS, ActionKeys.UPDATE));
 	}
 
 }
