@@ -24,6 +24,9 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.test.TestInfo;
@@ -70,7 +73,7 @@ public class LayoutPageTemplateDepotRolePermissionsContributorTest {
 
 	@FeatureFlags(featureFlags = @FeatureFlag("LPD-57283"))
 	@Test
-	@TestInfo("LPD-104558")
+	@TestInfo({"LPD-104558", "LPD-107020"})
 	public void testGetDepotRolePermissions() throws Exception {
 		DepotEntry depotEntry = _depotEntryLocalService.addDepotEntry(
 			RandomTestUtil.randomLocaleStringMap(),
@@ -124,6 +127,11 @@ public class LayoutPageTemplateDepotRolePermissionsContributorTest {
 
 		try (ContextUserReplace contextUserReplace = new ContextUserReplace(
 				nonownerUser)) {
+
+			Assert.assertTrue(
+				_layoutPageTemplateEntryModelResourcePermission.contains(
+					PermissionThreadLocal.getPermissionChecker(),
+					layoutPageTemplateEntry, ActionKeys.PERMISSIONS));
 
 			LayoutPageTemplateStructure layoutPageTemplateStructure =
 				_layoutPageTemplateStructureService.
@@ -182,6 +190,11 @@ public class LayoutPageTemplateDepotRolePermissionsContributorTest {
 		try (ContextUserReplace contextUserReplace = new ContextUserReplace(
 				UserTestUtil.addGroupUser(
 					group, DepotRolesConstants.DESIGN_LIBRARY_MEMBER))) {
+
+			Assert.assertFalse(
+				_layoutPageTemplateEntryModelResourcePermission.contains(
+					PermissionThreadLocal.getPermissionChecker(),
+					layoutPageTemplateEntry, ActionKeys.PERMISSIONS));
 
 			long layoutPageTemplateCollectionId =
 				layoutPageTemplateEntry.getLayoutPageTemplateCollectionId();
@@ -258,6 +271,12 @@ public class LayoutPageTemplateDepotRolePermissionsContributorTest {
 	@Inject
 	private LayoutPageTemplateCollectionService
 		_layoutPageTemplateCollectionService;
+
+	@Inject(
+		filter = "model.class.name=com.liferay.layout.page.template.model.LayoutPageTemplateEntry"
+	)
+	private ModelResourcePermission<LayoutPageTemplateEntry>
+		_layoutPageTemplateEntryModelResourcePermission;
 
 	@Inject
 	private LayoutPageTemplateEntryService _layoutPageTemplateEntryService;

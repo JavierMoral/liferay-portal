@@ -190,7 +190,9 @@ public class DepotRolesPortalInstanceLifecycleListenerTest {
 			companyId,
 			"com.liferay.layout.page.template.model.LayoutPageTemplateEntry",
 			ResourceConstants.SCOPE_COMPANY, String.valueOf(companyId),
-			roleName, List.of(ActionKeys.DELETE, ActionKeys.UPDATE));
+			roleName,
+			List.of(
+				ActionKeys.DELETE, ActionKeys.PERMISSIONS, ActionKeys.UPDATE));
 		_assertResourcePermissions(
 			companyId, "com.liferay.style.book",
 			ResourceConstants.SCOPE_COMPANY, String.valueOf(companyId),
