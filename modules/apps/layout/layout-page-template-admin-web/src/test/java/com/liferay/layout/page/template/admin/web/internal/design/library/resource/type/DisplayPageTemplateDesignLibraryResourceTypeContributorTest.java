@@ -67,7 +67,7 @@ public class DisplayPageTemplateDesignLibraryResourceTypeContributorTest {
 	}
 
 	@Test
-	@TestInfo("LPD-106072")
+	@TestInfo({"LPD-106072", "LPD-106073"})
 	public void testGetFDSActionDropdownItems() throws Exception {
 		List<FDSActionDropdownItem> fdsActionDropdownItems =
 			_displayPageTemplateDesignLibraryResourceTypeContributor.
@@ -76,24 +76,18 @@ public class DisplayPageTemplateDesignLibraryResourceTypeContributorTest {
 					RandomTestUtil.randomString());
 
 		Assert.assertEquals(
-			fdsActionDropdownItems.toString(), 1,
+			fdsActionDropdownItems.toString(), 3,
 			fdsActionDropdownItems.size());
 
-		FDSActionDropdownItem fdsActionDropdownItem =
-			fdsActionDropdownItems.get(0);
-
-		Map<String, String> data =
-			(Map<String, String>)fdsActionDropdownItem.get("data");
-
-		Assert.assertEquals("copy", data.get("id"));
-		Assert.assertEquals("post", data.get("method"));
-		Assert.assertEquals("copy", data.get("permissionKey"));
-
-		Assert.assertEquals(
-			"{actions.copy.href}", fdsActionDropdownItem.get("href"));
-		Assert.assertEquals("copy", fdsActionDropdownItem.get("icon"));
-		Assert.assertEquals("duplicate", fdsActionDropdownItem.get("label"));
-		Assert.assertEquals("async", fdsActionDropdownItem.get("target"));
+		_assertFDSActionDropdownItem(
+			fdsActionDropdownItems.get(0), "{actions.copy.href}", "copy",
+			"copy", "duplicate");
+		_assertFDSActionDropdownItem(
+			fdsActionDropdownItems.get(1), "{actions.markAsDefault.href}",
+			"star", "markAsDefault", "mark-as-default");
+		_assertFDSActionDropdownItem(
+			fdsActionDropdownItems.get(2), "{actions.unmarkAsDefault.href}",
+			"star-o", "unmarkAsDefault", "unmark-as-default");
 	}
 
 	@Test
@@ -138,6 +132,23 @@ public class DisplayPageTemplateDesignLibraryResourceTypeContributorTest {
 		Assert.assertTrue(
 			_displayPageTemplateDesignLibraryResourceTypeContributor.
 				hasViewPermission(_permissionChecker, _depotEntry));
+	}
+
+	private void _assertFDSActionDropdownItem(
+		FDSActionDropdownItem fdsActionDropdownItem, String href, String icon,
+		String id, String label) {
+
+		Map<String, String> data =
+			(Map<String, String>)fdsActionDropdownItem.get("data");
+
+		Assert.assertEquals(id, data.get("id"));
+		Assert.assertEquals("post", data.get("method"));
+		Assert.assertEquals(id, data.get("permissionKey"));
+
+		Assert.assertEquals(href, fdsActionDropdownItem.get("href"));
+		Assert.assertEquals(icon, fdsActionDropdownItem.get("icon"));
+		Assert.assertEquals(label, fdsActionDropdownItem.get("label"));
+		Assert.assertEquals("async", fdsActionDropdownItem.get("target"));
 	}
 
 	private static final long _GROUP_ID = RandomTestUtil.randomLong();
