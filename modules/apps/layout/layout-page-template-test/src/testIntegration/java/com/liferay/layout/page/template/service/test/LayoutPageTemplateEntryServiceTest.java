@@ -7,6 +7,8 @@ package com.liferay.layout.page.template.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.fragment.model.FragmentCollection;
+import com.liferay.fragment.model.FragmentEntryLink;
+import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateActionKeys;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateCollectionTypeConstants;
@@ -21,6 +23,7 @@ import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
 import com.liferay.layout.page.template.service.persistence.LayoutPageTemplateEntryPersistence;
 import com.liferay.layout.page.template.service.persistence.impl.constants.LayoutPersistenceConstants;
 import com.liferay.layout.page.template.test.util.LayoutPageTemplateTestUtil;
+import com.liferay.layout.test.util.ContentLayoutTestUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
@@ -29,6 +32,7 @@ import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutPrototype;
 import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.model.ResourceConstants;
@@ -41,10 +45,12 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutPrototypeLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.context.ContextUserReplace;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -64,6 +70,7 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.portal.test.rule.PersistenceTestRule;
 import com.liferay.portal.test.rule.TransactionalTestRule;
+import com.liferay.segments.service.SegmentsExperienceLocalService;
 
 import java.util.List;
 
@@ -411,6 +418,51 @@ public class LayoutPageTemplateEntryServiceTest {
 		Assert.assertNotEquals(
 			layoutPageTemplateEntry.getPlid(),
 			copiedLayoutPageTemplateEntry.getPlid());
+	}
+
+	@Test
+	@TestInfo("LPD-106072")
+	public void testCopyLayoutPageTemplateEntryWithPageContent()
+		throws Exception {
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			LayoutPageTemplateTestUtil.addLayoutPageTemplateEntry(
+				_layoutPageTemplateCollection.
+					getLayoutPageTemplateCollectionId());
+
+		FragmentEntryLink fragmentEntryLink =
+			_addFragmentEntryLinkAndPublishLayout(layoutPageTemplateEntry);
+
+		LayoutPageTemplateEntry copiedLayoutPageTemplateEntry =
+			_layoutPageTemplateEntryService.copyLayoutPageTemplateEntry(
+				_group.getGroupId(),
+				_layoutPageTemplateCollection.
+					getLayoutPageTemplateCollectionId(),
+				layoutPageTemplateEntry.getLayoutPageTemplateEntryId(), false,
+				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		Layout copiedLayout = _layoutLocalService.getLayout(
+			copiedLayoutPageTemplateEntry.getPlid());
+
+		Layout copiedDraftLayout = copiedLayout.fetchDraftLayout();
+
+		List<FragmentEntryLink> copiedFragmentEntryLinks =
+			_fragmentEntryLinkLocalService.getFragmentEntryLinksByPlid(
+				copiedLayoutPageTemplateEntry.getGroupId(),
+				copiedDraftLayout.getPlid());
+
+		Assert.assertEquals(
+			copiedFragmentEntryLinks.toString(), 1,
+			copiedFragmentEntryLinks.size());
+
+		FragmentEntryLink copiedFragmentEntryLink =
+			copiedFragmentEntryLinks.get(0);
+
+		Assert.assertEquals(
+			fragmentEntryLink.getHtml(), copiedFragmentEntryLink.getHtml());
+		Assert.assertNotEquals(
+			fragmentEntryLink.getFragmentEntryLinkId(),
+			copiedFragmentEntryLink.getFragmentEntryLinkId());
 	}
 
 	@Test
@@ -1296,14 +1348,40 @@ public class LayoutPageTemplateEntryServiceTest {
 			persistedLayoutPageTemplateEntry.getStatus());
 	}
 
+	private FragmentEntryLink _addFragmentEntryLinkAndPublishLayout(
+			LayoutPageTemplateEntry layoutPageTemplateEntry)
+		throws Exception {
+
+		Layout layout = _layoutLocalService.getLayout(
+			layoutPageTemplateEntry.getPlid());
+
+		Layout draftLayout = layout.fetchDraftLayout();
+
+		FragmentEntryLink fragmentEntryLink =
+			ContentLayoutTestUtil.addFragmentEntryLinkToLayout(
+				null, draftLayout,
+				_segmentsExperienceLocalService.
+					fetchDefaultSegmentsExperienceId(draftLayout.getPlid()));
+
+		ContentLayoutTestUtil.publishLayout(draftLayout, layout);
+
+		return fragmentEntryLink;
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		LayoutPageTemplateEntryServiceTest.class);
+
+	@Inject
+	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;
 
 	@DeleteAfterTestRun
 	private Group _group;
 
 	@Inject
 	private Language _language;
+
+	@Inject
+	private LayoutLocalService _layoutLocalService;
 
 	private LayoutPageTemplateCollection _layoutPageTemplateCollection;
 
@@ -1333,6 +1411,9 @@ public class LayoutPageTemplateEntryServiceTest {
 
 	@Inject
 	private RoleLocalService _roleLocalService;
+
+	@Inject
+	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
 
 	private ServiceContext _serviceContext;
 

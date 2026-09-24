@@ -6,14 +6,23 @@
 package com.liferay.layout.page.template.admin.web.internal.design.library.resource.type;
 
 import com.liferay.depot.model.DepotEntry;
+import com.liferay.frontend.data.set.model.FDSActionDropdownItem;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateActionKeys;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
+import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import java.util.List;
+import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -41,9 +50,50 @@ public class DisplayPageTemplateDesignLibraryResourceTypeContributorTest {
 			_GROUP_ID
 		);
 
+		LanguageUtil languageUtil = new LanguageUtil();
+
+		Mockito.when(
+			_language.get(
+				Mockito.any(HttpServletRequest.class), Mockito.anyString())
+		).thenAnswer(
+			invocation -> invocation.getArguments()[1]
+		);
+
+		languageUtil.setLanguage(_language);
+
 		ReflectionTestUtil.setFieldValue(
 			_displayPageTemplateDesignLibraryResourceTypeContributor,
 			"_portletResourcePermission", _portletResourcePermission);
+	}
+
+	@Test
+	@TestInfo("LPD-106072")
+	public void testGetFDSActionDropdownItems() throws Exception {
+		List<FDSActionDropdownItem> fdsActionDropdownItems =
+			_displayPageTemplateDesignLibraryResourceTypeContributor.
+				getFDSActionDropdownItems(
+					_httpServletRequest, _depotEntry,
+					RandomTestUtil.randomString());
+
+		Assert.assertEquals(
+			fdsActionDropdownItems.toString(), 1,
+			fdsActionDropdownItems.size());
+
+		FDSActionDropdownItem fdsActionDropdownItem =
+			fdsActionDropdownItems.get(0);
+
+		Map<String, String> data =
+			(Map<String, String>)fdsActionDropdownItem.get("data");
+
+		Assert.assertEquals("copy", data.get("id"));
+		Assert.assertEquals("post", data.get("method"));
+		Assert.assertEquals("copy", data.get("permissionKey"));
+
+		Assert.assertEquals(
+			"{actions.copy.href}", fdsActionDropdownItem.get("href"));
+		Assert.assertEquals("copy", fdsActionDropdownItem.get("icon"));
+		Assert.assertEquals("duplicate", fdsActionDropdownItem.get("label"));
+		Assert.assertEquals("async", fdsActionDropdownItem.get("target"));
 	}
 
 	@Test
@@ -96,6 +146,9 @@ public class DisplayPageTemplateDesignLibraryResourceTypeContributorTest {
 	private final DisplayPageTemplateDesignLibraryResourceTypeContributor
 		_displayPageTemplateDesignLibraryResourceTypeContributor =
 			new DisplayPageTemplateDesignLibraryResourceTypeContributor();
+	private final HttpServletRequest _httpServletRequest = Mockito.mock(
+		HttpServletRequest.class);
+	private final Language _language = Mockito.mock(Language.class);
 	private final PermissionChecker _permissionChecker = Mockito.mock(
 		PermissionChecker.class);
 	private final PortletResourcePermission _portletResourcePermission =
