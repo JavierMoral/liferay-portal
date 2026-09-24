@@ -62,7 +62,15 @@ public class DisplayPageTemplateDesignLibraryResourceTypeContributor
 			new FDSActionDropdownItem(
 				"{actions.copy.href}", "copy", "copy",
 				LanguageUtil.get(httpServletRequest, "duplicate"), "post",
-				"copy", "async"));
+				"copy", "async"),
+			new FDSActionDropdownItem(
+				"{actions.markAsDefault.href}", "star", "markAsDefault",
+				LanguageUtil.get(httpServletRequest, "mark-as-default"), "post",
+				"markAsDefault", "async"),
+			new FDSActionDropdownItem(
+				"{actions.unmarkAsDefault.href}", "star-o", "unmarkAsDefault",
+				LanguageUtil.get(httpServletRequest, "unmark-as-default"),
+				"post", "unmarkAsDefault", "async"));
 	}
 
 	@Override
