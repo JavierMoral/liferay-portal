@@ -17,10 +17,10 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
+import com.liferay.portal.kernel.util.ListUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -58,7 +58,11 @@ public class DisplayPageTemplateDesignLibraryResourceTypeContributor
 			String backURL)
 		throws PortalException {
 
-		return Collections.emptyList();
+		return ListUtil.fromArray(
+			new FDSActionDropdownItem(
+				"{actions.copy.href}", "copy", "copy",
+				LanguageUtil.get(httpServletRequest, "duplicate"), "post",
+				"copy", "async"));
 	}
 
 	@Override
