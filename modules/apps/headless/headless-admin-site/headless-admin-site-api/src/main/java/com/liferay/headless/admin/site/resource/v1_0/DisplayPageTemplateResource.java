@@ -110,6 +110,11 @@ public interface DisplayPageTemplateResource {
 			DisplayPageTemplate displayPageTemplate)
 		throws Exception;
 
+	public DisplayPageTemplate postDesignLibraryDisplayPageTemplateCopy(
+			String designLibraryExternalReferenceCode,
+			String displayPageTemplateExternalReferenceCode)
+		throws Exception;
+
 	public DisplayPageTemplate postSiteDisplayPageTemplate(
 			String siteExternalReferenceCode,
 			DisplayPageTemplate displayPageTemplate)
@@ -256,4 +261,4 @@ public interface DisplayPageTemplateResource {
 	}
 
 }
-// LIFERAY-REST-BUILDER-HASH:1151756371
+// LIFERAY-REST-BUILDER-HASH:1769120937
