@@ -113,7 +113,9 @@ public class CustomAssetDisplayPageFriendlyURLResolver
 			return null;
 		}
 
-		return _fetchLayoutByFriendlyURL(groupId, StringPool.SLASH + parts[0]);
+		return getTargetLayout(
+			groupId,
+			_fetchLayoutByFriendlyURL(groupId, StringPool.SLASH + parts[0]));
 	}
 
 	@Override
