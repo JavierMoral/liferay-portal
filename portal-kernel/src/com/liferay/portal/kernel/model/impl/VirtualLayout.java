@@ -109,6 +109,10 @@ public class VirtualLayout extends LayoutWrapper {
 
 	@Override
 	public List<Portlet> getEmbeddedPortlets() {
+		if (_isSourceGroupDepot()) {
+			return super.getEmbeddedPortlets(getSourceGroupId());
+		}
+
 		return super.getEmbeddedPortlets(getGroupId());
 	}
 
