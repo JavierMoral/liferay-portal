@@ -30,6 +30,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutFriendlyURLComposite;
+import com.liferay.portal.kernel.model.impl.VirtualLayout;
 import com.liferay.portal.kernel.portlet.FriendlyURLResolver;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.test.TestInfo;
@@ -141,7 +142,7 @@ public class CustomAssetDisplayPageFriendlyURLResolverTest {
 
 	@FeatureFlag("LPD-57283")
 	@Test
-	@TestInfo("LPD-104244")
+	@TestInfo({"LPD-104244", "LPD-107030"})
 	public void testGetLayoutDisplayPageObjectProviderLayout()
 		throws Exception {
 
@@ -149,6 +150,7 @@ public class CustomAssetDisplayPageFriendlyURLResolverTest {
 			TestPropsValues.getCompanyId(), true, "LPD-57283");
 
 		_testGetLayoutDisplayPageObjectProviderLayout();
+		_testGetLayoutDisplayPageObjectProviderLayoutWhenDesignLibraryScoped();
 		_testGetLayoutDisplayPageObjectProviderLayoutWhenDisconnected();
 	}
 
@@ -193,6 +195,20 @@ public class CustomAssetDisplayPageFriendlyURLResolverTest {
 			ObjectEntry objectEntry)
 		throws Exception {
 
+		Layout layout = _getLayout(layoutFriendlyURL, objectEntry);
+
+		if (expectedLayout == null) {
+			Assert.assertNull(layout);
+
+			return;
+		}
+
+		Assert.assertEquals(expectedLayout.getPlid(), layout.getPlid());
+	}
+
+	private Layout _getLayout(String layoutFriendlyURL, ObjectEntry objectEntry)
+		throws Exception {
+
 		LayoutFriendlyURLComposite layoutFriendlyURLComposite =
 			_friendlyURLResolver.getLayoutFriendlyURLComposite(
 				TestPropsValues.getCompanyId(), _group.getGroupId(), false,
@@ -206,15 +222,7 @@ public class CustomAssetDisplayPageFriendlyURLResolverTest {
 					WebKeys.LOCALE, LocaleUtil.getDefault()
 				).build());
 
-		Layout layout = layoutFriendlyURLComposite.getLayout();
-
-		if (expectedLayout == null) {
-			Assert.assertNull(layout);
-
-			return;
-		}
-
-		Assert.assertEquals(expectedLayout.getPlid(), layout.getPlid());
+		return layoutFriendlyURLComposite.getLayout();
 	}
 
 	private LayoutDisplayPageObjectProvider<?>
@@ -260,6 +268,27 @@ public class CustomAssetDisplayPageFriendlyURLResolverTest {
 			_group.getGroupId(), name);
 
 		_assertLayout(layout, layoutFriendlyURL, objectEntry);
+	}
+
+	private void _testGetLayoutDisplayPageObjectProviderLayoutWhenDesignLibraryScoped()
+		throws Exception {
+
+		ObjectEntry objectEntry = _addObjectEntry();
+
+		DepotEntry depotEntry = _addDesignLibraryDepotEntry();
+
+		_depotEntryGroupRelLocalService.addDepotEntryGroupRel(
+			depotEntry.getDepotEntryId(), _group.getGroupId());
+
+		Layout designLibraryLayout = _addDisplayPageTemplateLayout(
+			depotEntry.getGroupId(), RandomTestUtil.randomString());
+
+		Layout layout = _getLayout(
+			designLibraryLayout.getFriendlyURL(), objectEntry);
+
+		Assert.assertTrue(layout instanceof VirtualLayout);
+		Assert.assertEquals(designLibraryLayout.getPlid(), layout.getPlid());
+		Assert.assertEquals(_group.getGroupId(), layout.getGroupId());
 	}
 
 	private void _testGetLayoutDisplayPageObjectProviderLayoutWhenDisconnected()
