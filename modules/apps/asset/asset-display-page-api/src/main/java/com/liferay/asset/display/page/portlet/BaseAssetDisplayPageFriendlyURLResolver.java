@@ -45,13 +45,16 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutFriendlyURLComposite;
 import com.liferay.portal.kernel.model.LayoutQueryStringComposite;
+import com.liferay.portal.kernel.model.impl.VirtualLayout;
 import com.liferay.portal.kernel.module.service.Snapshot;
 import com.liferay.portal.kernel.portlet.FriendlyURLResolver;
 import com.liferay.portal.kernel.portlet.FriendlyURLResolverRegistryUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
@@ -316,9 +319,11 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 		LayoutDisplayPageObjectProvider<?> layoutDisplayPageObjectProvider,
 		LayoutDisplayPageProvider<?> layoutDisplayPageProvider) {
 
-		return _getLayoutDisplayPageObjectProviderLayout(
-			groupId, layoutDisplayPageObjectProvider,
-			layoutDisplayPageProvider);
+		return getTargetLayout(
+			groupId,
+			_getLayoutDisplayPageObjectProviderLayout(
+				groupId, layoutDisplayPageObjectProvider,
+				layoutDisplayPageProvider));
 	}
 
 	protected LayoutDisplayPageProvider<?> getLayoutDisplayPageProvider(
@@ -345,6 +350,34 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 		}
 
 		return locale;
+	}
+
+	protected Layout getTargetLayout(long groupId, Layout layout) {
+		if ((layout == null) || (layout.getGroupId() == groupId) ||
+			!ArrayUtil.contains(
+				getConnectedDesignLibraryGroupIds(groupId),
+				layout.getGroupId())) {
+
+			return layout;
+		}
+
+		GroupLocalService groupLocalService = _groupLocalServiceSnapshot.get();
+
+		if (groupLocalService == null) {
+			return layout;
+		}
+
+		Group targetGroup = groupLocalService.fetchGroup(groupId);
+
+		if (targetGroup == null) {
+			if (_log.isWarnEnabled()) {
+				_log.warn("Unable to get group " + groupId);
+			}
+
+			return layout;
+		}
+
+		return new VirtualLayout(layout, targetGroup);
 	}
 
 	protected String getVersion(Map<String, String[]> params) {
@@ -646,5 +679,9 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 		_friendlyURLSeparatorProviderSnapshot = new Snapshot<>(
 			BaseAssetDisplayPageFriendlyURLResolver.class,
 			FriendlyURLSeparatorProvider.class);
+	private static final Snapshot<GroupLocalService>
+		_groupLocalServiceSnapshot = new Snapshot<>(
+			BaseAssetDisplayPageFriendlyURLResolver.class,
+			GroupLocalService.class);
 
 }
