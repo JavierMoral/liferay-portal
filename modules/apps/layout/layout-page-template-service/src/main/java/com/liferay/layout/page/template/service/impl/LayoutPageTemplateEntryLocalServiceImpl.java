@@ -1068,8 +1068,11 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 
 		Layout draftLayout = layout.fetchDraftLayout();
 
-		if ((type == LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT) ||
-			Validator.isNotNull(masterLayoutPageTemplateEntryERC)) {
+		if (((type == LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT) ||
+			 Validator.isNotNull(masterLayoutPageTemplateEntryERC)) &&
+			(!FeatureFlagManagerUtil.isEnabled(
+				layout.getCompanyId(), "LPD-57283") ||
+			 !DesignLibraryUtil.isDesignLibraryScope(groupId))) {
 
 			LayoutSet layoutSet = _layoutSetLocalService.getLayoutSet(
 				groupId, false);
