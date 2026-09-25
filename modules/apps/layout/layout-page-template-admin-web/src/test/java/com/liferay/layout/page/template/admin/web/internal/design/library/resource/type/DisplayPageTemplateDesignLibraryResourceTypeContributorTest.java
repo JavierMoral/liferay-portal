@@ -226,8 +226,8 @@ public class DisplayPageTemplateDesignLibraryResourceTypeContributorTest {
 			fdsActionDropdownItems.get(0), "pencil", "edit", "edit", null,
 			"get", "link");
 		_assertFDSActionDropdownItem(
-			fdsActionDropdownItems.get(1), "copy", "copy", "duplicate", "post",
-			"copy", "async");
+			fdsActionDropdownItems.get(1), "copy", "copyMenu", "make-a-copy",
+			null, null, null);
 		_assertFDSActionDropdownItem(
 			fdsActionDropdownItems.get(2), "star", "markAsDefault",
 			"mark-as-default", "post", "markAsDefault", "async");
@@ -245,7 +245,36 @@ public class DisplayPageTemplateDesignLibraryResourceTypeContributorTest {
 			fdsActionDropdownItems.get(1);
 
 		Assert.assertEquals(
-			"{actions.copy.href}", copyFDSActionDropdownItem.get("href"));
+			"contextual", copyFDSActionDropdownItem.get("type"));
+
+		List<FDSActionDropdownItem> copyFDSActionDropdownItems =
+			(List<FDSActionDropdownItem>)copyFDSActionDropdownItem.get("items");
+
+		Assert.assertEquals(
+			copyFDSActionDropdownItems.toString(), 2,
+			copyFDSActionDropdownItems.size());
+
+		_assertFDSActionDropdownItem(
+			copyFDSActionDropdownItems.get(0), null, "copy", "display-page",
+			"post", "copy", "async");
+		_assertFDSActionDropdownItem(
+			copyFDSActionDropdownItems.get(1), null, "copyWithPermission",
+			"display-page-with-permissions", "post", "copyWithPermission",
+			"async");
+
+		FDSActionDropdownItem displayPageFDSActionDropdownItem =
+			copyFDSActionDropdownItems.get(0);
+
+		Assert.assertEquals(
+			"{actions.copy.href}",
+			displayPageFDSActionDropdownItem.get("href"));
+
+		FDSActionDropdownItem displayPageWithPermissionsFDSActionDropdownItem =
+			copyFDSActionDropdownItems.get(1);
+
+		Assert.assertEquals(
+			"{actions.copyWithPermission.href}",
+			displayPageWithPermissionsFDSActionDropdownItem.get("href"));
 
 		FDSActionDropdownItem markAsDefaultFDSActionDropdownItem =
 			fdsActionDropdownItems.get(2);
