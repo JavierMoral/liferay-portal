@@ -137,10 +137,7 @@ public class DisplayPageTemplateDesignLibraryResourceTypeContributor
 				).buildString(),
 				"pencil", "edit", LanguageUtil.get(httpServletRequest, "edit"),
 				null, "get", "link"),
-			new FDSActionDropdownItem(
-				"{actions.copy.href}", "copy", "copy",
-				LanguageUtil.get(httpServletRequest, "duplicate"), "post",
-				"copy", "async"),
+			_getCopyMenuFDSActionDropdownItem(httpServletRequest),
 			new FDSActionDropdownItem(
 				"{actions.markAsDefault.href}", "star", "markAsDefault",
 				LanguageUtil.get(httpServletRequest, "mark-as-default"), "post",
@@ -207,6 +204,33 @@ public class DisplayPageTemplateDesignLibraryResourceTypeContributor
 
 		return _portletResourcePermission.contains(
 			permissionChecker, depotEntry.getGroupId(), ActionKeys.VIEW);
+	}
+
+	private FDSActionDropdownItem _getCopyMenuFDSActionDropdownItem(
+		HttpServletRequest httpServletRequest) {
+
+		FDSActionDropdownItem copyMenuFDSActionDropdownItem =
+			new FDSActionDropdownItem();
+
+		copyMenuFDSActionDropdownItem.setFDSActionDropdownItems(
+			ListUtil.fromArray(
+				new FDSActionDropdownItem(
+					"{actions.copy.href}", null, "copy",
+					LanguageUtil.get(httpServletRequest, "display-page"),
+					"post", "copy", "async"),
+				new FDSActionDropdownItem(
+					"{actions.copyWithPermission.href}", null,
+					"copyWithPermission",
+					LanguageUtil.get(
+						httpServletRequest, "display-page-with-permissions"),
+					"post", "copyWithPermission", "async")));
+		copyMenuFDSActionDropdownItem.setIcon("copy");
+		copyMenuFDSActionDropdownItem.setId("copyMenu");
+		copyMenuFDSActionDropdownItem.setLabel(
+			LanguageUtil.get(httpServletRequest, "make-a-copy"));
+		copyMenuFDSActionDropdownItem.setType("contextual");
+
+		return copyMenuFDSActionDropdownItem;
 	}
 
 	@Reference
