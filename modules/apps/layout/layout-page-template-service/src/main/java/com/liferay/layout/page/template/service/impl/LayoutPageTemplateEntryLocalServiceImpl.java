@@ -1068,8 +1068,9 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 
 		Layout draftLayout = layout.fetchDraftLayout();
 
-		if ((type == LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT) ||
-			Validator.isNotNull(masterLayoutPageTemplateEntryERC)) {
+		if (((type == LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT) ||
+			 Validator.isNotNull(masterLayoutPageTemplateEntryERC)) &&
+			!_isDesignLibraryScopeEnabled(layout.getCompanyId(), groupId)) {
 
 			LayoutSet layoutSet = _layoutSetLocalService.getLayoutSet(
 				groupId, false);
@@ -1218,6 +1219,14 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 			String.valueOf(classTypeId));
 	}
 
+	private boolean _isDesignLibraryScopeEnabled(long companyId, long groupId) {
+		if (!FeatureFlagManagerUtil.isEnabled(companyId, "LPD-57283")) {
+			return false;
+		}
+
+		return DesignLibraryUtil.isDesignLibraryScope(groupId);
+	}
+
 	private void _unsetDefaultLayoutPageTemplateEntry(
 		long classNameId, String classTypeKey,
 		long excludedLayoutPageTemplateEntryId, long groupId) {
@@ -1249,10 +1258,10 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 			((!Objects.equals(
 				LayoutPageTemplateEntryTypeConstants.BASIC, type) &&
 			  !Objects.equals(
-				  LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, type)) ||
-			 !FeatureFlagManagerUtil.isEnabled(
-				 group.getCompanyId(), "LPD-57283") ||
-			 !DesignLibraryUtil.isDesignLibraryScope(group))) {
+				  LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, type) &&
+			  !Objects.equals(
+				  LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT, type)) ||
+			 !_isDesignLibraryScopeEnabled(group.getCompanyId(), groupId))) {
 
 			throw new LayoutPageTemplateEntryGroupIdException();
 		}

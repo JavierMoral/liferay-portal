@@ -5,15 +5,18 @@
 
 package com.liferay.segments.internal.events;
 
+import com.liferay.design.library.util.DesignLibraryUtil;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
 import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.events.Action;
 import com.liferay.portal.kernel.events.ActionException;
 import com.liferay.portal.kernel.events.LifecycleAction;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.impl.VirtualLayout;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -69,16 +72,36 @@ public class SegmentsServicePreAction extends Action {
 		}
 	}
 
+	private long _getSegmentsExperienceGroupId(Layout layout) {
+		if (!(layout instanceof VirtualLayout) ||
+			!FeatureFlagManagerUtil.isEnabled(
+				layout.getCompanyId(), "LPD-57283")) {
+
+			return layout.getGroupId();
+		}
+
+		VirtualLayout virtualLayout = (VirtualLayout)layout;
+
+		if (!DesignLibraryUtil.isDesignLibraryScope(
+				virtualLayout.getSourceGroupId())) {
+
+			return layout.getGroupId();
+		}
+
+		return virtualLayout.getSourceGroupId();
+	}
+
 	private long[] _getSegmentsExperienceIds(
 		HttpServletRequest httpServletRequest,
-		HttpServletResponse httpServletResponse, long groupId, long userId,
-		long plid) {
+		HttpServletResponse httpServletResponse, long segmentsEntryGroupId,
+		long segmentsExperienceGroupId, long userId, long plid) {
 
 		try {
 			long[] segmentsExperienceIds =
 				_segmentsExperienceRequestProcessorRegistry.
 					getSegmentsExperienceIds(
-						httpServletRequest, httpServletResponse, groupId, plid);
+						httpServletRequest, httpServletResponse,
+						segmentsExperienceGroupId, plid);
 
 			Set<Long> segmentsExperienceIdsSegmentsEntryIds = new HashSet<>();
 
@@ -116,7 +139,7 @@ public class SegmentsServicePreAction extends Action {
 			else {
 				long[] userSegmentsEntryIds =
 					_segmentsEntryRetriever.getSegmentsEntryIds(
-						groupId, userId,
+						segmentsEntryGroupId, userId,
 						_requestContextMapper.map(httpServletRequest));
 
 				segmentsEntryIds = TransformUtil.transformToLongArray(
@@ -139,8 +162,8 @@ public class SegmentsServicePreAction extends Action {
 
 			return _segmentsExperienceRequestProcessorRegistry.
 				getSegmentsExperienceIds(
-					httpServletRequest, httpServletResponse, groupId, plid,
-					segmentsEntryIds);
+					httpServletRequest, httpServletResponse,
+					segmentsExperienceGroupId, plid, segmentsEntryIds);
 		}
 		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
@@ -204,7 +227,8 @@ public class SegmentsServicePreAction extends Action {
 			SegmentsWebKeys.SEGMENTS_EXPERIENCE_IDS,
 			_getSegmentsExperienceIds(
 				httpServletRequest, httpServletResponse, layout.getGroupId(),
-				themeDisplay.getUserId(), layout.getPlid()));
+				_getSegmentsExperienceGroupId(layout), themeDisplay.getUserId(),
+				layout.getPlid()));
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

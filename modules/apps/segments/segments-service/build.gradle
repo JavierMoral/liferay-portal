@@ -22,6 +22,7 @@ dependencies {
 	compileOnly project(":apps:audiences:audiences-api")
 	compileOnly project(":apps:change-tracking:change-tracking-spi")
 	compileOnly project(":apps:configuration-admin:configuration-admin-api")
+	compileOnly project(":apps:design-library:design-library-api")
 	compileOnly project(":apps:export-import:export-import-api")
 	compileOnly project(":apps:layout:layout-api")
 	compileOnly project(":apps:layout:layout-content-page-editor-api")
