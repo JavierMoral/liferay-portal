@@ -150,8 +150,8 @@ public class CustomAssetDisplayPageFriendlyURLResolverTest {
 			TestPropsValues.getCompanyId(), true, "LPD-57283");
 
 		_testGetLayoutDisplayPageObjectProviderLayout();
-		_testGetLayoutDisplayPageObjectProviderLayoutWhenDesignLibraryScoped();
 		_testGetLayoutDisplayPageObjectProviderLayoutWhenDisconnected();
+		_testGetLayoutDisplayPageObjectProviderLayoutWhenVirtualLayout();
 	}
 
 	private DepotEntry _addDesignLibraryDepotEntry() throws Exception {
@@ -270,7 +270,20 @@ public class CustomAssetDisplayPageFriendlyURLResolverTest {
 		_assertLayout(layout, layoutFriendlyURL, objectEntry);
 	}
 
-	private void _testGetLayoutDisplayPageObjectProviderLayoutWhenDesignLibraryScoped()
+	private void _testGetLayoutDisplayPageObjectProviderLayoutWhenDisconnected()
+		throws Exception {
+
+		ObjectEntry objectEntry = _addObjectEntry();
+
+		DepotEntry depotEntry = _addDesignLibraryDepotEntry();
+
+		Layout designLibraryLayout = _addDisplayPageTemplateLayout(
+			depotEntry.getGroupId(), RandomTestUtil.randomString());
+
+		_assertLayout(null, designLibraryLayout.getFriendlyURL(), objectEntry);
+	}
+
+	private void _testGetLayoutDisplayPageObjectProviderLayoutWhenVirtualLayout()
 		throws Exception {
 
 		ObjectEntry objectEntry = _addObjectEntry();
@@ -289,19 +302,6 @@ public class CustomAssetDisplayPageFriendlyURLResolverTest {
 		Assert.assertTrue(layout instanceof VirtualLayout);
 		Assert.assertEquals(designLibraryLayout.getPlid(), layout.getPlid());
 		Assert.assertEquals(_group.getGroupId(), layout.getGroupId());
-	}
-
-	private void _testGetLayoutDisplayPageObjectProviderLayoutWhenDisconnected()
-		throws Exception {
-
-		ObjectEntry objectEntry = _addObjectEntry();
-
-		DepotEntry depotEntry = _addDesignLibraryDepotEntry();
-
-		Layout designLibraryLayout = _addDisplayPageTemplateLayout(
-			depotEntry.getGroupId(), RandomTestUtil.randomString());
-
-		_assertLayout(null, designLibraryLayout.getFriendlyURL(), objectEntry);
 	}
 
 	@DeleteAfterTestRun
