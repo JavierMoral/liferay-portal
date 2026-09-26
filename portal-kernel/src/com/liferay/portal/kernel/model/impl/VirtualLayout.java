@@ -251,9 +251,7 @@ public class VirtualLayout extends LayoutWrapper {
 	public String getThemeSetting(
 		String key, String device, boolean inheritLookAndFeel) {
 
-		LayoutSet layoutSet = _fetchHostLayoutSet();
-
-		if (layoutSet == null) {
+		if (!_isInheritHostLookAndFeel()) {
 			return super.getThemeSetting(key, device, inheritLookAndFeel);
 		}
 
