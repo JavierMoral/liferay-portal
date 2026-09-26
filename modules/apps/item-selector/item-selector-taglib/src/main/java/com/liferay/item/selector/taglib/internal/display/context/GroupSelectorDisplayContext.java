@@ -140,6 +140,9 @@ public class GroupSelectorDisplayContext {
 			groupItemSelectorProviderTypes.retainAll(
 				SetUtil.fromCollection(StringUtil.split(groupTypesString)));
 		}
+		else {
+			groupItemSelectorProviderTypes.remove("design-library");
+		}
 
 		for (String criterion :
 				ParamUtil.getStringValues(_liferayPortletRequest, "criteria")) {
@@ -192,12 +195,8 @@ public class GroupSelectorDisplayContext {
 		return groupType.equals(_getGroupType());
 	}
 
-	public boolean isGroupTypeSelected() {
-		return Validator.isNotNull(_getGroupType());
-	}
-
 	public boolean isShowGroupTypeCards() {
-		if (isShowGroupTypeSelector() && !isGroupTypeSelected()) {
+		if (isShowGroupTypeSelector() && !_isGroupTypeSelected()) {
 			return true;
 		}
 
@@ -308,6 +307,10 @@ public class GroupSelectorDisplayContext {
 		return _selectedTab;
 	}
 
+	private boolean _isGroupTypeSelected() {
+		return Validator.isNotNull(_getGroupType());
+	}
+
 	private boolean _isLegacyAssetItemSelectorCriterion() {
 		ItemSelector itemSelector = _getItemSelector();
 
@@ -357,7 +360,7 @@ public class GroupSelectorDisplayContext {
 	}
 
 	private boolean _isShowGroupTypeBreadcrumbEntry() {
-		if (!isGroupTypeSelected()) {
+		if (!_isGroupTypeSelected()) {
 			return false;
 		}
 

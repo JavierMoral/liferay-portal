@@ -49,7 +49,7 @@ Set<String> groupTypes = groupSelectorDisplayContext.getGroupTypes();
 		<c:when test="<%= groupSelectorDisplayContext.isShowGroupTypeCards() %>">
 			<c:choose>
 				<c:when test="<%= groupTypes.isEmpty() %>">
-					<clay:empty-state
+					<liferay-frontend:empty-result-message
 						title='<%= LanguageUtil.get(request, "no-results-were-found") %>'
 					/>
 				</c:when>
