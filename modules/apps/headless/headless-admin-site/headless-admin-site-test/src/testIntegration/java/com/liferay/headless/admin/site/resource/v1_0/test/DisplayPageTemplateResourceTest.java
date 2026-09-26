@@ -249,14 +249,12 @@ public class DisplayPageTemplateResourceTest
 		Map<String, Map<String, String>> actions =
 			displayPageTemplate.getActions();
 
-		Assert.assertTrue(actions.toString(), actions.containsKey("delete"));
-		Assert.assertTrue(actions.toString(), actions.containsKey("get"));
-		Assert.assertTrue(
-			actions.toString(), actions.containsKey("permissions"));
+		Assert.assertTrue(actions.containsKey("delete"));
+		Assert.assertTrue(actions.containsKey("get"));
+		Assert.assertTrue(actions.containsKey("permissions"));
 
-		Assert.assertFalse(actions.toString(), actions.containsKey("copy"));
-		Assert.assertFalse(
-			actions.toString(), actions.containsKey("copyWithPermission"));
+		Assert.assertFalse(actions.containsKey("copy"));
+		Assert.assertFalse(actions.containsKey("copyWithPermission"));
 	}
 
 	@Override
@@ -500,13 +498,11 @@ public class DisplayPageTemplateResourceTest
 	public void testPostDesignLibraryDisplayPageTemplateCopy()
 		throws Exception {
 
-		String designLibraryExternalReferenceCode =
-			_getDesignLibraryExternalReferenceCode();
+		String externalReferenceCode = _getDesignLibraryExternalReferenceCode();
 
 		DisplayPageTemplate displayPageTemplate =
 			_addDesignLibraryDisplayPageTemplate(
-				designLibraryExternalReferenceCode,
-				WorkflowConstants.STATUS_APPROVED);
+				externalReferenceCode, WorkflowConstants.STATUS_APPROVED);
 
 		Map<String, Map<String, String>> actions =
 			displayPageTemplate.getActions();
@@ -515,8 +511,8 @@ public class DisplayPageTemplateResourceTest
 
 		String copyHref = copyAction.get("href");
 
-		Assert.assertTrue(copyHref, copyHref.contains("/design-libraries/"));
-		Assert.assertTrue(copyHref, copyHref.endsWith("/copy"));
+		Assert.assertTrue(copyHref.contains("/design-libraries/"));
+		Assert.assertTrue(copyHref.endsWith("/copy"));
 
 		Map<String, String> copyWithPermissionAction = actions.get(
 			"copyWithPermission");
@@ -524,17 +520,16 @@ public class DisplayPageTemplateResourceTest
 		String copyWithPermissionHref = copyWithPermissionAction.get("href");
 
 		Assert.assertTrue(
-			copyWithPermissionHref,
 			copyWithPermissionHref.endsWith("/copy-with-permission"));
 
 		Role role = _addRoleWithViewPermission(
-			designLibraryExternalReferenceCode,
+			externalReferenceCode,
 			displayPageTemplate.getExternalReferenceCode());
 
 		DisplayPageTemplate copiedDisplayPageTemplate =
 			displayPageTemplateResource.
 				postDesignLibraryDisplayPageTemplateCopy(
-					designLibraryExternalReferenceCode,
+					externalReferenceCode,
 					displayPageTemplate.getExternalReferenceCode());
 
 		Assert.assertEquals(
@@ -544,21 +539,19 @@ public class DisplayPageTemplateResourceTest
 			displayPageTemplate.getExternalReferenceCode(),
 			copiedDisplayPageTemplate.getExternalReferenceCode());
 		Assert.assertTrue(
-			copiedDisplayPageTemplate.getName(),
 			StringUtil.startsWith(
 				copiedDisplayPageTemplate.getName(),
 				displayPageTemplate.getName()));
 		Assert.assertFalse(
 			_hasViewPermission(
-				designLibraryExternalReferenceCode,
+				externalReferenceCode,
 				copiedDisplayPageTemplate.getExternalReferenceCode(),
 				role.getName()));
 
 		Page<DisplayPageTemplate> displayPageTemplatesPage =
 			displayPageTemplateResource.
 				getDesignLibraryDisplayPageTemplatesPage(
-					designLibraryExternalReferenceCode, null, null, null, null,
-					null);
+					externalReferenceCode, null, null, null, null, null);
 
 		Assert.assertNotNull(
 			displayPageTemplatesPage.toString(),
@@ -567,15 +560,14 @@ public class DisplayPageTemplateResourceTest
 				copiedDisplayPageTemplate.getExternalReferenceCode()));
 
 		DisplayPageTemplate draftDisplayPageTemplate =
-			_addDesignLibraryDisplayPageTemplate(
-				designLibraryExternalReferenceCode);
+			_addDesignLibraryDisplayPageTemplate(externalReferenceCode);
 
 		_assertProblemException(
 			"BAD_REQUEST", "A draft display page template cannot be copied",
 			() ->
 				displayPageTemplateResource.
 					postDesignLibraryDisplayPageTemplateCopy(
-						designLibraryExternalReferenceCode,
+						externalReferenceCode,
 						draftDisplayPageTemplate.getExternalReferenceCode()));
 	}
 
@@ -585,22 +577,20 @@ public class DisplayPageTemplateResourceTest
 	public void testPostDesignLibraryDisplayPageTemplateCopyWithPermission()
 		throws Exception {
 
-		String designLibraryExternalReferenceCode =
-			_getDesignLibraryExternalReferenceCode();
+		String externalReferenceCode = _getDesignLibraryExternalReferenceCode();
 
 		DisplayPageTemplate displayPageTemplate =
 			_addDesignLibraryDisplayPageTemplate(
-				designLibraryExternalReferenceCode,
-				WorkflowConstants.STATUS_APPROVED);
+				externalReferenceCode, WorkflowConstants.STATUS_APPROVED);
 
 		Role role = _addRoleWithViewPermission(
-			designLibraryExternalReferenceCode,
+			externalReferenceCode,
 			displayPageTemplate.getExternalReferenceCode());
 
 		DisplayPageTemplate copiedDisplayPageTemplate =
 			displayPageTemplateResource.
 				postDesignLibraryDisplayPageTemplateCopyWithPermission(
-					designLibraryExternalReferenceCode,
+					externalReferenceCode,
 					displayPageTemplate.getExternalReferenceCode());
 
 		Assert.assertNotEquals(
@@ -608,27 +598,25 @@ public class DisplayPageTemplateResourceTest
 			copiedDisplayPageTemplate.getExternalReferenceCode());
 		Assert.assertTrue(
 			_hasViewPermission(
-				designLibraryExternalReferenceCode,
+				externalReferenceCode,
 				copiedDisplayPageTemplate.getExternalReferenceCode(),
 				role.getName()));
 
 		Map<String, Map<String, String>> actions =
 			copiedDisplayPageTemplate.getActions();
 
-		Assert.assertFalse(actions.toString(), actions.containsKey("copy"));
-		Assert.assertFalse(
-			actions.toString(), actions.containsKey("copyWithPermission"));
+		Assert.assertFalse(actions.containsKey("copy"));
+		Assert.assertFalse(actions.containsKey("copyWithPermission"));
 
 		DisplayPageTemplate draftDisplayPageTemplate =
-			_addDesignLibraryDisplayPageTemplate(
-				designLibraryExternalReferenceCode);
+			_addDesignLibraryDisplayPageTemplate(externalReferenceCode);
 
 		_assertProblemException(
 			"BAD_REQUEST", "A draft display page template cannot be copied",
 			() ->
 				displayPageTemplateResource.
 					postDesignLibraryDisplayPageTemplateCopyWithPermission(
-						designLibraryExternalReferenceCode,
+						externalReferenceCode,
 						draftDisplayPageTemplate.getExternalReferenceCode()));
 	}
 
