@@ -86,6 +86,10 @@ public class GroupSelectorDisplayContextTest {
 			}
 		);
 
+		_designLibraryGroupItemSelectorProviderServiceRegistration =
+			bundleContext.registerService(
+				GroupItemSelectorProvider.class,
+				new MockGroupItemSelectorProvider("design-library"), null);
 		_groupItemSelectorProviderServiceRegistration =
 			bundleContext.registerService(
 				GroupItemSelectorProvider.class,
@@ -100,6 +104,7 @@ public class GroupSelectorDisplayContextTest {
 
 	@AfterClass
 	public static void tearDownClass() {
+		_designLibraryGroupItemSelectorProviderServiceRegistration.unregister();
 		_frameworkUtilMockedStatic.close();
 		_groupItemSelectorProviderServiceRegistration.unregister();
 		_itemSelectorServiceRegistration.unregister();
@@ -115,51 +120,9 @@ public class GroupSelectorDisplayContextTest {
 
 	@Test
 	public void testGetBreadcrumbEntries() {
-		_whenGetItemSelectorURL();
-
-		GroupSelectorDisplayContext groupSelectorDisplayContext =
-			new GroupSelectorDisplayContext(new MockLiferayResourceRequest());
-
-		List<BreadcrumbEntry> breadcrumbEntries =
-			groupSelectorDisplayContext.getBreadcrumbEntries();
-
-		Assert.assertEquals(
-			breadcrumbEntries.toString(), 1, breadcrumbEntries.size());
-	}
-
-	@Test
-	public void testGetBreadcrumbEntriesWhenGroupTypeIsSelected() {
-		_whenGetItemSelectorURL();
-
-		GroupSelectorDisplayContext groupSelectorDisplayContext =
-			new GroupSelectorDisplayContext(
-				"test", new MockLiferayResourceRequest());
-
-		List<BreadcrumbEntry> breadcrumbEntries =
-			groupSelectorDisplayContext.getBreadcrumbEntries();
-
-		Assert.assertEquals(
-			breadcrumbEntries.toString(), 2, breadcrumbEntries.size());
-
-		BreadcrumbEntry breadcrumbEntry = breadcrumbEntries.get(1);
-
-		Assert.assertEquals("label", breadcrumbEntry.getTitle());
-	}
-
-	@Test
-	public void testGetBreadcrumbEntriesWhenGroupTypeProviderIsMissing() {
-		_whenGetItemSelectorURL();
-
-		GroupSelectorDisplayContext groupSelectorDisplayContext =
-			new GroupSelectorDisplayContext(
-				RandomTestUtil.randomString(),
-				new MockLiferayResourceRequest());
-
-		List<BreadcrumbEntry> breadcrumbEntries =
-			groupSelectorDisplayContext.getBreadcrumbEntries();
-
-		Assert.assertEquals(
-			breadcrumbEntries.toString(), 1, breadcrumbEntries.size());
+		_testGetBreadcrumbEntriesWithGroupType();
+		_testGetBreadcrumbEntriesWithoutGroupItemSelectorProvider();
+		_testGetBreadcrumbEntriesWithoutGroupType();
 	}
 
 	@Test
@@ -193,49 +156,67 @@ public class GroupSelectorDisplayContextTest {
 		_testGetGroupTypesWithJournalArticleInfoItemItemSelectorCriterion();
 		_testGetGroupTypesWithLegacyItemSelectorViewSelectedTab();
 		_testGetGroupTypesWithObjectEntryItemSelectorViewSelectedTab();
+		_testGetGroupTypesWithoutGroupTypesParameter();
 		_testGetGroupTypesWithoutJournalArticleInfoItemItemSelectorCriterion();
 	}
 
 	@Test
-	public void testIsGroupTypeSelected() {
-		GroupSelectorDisplayContext groupSelectorDisplayContext =
-			new GroupSelectorDisplayContext(
-				"test", new MockLiferayResourceRequest());
-
-		Assert.assertTrue(groupSelectorDisplayContext.isGroupTypeSelected());
-	}
-
-	@Test
-	public void testIsGroupTypeSelectedWhenGroupTypeIsNotSet() {
-		GroupSelectorDisplayContext groupSelectorDisplayContext =
-			new GroupSelectorDisplayContext(new MockLiferayResourceRequest());
-
-		Assert.assertFalse(groupSelectorDisplayContext.isGroupTypeSelected());
+	public void testIsShowGroupTypeCards() {
+		_testIsShowGroupTypeCardsWithGroupType();
+		_testIsShowGroupTypeCardsWithoutGroupType();
+		_testIsShowGroupTypeCardsWithoutRequestAttribute();
 	}
 
 	@Test
 	public void testIsShowGroupTypeSelector() {
-		MockLiferayResourceRequest mockLiferayResourceRequest =
-			new MockLiferayResourceRequest();
-
-		mockLiferayResourceRequest.setAttribute(
-			"liferay-item-selector:group-selector:showGroupTypeSelector",
-			Boolean.TRUE);
-
-		GroupSelectorDisplayContext groupSelectorDisplayContext =
-			new GroupSelectorDisplayContext(mockLiferayResourceRequest);
-
-		Assert.assertTrue(
-			groupSelectorDisplayContext.isShowGroupTypeSelector());
+		_testIsShowGroupTypeSelectorWithRequestAttribute();
+		_testIsShowGroupTypeSelectorWithoutRequestAttribute();
 	}
 
-	@Test
-	public void testIsShowGroupTypeSelectorWhenAttributeIsNotSet() {
+	private void _testGetBreadcrumbEntriesWithGroupType() {
+		_whenGetItemSelectorURL();
+
+		GroupSelectorDisplayContext groupSelectorDisplayContext =
+			new GroupSelectorDisplayContext(
+				"test", new MockLiferayResourceRequest());
+
+		List<BreadcrumbEntry> breadcrumbEntries =
+			groupSelectorDisplayContext.getBreadcrumbEntries();
+
+		Assert.assertEquals(
+			breadcrumbEntries.toString(), 2, breadcrumbEntries.size());
+
+		BreadcrumbEntry breadcrumbEntry = breadcrumbEntries.get(1);
+
+		Assert.assertEquals("label", breadcrumbEntry.getTitle());
+	}
+
+	private void _testGetBreadcrumbEntriesWithoutGroupItemSelectorProvider() {
+		_whenGetItemSelectorURL();
+
+		GroupSelectorDisplayContext groupSelectorDisplayContext =
+			new GroupSelectorDisplayContext(
+				RandomTestUtil.randomString(),
+				new MockLiferayResourceRequest());
+
+		List<BreadcrumbEntry> breadcrumbEntries =
+			groupSelectorDisplayContext.getBreadcrumbEntries();
+
+		Assert.assertEquals(
+			breadcrumbEntries.toString(), 1, breadcrumbEntries.size());
+	}
+
+	private void _testGetBreadcrumbEntriesWithoutGroupType() {
+		_whenGetItemSelectorURL();
+
 		GroupSelectorDisplayContext groupSelectorDisplayContext =
 			new GroupSelectorDisplayContext(new MockLiferayResourceRequest());
 
-		Assert.assertFalse(
-			groupSelectorDisplayContext.isShowGroupTypeSelector());
+		List<BreadcrumbEntry> breadcrumbEntries =
+			groupSelectorDisplayContext.getBreadcrumbEntries();
+
+		Assert.assertEquals(
+			breadcrumbEntries.toString(), 1, breadcrumbEntries.size());
 	}
 
 	private void _testGetGroupTypesWithDefaultSelectedTabRequestAttribute() {
@@ -280,13 +261,14 @@ public class GroupSelectorDisplayContextTest {
 		MockLiferayResourceRequest mockLiferayResourceRequest =
 			new MockLiferayResourceRequest();
 
-		mockLiferayResourceRequest.addParameter("groupTypes", "test");
+		mockLiferayResourceRequest.addParameter(
+			"groupTypes", "design-library,test");
 
 		GroupSelectorDisplayContext groupSelectorDisplayContext =
 			new GroupSelectorDisplayContext(mockLiferayResourceRequest);
 
 		Assert.assertEquals(
-			SetUtil.fromArray("test"),
+			SetUtil.fromArray("design-library", "test"),
 			groupSelectorDisplayContext.getGroupTypes());
 	}
 
@@ -364,6 +346,15 @@ public class GroupSelectorDisplayContextTest {
 			groupSelectorDisplayContext.getGroupTypes());
 	}
 
+	private void _testGetGroupTypesWithoutGroupTypesParameter() {
+		GroupSelectorDisplayContext groupSelectorDisplayContext =
+			new GroupSelectorDisplayContext(new MockLiferayResourceRequest());
+
+		Assert.assertEquals(
+			SetUtil.fromArray("space-depot", "test"),
+			groupSelectorDisplayContext.getGroupTypes());
+	}
+
 	private void _testGetGroupTypesWithoutJournalArticleInfoItemItemSelectorCriterion() {
 		Mockito.when(
 			_itemSelector.getItemSelectorCriteria(Mockito.anyMap())
@@ -384,6 +375,64 @@ public class GroupSelectorDisplayContextTest {
 			groupSelectorDisplayContext.getGroupTypes());
 	}
 
+	private void _testIsShowGroupTypeCardsWithGroupType() {
+		MockLiferayResourceRequest mockLiferayResourceRequest =
+			new MockLiferayResourceRequest();
+
+		mockLiferayResourceRequest.setAttribute(
+			"liferay-item-selector:group-selector:showGroupTypeSelector",
+			Boolean.TRUE);
+
+		GroupSelectorDisplayContext groupSelectorDisplayContext =
+			new GroupSelectorDisplayContext("test", mockLiferayResourceRequest);
+
+		Assert.assertFalse(groupSelectorDisplayContext.isShowGroupTypeCards());
+	}
+
+	private void _testIsShowGroupTypeCardsWithoutGroupType() {
+		MockLiferayResourceRequest mockLiferayResourceRequest =
+			new MockLiferayResourceRequest();
+
+		mockLiferayResourceRequest.setAttribute(
+			"liferay-item-selector:group-selector:showGroupTypeSelector",
+			Boolean.TRUE);
+
+		GroupSelectorDisplayContext groupSelectorDisplayContext =
+			new GroupSelectorDisplayContext(mockLiferayResourceRequest);
+
+		Assert.assertTrue(groupSelectorDisplayContext.isShowGroupTypeCards());
+	}
+
+	private void _testIsShowGroupTypeCardsWithoutRequestAttribute() {
+		GroupSelectorDisplayContext groupSelectorDisplayContext =
+			new GroupSelectorDisplayContext(new MockLiferayResourceRequest());
+
+		Assert.assertFalse(groupSelectorDisplayContext.isShowGroupTypeCards());
+	}
+
+	private void _testIsShowGroupTypeSelectorWithRequestAttribute() {
+		MockLiferayResourceRequest mockLiferayResourceRequest =
+			new MockLiferayResourceRequest();
+
+		mockLiferayResourceRequest.setAttribute(
+			"liferay-item-selector:group-selector:showGroupTypeSelector",
+			Boolean.TRUE);
+
+		GroupSelectorDisplayContext groupSelectorDisplayContext =
+			new GroupSelectorDisplayContext(mockLiferayResourceRequest);
+
+		Assert.assertTrue(
+			groupSelectorDisplayContext.isShowGroupTypeSelector());
+	}
+
+	private void _testIsShowGroupTypeSelectorWithoutRequestAttribute() {
+		GroupSelectorDisplayContext groupSelectorDisplayContext =
+			new GroupSelectorDisplayContext(new MockLiferayResourceRequest());
+
+		Assert.assertFalse(
+			groupSelectorDisplayContext.isShowGroupTypeSelector());
+	}
+
 	private void _whenGetItemSelectorURL() {
 		Mockito.when(
 			_itemSelector.getItemSelectorURL(
@@ -394,6 +443,8 @@ public class GroupSelectorDisplayContextTest {
 		);
 	}
 
+	private static ServiceRegistration<GroupItemSelectorProvider>
+		_designLibraryGroupItemSelectorProviderServiceRegistration;
 	private static final MockedStatic<FrameworkUtil>
 		_frameworkUtilMockedStatic = Mockito.mockStatic(FrameworkUtil.class);
 	private static ServiceRegistration<GroupItemSelectorProvider>
