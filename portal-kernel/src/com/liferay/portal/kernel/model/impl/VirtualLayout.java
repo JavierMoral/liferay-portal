@@ -255,7 +255,7 @@ public class VirtualLayout extends LayoutWrapper {
 			return super.getThemeSetting(key, device, inheritLookAndFeel);
 		}
 
-		String themeSetting = _getTypeSettingsThemeSetting(key, device);
+		String themeSetting = _fetchTypeSettingsThemeSetting(key, device);
 
 		if (themeSetting != null) {
 			return themeSetting;
@@ -326,7 +326,7 @@ public class VirtualLayout extends LayoutWrapper {
 		return getLayoutSet();
 	}
 
-	private String _getTypeSettingsThemeSetting(String key, String device) {
+	private String _fetchTypeSettingsThemeSetting(String key, String device) {
 		UnicodeProperties typeSettingsUnicodeProperties =
 			getTypeSettingsProperties();
 
