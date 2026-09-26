@@ -36,6 +36,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.impl.VirtualLayout;
 import com.liferay.portal.kernel.servlet.taglib.BaseDynamicInclude;
 import com.liferay.portal.kernel.servlet.taglib.DynamicInclude;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -135,10 +136,7 @@ public class OpenGraphTopHeadDynamicInclude extends BaseDynamicInclude {
 					_addLinkTag(httpServletRequest, layoutSEOLink));
 			}
 
-			LayoutSEOEntry layoutSEOEntry =
-				_layoutSEOEntryLocalService.fetchLayoutSEOEntry(
-					layout.getGroupId(), layout.isPrivateLayout(),
-					layout.getLayoutId());
+			LayoutSEOEntry layoutSEOEntry = _fetchSourceLayoutSEOEntry(layout);
 
 			if (layoutSEOEntry != null) {
 				List<LayoutSEOEntryCustomMetaTag> layoutSEOEntryCustomMetaTags =
@@ -359,6 +357,20 @@ public class OpenGraphTopHeadDynamicInclude extends BaseDynamicInclude {
 		sb.append("\" />");
 
 		return sb.toString();
+	}
+
+	private LayoutSEOEntry _fetchSourceLayoutSEOEntry(Layout layout) {
+		if (layout instanceof VirtualLayout) {
+			VirtualLayout virtualLayout = (VirtualLayout)layout;
+
+			if (virtualLayout.isSourceGroupDepot()) {
+				layout = virtualLayout.getSourceLayout();
+			}
+		}
+
+		return _layoutSEOEntryLocalService.fetchLayoutSEOEntry(
+			layout.getGroupId(), layout.isPrivateLayout(),
+			layout.getLayoutId());
 	}
 
 	private Set<Locale> _getAvailableLocales(
