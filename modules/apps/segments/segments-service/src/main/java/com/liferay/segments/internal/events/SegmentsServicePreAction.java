@@ -93,7 +93,7 @@ public class SegmentsServicePreAction extends Action {
 
 	private long[] _getSegmentsExperienceIds(
 		HttpServletRequest httpServletRequest,
-		HttpServletResponse httpServletResponse, long groupId,
+		HttpServletResponse httpServletResponse, long segmentsEntryGroupId,
 		long segmentsExperienceGroupId, long userId, long plid) {
 
 		try {
@@ -139,7 +139,7 @@ public class SegmentsServicePreAction extends Action {
 			else {
 				long[] userSegmentsEntryIds =
 					_segmentsEntryRetriever.getSegmentsEntryIds(
-						groupId, userId,
+						segmentsEntryGroupId, userId,
 						_requestContextMapper.map(httpServletRequest));
 
 				segmentsEntryIds = TransformUtil.transformToLongArray(
