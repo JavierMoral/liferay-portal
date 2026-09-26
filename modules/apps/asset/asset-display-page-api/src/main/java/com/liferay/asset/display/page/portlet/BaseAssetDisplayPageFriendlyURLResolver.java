@@ -45,7 +45,6 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutFriendlyURLComposite;
 import com.liferay.portal.kernel.model.LayoutQueryStringComposite;
@@ -315,11 +314,12 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 	}
 
 	protected Layout getLayoutDisplayPageObjectProviderLayout(
-		long groupId, String friendlyURL,
-		LayoutDisplayPageObjectProvider<?> layoutDisplayPageObjectProvider,
-		LayoutDisplayPageProvider<?> layoutDisplayPageProvider) {
+			long groupId, String friendlyURL,
+			LayoutDisplayPageObjectProvider<?> layoutDisplayPageObjectProvider,
+			LayoutDisplayPageProvider<?> layoutDisplayPageProvider)
+		throws PortalException {
 
-		return getTargetLayout(
+		return getVirtualLayout(
 			groupId,
 			_getLayoutDisplayPageObjectProviderLayout(
 				groupId, layoutDisplayPageObjectProvider,
@@ -352,7 +352,19 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 		return locale;
 	}
 
-	protected Layout getTargetLayout(long groupId, Layout layout) {
+	protected String getVersion(Map<String, String[]> params) {
+		String[] versions = params.get("version");
+
+		if (ArrayUtil.isEmpty(versions)) {
+			return StringPool.BLANK;
+		}
+
+		return versions[0];
+	}
+
+	protected Layout getVirtualLayout(long groupId, Layout layout)
+		throws PortalException {
+
 		if ((layout == null) || (layout.getGroupId() == groupId) ||
 			!ArrayUtil.contains(
 				getConnectedDesignLibraryGroupIds(groupId),
@@ -367,27 +379,7 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 			return layout;
 		}
 
-		Group targetGroup = groupLocalService.fetchGroup(groupId);
-
-		if (targetGroup == null) {
-			if (_log.isWarnEnabled()) {
-				_log.warn("Unable to get group " + groupId);
-			}
-
-			return layout;
-		}
-
-		return new VirtualLayout(layout, targetGroup);
-	}
-
-	protected String getVersion(Map<String, String[]> params) {
-		String[] versions = params.get("version");
-
-		if (ArrayUtil.isEmpty(versions)) {
-			return StringPool.BLANK;
-		}
-
-		return versions[0];
+		return new VirtualLayout(layout, groupLocalService.getGroup(groupId));
 	}
 
 	protected boolean isSameFriendlyURL(String url1, String url2) {
