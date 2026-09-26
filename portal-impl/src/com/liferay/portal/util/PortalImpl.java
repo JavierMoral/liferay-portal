@@ -1337,11 +1337,13 @@ public class PortalImpl implements Portal {
 
 				layout = virtualLayout.getSourceLayout();
 
-				Group group = layout.getGroup();
+				if (!virtualLayout.isSourceGroupDepot()) {
+					Group group = layout.getGroup();
 
-				groupFriendlyURLPrefix =
-					VirtualLayoutConstants.CANONICAL_URL_SEPARATOR.concat(
-						group.getFriendlyURL());
+					groupFriendlyURLPrefix =
+						VirtualLayoutConstants.CANONICAL_URL_SEPARATOR.concat(
+							group.getFriendlyURL());
+				}
 			}
 		}
 
@@ -1670,7 +1672,7 @@ public class PortalImpl implements Portal {
 		Group layoutGroup = layout.getGroup();
 
 		if (forceLayoutFriendlyURL ||
-			(!(layout instanceof VirtualLayout) &&
+			(!_hasVirtualGroupFriendlyURLPrefix(layout) &&
 			 (!layout.isFirstParent() || Validator.isNotNull(parametersURL)) &&
 			 _requiresLayoutFriendlyURL(
 				 groupFriendlyURL, themeDisplay.getLayoutFriendlyURL(layout),
@@ -8398,6 +8400,16 @@ public class PortalImpl implements Portal {
 		}
 
 		return false;
+	}
+
+	private boolean _hasVirtualGroupFriendlyURLPrefix(Layout layout) {
+		if (!(layout instanceof VirtualLayout)) {
+			return false;
+		}
+
+		VirtualLayout virtualLayout = (VirtualLayout)layout;
+
+		return !virtualLayout.isSourceGroupDepot();
 	}
 
 	private boolean _isChangeLanguageGroupFriendlyURL(
