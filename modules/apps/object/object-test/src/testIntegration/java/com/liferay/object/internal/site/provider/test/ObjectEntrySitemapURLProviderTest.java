@@ -52,6 +52,7 @@ import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.context.ContextUserReplace;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
@@ -66,11 +67,13 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.xml.Document;
 import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReader;
+import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.site.provider.SitemapURLProvider;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -196,6 +199,101 @@ public class ObjectEntrySitemapURLProviderTest {
 		_testVisitLayoutSet(0, _companyObjectDefinition);
 		_testVisitLayoutSet(_depotEntry.getGroupId(), _depotObjectDefinition);
 		_testVisitLayoutSet(_group.getGroupId(), _siteObjectDefinition);
+	}
+
+	@FeatureFlag("LPD-57283")
+	@Test
+	public void testVisitLayoutSetWithDesignLibraryDisplayPageTemplate()
+		throws Exception {
+
+		try (CompanyConfigurationTemporarySwapper
+				companyConfigurationTemporarySwapper =
+					_getCompanyConfigurationTemporarySwapper(
+						_siteObjectDefinition)) {
+
+			Group designLibraryGroup = _addConnectedDesignLibraryGroup();
+
+			_addDisplayPageTemplate(
+				designLibraryGroup.getGroupId(), _siteObjectDefinition);
+
+			ObjectEntry objectEntry = _addObjectEntry(
+				_group.getGroupId(), _siteObjectDefinition);
+
+			Element rootElement = _getRootElement();
+
+			_objectEntrySitemapURLProvider.visitLayoutSet(
+				rootElement, _layoutSet, _themeDisplay);
+
+			Assert.assertTrue(rootElement.asXML(), rootElement.hasContent());
+
+			_assertRootElements(
+				StringPool.BLANK, _siteObjectDefinition, objectEntry,
+				rootElement.elements());
+
+			for (Element element : rootElement.elements()) {
+				String objectEntryLocalizedURL = element.elementText("loc");
+
+				Assert.assertTrue(
+					objectEntryLocalizedURL,
+					objectEntryLocalizedURL.contains(_group.getFriendlyURL()));
+			}
+		}
+	}
+
+	@FeatureFlag("LPD-57283")
+	@Test
+	public void testVisitLayoutSetWithDesignLibraryDisplayPageTemplateWhenVisitedSiteCanonicalURLEnabled()
+		throws Exception {
+
+		try (CompanyConfigurationTemporarySwapper
+				companyConfigurationTemporarySwapper =
+					_getCompanyConfigurationTemporarySwapper(
+						_siteObjectDefinition)) {
+
+			Group designLibraryGroup = _addConnectedDesignLibraryGroup();
+
+			LayoutPageTemplateEntry layoutPageTemplateEntry =
+				_addDisplayPageTemplate(
+					designLibraryGroup.getGroupId(), _siteObjectDefinition);
+
+			ObjectEntry objectEntry = _addObjectEntry(
+				_group.getGroupId(), _siteObjectDefinition);
+
+			Layout layout = _layoutLocalService.getLayout(
+				layoutPageTemplateEntry.getPlid());
+
+			// A layout ID is a sequence handed out per group, so the visited
+			// site owns an unrelated entry under the same layout ID as the
+			// library template
+
+			_updateLayoutSEOEntry(true, layout);
+
+			Element rootElement = _getRootElement();
+
+			_objectEntrySitemapURLProvider.visitLayoutSet(
+				rootElement, _layoutSet, _themeDisplay);
+
+			Assert.assertTrue(rootElement.asXML(), rootElement.hasContent());
+
+			_assertRootElements(
+				StringPool.BLANK, _siteObjectDefinition, objectEntry,
+				rootElement.elements());
+		}
+	}
+
+	private Group _addConnectedDesignLibraryGroup() throws Exception {
+		DepotEntry depotEntry = _depotEntryLocalService.addDepotEntry(
+			RandomTestUtil.randomLocaleStringMap(),
+			RandomTestUtil.randomLocaleStringMap(),
+			DepotConstants.TYPE_DESIGN_LIBRARY,
+			ServiceContextTestUtil.getServiceContext());
+
+		_designLibraryDepotEntries.add(depotEntry);
+
+		_depotEntryGroupRelLocalService.addDepotEntryGroupRel(
+			depotEntry.getDepotEntryId(), _group.getGroupId());
+
+		return depotEntry.getGroup();
 	}
 
 	private LayoutPageTemplateEntry _addDisplayPageTemplate(
@@ -645,6 +743,11 @@ public class ObjectEntrySitemapURLProviderTest {
 	private DepotEntryLocalService _depotEntryLocalService;
 
 	private ObjectDefinition _depotObjectDefinition;
+
+	@DeleteAfterTestRun
+	private final List<DepotEntry> _designLibraryDepotEntries =
+		new ArrayList<>();
+
 	private Group _group;
 
 	@Inject
