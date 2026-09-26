@@ -159,6 +159,22 @@ public class GroupSelectorTagTest {
 				"liferay-item-selector:group-selector:groupsCount"));
 
 		Assert.assertEquals(expectedGroupsCount, actualGroupsCount);
+
+		Assert.assertFalse(
+			GetterUtil.getBoolean(
+				httpServletRequest.getAttribute(
+					"liferay-item-selector:group-selector:" +
+						"showGroupTypeSelector")));
+
+		groupSelectorTag.setShowGroupTypeSelector(true);
+
+		groupSelectorTag.setAttributes(httpServletRequest);
+
+		Assert.assertTrue(
+			GetterUtil.getBoolean(
+				httpServletRequest.getAttribute(
+					"liferay-item-selector:group-selector:" +
+						"showGroupTypeSelector")));
 	}
 
 	private static final long _COMPANY_GROUP_ID = RandomTestUtil.randomLong();
