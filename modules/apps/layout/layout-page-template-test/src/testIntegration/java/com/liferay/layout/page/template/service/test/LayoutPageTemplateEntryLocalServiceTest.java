@@ -414,6 +414,9 @@ public class LayoutPageTemplateEntryLocalServiceTest {
 		_testAddLayoutPageTemplateEntryLayoutPageTemplateEntryGroupIdException(
 			assetLibraryDepotGroup.getGroupId(),
 			LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE);
+		_testAddLayoutPageTemplateEntryLayoutPageTemplateEntryGroupIdException(
+			assetLibraryDepotGroup.getGroupId(),
+			LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT);
 
 		Group spaceDepotGroup = _addDepotGroup(DepotConstants.TYPE_SPACE);
 
@@ -423,6 +426,9 @@ public class LayoutPageTemplateEntryLocalServiceTest {
 		_testAddLayoutPageTemplateEntryLayoutPageTemplateEntryGroupIdException(
 			spaceDepotGroup.getGroupId(),
 			LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE);
+		_testAddLayoutPageTemplateEntryLayoutPageTemplateEntryGroupIdException(
+			spaceDepotGroup.getGroupId(),
+			LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT);
 	}
 
 	@Test
