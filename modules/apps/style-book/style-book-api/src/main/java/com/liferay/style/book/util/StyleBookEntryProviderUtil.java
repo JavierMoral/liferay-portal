@@ -92,7 +92,7 @@ public class StyleBookEntryProviderUtil {
 
 		Long groupId = ScopeUtil.getItemGroupId(
 			layout.getCompanyId(), layout.getStyleBookEntryScopeERC(),
-			_getSourceGroupId(layout));
+			_getStyleBookEntryGroupId(layout));
 
 		if ((groupId != null) && _isConnectedGroup(groupId, layout)) {
 			styleBookEntry =
@@ -138,7 +138,7 @@ public class StyleBookEntryProviderUtil {
 				DepotEntry::getGroupId));
 	}
 
-	private static long _getSourceGroupId(Layout layout) {
+	private static long _getStyleBookEntryGroupId(Layout layout) {
 		if (!(layout instanceof VirtualLayout)) {
 			return layout.getGroupId();
 		}
