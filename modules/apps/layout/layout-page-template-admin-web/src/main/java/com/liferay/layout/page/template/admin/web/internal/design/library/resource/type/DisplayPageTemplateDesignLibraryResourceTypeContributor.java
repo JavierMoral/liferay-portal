@@ -137,7 +137,6 @@ public class DisplayPageTemplateDesignLibraryResourceTypeContributor
 				).buildString(),
 				"pencil", "edit", LanguageUtil.get(httpServletRequest, "edit"),
 				null, "get", "link"),
-			_getCopyMenuFDSActionDropdownItem(httpServletRequest),
 			new FDSActionDropdownItem(
 				"{actions.markAsDefault.href}", "star", "markAsDefault",
 				LanguageUtil.get(httpServletRequest, "mark-as-default"), "post",
@@ -146,6 +145,7 @@ public class DisplayPageTemplateDesignLibraryResourceTypeContributor
 				"{actions.unmarkAsDefault.href}", "star-o", "unmarkAsDefault",
 				LanguageUtil.get(httpServletRequest, "unmark-as-default"),
 				"post", "unmarkAsDefault", "async"),
+			_getCopyMenuFDSActionDropdownItem(httpServletRequest),
 			new FDSActionDropdownItem(
 				PortletURLBuilder.create(
 					PortalUtil.getControlPanelPortletURL(
