@@ -20,26 +20,33 @@ import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.servlet.taglib.ui.BreadcrumbEntry;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.site.navigation.taglib.servlet.taglib.util.BreadcrumbEntryBuilder;
 import com.liferay.site.navigation.taglib.servlet.taglib.util.BreadcrumbEntryListBuilder;
 
+import jakarta.portlet.PortletException;
 import jakarta.portlet.PortletRequest;
+import jakarta.portlet.PortletResponse;
 import jakarta.portlet.PortletURL;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -66,6 +73,8 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 
 		_portletRequest = (PortletRequest)httpServletRequest.getAttribute(
 			JavaConstants.JAKARTA_PORTLET_REQUEST);
+		_portletResponse = (PortletResponse)httpServletRequest.getAttribute(
+			JavaConstants.JAKARTA_PORTLET_RESPONSE);
 		_themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
@@ -77,7 +86,7 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 
 		SearchContainer<Object> assetDisplayPageSearchContainer =
 			new SearchContainer<>(
-				_portletRequest, _portletURL, null,
+				_portletRequest, _clonePortletURL(), null,
 				"there-are-no-display-page-templates");
 
 		assetDisplayPageSearchContainer.setId(
@@ -121,14 +130,14 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 					getLayoutPageTemplateCollectionId());
 
 		return BreadcrumbEntryListBuilder.add(
-			() -> !_isShowGroupSelector(),
+			() -> !_isGroupSelectorEnabled(),
 			breadcrumbEntry -> {
 				breadcrumbEntry.setTitle(
 					LanguageUtil.get(_httpServletRequest, "home"));
 				breadcrumbEntry.setURL(_getRootCollectionURL());
 			}
 		).add(
-			this::_isShowGroupSelector,
+			this::_isGroupSelectorEnabled,
 			breadcrumbEntry -> {
 				breadcrumbEntry.setTitle(
 					LanguageUtil.get(
@@ -136,13 +145,13 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 				breadcrumbEntry.setURL(_getGroupSelectorURL(StringPool.BLANK));
 			}
 		).add(
-			this::_isShowGroupTypeBreadcrumbEntry,
+			this::_isGroupSelectorEnabled,
 			breadcrumbEntry -> {
 				breadcrumbEntry.setTitle(_getGroupTypeLabel());
 				breadcrumbEntry.setURL(_getGroupSelectorURL(_getGroupType()));
 			}
 		).add(
-			this::_isShowGroupSelector,
+			this::_isGroupSelectorEnabled,
 			breadcrumbEntry -> {
 				breadcrumbEntry.setTitle(_getGroupDescriptiveName());
 				breadcrumbEntry.setURL(_getRootCollectionURL());
@@ -163,7 +172,7 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 							curLayoutPageTemplateCollection.getName()
 						).setURL(
 							PortletURLBuilder.create(
-								_portletURL
+								_clonePortletURL()
 							).setParameter(
 								"layoutPageTemplateCollectionId",
 								curLayoutPageTemplateCollection.
@@ -217,7 +226,7 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 	}
 
 	public PortletURL getPortletURL() {
-		return _portletURL;
+		return _clonePortletURL();
 	}
 
 	public String getReturnType() {
@@ -225,11 +234,22 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 	}
 
 	public String getScopeCssClass() {
-		if (_isDesignLibraryScope()) {
+		if (_isGroupSelectorEnabled() && _isDesignLibraryScope()) {
 			return "item-selector-design-library-scope";
 		}
 
 		return StringPool.BLANK;
+	}
+
+	private PortletURL _clonePortletURL() {
+		try {
+			return PortletURLUtil.clone(
+				_portletURL,
+				PortalUtil.getLiferayPortletResponse(_portletResponse));
+		}
+		catch (PortletException portletException) {
+			throw new SystemException(portletException);
+		}
 	}
 
 	private Group _getGroup() {
@@ -266,11 +286,11 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 
 	private String _getGroupSelectorURL(String groupType) {
 		return PortletURLBuilder.create(
-			_portletURL
+			_clonePortletURL()
 		).setParameter(
 			"groupType", groupType
 		).setParameter(
-			"groupTypes", "site,design-library"
+			"groupTypes", StringUtil.merge(_GROUP_TYPES)
 		).setParameter(
 			"showGroupSelector", true
 		).setParameter(
@@ -279,24 +299,33 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 	}
 
 	private String _getGroupType() {
-		String groupType = ParamUtil.getString(
-			_httpServletRequest, "groupType");
+		if (_groupType != null) {
+			return _groupType;
+		}
 
-		if (Validator.isNotNull(groupType)) {
-			return groupType;
+		_groupType = ParamUtil.getString(_httpServletRequest, "groupType");
+
+		if (ArrayUtil.contains(_GROUP_TYPES, _groupType)) {
+			return _groupType;
 		}
 
 		if (_isDesignLibraryScope()) {
-			return "design-library";
+			_groupType = "design-library";
+
+			return _groupType;
 		}
 
 		Group group = _getGroup();
 
 		if ((group != null) && group.isDepot()) {
-			return StringPool.BLANK;
+			_groupType = StringPool.BLANK;
+
+			return _groupType;
 		}
 
-		return "site";
+		_groupType = "site";
+
+		return _groupType;
 	}
 
 	private String _getGroupTypeLabel() {
@@ -358,7 +387,7 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 
 	private String _getRootCollectionURL() {
 		return PortletURLBuilder.create(
-			_portletURL
+			_clonePortletURL()
 		).setParameter(
 			"layoutPageTemplateCollectionId",
 			LayoutPageTemplateConstants.
@@ -377,18 +406,17 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 		return _designLibraryScope;
 	}
 
-	private boolean _isShowGroupSelector() {
-		return FeatureFlagManagerUtil.isEnabled(
-			_themeDisplay.getCompanyId(), "LPD-57283");
-	}
+	private boolean _isGroupSelectorEnabled() {
+		if (!FeatureFlagManagerUtil.isEnabled(
+				_themeDisplay.getCompanyId(), "LPD-57283")) {
 
-	private boolean _isShowGroupTypeBreadcrumbEntry() {
-		if (!_isShowGroupSelector()) {
 			return false;
 		}
 
 		return Validator.isNotNull(_getGroupType());
 	}
+
+	private static final String[] _GROUP_TYPES = {"design-library", "site"};
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		AssetDisplayPagesItemSelectorCustomViewDisplayContext.class);
@@ -398,6 +426,7 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 	private SearchContainer<?> _assetDisplayPageSearchContainer;
 	private Boolean _designLibraryScope;
 	private Long _groupId;
+	private String _groupType;
 	private final HttpServletRequest _httpServletRequest;
 	private final String _itemSelectedEventName;
 	private String _keywords;
@@ -405,6 +434,7 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 	private String _orderByCol;
 	private String _orderByType;
 	private final PortletRequest _portletRequest;
+	private final PortletResponse _portletResponse;
 	private final PortletURL _portletURL;
 	private final ThemeDisplay _themeDisplay;
 
