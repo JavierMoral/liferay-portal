@@ -522,9 +522,11 @@ public class DisplayPageTemplateResourceTest
 		Assert.assertTrue(
 			copyWithPermissionHref.endsWith("/copy-with-permission"));
 
-		Role role = _addRoleWithViewPermission(
+		Role role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
+
+		_addViewPermission(
 			externalReferenceCode,
-			displayPageTemplate.getExternalReferenceCode());
+			displayPageTemplate.getExternalReferenceCode(), role.getName());
 
 		DisplayPageTemplate copiedDisplayPageTemplate =
 			displayPageTemplateResource.
@@ -583,9 +585,11 @@ public class DisplayPageTemplateResourceTest
 			_addDesignLibraryDisplayPageTemplate(
 				externalReferenceCode, WorkflowConstants.STATUS_APPROVED);
 
-		Role role = _addRoleWithViewPermission(
+		Role role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
+
+		_addViewPermission(
 			externalReferenceCode,
-			displayPageTemplate.getExternalReferenceCode());
+			displayPageTemplate.getExternalReferenceCode(), role.getName());
 
 		DisplayPageTemplate copiedDisplayPageTemplate =
 			displayPageTemplateResource.
@@ -1156,12 +1160,10 @@ public class DisplayPageTemplateResourceTest
 		return depotEntry.getGroup();
 	}
 
-	private Role _addRoleWithViewPermission(
+	private void _addViewPermission(
 			String designLibraryExternalReferenceCode,
-			String displayPageTemplateExternalReferenceCode)
+			String displayPageTemplateExternalReferenceCode, String roleName)
 		throws Exception {
-
-		Role role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
 
 		displayPageTemplateResource.
 			putDesignLibraryDisplayPageTemplatePermissionsPage(
@@ -1171,12 +1173,10 @@ public class DisplayPageTemplateResourceTest
 					new Permission() {
 						{
 							setActionIds(new String[] {"VIEW"});
-							setRoleName(role.getName());
+							setRoleName(roleName);
 						}
 					}
 				});
-
-		return role;
 	}
 
 	private void _assertDesignLibraryPermissionActionHrefs(
