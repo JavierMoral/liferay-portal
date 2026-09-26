@@ -6,6 +6,7 @@
 package com.liferay.asset.display.page.item.selector.web.internal.display.context;
 
 import com.liferay.asset.display.page.item.selector.AssetDisplayPageItemSelectorCriterion;
+import com.liferay.design.library.util.DesignLibraryUtil;
 import com.liferay.item.selector.criteria.AssetEntryItemSelectorReturnType;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateConstants;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
@@ -16,10 +17,17 @@ import com.liferay.layout.page.template.service.LayoutPageTemplateEntryServiceUt
 import com.liferay.layout.page.template.util.comparator.LayoutPageTemplateCollectionLayoutPageTemplateEntryCreateDateComparator;
 import com.liferay.layout.page.template.util.comparator.LayoutPageTemplateCollectionLayoutPageTemplateEntryNameComparator;
 import com.liferay.petra.function.transform.TransformUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.servlet.taglib.ui.BreadcrumbEntry;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
@@ -106,28 +114,38 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 		return _assetDisplayPageSearchContainer;
 	}
 
-	public String getItemSelectedEventName() {
-		return _itemSelectedEventName;
-	}
-
-	public List<BreadcrumbEntry> getLayoutPageTemplateBreadcrumbEntries() {
+	public List<BreadcrumbEntry> getBreadcrumbEntries() {
 		LayoutPageTemplateCollection layoutPageTemplateCollection =
 			LayoutPageTemplateCollectionLocalServiceUtil.
 				fetchLayoutPageTemplateCollection(
 					getLayoutPageTemplateCollectionId());
 
 		return BreadcrumbEntryListBuilder.add(
+			() -> !_isShowGroupSelector(),
 			breadcrumbEntry -> {
 				breadcrumbEntry.setTitle(
 					LanguageUtil.get(_httpServletRequest, "home"));
-				breadcrumbEntry.setURL(
-					PortletURLBuilder.create(
-						_portletURL
-					).setParameter(
-						"layoutPageTemplateCollectionId",
-						LayoutPageTemplateConstants.
-							PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT
-					).buildString());
+				breadcrumbEntry.setURL(_getRootCollectionURL());
+			}
+		).add(
+			this::_isShowGroupSelector,
+			breadcrumbEntry -> {
+				breadcrumbEntry.setTitle(
+					LanguageUtil.get(
+						_httpServletRequest, "sites-and-libraries"));
+				breadcrumbEntry.setURL(_getGroupSelectorURL(StringPool.BLANK));
+			}
+		).add(
+			this::_isShowGroupTypeBreadcrumbEntry,
+			breadcrumbEntry -> {
+				breadcrumbEntry.setTitle(_getGroupTypeLabel());
+				breadcrumbEntry.setURL(_getGroupSelectorURL(_getGroupType()));
+			}
+		).add(
+			this::_isShowGroupSelector,
+			breadcrumbEntry -> {
+				breadcrumbEntry.setTitle(_getGroupDescriptiveName());
+				breadcrumbEntry.setURL(_getRootCollectionURL());
 			}
 		).addAll(
 			() -> layoutPageTemplateCollection != null,
@@ -154,6 +172,10 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 						).build());
 			}
 		).build();
+	}
+
+	public String getItemSelectedEventName() {
+		return _itemSelectedEventName;
 	}
 
 	public long getLayoutPageTemplateCollectionId() {
@@ -202,6 +224,27 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 		return AssetEntryItemSelectorReturnType.class.getName();
 	}
 
+	private Group _getGroup() {
+		return GroupLocalServiceUtil.fetchGroup(_getGroupId());
+	}
+
+	private String _getGroupDescriptiveName() {
+		Group group = _getGroup();
+
+		if (group == null) {
+			return StringPool.BLANK;
+		}
+
+		try {
+			return group.getDescriptiveName(_themeDisplay.getLocale());
+		}
+		catch (PortalException portalException) {
+			_log.error(portalException);
+
+			return group.getName(_themeDisplay.getLocale());
+		}
+	}
+
 	private long _getGroupId() {
 		if (_groupId != null) {
 			return _groupId;
@@ -211,6 +254,51 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 			_httpServletRequest, "groupId", _themeDisplay.getScopeGroupId());
 
 		return _groupId;
+	}
+
+	private String _getGroupSelectorURL(String groupType) {
+		return PortletURLBuilder.create(
+			_portletURL
+		).setParameter(
+			"groupType", groupType
+		).setParameter(
+			"groupTypes", "site,design-library"
+		).setParameter(
+			"showGroupSelector", true
+		).setParameter(
+			"showGroupTypeSelector", true
+		).buildString();
+	}
+
+	private String _getGroupType() {
+		String groupType = ParamUtil.getString(
+			_httpServletRequest, "groupType");
+
+		if (Validator.isNotNull(groupType)) {
+			return groupType;
+		}
+
+		if (_isDesignLibraryScope()) {
+			return "design-library";
+		}
+
+		Group group = _getGroup();
+
+		if ((group != null) && group.isDepot()) {
+			return StringPool.BLANK;
+		}
+
+		return "site";
+	}
+
+	private String _getGroupTypeLabel() {
+		String groupType = _getGroupType();
+
+		if (groupType.equals("design-library")) {
+			return LanguageUtil.get(_httpServletRequest, "design-libraries");
+		}
+
+		return LanguageUtil.get(_httpServletRequest, "site");
 	}
 
 	private String _getKeywords() {
@@ -260,9 +348,47 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 		return _orderByCol;
 	}
 
+	private String _getRootCollectionURL() {
+		return PortletURLBuilder.create(
+			_portletURL
+		).setParameter(
+			"layoutPageTemplateCollectionId",
+			LayoutPageTemplateConstants.
+				PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT
+		).buildString();
+	}
+
+	private boolean _isDesignLibraryScope() {
+		if (_designLibraryScope != null) {
+			return _designLibraryScope;
+		}
+
+		_designLibraryScope = DesignLibraryUtil.isDesignLibraryScope(
+			_getGroupId());
+
+		return _designLibraryScope;
+	}
+
+	private boolean _isShowGroupSelector() {
+		return FeatureFlagManagerUtil.isEnabled(
+			_themeDisplay.getCompanyId(), "LPD-57283");
+	}
+
+	private boolean _isShowGroupTypeBreadcrumbEntry() {
+		if (!_isShowGroupSelector()) {
+			return false;
+		}
+
+		return Validator.isNotNull(_getGroupType());
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		AssetDisplayPagesItemSelectorCustomViewDisplayContext.class);
+
 	private final AssetDisplayPageItemSelectorCriterion
 		_assetDisplayPageItemSelectorCriterion;
 	private SearchContainer<?> _assetDisplayPageSearchContainer;
+	private Boolean _designLibraryScope;
 	private Long _groupId;
 	private final HttpServletRequest _httpServletRequest;
 	private final String _itemSelectedEventName;
