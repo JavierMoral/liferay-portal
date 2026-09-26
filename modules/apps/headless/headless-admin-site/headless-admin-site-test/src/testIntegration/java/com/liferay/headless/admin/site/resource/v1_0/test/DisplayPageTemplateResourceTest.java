@@ -650,16 +650,15 @@ public class DisplayPageTemplateResourceTest
 
 		Assert.assertTrue(markAsDefaultHref.endsWith("/mark-as-default"));
 
-		DisplayPageTemplate markedAsDefaultDisplayPageTemplate =
+		DisplayPageTemplate defaultDisplayPageTemplate =
 			displayPageTemplateResource.
 				postDesignLibraryDisplayPageTemplateMarkAsDefault(
 					externalReferenceCode,
 					displayPageTemplate.getExternalReferenceCode());
 
-		Assert.assertTrue(
-			markedAsDefaultDisplayPageTemplate.getMarkedAsDefault());
+		Assert.assertTrue(defaultDisplayPageTemplate.getMarkedAsDefault());
 
-		actions = markedAsDefaultDisplayPageTemplate.getActions();
+		actions = defaultDisplayPageTemplate.getActions();
 
 		Assert.assertFalse(actions.containsKey("markAsDefault"));
 		Assert.assertTrue(actions.containsKey("unmarkAsDefault"));
@@ -731,14 +730,14 @@ public class DisplayPageTemplateResourceTest
 						externalReferenceCode,
 						displayPageTemplate.getExternalReferenceCode()));
 
-		DisplayPageTemplate markedAsDefaultDisplayPageTemplate =
+		DisplayPageTemplate defaultDisplayPageTemplate =
 			displayPageTemplateResource.
 				postDesignLibraryDisplayPageTemplateMarkAsDefault(
 					externalReferenceCode,
 					displayPageTemplate.getExternalReferenceCode());
 
 		Map<String, Map<String, String>> actions =
-			markedAsDefaultDisplayPageTemplate.getActions();
+			defaultDisplayPageTemplate.getActions();
 
 		Map<String, String> unmarkAsDefaultAction = actions.get(
 			"unmarkAsDefault");
@@ -747,16 +746,15 @@ public class DisplayPageTemplateResourceTest
 
 		Assert.assertTrue(unmarkAsDefaultHref.endsWith("/unmark-as-default"));
 
-		DisplayPageTemplate unmarkedAsDefaultDisplayPageTemplate =
+		DisplayPageTemplate nondefaultDisplayPageTemplate =
 			displayPageTemplateResource.
 				postDesignLibraryDisplayPageTemplateUnmarkAsDefault(
 					externalReferenceCode,
 					displayPageTemplate.getExternalReferenceCode());
 
-		Assert.assertFalse(
-			unmarkedAsDefaultDisplayPageTemplate.getMarkedAsDefault());
+		Assert.assertFalse(nondefaultDisplayPageTemplate.getMarkedAsDefault());
 
-		actions = unmarkedAsDefaultDisplayPageTemplate.getActions();
+		actions = nondefaultDisplayPageTemplate.getActions();
 
 		Assert.assertTrue(actions.containsKey("markAsDefault"));
 		Assert.assertFalse(actions.containsKey("unmarkAsDefault"));
