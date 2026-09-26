@@ -6,7 +6,6 @@
 package com.liferay.asset.display.page.item.selector.web.internal.display.context;
 
 import com.liferay.asset.display.page.item.selector.AssetDisplayPageItemSelectorCriterion;
-import com.liferay.design.library.util.DesignLibraryUtil;
 import com.liferay.item.selector.criteria.AssetEntryItemSelectorReturnType;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateConstants;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
@@ -17,27 +16,19 @@ import com.liferay.layout.page.template.service.LayoutPageTemplateEntryServiceUt
 import com.liferay.layout.page.template.util.comparator.LayoutPageTemplateCollectionLayoutPageTemplateEntryCreateDateComparator;
 import com.liferay.layout.page.template.util.comparator.LayoutPageTemplateCollectionLayoutPageTemplateEntryNameComparator;
 import com.liferay.petra.function.transform.TransformUtil;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
-import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.servlet.taglib.ui.BreadcrumbEntry;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -130,30 +121,17 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 					getLayoutPageTemplateCollectionId());
 
 		return BreadcrumbEntryListBuilder.add(
-			() -> !_isGroupSelectorEnabled(),
-			breadcrumbEntry -> {
-				breadcrumbEntry.setTitle(
-					LanguageUtil.get(_httpServletRequest, "home"));
-				breadcrumbEntry.setURL(_getRootCollectionURL());
-			}
-		).add(
 			this::_isGroupSelectorEnabled,
 			breadcrumbEntry -> {
 				breadcrumbEntry.setTitle(
 					LanguageUtil.get(
 						_httpServletRequest, "sites-and-libraries"));
-				breadcrumbEntry.setURL(_getGroupSelectorURL(StringPool.BLANK));
+				breadcrumbEntry.setURL(_getGroupSelectorURL());
 			}
 		).add(
-			this::_isGroupSelectorEnabled,
 			breadcrumbEntry -> {
-				breadcrumbEntry.setTitle(_getGroupTypeLabel());
-				breadcrumbEntry.setURL(_getGroupSelectorURL(_getGroupType()));
-			}
-		).add(
-			this::_isGroupSelectorEnabled,
-			breadcrumbEntry -> {
-				breadcrumbEntry.setTitle(_getGroupDescriptiveName());
+				breadcrumbEntry.setTitle(
+					LanguageUtil.get(_httpServletRequest, "home"));
 				breadcrumbEntry.setURL(_getRootCollectionURL());
 			}
 		).addAll(
@@ -233,14 +211,6 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 		return AssetEntryItemSelectorReturnType.class.getName();
 	}
 
-	public String getScopeCssClass() {
-		if (_isGroupSelectorEnabled() && _isDesignLibraryScope()) {
-			return "item-selector-design-library-scope";
-		}
-
-		return StringPool.BLANK;
-	}
-
 	private PortletURL _clonePortletURL() {
 		try {
 			return PortletURLUtil.clone(
@@ -249,27 +219,6 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 		}
 		catch (PortletException portletException) {
 			throw new SystemException(portletException);
-		}
-	}
-
-	private Group _getGroup() {
-		return GroupLocalServiceUtil.fetchGroup(_getGroupId());
-	}
-
-	private String _getGroupDescriptiveName() {
-		Group group = _getGroup();
-
-		if (group == null) {
-			return StringPool.BLANK;
-		}
-
-		try {
-			return group.getDescriptiveName(_themeDisplay.getLocale());
-		}
-		catch (PortalException portalException) {
-			_log.error(portalException);
-
-			return group.getName(_themeDisplay.getLocale());
 		}
 	}
 
@@ -284,58 +233,14 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 		return _groupId;
 	}
 
-	private String _getGroupSelectorURL(String groupType) {
+	private String _getGroupSelectorURL() {
 		return PortletURLBuilder.create(
 			_clonePortletURL()
 		).setParameter(
-			"groupType", groupType
-		).setParameter(
-			"groupTypes", StringUtil.merge(_GROUP_TYPES)
+			"groupType", "site"
 		).setParameter(
 			"showGroupSelector", true
-		).setParameter(
-			"showGroupTypeSelector", true
 		).buildString();
-	}
-
-	private String _getGroupType() {
-		if (_groupType != null) {
-			return _groupType;
-		}
-
-		_groupType = ParamUtil.getString(_httpServletRequest, "groupType");
-
-		if (ArrayUtil.contains(_GROUP_TYPES, _groupType)) {
-			return _groupType;
-		}
-
-		if (_isDesignLibraryScope()) {
-			_groupType = "design-library";
-
-			return _groupType;
-		}
-
-		Group group = _getGroup();
-
-		if ((group != null) && group.isDepot()) {
-			_groupType = StringPool.BLANK;
-
-			return _groupType;
-		}
-
-		_groupType = "site";
-
-		return _groupType;
-	}
-
-	private String _getGroupTypeLabel() {
-		String groupType = _getGroupType();
-
-		if (groupType.equals("design-library")) {
-			return LanguageUtil.get(_httpServletRequest, "design-libraries");
-		}
-
-		return LanguageUtil.get(_httpServletRequest, "site");
 	}
 
 	private String _getKeywords() {
@@ -395,38 +300,15 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 		).buildString();
 	}
 
-	private boolean _isDesignLibraryScope() {
-		if (_designLibraryScope != null) {
-			return _designLibraryScope;
-		}
-
-		_designLibraryScope = DesignLibraryUtil.isDesignLibraryScope(
-			_getGroupId());
-
-		return _designLibraryScope;
-	}
-
 	private boolean _isGroupSelectorEnabled() {
-		if (!FeatureFlagManagerUtil.isEnabled(
-				_themeDisplay.getCompanyId(), "LPD-57283")) {
-
-			return false;
-		}
-
-		return Validator.isNotNull(_getGroupType());
+		return FeatureFlagManagerUtil.isEnabled(
+			_themeDisplay.getCompanyId(), "LPD-57283");
 	}
-
-	private static final String[] _GROUP_TYPES = {"design-library", "site"};
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		AssetDisplayPagesItemSelectorCustomViewDisplayContext.class);
 
 	private final AssetDisplayPageItemSelectorCriterion
 		_assetDisplayPageItemSelectorCriterion;
 	private SearchContainer<?> _assetDisplayPageSearchContainer;
-	private Boolean _designLibraryScope;
 	private Long _groupId;
-	private String _groupType;
 	private final HttpServletRequest _httpServletRequest;
 	private final String _itemSelectedEventName;
 	private String _keywords;

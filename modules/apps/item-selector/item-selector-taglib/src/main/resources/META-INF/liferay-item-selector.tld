@@ -27,12 +27,6 @@
 			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
-		<attribute>
-			<description>Whether to show the group type as its own navigation level, with a card per type, instead of a button group above the group list. The default value is <![CDATA[<code>false</code>]]>.</description>
-			<name>showGroupTypeSelector</name>
-			<required>false</required>
-			<rtexprvalue>true</rtexprvalue>
-		</attribute>
 	</tag>
 	<tag>
 		<description>Creates a UI to add images. It renders a drag and drop area and a button to open a selection dialog. It works as an image viewer if an image is selected.<![CDATA[<br /><br />Example:<br /><img src="../images/image-selector.png"/>]]></description>

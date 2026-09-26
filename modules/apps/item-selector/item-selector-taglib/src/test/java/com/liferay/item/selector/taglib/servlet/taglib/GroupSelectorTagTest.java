@@ -97,8 +97,6 @@ public class GroupSelectorTagTest {
 		);
 
 		_testSetAttributes(Arrays.asList(group, _companyGroup), 2, group);
-
-		_testSetAttributesWithShowGroupTypeSelector();
 	}
 
 	private Group _getGroup() {
@@ -161,41 +159,6 @@ public class GroupSelectorTagTest {
 				"liferay-item-selector:group-selector:groupsCount"));
 
 		Assert.assertEquals(expectedGroupsCount, actualGroupsCount);
-	}
-
-	private void _testSetAttributesWithShowGroupTypeSelector() {
-		GroupSelectorTag groupSelectorTag = new GroupSelectorTag();
-
-		HttpServletRequest httpServletRequest =
-			new TestMockHttpServletRequest();
-
-		ThemeDisplay themeDisplay = Mockito.mock(ThemeDisplay.class);
-
-		Mockito.when(
-			themeDisplay.getScopeGroup()
-		).thenReturn(
-			_companyGroup
-		);
-
-		httpServletRequest.setAttribute(WebKeys.THEME_DISPLAY, themeDisplay);
-
-		groupSelectorTag.setAttributes(httpServletRequest);
-
-		Assert.assertFalse(
-			GetterUtil.getBoolean(
-				httpServletRequest.getAttribute(
-					"liferay-item-selector:group-selector:" +
-						"showGroupTypeSelector")));
-
-		groupSelectorTag.setShowGroupTypeSelector(true);
-
-		groupSelectorTag.setAttributes(httpServletRequest);
-
-		Assert.assertTrue(
-			GetterUtil.getBoolean(
-				httpServletRequest.getAttribute(
-					"liferay-item-selector:group-selector:" +
-						"showGroupTypeSelector")));
 	}
 
 	private static final long _COMPANY_GROUP_ID = RandomTestUtil.randomLong();

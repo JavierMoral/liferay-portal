@@ -9,9 +9,7 @@
 
 <c:choose>
 	<c:when test='<%= ParamUtil.getBoolean(request, "showGroupSelector") %>'>
-		<liferay-item-selector:group-selector
-			showGroupTypeSelector='<%= ParamUtil.getBoolean(request, "showGroupTypeSelector") %>'
-		/>
+		<liferay-item-selector:group-selector />
 	</c:when>
 	<c:otherwise>
 
