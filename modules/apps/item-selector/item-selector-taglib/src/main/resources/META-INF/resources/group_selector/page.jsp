@@ -13,48 +13,91 @@ GroupSelectorDisplayContext groupSelectorDisplayContext = new GroupSelectorDispl
 Set<String> groupTypes = groupSelectorDisplayContext.getGroupTypes();
 %>
 
-<c:if test="<%= groupTypes.size() > 1 %>">
-	<clay:container-fluid>
-		<div class="btn-group btn-group-sm my-3" role="group">
+<c:choose>
+	<c:when test="<%= groupSelectorDisplayContext.isShowGroupTypeSelector() %>">
+		<clay:container-fluid>
+			<liferay-site-navigation:breadcrumb
+				breadcrumbEntries="<%= groupSelectorDisplayContext.getBreadcrumbEntries() %>"
+			/>
+		</clay:container-fluid>
+	</c:when>
+	<c:otherwise>
+		<c:if test="<%= groupTypes.size() > 1 %>">
+			<clay:container-fluid>
+				<div class="btn-group btn-group-sm my-3" role="group">
 
-			<%
-			for (String curGroupType : groupTypes) {
-			%>
+					<%
+					for (String curGroupType : groupTypes) {
+					%>
 
-				<a class="btn btn-secondary <%= groupSelectorDisplayContext.isGroupTypeActive(curGroupType) ? "active" : StringPool.BLANK %>" href="<%= groupSelectorDisplayContext.getGroupItemSelectorURL(curGroupType) %>"><%= groupSelectorDisplayContext.getGroupItemSelectorLabel(curGroupType) %></a>
+						<a class="btn btn-secondary <%= groupSelectorDisplayContext.isGroupTypeActive(curGroupType) ? "active" : StringPool.BLANK %>" href="<%= groupSelectorDisplayContext.getGroupItemSelectorURL(curGroupType) %>"><%= groupSelectorDisplayContext.getGroupItemSelectorLabel(curGroupType) %></a>
 
-			<%
-			}
-			%>
+					<%
+					}
+					%>
 
-		</div>
-	</clay:container-fluid>
-</c:if>
+				</div>
+			</clay:container-fluid>
+		</c:if>
+	</c:otherwise>
+</c:choose>
 
 <clay:container-fluid
 	cssClass="lfr-item-viewer"
 >
-	<liferay-ui:search-container
-		searchContainer="<%= groupSelectorDisplayContext.getSearchContainer() %>"
-		var="listSearchContainer"
-	>
-		<liferay-ui:search-container-row
-			className="com.liferay.portal.kernel.model.Group"
-			cssClass="card-page-item card-page-item-directory"
-			modelVar="curGroup"
-		>
-			<liferay-ui:search-container-column-text
-				colspan="<%= 3 %>"
-			>
-				<clay:navigation-card
-					navigationCard="<%= new GroupNavigationCard(curGroup, groupSelectorDisplayContext, request) %>"
-				/>
-			</liferay-ui:search-container-column-text>
-		</liferay-ui:search-container-row>
+	<c:choose>
+		<c:when test="<%= groupSelectorDisplayContext.isShowGroupTypeCards() %>">
+			<c:choose>
+				<c:when test="<%= groupTypes.isEmpty() %>">
+					<clay:empty-state
+						title='<%= LanguageUtil.get(request, "no-results-were-found") %>'
+					/>
+				</c:when>
+				<c:otherwise>
+					<div class="card-page">
 
-		<liferay-ui:search-iterator
-			displayStyle="icon"
-			markupView="lexicon"
-		/>
-	</liferay-ui:search-container>
+						<%
+						for (String curGroupType : groupTypes) {
+						%>
+
+							<div class="card-page-item card-page-item-directory">
+								<clay:navigation-card
+									navigationCard="<%= new GroupTypeNavigationCard(groupSelectorDisplayContext, curGroupType) %>"
+								/>
+							</div>
+
+						<%
+						}
+						%>
+
+					</div>
+				</c:otherwise>
+			</c:choose>
+		</c:when>
+		<c:otherwise>
+			<liferay-ui:search-container
+				searchContainer="<%= groupSelectorDisplayContext.getSearchContainer() %>"
+				var="listSearchContainer"
+			>
+				<liferay-ui:search-container-row
+					className="com.liferay.portal.kernel.model.Group"
+					cssClass="card-page-item card-page-item-directory"
+					modelVar="curGroup"
+				>
+					<liferay-ui:search-container-column-text
+						colspan="<%= 3 %>"
+					>
+						<clay:navigation-card
+							navigationCard="<%= new GroupNavigationCard(curGroup, groupSelectorDisplayContext, request) %>"
+						/>
+					</liferay-ui:search-container-column-text>
+				</liferay-ui:search-container-row>
+
+				<liferay-ui:search-iterator
+					displayStyle="icon"
+					markupView="lexicon"
+				/>
+			</liferay-ui:search-container>
+		</c:otherwise>
+	</c:choose>
 </clay:container-fluid>

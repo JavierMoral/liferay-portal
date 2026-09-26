@@ -41,6 +41,10 @@ public class GroupSelectorTag extends IncludeTag {
 		return _groupsCount;
 	}
 
+	public boolean isShowGroupTypeSelector() {
+		return _showGroupTypeSelector;
+	}
+
 	public void setGroups(List<Group> groups) {
 		_groups = groups;
 	}
@@ -56,6 +60,10 @@ public class GroupSelectorTag extends IncludeTag {
 		setServletContext(ServletContextUtil.getServletContext());
 	}
 
+	public void setShowGroupTypeSelector(boolean showGroupTypeSelector) {
+		_showGroupTypeSelector = showGroupTypeSelector;
+	}
+
 	@Override
 	protected void cleanUp() {
 		super.cleanUp();
@@ -65,6 +73,7 @@ public class GroupSelectorTag extends IncludeTag {
 		_groupsCount = -1;
 		_keywords = null;
 		_scopeGroupType = null;
+		_showGroupTypeSelector = false;
 	}
 
 	@Override
@@ -88,6 +97,10 @@ public class GroupSelectorTag extends IncludeTag {
 
 		httpServletRequest.setAttribute(
 			"liferay-item-selector:group-selector:groupsCount", _groupsCount);
+
+		httpServletRequest.setAttribute(
+			"liferay-item-selector:group-selector:showGroupTypeSelector",
+			_showGroupTypeSelector);
 	}
 
 	private Group _getGroup(ThemeDisplay themeDisplay) {
@@ -249,5 +262,6 @@ public class GroupSelectorTag extends IncludeTag {
 	private int _groupsCount = -1;
 	private String _keywords;
 	private Boolean _scopeGroupType;
+	private boolean _showGroupTypeSelector;
 
 }

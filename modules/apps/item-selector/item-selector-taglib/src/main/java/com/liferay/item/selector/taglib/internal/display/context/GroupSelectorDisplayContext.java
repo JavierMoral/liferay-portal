@@ -16,15 +16,19 @@ import com.liferay.journal.model.JournalArticle;
 import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
 import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.servlet.taglib.ui.BreadcrumbEntry;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.site.navigation.taglib.servlet.taglib.util.BreadcrumbEntryListBuilder;
 import com.liferay.site.search.GroupSearch;
 
 import jakarta.portlet.PortletURL;
@@ -44,10 +48,36 @@ public class GroupSelectorDisplayContext {
 		_liferayPortletRequest = liferayPortletRequest;
 	}
 
+	public List<BreadcrumbEntry> getBreadcrumbEntries() {
+		return BreadcrumbEntryListBuilder.add(
+			breadcrumbEntry -> {
+				breadcrumbEntry.setTitle(
+					LanguageUtil.get(
+						_liferayPortletRequest.getLocale(),
+						"sites-and-libraries"));
+				breadcrumbEntry.setURL(
+					String.valueOf(getGroupItemSelectorURL(StringPool.BLANK)));
+			}
+		).add(
+			this::_isShowGroupTypeBreadcrumbEntry,
+			breadcrumbEntry -> {
+				String groupType = _getGroupType();
+
+				breadcrumbEntry.setTitle(getGroupItemSelectorLabel(groupType));
+				breadcrumbEntry.setURL(
+					String.valueOf(getGroupItemSelectorURL(groupType)));
+			}
+		).build();
+	}
+
 	public String getGroupItemSelectorIcon() {
+		return getGroupItemSelectorIcon(_getGroupType());
+	}
+
+	public String getGroupItemSelectorIcon(String groupType) {
 		GroupItemSelectorProvider groupItemSelectorProvider =
 			GroupItemSelectorProviderRegistryUtil.getGroupItemSelectorProvider(
-				_getGroupType());
+				groupType);
 
 		if (groupItemSelectorProvider == null) {
 			return "folder";
@@ -87,11 +117,15 @@ public class GroupSelectorDisplayContext {
 		).setParameter(
 			"groupType", groupType
 		).setParameter(
+			"groupTypes", _getGroupTypesString()
+		).setParameter(
 			"scopeGroupType", _isScopeGroupType()
 		).setParameter(
 			"selectedTab", _getSelectedTab()
 		).setParameter(
 			"showGroupSelector", true
+		).setParameter(
+			"showGroupTypeSelector", isShowGroupTypeSelector()
 		).buildPortletURL();
 	}
 
@@ -99,6 +133,13 @@ public class GroupSelectorDisplayContext {
 		Set<String> groupItemSelectorProviderTypes =
 			GroupItemSelectorProviderRegistryUtil.
 				getGroupItemSelectorProviderTypes();
+
+		String groupTypesString = _getGroupTypesString();
+
+		if (Validator.isNotNull(groupTypesString)) {
+			groupItemSelectorProviderTypes.retainAll(
+				SetUtil.fromCollection(StringUtil.split(groupTypesString)));
+		}
 
 		for (String criterion :
 				ParamUtil.getStringValues(_liferayPortletRequest, "criteria")) {
@@ -151,6 +192,24 @@ public class GroupSelectorDisplayContext {
 		return groupType.equals(_getGroupType());
 	}
 
+	public boolean isGroupTypeSelected() {
+		return Validator.isNotNull(_getGroupType());
+	}
+
+	public boolean isShowGroupTypeCards() {
+		if (isShowGroupTypeSelector() && !isGroupTypeSelected()) {
+			return true;
+		}
+
+		return false;
+	}
+
+	public boolean isShowGroupTypeSelector() {
+		return GetterUtil.getBoolean(
+			_liferayPortletRequest.getAttribute(
+				"liferay-item-selector:group-selector:showGroupTypeSelector"));
+	}
+
 	protected GroupSelectorDisplayContext(
 		String groupType, LiferayPortletRequest liferayPortletRequest) {
 
@@ -192,6 +251,10 @@ public class GroupSelectorDisplayContext {
 		return _groupType;
 	}
 
+	private String _getGroupTypesString() {
+		return ParamUtil.getString(_liferayPortletRequest, "groupTypes");
+	}
+
 	private ItemSelector _getItemSelector() {
 		return ItemSelectorUtil.getItemSelector();
 	}
@@ -216,11 +279,15 @@ public class GroupSelectorDisplayContext {
 		).setParameter(
 			"groupType", _getGroupType()
 		).setParameter(
+			"groupTypes", _getGroupTypesString()
+		).setParameter(
 			"scopeGroupType", _isScopeGroupType()
 		).setParameter(
 			"selectedTab", _getSelectedTab()
 		).setParameter(
 			"showGroupSelector", true
+		).setParameter(
+			"showGroupTypeSelector", isShowGroupTypeSelector()
 		).buildPortletURL();
 	}
 
@@ -287,6 +354,14 @@ public class GroupSelectorDisplayContext {
 			_liferayPortletRequest, "scopeGroupType");
 
 		return _scopeGroupType;
+	}
+
+	private boolean _isShowGroupTypeBreadcrumbEntry() {
+		if (!isGroupTypeSelected()) {
+			return false;
+		}
+
+		return Validator.isNotNull(getGroupItemSelectorLabel(_getGroupType()));
 	}
 
 	private static final String _CLASS_NAME_OBJECT_ENTRY_ITEM_SELECTOR_VIEW =
