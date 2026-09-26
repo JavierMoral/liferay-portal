@@ -638,35 +638,30 @@ public class DisplayPageTemplateResourceTest
 	public void testPostDesignLibraryDisplayPageTemplateMarkAsDefault()
 		throws Exception {
 
-		String designLibraryExternalReferenceCode =
-			_getDesignLibraryExternalReferenceCode();
+		String externalReferenceCode = _getDesignLibraryExternalReferenceCode();
 
 		DisplayPageTemplate displayPageTemplate =
 			_addDesignLibraryDisplayPageTemplate(
-				designLibraryExternalReferenceCode,
-				WorkflowConstants.STATUS_APPROVED);
+				externalReferenceCode, WorkflowConstants.STATUS_APPROVED);
 
 		Assert.assertFalse(displayPageTemplate.getMarkedAsDefault());
 
 		Map<String, Map<String, String>> actions =
 			displayPageTemplate.getActions();
 
-		Assert.assertTrue(
-			actions.toString(), actions.containsKey("markAsDefault"));
-		Assert.assertFalse(
-			actions.toString(), actions.containsKey("unmarkAsDefault"));
+		Assert.assertTrue(actions.containsKey("markAsDefault"));
+		Assert.assertFalse(actions.containsKey("unmarkAsDefault"));
 
 		Map<String, String> markAsDefaultAction = actions.get("markAsDefault");
 
 		String markAsDefaultHref = markAsDefaultAction.get("href");
 
-		Assert.assertTrue(
-			markAsDefaultHref, markAsDefaultHref.endsWith("/mark-as-default"));
+		Assert.assertTrue(markAsDefaultHref.endsWith("/mark-as-default"));
 
 		DisplayPageTemplate markedAsDefaultDisplayPageTemplate =
 			displayPageTemplateResource.
 				postDesignLibraryDisplayPageTemplateMarkAsDefault(
-					designLibraryExternalReferenceCode,
+					externalReferenceCode,
 					displayPageTemplate.getExternalReferenceCode());
 
 		Assert.assertTrue(
@@ -674,10 +669,8 @@ public class DisplayPageTemplateResourceTest
 
 		actions = markedAsDefaultDisplayPageTemplate.getActions();
 
-		Assert.assertFalse(
-			actions.toString(), actions.containsKey("markAsDefault"));
-		Assert.assertTrue(
-			actions.toString(), actions.containsKey("unmarkAsDefault"));
+		Assert.assertFalse(actions.containsKey("markAsDefault"));
+		Assert.assertTrue(actions.containsKey("unmarkAsDefault"));
 
 		_assertProblemException(
 			"CONFLICT",
@@ -686,18 +679,16 @@ public class DisplayPageTemplateResourceTest
 			() ->
 				displayPageTemplateResource.
 					postDesignLibraryDisplayPageTemplateMarkAsDefault(
-						designLibraryExternalReferenceCode,
+						externalReferenceCode,
 						displayPageTemplate.getExternalReferenceCode()));
 
 		DisplayPageTemplate draftDisplayPageTemplate =
 			_addDesignLibraryDisplayPageTemplate(
-				designLibraryExternalReferenceCode,
-				WorkflowConstants.STATUS_DRAFT);
+				externalReferenceCode, WorkflowConstants.STATUS_DRAFT);
 
 		actions = draftDisplayPageTemplate.getActions();
 
-		Assert.assertFalse(
-			actions.toString(), actions.containsKey("markAsDefault"));
+		Assert.assertFalse(actions.containsKey("markAsDefault"));
 
 		_assertProblemException(
 			"CONFLICT",
@@ -705,17 +696,15 @@ public class DisplayPageTemplateResourceTest
 			() ->
 				displayPageTemplateResource.
 					postDesignLibraryDisplayPageTemplateMarkAsDefault(
-						designLibraryExternalReferenceCode,
+						externalReferenceCode,
 						draftDisplayPageTemplate.getExternalReferenceCode()));
 
 		DisplayPageTemplate noContentTypeDisplayPageTemplate =
-			_addDesignLibraryDisplayPageTemplate(
-				designLibraryExternalReferenceCode);
+			_addDesignLibraryDisplayPageTemplate(externalReferenceCode);
 
 		actions = noContentTypeDisplayPageTemplate.getActions();
 
-		Assert.assertFalse(
-			actions.toString(), actions.containsKey("markAsDefault"));
+		Assert.assertFalse(actions.containsKey("markAsDefault"));
 
 		_assertProblemException(
 			"CONFLICT",
@@ -724,7 +713,7 @@ public class DisplayPageTemplateResourceTest
 			() ->
 				displayPageTemplateResource.
 					postDesignLibraryDisplayPageTemplateMarkAsDefault(
-						designLibraryExternalReferenceCode,
+						externalReferenceCode,
 						noContentTypeDisplayPageTemplate.
 							getExternalReferenceCode()));
 	}
@@ -735,13 +724,11 @@ public class DisplayPageTemplateResourceTest
 	public void testPostDesignLibraryDisplayPageTemplateUnmarkAsDefault()
 		throws Exception {
 
-		String designLibraryExternalReferenceCode =
-			_getDesignLibraryExternalReferenceCode();
+		String externalReferenceCode = _getDesignLibraryExternalReferenceCode();
 
 		DisplayPageTemplate displayPageTemplate =
 			_addDesignLibraryDisplayPageTemplate(
-				designLibraryExternalReferenceCode,
-				WorkflowConstants.STATUS_APPROVED);
+				externalReferenceCode, WorkflowConstants.STATUS_APPROVED);
 
 		_assertProblemException(
 			"CONFLICT",
@@ -749,13 +736,13 @@ public class DisplayPageTemplateResourceTest
 			() ->
 				displayPageTemplateResource.
 					postDesignLibraryDisplayPageTemplateUnmarkAsDefault(
-						designLibraryExternalReferenceCode,
+						externalReferenceCode,
 						displayPageTemplate.getExternalReferenceCode()));
 
 		DisplayPageTemplate markedAsDefaultDisplayPageTemplate =
 			displayPageTemplateResource.
 				postDesignLibraryDisplayPageTemplateMarkAsDefault(
-					designLibraryExternalReferenceCode,
+					externalReferenceCode,
 					displayPageTemplate.getExternalReferenceCode());
 
 		Map<String, Map<String, String>> actions =
@@ -766,14 +753,12 @@ public class DisplayPageTemplateResourceTest
 
 		String unmarkAsDefaultHref = unmarkAsDefaultAction.get("href");
 
-		Assert.assertTrue(
-			unmarkAsDefaultHref,
-			unmarkAsDefaultHref.endsWith("/unmark-as-default"));
+		Assert.assertTrue(unmarkAsDefaultHref.endsWith("/unmark-as-default"));
 
 		DisplayPageTemplate unmarkedAsDefaultDisplayPageTemplate =
 			displayPageTemplateResource.
 				postDesignLibraryDisplayPageTemplateUnmarkAsDefault(
-					designLibraryExternalReferenceCode,
+					externalReferenceCode,
 					displayPageTemplate.getExternalReferenceCode());
 
 		Assert.assertFalse(
@@ -781,10 +766,8 @@ public class DisplayPageTemplateResourceTest
 
 		actions = unmarkedAsDefaultDisplayPageTemplate.getActions();
 
-		Assert.assertTrue(
-			actions.toString(), actions.containsKey("markAsDefault"));
-		Assert.assertFalse(
-			actions.toString(), actions.containsKey("unmarkAsDefault"));
+		Assert.assertTrue(actions.containsKey("markAsDefault"));
+		Assert.assertFalse(actions.containsKey("unmarkAsDefault"));
 
 		_assertProblemException(
 			"CONFLICT",
@@ -792,7 +775,7 @@ public class DisplayPageTemplateResourceTest
 			() ->
 				displayPageTemplateResource.
 					postDesignLibraryDisplayPageTemplateUnmarkAsDefault(
-						designLibraryExternalReferenceCode,
+						externalReferenceCode,
 						displayPageTemplate.getExternalReferenceCode()));
 	}
 
