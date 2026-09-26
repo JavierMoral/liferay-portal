@@ -342,8 +342,7 @@ public class VirtualLayout extends LayoutWrapper {
 		}
 
 		return typeSettingsUnicodeProperties.getProperty(
-			StringBundler.concat(
-				"lfr-theme:", device, StringPool.COLON, key));
+			StringBundler.concat("lfr-theme:", device, StringPool.COLON, key));
 	}
 
 	private boolean _isInheritHostLookAndFeel() {
