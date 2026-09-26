@@ -31,7 +31,6 @@ import com.liferay.portal.kernel.model.impl.VirtualLayout;
 import com.liferay.portal.kernel.portlet.FriendlyURLResolver;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutSetLocalService;
-import com.liferay.portal.kernel.service.ThemeLocalService;
 import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -215,15 +214,6 @@ public class BaseAssetDisplayPageFriendlyURLResolverTest {
 		return layoutFriendlyURLComposite.getLayout();
 	}
 
-	private List<Theme> _getThemes() throws Exception {
-		List<Theme> themes = _themeLocalService.getThemes(
-			TestPropsValues.getCompanyId());
-
-		Assert.assertTrue(themes.toString(), themes.size() > 1);
-
-		return themes;
-	}
-
 	private void _testGetLayoutFriendlyURLComposite() throws Exception {
 		JournalArticle journalArticle = _addJournalArticle();
 
@@ -256,16 +246,9 @@ public class BaseAssetDisplayPageFriendlyURLResolverTest {
 		_addDisplayPageTemplate(
 			designLibraryGroup.getGroupId(), journalArticle);
 
-		List<Theme> themes = _getThemes();
+		_updateLookAndFeel(designLibraryGroup, _MINIUM_THEME_ID);
 
-		Theme designLibraryTheme = themes.get(0);
-
-		_updateLookAndFeel(designLibraryGroup, designLibraryTheme.getThemeId());
-
-		Theme groupTheme = themes.get(1);
-
-		LayoutSet layoutSet = _updateLookAndFeel(
-			_group, groupTheme.getThemeId());
+		LayoutSet layoutSet = _updateLookAndFeel(_group, _SPEEDWELL_THEME_ID);
 
 		Layout layout = _getLayout(journalArticle);
 
@@ -281,16 +264,9 @@ public class BaseAssetDisplayPageFriendlyURLResolverTest {
 
 		Group designLibraryGroup = _addConnectedDesignLibraryGroup(_group);
 
-		List<Theme> themes = _getThemes();
+		_updateLookAndFeel(designLibraryGroup, _MINIUM_THEME_ID);
 
-		Theme designLibraryTheme = themes.get(0);
-
-		_updateLookAndFeel(designLibraryGroup, designLibraryTheme.getThemeId());
-
-		Theme groupTheme = themes.get(1);
-
-		LayoutSet layoutSet = _updateLookAndFeel(
-			_group, groupTheme.getThemeId());
+		LayoutSet layoutSet = _updateLookAndFeel(_group, _SPEEDWELL_THEME_ID);
 
 		LayoutPageTemplateEntry masterLayoutPageTemplateEntry =
 			LayoutPageTemplateTestUtil.addLayoutPageTemplateEntry(
@@ -343,14 +319,10 @@ public class BaseAssetDisplayPageFriendlyURLResolverTest {
 			_addDisplayPageTemplate(
 				designLibraryGroup.getGroupId(), journalArticle);
 
-		List<Theme> themes = _getThemes();
-
-		Theme layoutSetTheme = themes.get(1);
-
 		LayoutSet designLibraryLayoutSet = _updateLookAndFeel(
-			designLibraryGroup, layoutSetTheme.getThemeId());
+			designLibraryGroup, _SPEEDWELL_THEME_ID);
 
-		_updateLookAndFeel(_group, layoutSetTheme.getThemeId());
+		_updateLookAndFeel(_group, _SPEEDWELL_THEME_ID);
 
 		ColorScheme designLibraryColorScheme =
 			designLibraryLayoutSet.getColorScheme();
@@ -358,13 +330,10 @@ public class BaseAssetDisplayPageFriendlyURLResolverTest {
 		Layout designLibraryLayout = _layoutLocalService.getLayout(
 			layoutPageTemplateEntry.getPlid());
 
-		Theme designLibraryLayoutTheme = themes.get(0);
-
 		_layoutLocalService.updateLookAndFeel(
 			designLibraryLayout.getGroupId(),
 			designLibraryLayout.isPrivateLayout(),
-			designLibraryLayout.getLayoutId(),
-			designLibraryLayoutTheme.getThemeId(),
+			designLibraryLayout.getLayoutId(), _MINIUM_THEME_ID,
 			designLibraryColorScheme.getColorSchemeId(), StringPool.BLANK);
 
 		Layout layout = _getLayout(journalArticle);
@@ -373,8 +342,7 @@ public class BaseAssetDisplayPageFriendlyURLResolverTest {
 
 		Theme layoutTheme = layout.getTheme();
 
-		Assert.assertEquals(
-			designLibraryLayoutTheme.getThemeId(), layoutTheme.getThemeId());
+		Assert.assertEquals(_MINIUM_THEME_ID, layoutTheme.getThemeId());
 	}
 
 	private void _testGetLayoutFriendlyURLCompositeLookAndFeelWhenThemeSettingSet()
@@ -388,15 +356,9 @@ public class BaseAssetDisplayPageFriendlyURLResolverTest {
 			_addDisplayPageTemplate(
 				designLibraryGroup.getGroupId(), journalArticle);
 
-		List<Theme> themes = _getThemes();
+		_updateLookAndFeel(designLibraryGroup, _MINIUM_THEME_ID);
 
-		Theme designLibraryTheme = themes.get(0);
-
-		_updateLookAndFeel(designLibraryGroup, designLibraryTheme.getThemeId());
-
-		Theme groupTheme = themes.get(1);
-
-		_updateLookAndFeel(_group, groupTheme.getThemeId());
+		_updateLookAndFeel(_group, _SPEEDWELL_THEME_ID);
 
 		Layout designLibraryLayout = _layoutLocalService.getLayout(
 			layoutPageTemplateEntry.getPlid());
@@ -471,6 +433,11 @@ public class BaseAssetDisplayPageFriendlyURLResolverTest {
 			group.getGroupId(), false, settingsUnicodeProperties.toString());
 	}
 
+	private static final String _MINIUM_THEME_ID = "minium_WAR_miniumtheme";
+
+	private static final String _SPEEDWELL_THEME_ID =
+		"speedwell_WAR_speedwelltheme";
+
 	@DeleteAfterTestRun
 	private final List<DepotEntry> _depotEntries = new ArrayList<>();
 
@@ -498,9 +465,6 @@ public class BaseAssetDisplayPageFriendlyURLResolverTest {
 
 	@Inject
 	private Portal _portal;
-
-	@Inject
-	private ThemeLocalService _themeLocalService;
 
 	private String _themeSettingKey;
 
