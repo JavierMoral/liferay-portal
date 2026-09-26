@@ -121,18 +121,33 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 					getLayoutPageTemplateCollectionId());
 
 		return BreadcrumbEntryListBuilder.add(
-			this::_isGroupSelectorEnabled,
+			() -> FeatureFlagManagerUtil.isEnabled(
+				_themeDisplay.getCompanyId(), "LPD-57283"),
 			breadcrumbEntry -> {
 				breadcrumbEntry.setTitle(
 					LanguageUtil.get(
 						_httpServletRequest, "sites-and-libraries"));
-				breadcrumbEntry.setURL(_getGroupSelectorURL());
+				breadcrumbEntry.setURL(
+					PortletURLBuilder.create(
+						_clonePortletURL()
+					).setParameter(
+						"groupType", "site"
+					).setParameter(
+						"showGroupSelector", true
+					).buildString());
 			}
 		).add(
 			breadcrumbEntry -> {
 				breadcrumbEntry.setTitle(
 					LanguageUtil.get(_httpServletRequest, "home"));
-				breadcrumbEntry.setURL(_getRootCollectionURL());
+				breadcrumbEntry.setURL(
+					PortletURLBuilder.create(
+						_clonePortletURL()
+					).setParameter(
+						"layoutPageTemplateCollectionId",
+						LayoutPageTemplateConstants.
+							PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT
+					).buildString());
 			}
 		).addAll(
 			() -> layoutPageTemplateCollection != null,
@@ -233,16 +248,6 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 		return _groupId;
 	}
 
-	private String _getGroupSelectorURL() {
-		return PortletURLBuilder.create(
-			_clonePortletURL()
-		).setParameter(
-			"groupType", "site"
-		).setParameter(
-			"showGroupSelector", true
-		).buildString();
-	}
-
 	private String _getKeywords() {
 		if (Validator.isNotNull(_keywords)) {
 			return _keywords;
@@ -288,21 +293,6 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 			_httpServletRequest, "orderByCol", "create-date");
 
 		return _orderByCol;
-	}
-
-	private String _getRootCollectionURL() {
-		return PortletURLBuilder.create(
-			_clonePortletURL()
-		).setParameter(
-			"layoutPageTemplateCollectionId",
-			LayoutPageTemplateConstants.
-				PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT
-		).buildString();
-	}
-
-	private boolean _isGroupSelectorEnabled() {
-		return FeatureFlagManagerUtil.isEnabled(
-			_themeDisplay.getCompanyId(), "LPD-57283");
 	}
 
 	private final AssetDisplayPageItemSelectorCriterion
