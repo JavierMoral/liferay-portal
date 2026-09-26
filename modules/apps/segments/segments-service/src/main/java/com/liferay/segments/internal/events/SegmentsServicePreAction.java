@@ -94,14 +94,14 @@ public class SegmentsServicePreAction extends Action {
 	private long[] _getSegmentsExperienceIds(
 		HttpServletRequest httpServletRequest,
 		HttpServletResponse httpServletResponse, long groupId,
-		long sourceGroupId, long userId, long plid) {
+		long segmentsExperienceGroupId, long userId, long plid) {
 
 		try {
 			long[] segmentsExperienceIds =
 				_segmentsExperienceRequestProcessorRegistry.
 					getSegmentsExperienceIds(
-						httpServletRequest, httpServletResponse, sourceGroupId,
-						plid);
+						httpServletRequest, httpServletResponse,
+						segmentsExperienceGroupId, plid);
 
 			Set<Long> segmentsExperienceIdsSegmentsEntryIds = new HashSet<>();
 
@@ -162,8 +162,8 @@ public class SegmentsServicePreAction extends Action {
 
 			return _segmentsExperienceRequestProcessorRegistry.
 				getSegmentsExperienceIds(
-					httpServletRequest, httpServletResponse, sourceGroupId,
-					plid, segmentsEntryIds);
+					httpServletRequest, httpServletResponse,
+					segmentsExperienceGroupId, plid, segmentsEntryIds);
 		}
 		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
