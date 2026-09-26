@@ -17,7 +17,9 @@ AssetDisplayPagesItemSelectorCustomViewManagementToolbarDisplayContext assetDisp
 	managementToolbarDisplayContext="<%= assetDisplayPagesItemSelectorCustomViewManagementToolbarDisplayContext %>"
 />
 
-<clay:container-fluid>
+<clay:container-fluid
+	cssClass="<%= assetDisplayPagesItemSelectorCustomViewDisplayContext.getScopeCssClass() %>"
+>
 	<liferay-site-navigation:breadcrumb
 		breadcrumbEntries="<%= assetDisplayPagesItemSelectorCustomViewDisplayContext.getBreadcrumbEntries() %>"
 	/>

@@ -224,6 +224,14 @@ public class AssetDisplayPagesItemSelectorCustomViewDisplayContext {
 		return AssetEntryItemSelectorReturnType.class.getName();
 	}
 
+	public String getScopeCssClass() {
+		if (_isDesignLibraryScope()) {
+			return "item-selector-design-library-scope";
+		}
+
+		return StringPool.BLANK;
+	}
+
 	private Group _getGroup() {
 		return GroupLocalServiceUtil.fetchGroup(_getGroupId());
 	}
