@@ -72,6 +72,25 @@ public class SegmentsServicePreAction extends Action {
 		}
 	}
 
+	private long _getSegmentsExperienceGroupId(Layout layout) {
+		if (!(layout instanceof VirtualLayout) ||
+			!FeatureFlagManagerUtil.isEnabled(
+				layout.getCompanyId(), "LPD-57283")) {
+
+			return layout.getGroupId();
+		}
+
+		VirtualLayout virtualLayout = (VirtualLayout)layout;
+
+		if (!DesignLibraryUtil.isDesignLibraryScope(
+				virtualLayout.getSourceGroupId())) {
+
+			return layout.getGroupId();
+		}
+
+		return virtualLayout.getSourceGroupId();
+	}
+
 	private long[] _getSegmentsExperienceIds(
 		HttpServletRequest httpServletRequest,
 		HttpServletResponse httpServletResponse, long groupId,
@@ -158,25 +177,6 @@ public class SegmentsServicePreAction extends Action {
 		};
 	}
 
-	private long _getSourceGroupId(Layout layout) {
-		if (!(layout instanceof VirtualLayout) ||
-			!FeatureFlagManagerUtil.isEnabled(
-				layout.getCompanyId(), "LPD-57283")) {
-
-			return layout.getGroupId();
-		}
-
-		VirtualLayout virtualLayout = (VirtualLayout)layout;
-
-		if (!DesignLibraryUtil.isDesignLibraryScope(
-				virtualLayout.getSourceGroupId())) {
-
-			return layout.getGroupId();
-		}
-
-		return virtualLayout.getSourceGroupId();
-	}
-
 	private void _run(
 		HttpServletRequest httpServletRequest,
 		HttpServletResponse httpServletResponse) {
@@ -227,7 +227,7 @@ public class SegmentsServicePreAction extends Action {
 			SegmentsWebKeys.SEGMENTS_EXPERIENCE_IDS,
 			_getSegmentsExperienceIds(
 				httpServletRequest, httpServletResponse, layout.getGroupId(),
-				_getSourceGroupId(layout), themeDisplay.getUserId(),
+				_getSegmentsExperienceGroupId(layout), themeDisplay.getUserId(),
 				layout.getPlid()));
 	}
 
