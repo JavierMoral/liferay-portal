@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
@@ -215,6 +216,14 @@ public interface LayoutSEOEntryLocalService
 	public long dynamicQueryCount(
 		DynamicQuery dynamicQuery, Projection projection);
 
+	/**
+	 * Returns the entry the layout itself owns. A virtual layout reports the
+	 * group it is mounted on but the layout ID of the layout it wraps, so the
+	 * pair only addresses an entry once it is read off the source layout.
+	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public LayoutSEOEntry fetchLayoutSEOEntry(Layout layout);
+
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public LayoutSEOEntry fetchLayoutSEOEntry(long layoutSEOEntryId);
 
@@ -401,4 +410,4 @@ public interface LayoutSEOEntryLocalService
 		throws E;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-428693256
+// LIFERAY-SERVICE-BUILDER-HASH:918124474

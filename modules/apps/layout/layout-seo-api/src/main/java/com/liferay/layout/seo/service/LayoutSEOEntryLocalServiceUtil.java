@@ -226,6 +226,17 @@ public class LayoutSEOEntryLocalServiceUtil {
 		return getService().dynamicQueryCount(dynamicQuery, projection);
 	}
 
+	/**
+	 * Returns the entry the layout itself owns. A virtual layout reports the
+	 * group it is mounted on but the layout ID of the layout it wraps, so the
+	 * pair only addresses an entry once it is read off the source layout.
+	 */
+	public static LayoutSEOEntry fetchLayoutSEOEntry(
+		com.liferay.portal.kernel.model.Layout layout) {
+
+		return getService().fetchLayoutSEOEntry(layout);
+	}
+
 	public static LayoutSEOEntry fetchLayoutSEOEntry(long layoutSEOEntryId) {
 		return getService().fetchLayoutSEOEntry(layoutSEOEntryId);
 	}
@@ -474,4 +485,4 @@ public class LayoutSEOEntryLocalServiceUtil {
 			LayoutSEOEntryLocalService.class);
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:1464720495
+// LIFERAY-SERVICE-BUILDER-HASH:-480447293
