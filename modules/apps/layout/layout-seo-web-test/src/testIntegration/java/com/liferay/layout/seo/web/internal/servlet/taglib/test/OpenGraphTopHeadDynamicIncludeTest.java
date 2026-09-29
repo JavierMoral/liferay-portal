@@ -96,11 +96,9 @@ import com.liferay.translation.info.item.provider.InfoItemLanguagesProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -1742,18 +1740,16 @@ public class OpenGraphTopHeadDynamicIncludeTest {
 	}
 
 	private Group _addConnectedDesignLibraryGroup() throws Exception {
-		DepotEntry depotEntry = _depotEntryLocalService.addDepotEntry(
+		_depotEntry = _depotEntryLocalService.addDepotEntry(
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomLocaleStringMap(),
 			DepotConstants.TYPE_DESIGN_LIBRARY,
 			ServiceContextTestUtil.getServiceContext());
 
-		_depotEntries.add(depotEntry);
-
 		_depotEntryGroupRelLocalService.addDepotEntryGroupRel(
-			depotEntry.getDepotEntryId(), _group.getGroupId());
+			_depotEntry.getDepotEntryId(), _group.getGroupId());
 
-		return depotEntry.getGroup();
+		return _depotEntry.getGroup();
 	}
 
 	private FileEntry _addImageFileEntry(
@@ -2257,7 +2253,7 @@ public class OpenGraphTopHeadDynamicIncludeTest {
 	private CompanyLocalService _companyLocalService;
 
 	@DeleteAfterTestRun
-	private final List<DepotEntry> _depotEntries = new ArrayList<>();
+	private DepotEntry _depotEntry;
 
 	@Inject
 	private DepotEntryGroupRelLocalService _depotEntryGroupRelLocalService;
