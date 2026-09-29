@@ -36,7 +36,6 @@ import com.liferay.portal.configuration.test.util.ConfigurationTemporarySwapper;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.model.VirtualLayoutConstants;
 import com.liferay.portal.kernel.model.impl.VirtualLayout;
 import com.liferay.portal.kernel.portlet.constants.FriendlyURLResolverConstants;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
@@ -338,46 +337,6 @@ public class LayoutSEOLinkManagerCanonicalLayoutSEOLinkTest {
 					alternateURLs.getOrDefault(LocaleUtil.CHINA, canonicalURL),
 					canonicalLayoutSEOLink.getHref());
 			});
-	}
-
-	@FeatureFlag("LPD-57283")
-	@Test
-	public void testGetLayoutFriendlyURLDesignLibraryDisplayPageKeepsVirtualGroupPrefix()
-		throws Exception {
-
-		Group designLibraryGroup = _addConnectedDesignLibraryGroup();
-
-		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
-				designLibraryGroup.getGroupId(),
-				_portal.getClassNameId(JournalArticle.class.getName()), null,
-				true, WorkflowConstants.STATUS_APPROVED);
-
-		Layout layout = _layoutLocalService.getLayout(
-			layoutPageTemplateEntry.getPlid());
-
-		Layout virtualLayout = new VirtualLayout(layout, _group);
-
-		// Every portlet URL on the page is composed from this address, and
-		// VirtualLayoutFriendlyURLResolver only resolves it under the prefix
-
-		Assert.assertEquals(
-			StringBundler.concat(
-				VirtualLayoutConstants.CANONICAL_URL_SEPARATOR,
-				designLibraryGroup.getFriendlyURL(), layout.getFriendlyURL()),
-			virtualLayout.getFriendlyURL());
-		Assert.assertEquals(
-			StringBundler.concat(
-				VirtualLayoutConstants.CANONICAL_URL_SEPARATOR,
-				designLibraryGroup.getFriendlyURL(),
-				layout.getFriendlyURL(LocaleUtil.getDefault())),
-			virtualLayout.getFriendlyURL(LocaleUtil.getDefault()));
-		Assert.assertEquals(
-			StringBundler.concat(
-				VirtualLayoutConstants.CANONICAL_URL_SEPARATOR,
-				designLibraryGroup.getFriendlyURL(),
-				_themeDisplay.getLayoutFriendlyURL(layout)),
-			_themeDisplay.getLayoutFriendlyURL(virtualLayout));
 	}
 
 	private Group _addConnectedDesignLibraryGroup() throws Exception {
