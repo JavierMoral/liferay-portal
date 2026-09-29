@@ -534,7 +534,7 @@ public class JournalArticleSitemapURLProviderTest {
 	}
 
 	private Group _addConnectedDesignLibraryGroup() throws Exception {
-		DepotEntry depotEntry = _depotEntryLocalService.addDepotEntry(
+		_depotEntry = _depotEntryLocalService.addDepotEntry(
 			HashMapBuilder.put(
 				LocaleUtil.getDefault(), RandomTestUtil.randomString()
 			).build(),
@@ -544,12 +544,10 @@ public class JournalArticleSitemapURLProviderTest {
 			DepotConstants.TYPE_DESIGN_LIBRARY,
 			ServiceContextTestUtil.getServiceContext());
 
-		_depotEntries.add(depotEntry);
-
 		_depotEntryGroupRelLocalService.addDepotEntryGroupRel(
-			depotEntry.getDepotEntryId(), _group.getGroupId());
+			_depotEntry.getDepotEntryId(), _group.getGroupId());
 
-		return depotEntry.getGroup();
+		return _depotEntry.getGroup();
 	}
 
 	private void _assertRootElement(
@@ -761,7 +759,7 @@ public class JournalArticleSitemapURLProviderTest {
 	private CompanyLocalService _companyLocalService;
 
 	@DeleteAfterTestRun
-	private final List<DepotEntry> _depotEntries = new ArrayList<>();
+	private DepotEntry _depotEntry;
 
 	@Inject
 	private DepotEntryGroupRelLocalService _depotEntryGroupRelLocalService;

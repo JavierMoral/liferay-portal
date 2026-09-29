@@ -73,7 +73,6 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.site.provider.SitemapURLProvider;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -282,18 +281,16 @@ public class ObjectEntrySitemapURLProviderTest {
 	}
 
 	private Group _addConnectedDesignLibraryGroup() throws Exception {
-		DepotEntry depotEntry = _depotEntryLocalService.addDepotEntry(
+		_designLibraryDepotEntry = _depotEntryLocalService.addDepotEntry(
 			RandomTestUtil.randomLocaleStringMap(),
 			RandomTestUtil.randomLocaleStringMap(),
 			DepotConstants.TYPE_DESIGN_LIBRARY,
 			ServiceContextTestUtil.getServiceContext());
 
-		_designLibraryDepotEntries.add(depotEntry);
-
 		_depotEntryGroupRelLocalService.addDepotEntryGroupRel(
-			depotEntry.getDepotEntryId(), _group.getGroupId());
+			_designLibraryDepotEntry.getDepotEntryId(), _group.getGroupId());
 
-		return depotEntry.getGroup();
+		return _designLibraryDepotEntry.getGroup();
 	}
 
 	private LayoutPageTemplateEntry _addDisplayPageTemplate(
@@ -745,8 +742,7 @@ public class ObjectEntrySitemapURLProviderTest {
 	private ObjectDefinition _depotObjectDefinition;
 
 	@DeleteAfterTestRun
-	private final List<DepotEntry> _designLibraryDepotEntries =
-		new ArrayList<>();
+	private DepotEntry _designLibraryDepotEntry;
 
 	private Group _group;
 
