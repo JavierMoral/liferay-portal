@@ -360,17 +360,18 @@ public class OpenGraphTopHeadDynamicInclude extends BaseDynamicInclude {
 	}
 
 	private LayoutSEOEntry _fetchSourceLayoutSEOEntry(Layout layout) {
+		long groupId = layout.getGroupId();
+
 		if (layout instanceof VirtualLayout) {
 			VirtualLayout virtualLayout = (VirtualLayout)layout;
 
 			if (virtualLayout.isSourceGroupDepot()) {
-				layout = virtualLayout.getSourceLayout();
+				groupId = virtualLayout.getSourceGroupId();
 			}
 		}
 
 		return _layoutSEOEntryLocalService.fetchLayoutSEOEntry(
-			layout.getGroupId(), layout.isPrivateLayout(),
-			layout.getLayoutId());
+			groupId, layout.isPrivateLayout(), layout.getLayoutId());
 	}
 
 	private Set<Locale> _getAvailableLocales(
