@@ -246,6 +246,17 @@ public class VirtualHostFilterTest {
 	}
 
 	@Test
+	public void testProcessFilterForwardedURLWithVirtualLayoutSeparator()
+		throws Exception {
+
+		String groupFriendlyURL = _getGroupFriendlyURL(_publicLayoutSet);
+
+		Assert.assertEquals(
+			"/web" + groupFriendlyURL + "/~/design-library/home",
+			_getForwardedURL("/~/design-library/home"));
+	}
+
+	@Test
 	public void testProcessFilterForwardsUnknownDocumentsURL() {
 		Assert.assertNotNull(
 			_getForwardedDLURL(
