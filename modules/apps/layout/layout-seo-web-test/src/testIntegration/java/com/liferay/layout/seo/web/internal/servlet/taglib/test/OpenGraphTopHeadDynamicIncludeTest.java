@@ -247,7 +247,7 @@ public class OpenGraphTopHeadDynamicIncludeTest {
 
 	@FeatureFlag("LPD-57283")
 	@Test
-	public void testIncludeCustomDescriptionFromDesignLibraryDisplayPageTemplate()
+	public void testIncludeCustomDescriptionWithDesignLibraryDisplayPageTemplate()
 		throws Exception {
 
 		Group designLibraryGroup = _addConnectedDesignLibraryGroup();

@@ -237,10 +237,9 @@ public class JournalArticleSitemapURLProviderTest {
 	public void testJournalArticleSitemapURLProviderDefaultDisplayPageWhenDisplayPageTemplateInConnectedDesignLibrary()
 		throws Exception {
 
-		Group designLibraryGroup = _addConnectedDesignLibraryGroup();
-
 		JournalArticle article = JournalTestUtil.addArticleWithWorkflow(
 			_group.getGroupId(), true);
+		Group designLibraryGroup = _addConnectedDesignLibraryGroup();
 
 		DisplayPageTemplateTestUtil.addDisplayPageTemplate(
 			designLibraryGroup.getGroupId(),
@@ -458,10 +457,9 @@ public class JournalArticleSitemapURLProviderTest {
 	public void testJournalArticleSitemapURLProviderSpecificDisplayPageWhenDisplayPageTemplateInConnectedDesignLibrary()
 		throws Exception {
 
-		Group designLibraryGroup = _addConnectedDesignLibraryGroup();
-
 		JournalArticle article = JournalTestUtil.addArticleWithWorkflow(
 			_group.getGroupId(), true);
+		Group designLibraryGroup = _addConnectedDesignLibraryGroup();
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
@@ -535,12 +533,8 @@ public class JournalArticleSitemapURLProviderTest {
 
 	private Group _addConnectedDesignLibraryGroup() throws Exception {
 		_depotEntry = _depotEntryLocalService.addDepotEntry(
-			HashMapBuilder.put(
-				LocaleUtil.getDefault(), RandomTestUtil.randomString()
-			).build(),
-			HashMapBuilder.put(
-				LocaleUtil.getDefault(), RandomTestUtil.randomString()
-			).build(),
+			RandomTestUtil.randomLocaleStringMap(),
+			RandomTestUtil.randomLocaleStringMap(),
 			DepotConstants.TYPE_DESIGN_LIBRARY,
 			ServiceContextTestUtil.getServiceContext());
 

@@ -241,8 +241,7 @@ public class LayoutSEOLinkManagerCanonicalLayoutSEOLinkTest {
 		_layoutSEOEntryLocalService.updateLayoutSEOEntry(
 			TestPropsValues.getUserId(), _group.getGroupId(), false,
 			_layout.getLayoutId(), false,
-			Collections.singletonMap(
-				LocaleUtil.getDefault(), "http://example.com"),
+			Collections.singletonMap(LocaleUtil.getDefault(), _CANONICAL_URL),
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		LayoutSEOLink canonicalLayoutSEOLink =
@@ -259,8 +258,7 @@ public class LayoutSEOLinkManagerCanonicalLayoutSEOLinkTest {
 		_layoutSEOEntryLocalService.updateLayoutSEOEntry(
 			TestPropsValues.getUserId(), _group.getGroupId(), false,
 			_layout.getLayoutId(), true,
-			Collections.singletonMap(
-				LocaleUtil.getDefault(), "http://example.com"),
+			Collections.singletonMap(LocaleUtil.getDefault(), _CANONICAL_URL),
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		String canonicalURL = _portal.getCanonicalURL(
@@ -270,8 +268,7 @@ public class LayoutSEOLinkManagerCanonicalLayoutSEOLinkTest {
 			_layoutSEOLinkManager.getCanonicalLayoutSEOLink(
 				_layout, LocaleUtil.getDefault(), canonicalURL, _themeDisplay);
 
-		Assert.assertEquals(
-			"http://example.com", canonicalLayoutSEOLink.getHref());
+		Assert.assertEquals(_CANONICAL_URL, canonicalLayoutSEOLink.getHref());
 	}
 
 	@FeatureFlag("LPD-57283")
@@ -297,8 +294,7 @@ public class LayoutSEOLinkManagerCanonicalLayoutSEOLinkTest {
 		_layoutSEOEntryLocalService.updateLayoutSEOEntry(
 			TestPropsValues.getUserId(), _group.getGroupId(),
 			layout.isPrivateLayout(), layout.getLayoutId(), true,
-			Collections.singletonMap(
-				LocaleUtil.getDefault(), "http://example.com"),
+			Collections.singletonMap(LocaleUtil.getDefault(), _CANONICAL_URL),
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		Layout virtualLayout = new VirtualLayout(layout, _group);
@@ -319,8 +315,7 @@ public class LayoutSEOLinkManagerCanonicalLayoutSEOLinkTest {
 					virtualLayout, LocaleUtil.getDefault(), canonicalURL,
 					Collections.singleton(LocaleUtil.getDefault()))) {
 
-			Assert.assertNotEquals(
-				"http://example.com", layoutSEOLink.getHref());
+			Assert.assertNotEquals(_CANONICAL_URL, layoutSEOLink.getHref());
 		}
 	}
 
@@ -523,6 +518,8 @@ public class LayoutSEOLinkManagerCanonicalLayoutSEOLinkTest {
 			unsafeRunnable.run();
 		}
 	}
+
+	private static final String _CANONICAL_URL = "http://example.com";
 
 	private static final String _LAYOUT_SEO_CONFIGURATION_PID =
 		"com.liferay.layout.seo.internal.configuration." +
