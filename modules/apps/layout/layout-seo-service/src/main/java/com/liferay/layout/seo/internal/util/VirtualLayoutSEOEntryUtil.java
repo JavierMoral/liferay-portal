@@ -23,7 +23,7 @@ public class VirtualLayoutSEOEntryUtil {
 	 * Graph tags, whose values are authored on the template and resolve against
 	 * the mapped asset.
 	 */
-	public static LayoutSEOEntry fetchVisitedLayoutSEOEntry(
+	public static LayoutSEOEntry fetchLayoutSEOEntry(
 		Layout layout, LayoutSEOEntryLocalService layoutSEOEntryLocalService) {
 
 		if (layout instanceof VirtualLayout) {

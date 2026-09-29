@@ -180,7 +180,7 @@ public class LayoutSEOLinkManagerImpl implements LayoutSEOLinkManager {
 		Locale siteDefaultLocale) {
 
 		LayoutSEOEntry layoutSEOEntry =
-			VirtualLayoutSEOEntryUtil.fetchVisitedLayoutSEOEntry(
+			VirtualLayoutSEOEntryUtil.fetchLayoutSEOEntry(
 				layout, _layoutSEOEntryLocalService);
 
 		if ((layoutSEOEntry == null) ||

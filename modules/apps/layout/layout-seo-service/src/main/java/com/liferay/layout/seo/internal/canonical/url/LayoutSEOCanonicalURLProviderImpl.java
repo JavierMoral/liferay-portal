@@ -97,7 +97,7 @@ public class LayoutSEOCanonicalURLProviderImpl
 			_language.getAvailableLocales(layout.getGroupId()));
 
 		LayoutSEOEntry layoutSEOEntry =
-			VirtualLayoutSEOEntryUtil.fetchVisitedLayoutSEOEntry(
+			VirtualLayoutSEOEntryUtil.fetchLayoutSEOEntry(
 				layout, _layoutSEOEntryLocalService);
 
 		if ((layoutSEOEntry == null) ||
@@ -232,7 +232,7 @@ public class LayoutSEOCanonicalURLProviderImpl
 
 	private String _getLayoutCanonicalURL(Locale locale, Layout layout) {
 		LayoutSEOEntry layoutSEOEntry =
-			VirtualLayoutSEOEntryUtil.fetchVisitedLayoutSEOEntry(
+			VirtualLayoutSEOEntryUtil.fetchLayoutSEOEntry(
 				layout, _layoutSEOEntryLocalService);
 
 		if ((layoutSEOEntry == null) ||

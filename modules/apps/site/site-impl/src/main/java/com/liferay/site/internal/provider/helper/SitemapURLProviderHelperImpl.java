@@ -47,7 +47,7 @@ public class SitemapURLProviderHelperImpl implements SitemapURLProviderHelper {
 			return true;
 		}
 
-		LayoutSEOEntry layoutSEOEntry = _fetchVisitedLayoutSEOEntry(layout);
+		LayoutSEOEntry layoutSEOEntry = _fetchLayoutSEOEntry(layout);
 
 		if ((layoutSEOEntry != null) &&
 			layoutSEOEntry.isCanonicalURLEnabled()) {
@@ -95,7 +95,7 @@ public class SitemapURLProviderHelperImpl implements SitemapURLProviderHelper {
 		return false;
 	}
 
-	private LayoutSEOEntry _fetchVisitedLayoutSEOEntry(Layout layout) {
+	private LayoutSEOEntry _fetchLayoutSEOEntry(Layout layout) {
 		if (layout instanceof VirtualLayout) {
 			VirtualLayout virtualLayout = (VirtualLayout)layout;
 
