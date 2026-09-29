@@ -15,6 +15,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.LayoutSet;
+import com.liferay.portal.kernel.model.VirtualLayoutConstants;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.struts.LastPath;
@@ -142,6 +143,11 @@ public class VirtualHostFilter extends BasePortalFilter {
 			LayoutImpl.hasFriendlyURLKeyword(friendlyURL)) {
 
 			return false;
+		}
+
+		if (friendlyURL.startsWith(_VIRTUAL_LAYOUT_SEPARATOR_SLASH)) {
+			friendlyURL = friendlyURL.substring(
+				VirtualLayoutConstants.CANONICAL_URL_SEPARATOR.length());
 		}
 
 		int code = LayoutImpl.validateFriendlyURL(friendlyURL, false);
@@ -527,6 +533,9 @@ public class VirtualHostFilter extends BasePortalFilter {
 
 	private static final String _PUBLIC_GROUP_SERVLET_MAPPING_SLASH =
 		_PUBLIC_GROUP_SERVLET_MAPPING + StringPool.SLASH;
+
+	private static final String _VIRTUAL_LAYOUT_SEPARATOR_SLASH =
+		VirtualLayoutConstants.CANONICAL_URL_SEPARATOR + StringPool.SLASH;
 
 	private static final String _WIDGET_SERVLET_MAPPING_SLASH =
 		PropsValues.WIDGET_SERVLET_MAPPING + StringPool.SLASH;
