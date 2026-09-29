@@ -9,14 +9,40 @@ import com.liferay.info.item.InfoItemFormVariation;
 import com.liferay.info.item.InfoItemServiceRegistryUtil;
 import com.liferay.info.item.provider.InfoItemFormVariationsProvider;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
+import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 /**
  * @author Mikel Lorza
+ * @author Javier Moral
  */
 public class LayoutPageTemplateEntryUtil {
+
+	public static LayoutPageTemplateEntry fetchDefaultLayoutPageTemplateEntry(
+		long classNameId, long classTypeId, long[] designLibraryGroupIds,
+		long groupId) {
+
+		String classTypeKey = getClassTypeKey(
+			classNameId, classTypeId, groupId);
+
+		for (long curGroupId :
+				ArrayUtil.append(new long[] {groupId}, designLibraryGroupIds)) {
+
+			LayoutPageTemplateEntry layoutPageTemplateEntry =
+				LayoutPageTemplateEntryLocalServiceUtil.
+					fetchDefaultLayoutPageTemplateEntry(
+						curGroupId, classNameId, classTypeKey);
+
+			if (layoutPageTemplateEntry != null) {
+				return layoutPageTemplateEntry;
+			}
+		}
+
+		return null;
+	}
 
 	public static long getClassTypeId(
 		LayoutPageTemplateEntry layoutPageTemplateEntry) {
