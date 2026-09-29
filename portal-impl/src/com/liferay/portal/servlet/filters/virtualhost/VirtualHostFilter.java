@@ -145,7 +145,7 @@ public class VirtualHostFilter extends BasePortalFilter {
 			return false;
 		}
 
-		if (friendlyURL.startsWith(_VIRTUAL_LAYOUT_SEPARATOR_SLASH)) {
+		if (friendlyURL.startsWith(_CANONICAL_URL_SEPARATOR_SLASH)) {
 			friendlyURL = friendlyURL.substring(
 				VirtualLayoutConstants.CANONICAL_URL_SEPARATOR.length());
 		}
@@ -511,6 +511,9 @@ public class VirtualHostFilter extends BasePortalFilter {
 		}
 	}
 
+	private static final String _CANONICAL_URL_SEPARATOR_SLASH =
+		VirtualLayoutConstants.CANONICAL_URL_SEPARATOR + StringPool.SLASH;
+
 	private static final String _PATH_DOCUMENTS = "/documents/";
 
 	private static final String _PATH_MODULE_SLASH =
@@ -533,9 +536,6 @@ public class VirtualHostFilter extends BasePortalFilter {
 
 	private static final String _PUBLIC_GROUP_SERVLET_MAPPING_SLASH =
 		_PUBLIC_GROUP_SERVLET_MAPPING + StringPool.SLASH;
-
-	private static final String _VIRTUAL_LAYOUT_SEPARATOR_SLASH =
-		VirtualLayoutConstants.CANONICAL_URL_SEPARATOR + StringPool.SLASH;
 
 	private static final String _WIDGET_SERVLET_MAPPING_SLASH =
 		PropsValues.WIDGET_SERVLET_MAPPING + StringPool.SLASH;
