@@ -136,19 +136,14 @@ public class JournalArticleSitemapURLProvider implements SitemapURLProvider {
 			return;
 		}
 
-		long[] designLibraryGroupIds =
-			DesignLibraryUtil.getConnectedDesignLibraryGroupIds(
-				themeDisplay.getCompanyId(), layoutSet.getGroupId());
-
 		if (layout.isTypeAssetDisplay()) {
 			_visitArticles(
-				designLibraryGroupIds, element, false,
-				_getDisplayPageTemplateArticles(layout), layout, layoutSet,
-				themeDisplay);
+				element, false, _getDisplayPageTemplateArticles(layout), layout,
+				layoutSet, themeDisplay);
 		}
 		else {
 			_visitArticles(
-				designLibraryGroupIds, element, true,
+				element, true,
 				_getDisplayPageArticles(layoutSet.getGroupId(), layoutUuid),
 				null, layoutSet, themeDisplay);
 		}
@@ -188,20 +183,17 @@ public class JournalArticleSitemapURLProvider implements SitemapURLProvider {
 		long classNameId, long classTypeId, long[] designLibraryGroupIds,
 		long groupId) {
 
-		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			_layoutPageTemplateEntryLocalService.
-				fetchDefaultLayoutPageTemplateEntry(
-					groupId, classNameId, classTypeId);
+		String classTypeKey = LayoutPageTemplateEntryUtil.getClassTypeKey(
+			classNameId, classTypeId, groupId);
+		long[] groupIds = {groupId};
 
-		if (layoutPageTemplateEntry != null) {
-			return layoutPageTemplateEntry;
-		}
+		for (long curGroupId :
+				ArrayUtil.append(groupIds, designLibraryGroupIds)) {
 
-		for (long designLibraryGroupId : designLibraryGroupIds) {
-			layoutPageTemplateEntry =
+			LayoutPageTemplateEntry layoutPageTemplateEntry =
 				_layoutPageTemplateEntryLocalService.
 					fetchDefaultLayoutPageTemplateEntry(
-						designLibraryGroupId, classNameId, classTypeId);
+						curGroupId, classNameId, classTypeKey);
 
 			if (layoutPageTemplateEntry != null) {
 				return layoutPageTemplateEntry;
@@ -491,7 +483,7 @@ public class JournalArticleSitemapURLProvider implements SitemapURLProvider {
 	}
 
 	private void _visitArticles(
-			long[] designLibraryGroupIds, Element element, boolean headCheck,
+			Element element, boolean headCheck,
 			List<JournalArticle> journalArticles, Layout layout,
 			LayoutSet layoutSet, ThemeDisplay themeDisplay)
 		throws PortalException {
@@ -500,6 +492,9 @@ public class JournalArticleSitemapURLProvider implements SitemapURLProvider {
 			return;
 		}
 
+		long[] designLibraryGroupIds =
+			DesignLibraryUtil.getConnectedDesignLibraryGroupIds(
+				themeDisplay.getCompanyId(), layoutSet.getGroupId());
 		String portalURL = _portal.getPortalURL(layoutSet, themeDisplay);
 		Set<String> processedArticleIds = new HashSet<>();
 		Set<Locale> siteAvailableLocales = _language.getAvailableLocales(
