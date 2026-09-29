@@ -136,7 +136,7 @@ public class OpenGraphTopHeadDynamicInclude extends BaseDynamicInclude {
 					_addLinkTag(httpServletRequest, layoutSEOLink));
 			}
 
-			LayoutSEOEntry layoutSEOEntry = _fetchSourceLayoutSEOEntry(layout);
+			LayoutSEOEntry layoutSEOEntry = _fetchLayoutSEOEntry(layout);
 
 			if (layoutSEOEntry != null) {
 				List<LayoutSEOEntryCustomMetaTag> layoutSEOEntryCustomMetaTags =
@@ -359,7 +359,7 @@ public class OpenGraphTopHeadDynamicInclude extends BaseDynamicInclude {
 		return sb.toString();
 	}
 
-	private LayoutSEOEntry _fetchSourceLayoutSEOEntry(Layout layout) {
+	private LayoutSEOEntry _fetchLayoutSEOEntry(Layout layout) {
 		long groupId = layout.getGroupId();
 
 		if (layout instanceof VirtualLayout) {
