@@ -213,10 +213,8 @@ public class ObjectEntrySitemapURLProvider implements SitemapURLProvider {
 	private LayoutPageTemplateEntry _fetchDefaultLayoutPageTemplateEntry(
 		long classNameId, long[] designLibraryGroupIds, long groupId) {
 
-		long[] groupIds = {groupId};
-
 		for (long curGroupId :
-				ArrayUtil.append(groupIds, designLibraryGroupIds)) {
+				ArrayUtil.append(new long[] {groupId}, designLibraryGroupIds)) {
 
 			LayoutPageTemplateEntry layoutPageTemplateEntry =
 				_layoutPageTemplateEntryLocalService.

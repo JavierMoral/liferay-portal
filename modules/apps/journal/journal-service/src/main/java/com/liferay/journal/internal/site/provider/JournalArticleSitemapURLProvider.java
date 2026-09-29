@@ -185,10 +185,9 @@ public class JournalArticleSitemapURLProvider implements SitemapURLProvider {
 
 		String classTypeKey = LayoutPageTemplateEntryUtil.getClassTypeKey(
 			classNameId, classTypeId, groupId);
-		long[] groupIds = {groupId};
 
 		for (long curGroupId :
-				ArrayUtil.append(groupIds, designLibraryGroupIds)) {
+				ArrayUtil.append(new long[] {groupId}, designLibraryGroupIds)) {
 
 			LayoutPageTemplateEntry layoutPageTemplateEntry =
 				_layoutPageTemplateEntryLocalService.
