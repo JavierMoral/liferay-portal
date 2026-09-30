@@ -216,11 +216,6 @@ public interface LayoutSEOEntryLocalService
 	public long dynamicQueryCount(
 		DynamicQuery dynamicQuery, Projection projection);
 
-	/**
-	 * Returns the entry the layout itself owns. A virtual layout reports the
-	 * group it is mounted on but the layout ID of the layout it wraps, so the
-	 * pair only addresses an entry once it is read off the source layout.
-	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public LayoutSEOEntry fetchLayoutSEOEntry(Layout layout);
 
@@ -410,4 +405,4 @@ public interface LayoutSEOEntryLocalService
 		throws E;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:918124474
+// LIFERAY-SERVICE-BUILDER-HASH:2067909273

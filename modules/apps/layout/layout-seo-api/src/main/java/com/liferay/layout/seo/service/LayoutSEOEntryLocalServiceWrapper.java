@@ -246,11 +246,6 @@ public class LayoutSEOEntryLocalServiceWrapper
 			dynamicQuery, projection);
 	}
 
-	/**
-	 * Returns the entry the layout itself owns. A virtual layout reports the
-	 * group it is mounted on but the layout ID of the layout it wraps, so the
-	 * pair only addresses an entry once it is read off the source layout.
-	 */
 	@Override
 	public LayoutSEOEntry fetchLayoutSEOEntry(
 		com.liferay.portal.kernel.model.Layout layout) {
@@ -564,4 +559,4 @@ public class LayoutSEOEntryLocalServiceWrapper
 	private LayoutSEOEntryLocalService _layoutSEOEntryLocalService;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:99015203
+// LIFERAY-SERVICE-BUILDER-HASH:1108466164
