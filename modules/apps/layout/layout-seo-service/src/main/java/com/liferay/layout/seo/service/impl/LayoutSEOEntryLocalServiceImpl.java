@@ -124,11 +124,6 @@ public class LayoutSEOEntryLocalServiceImpl
 			layoutSEOEntryPersistence.findByUUID_G(uuid, groupId));
 	}
 
-	/**
-	 * Returns the entry the layout itself owns. A virtual layout reports the
-	 * group it is mounted on but the layout ID of the layout it wraps, so the
-	 * pair only addresses an entry once it is read off the source layout.
-	 */
 	@Override
 	public LayoutSEOEntry fetchLayoutSEOEntry(Layout layout) {
 		if (layout instanceof VirtualLayout) {
