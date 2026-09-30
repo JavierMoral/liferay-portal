@@ -129,10 +129,6 @@ public class LayoutSEOLinkManagerCanonicalLayoutSEOLinkTest {
 		designLibraryGroup = _groupLocalService.updateFriendlyURL(
 			designLibraryGroup.getGroupId(), friendlyURL.concat("-designs"));
 
-		_group = GroupTestUtil.updateDisplaySettings(
-			_group.getGroupId(), Arrays.asList(LocaleUtil.SPAIN, LocaleUtil.US),
-			LocaleUtil.US);
-
 		String spainFriendlyURL = friendlyURL.concat("-es");
 
 		Layout layout = LayoutTestUtil.addTypePortletLayout(
@@ -147,6 +143,10 @@ public class LayoutSEOLinkManagerCanonicalLayoutSEOLinkTest {
 			).put(
 				LocaleUtil.US, friendlyURL
 			).build());
+
+		_group = GroupTestUtil.updateDisplaySettings(
+			_group.getGroupId(), Arrays.asList(LocaleUtil.SPAIN, LocaleUtil.US),
+			LocaleUtil.US);
 
 		Layout virtualLayout = new VirtualLayout(layout, _group);
 
