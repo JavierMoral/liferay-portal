@@ -24,6 +24,7 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.URLCodec;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.virtual.host.SiteVirtualHostUtil;
@@ -135,6 +136,11 @@ public class VirtualHostFilter extends BasePortalFilter {
 	protected boolean isValidFriendlyURL(String friendlyURL) {
 		friendlyURL = StringUtil.toLowerCase(friendlyURL);
 
+		if (friendlyURL.startsWith(_CANONICAL_URL_SEPARATOR_SLASH)) {
+			friendlyURL = friendlyURL.substring(
+				VirtualLayoutConstants.CANONICAL_URL_SEPARATOR.length());
+		}
+
 		if (PortalInstances.isVirtualHostsIgnorePath(friendlyURL) ||
 			friendlyURL.startsWith(_PATH_MODULE_SLASH) ||
 			friendlyURL.startsWith(_PRIVATE_GROUP_SERVLET_MAPPING_SLASH) ||
@@ -143,11 +149,6 @@ public class VirtualHostFilter extends BasePortalFilter {
 			LayoutImpl.hasFriendlyURLKeyword(friendlyURL)) {
 
 			return false;
-		}
-
-		if (friendlyURL.startsWith(_CANONICAL_URL_SEPARATOR_SLASH)) {
-			friendlyURL = friendlyURL.substring(
-				VirtualLayoutConstants.CANONICAL_URL_SEPARATOR.length());
 		}
 
 		int code = LayoutImpl.validateFriendlyURL(friendlyURL, false);
@@ -167,8 +168,9 @@ public class VirtualHostFilter extends BasePortalFilter {
 			HttpServletResponse httpServletResponse, FilterChain filterChain)
 		throws Exception {
 
-		String originalFriendlyURL = HttpComponentsUtil.normalizePath(
-			httpServletRequest.getRequestURI());
+		String originalFriendlyURL = _decodeCanonicalURLSeparator(
+			HttpComponentsUtil.normalizePath(
+				httpServletRequest.getRequestURI()));
 
 		String friendlyURL = originalFriendlyURL;
 
@@ -465,6 +467,17 @@ public class VirtualHostFilter extends BasePortalFilter {
 		requestDispatcher.forward(httpServletRequest, httpServletResponse);
 	}
 
+	private String _decodeCanonicalURLSeparator(String friendlyURL) {
+		if (!friendlyURL.startsWith(_ENCODED_CANONICAL_URL_SEPARATOR_SLASH)) {
+			return friendlyURL;
+		}
+
+		String path = friendlyURL.substring(
+			_ENCODED_CANONICAL_URL_SEPARATOR_SLASH.length());
+
+		return _CANONICAL_URL_SEPARATOR_SLASH + path;
+	}
+
 	private String _findLanguageId(String friendlyURL) {
 		if (friendlyURL.isEmpty() ||
 			(friendlyURL.charAt(0) != CharPool.SLASH)) {
@@ -513,6 +526,12 @@ public class VirtualHostFilter extends BasePortalFilter {
 
 	private static final String _CANONICAL_URL_SEPARATOR_SLASH =
 		VirtualLayoutConstants.CANONICAL_URL_SEPARATOR + StringPool.SLASH;
+
+	private static final String _ENCODED_CANONICAL_URL_SEPARATOR_SLASH =
+		StringPool.SLASH +
+			URLCodec.encodeURL(
+				VirtualLayoutConstants.CANONICAL_URL_SEPARATOR.substring(1)) +
+					StringPool.SLASH;
 
 	private static final String _PATH_DOCUMENTS = "/documents/";
 
