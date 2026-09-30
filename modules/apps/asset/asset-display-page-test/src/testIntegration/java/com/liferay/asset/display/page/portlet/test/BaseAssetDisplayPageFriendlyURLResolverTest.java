@@ -98,7 +98,7 @@ public class BaseAssetDisplayPageFriendlyURLResolverTest {
 		_testGetLayoutFriendlyURLCompositeLookAndFeelWhenMasterLayout();
 		_testGetLayoutFriendlyURLCompositeLookAndFeelWhenNotInherited();
 		_testGetLayoutFriendlyURLCompositeLookAndFeelWhenThemeSettingSet();
-		_testGetLayoutFriendlyURLCompositeVirtualGroupPrefix();
+		_testGetLayoutFriendlyURLCompositeVirtualGroup();
 		_testGetLayoutFriendlyURLCompositeWhenDisconnected();
 		_testGetLayoutFriendlyURLCompositeWhenNoDisplayPage();
 	}
@@ -377,7 +377,7 @@ public class BaseAssetDisplayPageFriendlyURLResolverTest {
 			layout.getThemeSetting(_themeSettingKey, "regular"));
 	}
 
-	private void _testGetLayoutFriendlyURLCompositeVirtualGroupPrefix()
+	private void _testGetLayoutFriendlyURLCompositeVirtualGroup()
 		throws Exception {
 
 		Group designLibraryGroup = _addConnectedDesignLibraryGroup(_group);
