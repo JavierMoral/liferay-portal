@@ -258,14 +258,10 @@ public class ObjectEntrySitemapURLProviderTest {
 			ObjectEntry objectEntry = _addObjectEntry(
 				_group.getGroupId(), _siteObjectDefinition);
 
-			Layout layout = _layoutLocalService.getLayout(
-				layoutPageTemplateEntry.getPlid());
-
-			// A layout ID is a sequence handed out per group, so the visited
-			// site owns an unrelated entry under the same layout ID as the
-			// library template
-
-			_updateLayoutSEOEntry(true, layout);
+			_updateLayoutSEOEntry(
+				true,
+				_layoutLocalService.getLayout(
+					layoutPageTemplateEntry.getPlid()));
 
 			Element rootElement = _getRootElement();
 
