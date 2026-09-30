@@ -268,10 +268,6 @@ public class OpenGraphTopHeadDynamicIncludeTest {
 			ServiceContextTestUtil.getServiceContext(
 				designLibraryGroup.getGroupId()));
 
-		// A layout ID is a sequence handed out per group, so the visited site
-		// owns an unrelated entry under the same layout ID as the library
-		// template
-
 		_layoutSEOEntryLocalService.updateLayoutSEOEntry(
 			TestPropsValues.getUserId(), _group.getGroupId(),
 			layout.isPrivateLayout(), layout.getLayoutId(), true,
