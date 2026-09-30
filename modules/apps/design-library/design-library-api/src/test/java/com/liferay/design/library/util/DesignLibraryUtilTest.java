@@ -7,6 +7,8 @@ package com.liferay.design.library.util;
 
 import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.model.DepotEntry;
+import com.liferay.depot.model.DepotEntryGroupRel;
+import com.liferay.depot.service.DepotEntryGroupRelLocalService;
 import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -47,6 +49,18 @@ public class DesignLibraryUtilTest {
 
 	@Before
 	public void setUp() {
+		ReflectionTestUtil.setFieldValue(
+			DesignLibraryUtil.class, "_depotEntryGroupRelLocalServiceSnapshot",
+			new Snapshot<DepotEntryGroupRelLocalService>(
+				DesignLibraryUtil.class, DepotEntryGroupRelLocalService.class) {
+
+				@Override
+				public DepotEntryGroupRelLocalService get() {
+					return _depotEntryGroupRelLocalService;
+				}
+
+			});
+
 		ReflectionTestUtil.setFieldValue(
 			DesignLibraryUtil.class, "_depotEntryLocalServiceSnapshot",
 			new Snapshot<DepotEntryLocalService>(
@@ -155,11 +169,38 @@ public class DesignLibraryUtilTest {
 
 	@Test
 	@TestInfo("LPD-105566")
-	public void testIsConnectedDesignLibraryGroupId() throws Exception {
-		long companyId = RandomTestUtil.randomLong();
-		long groupId = RandomTestUtil.randomLong();
+	public void testIsConnectedDesignLibraryGroupId() {
+		long designLibraryGroupId = RandomTestUtil.randomLong();
 
-		_setUpGroup(companyId, groupId);
+		DepotEntry depotEntry = _getDepotEntry(designLibraryGroupId);
+
+		long companyId = RandomTestUtil.randomLong();
+
+		Mockito.when(
+			depotEntry.getCompanyId()
+		).thenReturn(
+			companyId
+		);
+
+		long depotEntryId = RandomTestUtil.randomLong();
+
+		Mockito.when(
+			depotEntry.getDepotEntryId()
+		).thenReturn(
+			depotEntryId
+		);
+
+		Mockito.when(
+			depotEntry.getType()
+		).thenReturn(
+			DepotConstants.TYPE_DESIGN_LIBRARY
+		);
+
+		Mockito.when(
+			_depotEntryLocalService.fetchGroupDepotEntry(designLibraryGroupId)
+		).thenReturn(
+			depotEntry
+		);
 
 		_featureFlagManagerUtilMockedStatic.when(
 			() -> FeatureFlagManagerUtil.isEnabled(companyId, "LPD-57283")
@@ -167,22 +208,23 @@ public class DesignLibraryUtilTest {
 			true
 		);
 
-		long designLibraryGroupId = RandomTestUtil.randomLong();
-
-		List<DepotEntry> depotEntries = Collections.singletonList(
-			_getDepotEntry(designLibraryGroupId));
-
-		Mockito.when(
-			_depotEntryLocalService.getGroupConnectedDepotEntries(
-				groupId, DepotConstants.TYPE_DESIGN_LIBRARY, QueryUtil.ALL_POS,
-				QueryUtil.ALL_POS)
-		).thenReturn(
-			depotEntries
-		);
+		long groupId = RandomTestUtil.randomLong();
 
 		Assert.assertFalse(
 			DesignLibraryUtil.isConnectedDesignLibraryGroupId(
-				RandomTestUtil.randomLong(), groupId));
+				designLibraryGroupId, groupId));
+
+		DepotEntryGroupRel depotEntryGroupRel = Mockito.mock(
+			DepotEntryGroupRel.class);
+
+		Mockito.when(
+			_depotEntryGroupRelLocalService.
+				fetchDepotEntryGroupRelByDepotEntryIdToGroupId(
+					depotEntryId, groupId)
+		).thenReturn(
+			depotEntryGroupRel
+		);
+
 		Assert.assertTrue(
 			DesignLibraryUtil.isConnectedDesignLibraryGroupId(
 				designLibraryGroupId, groupId));
@@ -344,6 +386,9 @@ public class DesignLibraryUtilTest {
 		);
 	}
 
+	private final DepotEntryGroupRelLocalService
+		_depotEntryGroupRelLocalService = Mockito.mock(
+			DepotEntryGroupRelLocalService.class);
 	private final DepotEntryLocalService _depotEntryLocalService = Mockito.mock(
 		DepotEntryLocalService.class);
 	private final MockedStatic<FeatureFlagManagerUtil>
