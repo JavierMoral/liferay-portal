@@ -33,16 +33,9 @@ import jakarta.servlet.http.HttpServletRequest;
  */
 public class DesignLibraryUtil {
 
-	public static long[] getConnectedDesignLibraryGroupIds(long groupId) {
-		Group group = GroupLocalServiceUtil.fetchGroup(groupId);
-
-		if (group == null) {
-			return new long[0];
-		}
-
+	public static long[] fetchConnectedDesignLibraryGroupIds(long groupId) {
 		try {
-			return getConnectedDesignLibraryGroupIds(
-				group.getCompanyId(), groupId);
+			return getConnectedDesignLibraryGroupIds(groupId);
 		}
 		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
@@ -53,11 +46,14 @@ public class DesignLibraryUtil {
 		}
 	}
 
-	public static long[] getConnectedDesignLibraryGroupIds(
-			long companyId, long groupId)
+	public static long[] getConnectedDesignLibraryGroupIds(long groupId)
 		throws PortalException {
 
-		if (!FeatureFlagManagerUtil.isEnabled(companyId, "LPD-57283")) {
+		Group group = GroupLocalServiceUtil.getGroup(groupId);
+
+		if (!FeatureFlagManagerUtil.isEnabled(
+				group.getCompanyId(), "LPD-57283")) {
+
 			return new long[0];
 		}
 
@@ -97,12 +93,11 @@ public class DesignLibraryUtil {
 	}
 
 	public static boolean isConnectedDesignLibraryGroupId(
-			long companyId, long designLibraryGroupId, long groupId)
+			long designLibraryGroupId, long groupId)
 		throws PortalException {
 
 		return ArrayUtil.contains(
-			getConnectedDesignLibraryGroupIds(companyId, groupId),
-			designLibraryGroupId);
+			getConnectedDesignLibraryGroupIds(groupId), designLibraryGroupId);
 	}
 
 	public static boolean isDesignLibraryScope(Group group) {
