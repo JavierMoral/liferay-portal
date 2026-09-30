@@ -392,9 +392,6 @@ public class BaseAssetDisplayPageFriendlyURLResolverTest {
 
 		Layout virtualLayout = _getLayout(journalArticle);
 
-		// Every portlet URL on the page is composed from these addresses, and
-		// VirtualLayoutFriendlyURLResolver only resolves them under the prefix
-
 		Assert.assertEquals(
 			StringBundler.concat(
 				VirtualLayoutConstants.CANONICAL_URL_SEPARATOR,
