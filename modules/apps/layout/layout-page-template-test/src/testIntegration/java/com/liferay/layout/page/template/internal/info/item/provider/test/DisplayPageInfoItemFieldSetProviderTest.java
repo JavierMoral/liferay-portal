@@ -137,7 +137,7 @@ public class DisplayPageInfoItemFieldSetProviderTest {
 
 	@FeatureFlag("LPD-57283")
 	@Test
-	@TestInfo("LPD-104243")
+	@TestInfo({"LPD-104243", "LPD-107768"})
 	public void testGetInfoFieldSet() throws Exception {
 		FeatureFlagTestUtil.invokeFeatureFlagListeners(
 			TestPropsValues.getCompanyId(), true, "LPD-57283");
@@ -146,51 +146,7 @@ public class DisplayPageInfoItemFieldSetProviderTest {
 
 		_testGetInfoFieldSetWithDisconnectedDesignLibrary();
 		_testGetInfoFieldSetWithConnectedDesignLibrary();
-	}
-
-	@FeatureFlag("LPD-57283")
-	@Test
-	@TestInfo("LPD-104243")
-	public void testGetInfoFieldSetWithConnectedDesignLibraryWithSameName()
-		throws Exception {
-
-		FeatureFlagTestUtil.invokeFeatureFlagListeners(
-			TestPropsValues.getCompanyId(), true, "LPD-57283");
-
-		Group designLibraryGroup = _addConnectedDesignLibraryGroup();
-
-		LayoutPageTemplateEntry designLibraryLayoutPageTemplateEntry =
-			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
-				designLibraryGroup.getGroupId(), _classNameId,
-				_journalArticle.getDDMStructureKey(), false, null,
-				_layoutPageTemplateEntry.getName(),
-				WorkflowConstants.STATUS_APPROVED);
-
-		List<InfoField<?>> sortedInfoFields = _getSortedInfoFields();
-
-		Assert.assertEquals(
-			sortedInfoFields.toString(), 3, sortedInfoFields.size());
-
-		long layoutPageTemplateEntryId =
-			designLibraryLayoutPageTemplateEntry.getLayoutPageTemplateEntryId();
-
-		_assertInfoField(
-			"LayoutPageTemplateEntry__ERC__" +
-				designLibraryLayoutPageTemplateEntry.getExternalReferenceCode(),
-			sortedInfoFields.get(0),
-			_getLabel(
-				designLibraryGroup, designLibraryLayoutPageTemplateEntry,
-				LocaleUtil.getSiteDefault()),
-			"LayoutPageTemplateEntry_" + layoutPageTemplateEntryId,
-			"LayoutPageTemplateEntry_" + layoutPageTemplateEntryId);
-
-		_assertInfoField(
-			"LayoutPageTemplateEntry__ERC__" +
-				_layoutPageTemplateEntry.getExternalReferenceCode(),
-			sortedInfoFields.get(2), _layoutPageTemplateEntry.getName(),
-			_layoutPageTemplateEntry.getName(),
-			"LayoutPageTemplateEntry_" +
-				_layoutPageTemplateEntry.getLayoutPageTemplateEntryId());
+		_testGetInfoFieldSetWithConnectedDesignLibraryWithSameName();
 	}
 
 	@FeatureFlag("LPD-57283")
@@ -516,6 +472,45 @@ public class DisplayPageInfoItemFieldSetProviderTest {
 				designLibraryGroup, designLibraryLayoutPageTemplateEntry,
 				LocaleUtil.SPAIN),
 			infoField.getLabel(LocaleUtil.SPAIN));
+	}
+
+	private void _testGetInfoFieldSetWithConnectedDesignLibraryWithSameName()
+		throws Exception {
+
+		Group designLibraryGroup = _addConnectedDesignLibraryGroup();
+
+		LayoutPageTemplateEntry designLibraryLayoutPageTemplateEntry =
+			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
+				designLibraryGroup.getGroupId(), _classNameId,
+				_journalArticle.getDDMStructureKey(), false, null,
+				_layoutPageTemplateEntry.getName(),
+				WorkflowConstants.STATUS_APPROVED);
+
+		long layoutPageTemplateEntryId =
+			designLibraryLayoutPageTemplateEntry.getLayoutPageTemplateEntryId();
+
+		List<InfoField<?>> sortedInfoFields = _getSortedInfoFields();
+
+		Assert.assertEquals(
+			sortedInfoFields.toString(), 4, sortedInfoFields.size());
+
+		_assertInfoField(
+			"LayoutPageTemplateEntry__ERC__" +
+				designLibraryLayoutPageTemplateEntry.getExternalReferenceCode(),
+			sortedInfoFields.get(1),
+			_getLabel(
+				designLibraryGroup, designLibraryLayoutPageTemplateEntry,
+				LocaleUtil.getSiteDefault()),
+			"LayoutPageTemplateEntry_" + layoutPageTemplateEntryId,
+			"LayoutPageTemplateEntry_" + layoutPageTemplateEntryId);
+
+		_assertInfoField(
+			"LayoutPageTemplateEntry__ERC__" +
+				_layoutPageTemplateEntry.getExternalReferenceCode(),
+			sortedInfoFields.get(3), _layoutPageTemplateEntry.getName(),
+			_layoutPageTemplateEntry.getName(),
+			"LayoutPageTemplateEntry_" +
+				_layoutPageTemplateEntry.getLayoutPageTemplateEntryId());
 	}
 
 	private void _testGetInfoFieldSetWithDisconnectedDesignLibrary()
