@@ -5,10 +5,12 @@
 
 package com.liferay.layout.page.template.admin.web.internal.portlet.action;
 
+import com.liferay.design.library.util.DesignLibraryUtil;
 import com.liferay.layout.page.template.admin.constants.LayoutPageTemplateAdminPortletKeys;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.constants.MVCRenderConstants;
@@ -82,6 +84,13 @@ public class EditDisplayPageMVCRenderCommand implements MVCRenderCommand {
 
 	private String _getBackURL(
 		RenderRequest renderRequest, ThemeDisplay themeDisplay) {
+
+		Group scopeGroup = themeDisplay.getScopeGroup();
+
+		if (DesignLibraryUtil.isDesignLibraryScope(scopeGroup)) {
+			return DesignLibraryUtil.getDesignLibraryResourcesURL(
+				scopeGroup, _portal.getHttpServletRequest(renderRequest));
+		}
 
 		String backURL = _portal.escapeRedirect(
 			ParamUtil.getString(renderRequest, "redirect"));
