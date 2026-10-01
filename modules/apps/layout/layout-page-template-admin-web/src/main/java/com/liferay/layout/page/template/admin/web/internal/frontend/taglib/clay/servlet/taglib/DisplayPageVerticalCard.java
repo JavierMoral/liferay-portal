@@ -18,6 +18,7 @@ import com.liferay.info.item.provider.InfoItemFormVariationsProvider;
 import com.liferay.layout.constants.LayoutTypeSettingsConstants;
 import com.liferay.layout.page.template.admin.web.internal.servlet.taglib.util.DisplayPageActionDropdownItemsProvider;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
+import com.liferay.layout.util.BackURLUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.RowChecker;
 import com.liferay.portal.kernel.log.Log;
@@ -103,7 +104,8 @@ public class DisplayPageVerticalCard
 
 			return HttpComponentsUtil.addParameters(
 				PortalUtil.getLayoutFullURL(_draftLayout, _themeDisplay),
-				"p_l_back_url", _themeDisplay.getURLCurrent(),
+				"p_l_back_url",
+				BackURLUtil.getBackURL(_themeDisplay.getURLCurrent()),
 				"p_l_back_url_title", portletDisplay.getPortletDisplayName(),
 				"p_l_mode", Constants.EDIT);
 		}

@@ -10,6 +10,7 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuil
 import com.liferay.info.display.url.provider.InfoEditURLProvider;
 import com.liferay.layout.display.page.LayoutDisplayPageObjectProvider;
 import com.liferay.layout.display.page.constants.LayoutDisplayPageWebKeys;
+import com.liferay.layout.util.BackURLUtil;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
@@ -63,7 +64,8 @@ public class EditDisplayPageMenuDisplayContext {
 							LayoutLocalServiceUtil.fetchDraftLayout(
 								_themeDisplay.getPlid()),
 							_themeDisplay),
-						"p_l_back_url", _themeDisplay.getURLCurrent(),
+						"p_l_back_url",
+						BackURLUtil.getBackURL(_themeDisplay.getURLCurrent()),
 						"p_l_back_url_title",
 						_layoutDisplayPageObjectProvider.getTitle(
 							_themeDisplay.getLocale()),

@@ -11,6 +11,7 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemListBuilder;
 import com.liferay.layout.page.template.admin.web.internal.servlet.taglib.util.LayoutPrototypeActionDropdownItemsProvider;
+import com.liferay.layout.util.BackURLUtil;
 import com.liferay.portal.kernel.dao.search.RowChecker;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -86,7 +87,8 @@ public class LayoutPrototypeVerticalCard
 				_themeDisplay, true);
 
 			return HttpComponentsUtil.addParameters(
-				layoutFullURL, "p_l_back_url", _themeDisplay.getURLCurrent(),
+				layoutFullURL, "p_l_back_url",
+				BackURLUtil.getBackURL(_themeDisplay.getURLCurrent()),
 				"p_l_back_url_title",
 				LanguageUtil.get(
 					_themeDisplay.getLocale(), "widget-page-templates"));

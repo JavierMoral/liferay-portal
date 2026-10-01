@@ -20,6 +20,7 @@ import com.liferay.layout.admin.web.internal.item.selector.MasterLayoutPageTempl
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil;
+import com.liferay.layout.util.BackURLUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONArray;
@@ -158,7 +159,8 @@ public class LayoutLookAndFeelDisplayContext {
 				return HttpComponentsUtil.addParameters(
 					PortalUtil.getLayoutFullURL(
 						masterLayout.fetchDraftLayout(), _themeDisplay),
-					"p_l_back_url", _themeDisplay.getURLCurrent(),
+					"p_l_back_url",
+					BackURLUtil.getBackURL(_themeDisplay.getURLCurrent()),
 					"p_l_back_url_title",
 					LanguageUtil.get(
 						_themeDisplay.getLocale(),

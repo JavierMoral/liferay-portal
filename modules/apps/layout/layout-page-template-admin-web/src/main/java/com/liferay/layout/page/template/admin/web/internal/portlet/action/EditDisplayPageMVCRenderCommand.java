@@ -9,6 +9,7 @@ import com.liferay.design.library.util.DesignLibraryUtil;
 import com.liferay.layout.page.template.admin.constants.LayoutPageTemplateAdminPortletKeys;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
+import com.liferay.layout.util.BackURLUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
@@ -96,7 +97,7 @@ public class EditDisplayPageMVCRenderCommand implements MVCRenderCommand {
 			ParamUtil.getString(renderRequest, "redirect"));
 
 		if (Validator.isNull(backURL)) {
-			return themeDisplay.getURLCurrent();
+			return BackURLUtil.getBackURL(themeDisplay.getURLCurrent());
 		}
 
 		return backURL;

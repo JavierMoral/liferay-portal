@@ -20,6 +20,7 @@ import com.liferay.layout.page.template.admin.web.internal.security.permission.r
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.item.selector.LayoutPageTemplateCollectionItemSelectorCriterion;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
+import com.liferay.layout.util.BackURLUtil;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -345,7 +346,8 @@ public class LayoutPageTemplateEntryActionDropdownItemsProvider {
 				dropdownItem.setHref(
 					HttpComponentsUtil.addParameters(
 						layoutPrototypeGroup.getDisplayURL(_themeDisplay, true),
-						"p_l_back_url", _themeDisplay.getURLCurrent(),
+						"p_l_back_url",
+						BackURLUtil.getBackURL(_themeDisplay.getURLCurrent()),
 						"p_l_back_url_title",
 						portletDisplay.getPortletDisplayName()));
 				dropdownItem.setIcon("pencil");
@@ -358,7 +360,8 @@ public class LayoutPageTemplateEntryActionDropdownItemsProvider {
 			dropdownItem.setHref(
 				HttpComponentsUtil.addParameters(
 					PortalUtil.getLayoutFullURL(_draftLayout, _themeDisplay),
-					"p_l_back_url", _themeDisplay.getURLCurrent(),
+					"p_l_back_url",
+					BackURLUtil.getBackURL(_themeDisplay.getURLCurrent()),
 					"p_l_back_url_title", portletDisplay.getTitle(), "p_l_mode",
 					Constants.EDIT));
 			dropdownItem.setIcon("pencil");
@@ -600,7 +603,8 @@ public class LayoutPageTemplateEntryActionDropdownItemsProvider {
 				previewLayout, _themeDisplay);
 
 			layoutFullURL = HttpComponentsUtil.setParameter(
-				layoutFullURL, "p_l_back_url", _themeDisplay.getURLCurrent());
+				layoutFullURL, "p_l_back_url",
+				BackURLUtil.getBackURL(_themeDisplay.getURLCurrent()));
 			layoutFullURL = HttpComponentsUtil.setParameter(
 				layoutFullURL, "p_l_mode", Constants.PREVIEW);
 			layoutFullURL = HttpComponentsUtil.addParameter(

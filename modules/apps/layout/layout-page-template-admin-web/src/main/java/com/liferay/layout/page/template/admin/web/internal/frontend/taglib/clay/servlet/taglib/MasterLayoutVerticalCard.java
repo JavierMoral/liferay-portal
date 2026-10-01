@@ -16,6 +16,7 @@ import com.liferay.layout.page.template.admin.web.internal.servlet.taglib.util.M
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryServiceUtil;
+import com.liferay.layout.util.BackURLUtil;
 import com.liferay.portal.kernel.dao.search.RowChecker;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -108,7 +109,8 @@ public class MasterLayoutVerticalCard
 			return HttpComponentsUtil.addParameters(
 				PortalUtil.getLayoutFullURL(
 					layout.fetchDraftLayout(), _themeDisplay),
-				"p_l_back_url", _themeDisplay.getURLCurrent(),
+				"p_l_back_url",
+				BackURLUtil.getBackURL(_themeDisplay.getURLCurrent()),
 				"p_l_back_url_title", portletDisplay.getPortletDisplayName(),
 				"p_l_mode", Constants.EDIT);
 		}

@@ -10,6 +10,7 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil;
+import com.liferay.layout.util.BackURLUtil;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -238,7 +239,8 @@ public class LayoutPrototypeActionDropdownItemsProvider {
 			_themeDisplay, true);
 
 		return HttpComponentsUtil.addParameters(
-			layoutFullURL, "p_l_back_url", _themeDisplay.getURLCurrent(),
+			layoutFullURL, "p_l_back_url",
+			BackURLUtil.getBackURL(_themeDisplay.getURLCurrent()),
 			"p_l_back_url_title",
 			LanguageUtil.get(_httpServletRequest, "widget-page-templates"));
 	}

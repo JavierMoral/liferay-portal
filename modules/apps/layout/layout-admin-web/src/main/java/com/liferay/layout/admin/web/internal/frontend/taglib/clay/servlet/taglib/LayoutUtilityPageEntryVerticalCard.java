@@ -10,6 +10,7 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemListBuilder;
 import com.liferay.layout.admin.web.internal.servlet.taglib.util.LayoutUtilityPageEntryActionDropdownItemsProvider;
+import com.liferay.layout.util.BackURLUtil;
 import com.liferay.layout.utility.page.kernel.LayoutUtilityPageEntryViewRenderer;
 import com.liferay.layout.utility.page.kernel.LayoutUtilityPageEntryViewRendererRegistryUtil;
 import com.liferay.layout.utility.page.model.LayoutUtilityPageEntry;
@@ -71,7 +72,8 @@ public class LayoutUtilityPageEntryVerticalCard extends BaseVerticalCard {
 
 			return HttpComponentsUtil.addParameters(
 				PortalUtil.getLayoutFullURL(_draftLayout, themeDisplay),
-				"p_l_back_url", themeDisplay.getURLCurrent(),
+				"p_l_back_url",
+				BackURLUtil.getBackURL(themeDisplay.getURLCurrent()),
 				"p_l_back_url_title", portletDisplay.getPortletDisplayName(),
 				"p_l_mode", Constants.EDIT);
 		}

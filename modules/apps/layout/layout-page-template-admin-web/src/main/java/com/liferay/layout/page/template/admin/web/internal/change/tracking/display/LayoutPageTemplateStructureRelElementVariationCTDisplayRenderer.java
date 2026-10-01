@@ -8,6 +8,7 @@ package com.liferay.layout.page.template.admin.web.internal.change.tracking.disp
 import com.liferay.change.tracking.spi.display.BaseCTDisplayRenderer;
 import com.liferay.change.tracking.spi.display.CTDisplayRenderer;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructureRelElementVariation;
+import com.liferay.layout.util.BackURLUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.service.LayoutLocalService;
@@ -57,7 +58,8 @@ public class LayoutPageTemplateStructureRelElementVariationCTDisplayRenderer
 				draftLayout,
 				(ThemeDisplay)httpServletRequest.getAttribute(
 					WebKeys.THEME_DISPLAY)),
-			"p_l_back_url", _portal.getCurrentURL(httpServletRequest),
+			"p_l_back_url",
+			BackURLUtil.getBackURL(_portal.getCurrentURL(httpServletRequest)),
 			"p_l_mode", Constants.EDIT);
 	}
 

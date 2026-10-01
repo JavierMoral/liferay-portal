@@ -26,6 +26,7 @@ import com.liferay.layout.page.template.item.selector.LayoutPageTemplateCollecti
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryServiceUtil;
 import com.liferay.layout.page.template.util.LayoutPageTemplateEntryUtil;
+import com.liferay.layout.util.BackURLUtil;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -233,7 +234,8 @@ public class DisplayPageActionDropdownItemsProvider {
 			"layoutPageTemplateEntryId",
 			_layoutPageTemplateEntry.getLayoutPageTemplateEntryId()
 		).setParameter(
-			"p_l_back_url", _themeDisplay.getURLCurrent()
+			"p_l_back_url",
+			BackURLUtil.getBackURL(_themeDisplay.getURLCurrent())
 		).setParameter(
 			"p_l_back_url_title",
 			() -> {
@@ -431,7 +433,8 @@ public class DisplayPageActionDropdownItemsProvider {
 		return dropdownItem -> {
 			String editDisplayPageURL = HttpComponentsUtil.addParameters(
 				PortalUtil.getLayoutFullURL(_draftLayout, _themeDisplay),
-				"p_l_back_url", _themeDisplay.getURLCurrent(),
+				"p_l_back_url",
+				BackURLUtil.getBackURL(_themeDisplay.getURLCurrent()),
 				"p_l_back_url_title", portletDisplay.getPortletDisplayName(),
 				"p_l_mode", Constants.EDIT);
 

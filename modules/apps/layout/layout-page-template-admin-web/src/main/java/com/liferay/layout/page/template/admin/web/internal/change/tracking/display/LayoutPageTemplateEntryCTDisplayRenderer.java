@@ -10,6 +10,7 @@ import com.liferay.change.tracking.spi.display.CTDisplayRenderer;
 import com.liferay.change.tracking.spi.display.context.DisplayContext;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
+import com.liferay.layout.util.BackURLUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
@@ -68,7 +69,8 @@ public class LayoutPageTemplateEntryCTDisplayRenderer
 
 			return HttpComponentsUtil.addParameters(
 				layoutPrototypeGroup.getDisplayURL(themeDisplay, true),
-				"p_l_back_url", themeDisplay.getURLCurrent());
+				"p_l_back_url",
+				BackURLUtil.getBackURL(themeDisplay.getURLCurrent()));
 		}
 
 		Layout layout = _layoutLocalService.fetchLayout(
@@ -77,7 +79,8 @@ public class LayoutPageTemplateEntryCTDisplayRenderer
 		return HttpComponentsUtil.addParameters(
 			PortalUtil.getLayoutFullURL(
 				layout.fetchDraftLayout(), themeDisplay),
-			"p_l_back_url", themeDisplay.getURLCurrent(), "p_l_mode",
+			"p_l_back_url",
+			BackURLUtil.getBackURL(themeDisplay.getURLCurrent()), "p_l_mode",
 			Constants.EDIT);
 	}
 

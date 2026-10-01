@@ -62,6 +62,7 @@ import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServ
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
 import com.liferay.layout.page.template.util.comparator.LayoutPageTemplateEntryNameComparator;
 import com.liferay.layout.responsive.ViewportSize;
+import com.liferay.layout.util.BackURLUtil;
 import com.liferay.layout.util.structure.CommonStylesUtil;
 import com.liferay.layout.util.structure.DropZoneLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
@@ -1398,7 +1399,7 @@ public class ContentPageEditorDisplayContext {
 				scopeGroup, httpServletRequest);
 		}
 
-		return themeDisplay.getURLCurrent();
+		return BackURLUtil.getBackURL(themeDisplay.getURLCurrent());
 	}
 
 	private String _getCollectionSelectorURL() {

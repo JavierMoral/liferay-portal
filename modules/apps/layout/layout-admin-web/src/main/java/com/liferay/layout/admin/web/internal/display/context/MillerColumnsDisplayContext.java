@@ -7,6 +7,7 @@ package com.liferay.layout.admin.web.internal.display.context;
 
 import com.liferay.exportimport.kernel.staging.LayoutStagingUtil;
 import com.liferay.layout.set.prototype.helper.LayoutSetPrototypeHelper;
+import com.liferay.layout.util.BackURLUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
@@ -343,7 +344,8 @@ public class MillerColumnsDisplayContext {
 		).setBackURL(
 			ParamUtil.getString(
 				PortalUtil.getOriginalServletRequest(_httpServletRequest),
-				"p_l_back_url", _themeDisplay.getURLCurrent())
+				"p_l_back_url",
+				BackURLUtil.getBackURL(_themeDisplay.getURLCurrent()))
 		).buildString();
 	}
 

@@ -14,6 +14,7 @@ import com.liferay.layout.page.template.admin.web.internal.security.permission.r
 import com.liferay.layout.page.template.admin.web.internal.servlet.taglib.util.LayoutPageTemplateEntryActionDropdownItemsProvider;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
+import com.liferay.layout.util.BackURLUtil;
 import com.liferay.portal.kernel.dao.search.RowChecker;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -105,7 +106,8 @@ public class LayoutPageTemplateEntryVerticalCard extends BaseVerticalCard {
 
 				return HttpComponentsUtil.addParameters(
 					layoutPrototypeGroup.getDisplayURL(themeDisplay, true),
-					"p_l_back_url", themeDisplay.getURLCurrent(),
+					"p_l_back_url",
+					BackURLUtil.getBackURL(themeDisplay.getURLCurrent()),
 					"p_l_back_url_title",
 					portletDisplay.getPortletDisplayName());
 			}
@@ -115,7 +117,8 @@ public class LayoutPageTemplateEntryVerticalCard extends BaseVerticalCard {
 					LayoutLocalServiceUtil.fetchDraftLayout(
 						_layoutPageTemplateEntry.getPlid()),
 					themeDisplay),
-				"p_l_back_url", themeDisplay.getURLCurrent(),
+				"p_l_back_url",
+				BackURLUtil.getBackURL(themeDisplay.getURLCurrent()),
 				"p_l_back_url_title", portletDisplay.getTitle(), "p_l_mode",
 				Constants.EDIT);
 		}

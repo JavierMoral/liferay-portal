@@ -13,6 +13,7 @@ import com.liferay.layout.admin.web.internal.security.permission.resource.Layout
 import com.liferay.layout.page.template.constants.LayoutPageTemplateActionKeys;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil;
+import com.liferay.layout.util.BackURLUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -332,7 +333,9 @@ public class LayoutActionsDisplayContext {
 
 		return HttpComponentsUtil.addParameters(
 			PortalUtil.getLayoutFullURL(draftLayout, _themeDisplay),
-			"p_l_back_url", PortalUtil.getCurrentURL(_httpServletRequest),
+			"p_l_back_url",
+			BackURLUtil.getBackURL(
+				PortalUtil.getCurrentURL(_httpServletRequest)),
 			"p_l_back_url_title", layout.getName(_themeDisplay.getLocale()),
 			"p_l_mode", Constants.HISTORY);
 	}

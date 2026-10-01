@@ -14,6 +14,7 @@ import com.liferay.item.selector.criteria.upload.criterion.UploadItemSelectorCri
 import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
 import com.liferay.layout.admin.web.internal.configuration.LayoutUtilityPageThumbnailConfiguration;
 import com.liferay.layout.admin.web.internal.security.permission.resource.LayoutUtilityPageEntryPermission;
+import com.liferay.layout.util.BackURLUtil;
 import com.liferay.layout.utility.page.constants.LayoutUtilityPageActionKeys;
 import com.liferay.layout.utility.page.kernel.LayoutUtilityPageEntryViewRenderer;
 import com.liferay.layout.utility.page.kernel.LayoutUtilityPageEntryViewRendererRegistryUtil;
@@ -288,7 +289,8 @@ public class LayoutUtilityPageEntryActionDropdownItemsProvider {
 			dropdownItem.setHref(
 				HttpComponentsUtil.addParameters(
 					PortalUtil.getLayoutFullURL(_draftLayout, _themeDisplay),
-					"p_l_back_url", _themeDisplay.getURLCurrent(),
+					"p_l_back_url",
+					BackURLUtil.getBackURL(_themeDisplay.getURLCurrent()),
 					"p_l_back_url_title",
 					portletDisplay.getPortletDisplayName(), "p_l_mode",
 					Constants.EDIT));
@@ -515,7 +517,8 @@ public class LayoutUtilityPageEntryActionDropdownItemsProvider {
 				previewLayout, _themeDisplay);
 
 			layoutFullURL = HttpComponentsUtil.setParameter(
-				layoutFullURL, "p_l_back_url", _themeDisplay.getURLCurrent());
+				layoutFullURL, "p_l_back_url",
+				BackURLUtil.getBackURL(_themeDisplay.getURLCurrent()));
 			layoutFullURL = HttpComponentsUtil.setParameter(
 				layoutFullURL, "p_l_mode", Constants.PREVIEW);
 			layoutFullURL = HttpComponentsUtil.addParameter(

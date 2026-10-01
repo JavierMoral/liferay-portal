@@ -12,6 +12,7 @@ import com.liferay.change.tracking.spi.display.CTDisplayRenderer;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructureRelElementVariation;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructureRelElementVariationAudienceEntryRel;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureRelElementVariationLocalService;
+import com.liferay.layout.util.BackURLUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Layout;
@@ -76,7 +77,8 @@ public class
 				draftLayout,
 				(ThemeDisplay)httpServletRequest.getAttribute(
 					WebKeys.THEME_DISPLAY)),
-			"p_l_back_url", _portal.getCurrentURL(httpServletRequest),
+			"p_l_back_url",
+			BackURLUtil.getBackURL(_portal.getCurrentURL(httpServletRequest)),
 			"p_l_mode", Constants.EDIT);
 	}
 
