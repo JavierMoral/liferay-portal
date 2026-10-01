@@ -1123,8 +1123,6 @@ public class ContentPageEditorDisplayContext {
 					"/layout_admin/edit_layout"
 				).setRedirect(
 					themeDisplay.getURLCurrent()
-				).setBackURL(
-					themeDisplay.getURLCurrent()
 				).setParameter(
 					"backURLTitle", layout.getName(themeDisplay.getLocale())
 				).setParameter(
