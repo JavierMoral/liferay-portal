@@ -20,7 +20,9 @@ import com.liferay.journal.model.JournalFolder;
 import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.service.JournalFolderLocalService;
 import com.liferay.journal.test.util.JournalTestUtil;
+import com.liferay.layout.page.template.constants.LayoutPageTemplateCollectionTypeConstants;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
+import com.liferay.layout.page.template.model.LayoutPageTemplateCollection;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.test.util.LayoutPageTemplateTestUtil;
 import com.liferay.object.constants.ObjectDefinitionConstants;
@@ -651,6 +653,22 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 			_serviceContext);
 	}
 
+	private void _assertEmbeddedDisplayPageTemplateFolderJSONObject(
+		JSONObject jsonObject,
+		LayoutPageTemplateCollection layoutPageTemplateCollection) {
+
+		Assert.assertNotNull(
+			layoutPageTemplateCollection.getName(), jsonObject);
+
+		JSONAssert.assertEquals(
+			JSONUtil.put(
+				"name", layoutPageTemplateCollection.getName()
+			).put(
+				"uuid", layoutPageTemplateCollection.getUuid()
+			).toString(),
+			jsonObject.toString(), JSONCompareMode.LENIENT);
+	}
+
 	private void _assertEmbeddedJSONObject(
 		JSONObject expectedJSONObject, JSONObject jsonObject,
 		LayoutPageTemplateEntry layoutPageTemplateEntry) {
@@ -662,6 +680,22 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 				"name", layoutPageTemplateEntry.getName()
 			).toString(),
 			jsonObject.toString(), JSONCompareMode.LENIENT);
+	}
+
+	private void _assertEmbeddedPageTemplateSetJSONObject(
+		JSONObject jsonObject,
+		LayoutPageTemplateCollection layoutPageTemplateCollection) {
+
+		Assert.assertNotNull(
+			layoutPageTemplateCollection.getName(), jsonObject);
+
+		JSONAssert.assertEquals(
+			JSONUtil.put(
+				"name", layoutPageTemplateCollection.getName()
+			).toString(),
+			jsonObject.toString(), JSONCompareMode.LENIENT);
+
+		Assert.assertFalse(jsonObject.toString(), jsonObject.has("uuid"));
 	}
 
 	private SearchPage<SearchResult> _assertFacetConfiguration(
@@ -1054,6 +1088,7 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 		}
 
 		_testPostSearchPageWithEmbeddedNestedFieldsInLayout();
+		_testPostSearchPageWithEmbeddedNestedFieldsInLayoutPageTemplateCollection();
 		_testPostSearchPageWithEmbeddedNestedFieldsInLayoutPageTemplateEntry();
 		_testPostSearchPageWithEmbeddedNestedFieldsInObjectEntry();
 	}
@@ -1083,6 +1118,54 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 				JSONUtil.getValue(
 					searchResultJSONObject, "JSONObject/embedded"));
 		}
+	}
+
+	private void _testPostSearchPageWithEmbeddedNestedFieldsInLayoutPageTemplateCollection()
+		throws Exception {
+
+		LayoutPageTemplateCollection layoutPageTemplateCollection1 =
+			LayoutPageTemplateTestUtil.addLayoutPageTemplateCollection(
+				testGroup.getGroupId(),
+				LayoutPageTemplateCollectionTypeConstants.BASIC);
+		LayoutPageTemplateCollection layoutPageTemplateCollection2 =
+			LayoutPageTemplateTestUtil.addLayoutPageTemplateCollection(
+				testGroup.getGroupId(),
+				LayoutPageTemplateCollectionTypeConstants.DISPLAY_PAGE);
+
+		SearchPage<SearchResult> searchPage = _postSearchPage(
+			HashMapBuilder.put(
+				"entryClassNames", LayoutPageTemplateCollection.class.getName()
+			).put(
+				"nestedFields", "embedded"
+			).put(
+				"scope", String.valueOf(testGroup.getGroupId())
+			).build(),
+			new SearchRequestBody() {
+				{
+					attributes = HashMapBuilder.<String, Object>put(
+						"search.empty.search", true
+					).build();
+				}
+			});
+
+		Map<String, JSONObject> embeddedJSONObjects = JSONUtil.toJSONObjectMap(
+			JSONUtil.toJSONArray(
+				searchPage.getItems(),
+				searchResult -> JSONUtil.getValueAsJSONObject(
+					_jsonFactory.createJSONObject(String.valueOf(searchResult)),
+					"JSONObject/embedded")),
+			"key");
+
+		_assertEmbeddedPageTemplateSetJSONObject(
+			embeddedJSONObjects.get(
+				layoutPageTemplateCollection1.
+					getLayoutPageTemplateCollectionKey()),
+			layoutPageTemplateCollection1);
+		_assertEmbeddedDisplayPageTemplateFolderJSONObject(
+			embeddedJSONObjects.get(
+				layoutPageTemplateCollection2.
+					getLayoutPageTemplateCollectionKey()),
+			layoutPageTemplateCollection2);
 	}
 
 	private void _testPostSearchPageWithEmbeddedNestedFieldsInLayoutPageTemplateEntry()
