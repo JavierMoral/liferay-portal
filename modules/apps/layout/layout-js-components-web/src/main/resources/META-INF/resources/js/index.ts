@@ -22,7 +22,10 @@ export {default as LengthInput} from './components/length_input/LengthInput';
 export {default as MarketplaceButton} from './components/marketplace/MarketplaceButton';
 export {default as MarketplaceModal} from './components/marketplace/MarketplaceModal';
 export {default as MarketplacePresentationModal} from './components/marketplace/MarketplacePresentationModal';
-export {default as CreationModal} from './components/modals/CreationModal';
+export {
+	default as CreationModal,
+	CreationModalContent,
+} from './components/modals/CreationModal';
 export {default as openConfirmModal} from './components/modals/openConfirmModal';
 export {default as openModalComponent} from './components/modals/openModalComponent';
 export {default as openOptionsModal} from './components/modals/openOptionsModal';

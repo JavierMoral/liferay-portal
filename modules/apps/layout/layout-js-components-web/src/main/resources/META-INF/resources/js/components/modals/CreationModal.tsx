@@ -14,24 +14,38 @@ import {fetch, navigate, sub} from 'frontend-js-web';
 import React, {useRef, useState} from 'react';
 
 interface Props {
-	buttonLabel: string;
-	descriptionInputValue: string;
+	buttonLabel?: string;
+	descriptionInputValue?: string;
 	formSubmitURL: string;
 	heading: string;
-	nameInputValue: string;
+	nameInputValue?: string;
 	onCloseModal: () => void;
 	portletNamespace: string;
 }
 
-function CreationModal({
+function CreationModal({onCloseModal, ...otherProps}: Props) {
+	const {observer, onClose} = useModal({
+		onClose: () => {
+			onCloseModal();
+		},
+	});
+
+	return (
+		<ClayModal className="m-0" observer={observer}>
+			<CreationModalContent {...otherProps} closeModal={onClose} />
+		</ClayModal>
+	);
+}
+
+export function CreationModalContent({
 	buttonLabel = Liferay.Language.get('save'),
+	closeModal,
 	descriptionInputValue: initialDescriptionInputValue,
 	formSubmitURL,
 	heading,
 	nameInputValue: initialNameInputValue,
-	onCloseModal,
 	portletNamespace,
-}: Props) {
+}: Omit<Props, 'onCloseModal'> & {closeModal: () => void}) {
 	const [descriptionInputValue, setDescriptionInputValue] = useState<string>(
 		initialDescriptionInputValue || ''
 	);
@@ -42,12 +56,6 @@ function CreationModal({
 	const [nameInputValue, setNameInputValue] = useState<string>(
 		initialNameInputValue || ''
 	);
-
-	const {observer, onClose} = useModal({
-		onClose: () => {
-			onCloseModal();
-		},
-	});
 
 	const formRef = useRef();
 	const handleSubmit = (event: any) => {
@@ -84,7 +92,7 @@ function CreationModal({
 						setNameInputError(responseContent.error);
 					}
 					else {
-						onClose();
+						closeModal();
 
 						if (responseContent.redirectURL) {
 							navigate(responseContent.redirectURL);
@@ -98,7 +106,7 @@ function CreationModal({
 	};
 
 	return (
-		<ClayModal className="m-0" observer={observer}>
+		<>
 			<ClayModal.Header
 				closeButtonAriaLabel={Liferay.Language.get('close')}
 			>
@@ -194,7 +202,7 @@ function CreationModal({
 						<ClayButton
 							disabled={loading}
 							displayType="secondary"
-							onClick={onClose}
+							onClick={closeModal}
 						>
 							{Liferay.Language.get('cancel')}
 						</ClayButton>
@@ -217,7 +225,7 @@ function CreationModal({
 					</ClayButton.Group>
 				}
 			/>
-		</ClayModal>
+		</>
 	);
 }
 
