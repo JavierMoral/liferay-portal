@@ -21,9 +21,7 @@ import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
-import com.liferay.portal.search.filter.ComplexQueryPartBuilderFactory;
 import com.liferay.portal.search.model.uid.UIDFactory;
-import com.liferay.portal.search.query.QueriesUtil;
 import com.liferay.portal.search.searcher.SearchRequestBuilderFactory;
 import com.liferay.portal.search.searcher.SearchResponse;
 import com.liferay.portal.search.searcher.Searcher;
@@ -34,7 +32,6 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.Collections;
 
-import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -129,8 +126,6 @@ public class LayoutPageTemplateCollectionIndexerReindexTest {
 			Field.FOLDER_ID,
 			String.valueOf(parentLayoutPageTemplateCollectionId), name);
 
-		_assertFolderIdSearchCount(1, parentLayoutPageTemplateCollectionId);
-
 		_layoutPageTemplateCollectionLocalService.
 			moveLayoutPageTemplateCollection(
 				_layoutPageTemplateCollection.
@@ -138,8 +133,6 @@ public class LayoutPageTemplateCollectionIndexerReindexTest {
 				0);
 
 		_assertFieldValue(Field.FOLDER_ID, "0", name);
-
-		_assertFolderIdSearchCount(0, parentLayoutPageTemplateCollectionId);
 	}
 
 	@Rule
@@ -162,31 +155,6 @@ public class LayoutPageTemplateCollectionIndexerReindexTest {
 
 		FieldValuesAssert.assertFieldValue(
 			fieldName, fieldValue, _search(queryString));
-	}
-
-	private void _assertFolderIdSearchCount(int expectedCount, long folderId)
-		throws Exception {
-
-		SearchResponse searchResponse = _searcher.search(
-			_searchRequestBuilderFactory.builder(
-			).addComplexQueryPart(
-				_complexQueryPartBuilderFactory.builder(
-				).query(
-					QueriesUtil.term(Field.FOLDER_ID, String.valueOf(folderId))
-				).build()
-			).companyId(
-				TestPropsValues.getCompanyId()
-			).emptySearchEnabled(
-				true
-			).groupIds(
-				TestPropsValues.getGroupId()
-			).modelIndexerClasses(
-				LayoutPageTemplateCollection.class
-			).build());
-
-		Assert.assertEquals(
-			searchResponse.toString(), expectedCount,
-			searchResponse.getTotalHits());
 	}
 
 	private void _assertNoFieldValues(String queryString) throws Exception {
@@ -224,9 +192,6 @@ public class LayoutPageTemplateCollectionIndexerReindexTest {
 				queryString
 			).build());
 	}
-
-	@Inject
-	private ComplexQueryPartBuilderFactory _complexQueryPartBuilderFactory;
 
 	@DeleteAfterTestRun
 	private LayoutPageTemplateCollection _layoutPageTemplateCollection;

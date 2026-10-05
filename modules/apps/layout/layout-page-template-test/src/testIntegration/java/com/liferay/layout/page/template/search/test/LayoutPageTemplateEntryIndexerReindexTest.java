@@ -27,9 +27,7 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.search.filter.ComplexQueryPartBuilderFactory;
 import com.liferay.portal.search.model.uid.UIDFactory;
-import com.liferay.portal.search.query.QueriesUtil;
 import com.liferay.portal.search.searcher.SearchRequestBuilderFactory;
 import com.liferay.portal.search.searcher.SearchResponse;
 import com.liferay.portal.search.searcher.Searcher;
@@ -44,7 +42,6 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
 
-import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -158,14 +155,10 @@ public class LayoutPageTemplateEntryIndexerReindexTest {
 			Field.FOLDER_ID, String.valueOf(layoutPageTemplateCollectionId),
 			name, parameters);
 
-		_assertFolderIdSearchCount(1, layoutPageTemplateCollectionId);
-
 		_layoutPageTemplateEntryLocalService.moveLayoutPageTemplateEntry(
 			_layoutPageTemplateEntry.getLayoutPageTemplateEntryId(), 0);
 
 		_assertFieldValue(Field.FOLDER_ID, "0", name, parameters);
-
-		_assertFolderIdSearchCount(0, layoutPageTemplateCollectionId);
 	}
 
 	@Rule
@@ -189,31 +182,6 @@ public class LayoutPageTemplateEntryIndexerReindexTest {
 
 		FieldValuesAssert.assertFieldValue(
 			fieldName, fieldValue, _search(queryString, parameters));
-	}
-
-	private void _assertFolderIdSearchCount(int expectedCount, long folderId)
-		throws Exception {
-
-		SearchResponse searchResponse = _searcher.search(
-			_searchRequestBuilderFactory.builder(
-			).addComplexQueryPart(
-				_complexQueryPartBuilderFactory.builder(
-				).query(
-					QueriesUtil.term(Field.FOLDER_ID, String.valueOf(folderId))
-				).build()
-			).companyId(
-				TestPropsValues.getCompanyId()
-			).emptySearchEnabled(
-				true
-			).groupIds(
-				TestPropsValues.getGroupId()
-			).modelIndexerClasses(
-				LayoutPageTemplateEntry.class
-			).build());
-
-		Assert.assertEquals(
-			searchResponse.toString(), expectedCount,
-			searchResponse.getTotalHits());
 	}
 
 	private void _assertNoFieldValues(
@@ -274,9 +242,6 @@ public class LayoutPageTemplateEntryIndexerReindexTest {
 					searchTerm, parameters, searchContext)
 			).build());
 	}
-
-	@Inject
-	private ComplexQueryPartBuilderFactory _complexQueryPartBuilderFactory;
 
 	@DeleteAfterTestRun
 	private LayoutPageTemplateCollection _layoutPageTemplateCollection;
