@@ -49,7 +49,7 @@ public class LayoutPageTemplateTestUtil {
 	}
 
 	public static LayoutPageTemplateCollection addLayoutPageTemplateCollection(
-			long groupId, long parentLayoutPageTemplateCollectionId, int type)
+			long groupId, long layoutPageTemplateCollectionId, int type)
 		throws PortalException {
 
 		ServiceContext serviceContext =
@@ -59,7 +59,7 @@ public class LayoutPageTemplateTestUtil {
 		return LayoutPageTemplateCollectionLocalServiceUtil.
 			addLayoutPageTemplateCollection(
 				null, TestPropsValues.getUserId(), groupId,
-				parentLayoutPageTemplateCollectionId, null,
+				layoutPageTemplateCollectionId, null,
 				RandomTestUtil.randomString(), StringPool.BLANK, type,
 				serviceContext);
 	}
