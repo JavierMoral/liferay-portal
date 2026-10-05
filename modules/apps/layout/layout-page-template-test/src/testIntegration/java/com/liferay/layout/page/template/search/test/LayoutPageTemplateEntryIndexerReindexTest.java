@@ -10,6 +10,7 @@ import com.liferay.layout.page.template.constants.LayoutPageTemplateCollectionTy
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateCollection;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
+import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionLocalService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.layout.page.template.test.util.LayoutPageTemplateTestUtil;
 import com.liferay.petra.string.StringPool;
@@ -20,7 +21,6 @@ import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
-import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
@@ -128,21 +128,21 @@ public class LayoutPageTemplateEntryIndexerReindexTest {
 	@Test
 	@TestInfo("LPD-108334")
 	public void testReindexLayoutPageTemplateCollectionId() throws Exception {
-		_layoutPageTemplateCollection =
+		LayoutPageTemplateCollection layoutPageTemplateCollection =
 			LayoutPageTemplateTestUtil.addLayoutPageTemplateCollection(
 				TestPropsValues.getGroupId(),
 				LayoutPageTemplateCollectionTypeConstants.DISPLAY_PAGE);
 
 		long layoutPageTemplateCollectionId =
-			_layoutPageTemplateCollection.getLayoutPageTemplateCollectionId();
+			layoutPageTemplateCollection.getLayoutPageTemplateCollectionId();
 
-		_layoutPageTemplateEntry =
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			LayoutPageTemplateTestUtil.addLayoutPageTemplateEntry(
 				layoutPageTemplateCollectionId, RandomTestUtil.randomString(),
 				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE,
 				WorkflowConstants.STATUS_DRAFT);
 
-		String name = _layoutPageTemplateEntry.getName();
+		String name = layoutPageTemplateEntry.getName();
 
 		Map<String, Serializable> parameters = Collections.singletonMap(
 			"types",
@@ -156,9 +156,15 @@ public class LayoutPageTemplateEntryIndexerReindexTest {
 			name, parameters);
 
 		_layoutPageTemplateEntryLocalService.moveLayoutPageTemplateEntry(
-			_layoutPageTemplateEntry.getLayoutPageTemplateEntryId(), 0);
+			layoutPageTemplateEntry.getLayoutPageTemplateEntryId(), 0);
 
 		_assertFieldValue(Field.FOLDER_ID, "0", name, parameters);
+
+		_layoutPageTemplateEntryLocalService.deleteLayoutPageTemplateEntry(
+			layoutPageTemplateEntry);
+
+		_layoutPageTemplateCollectionLocalService.
+			deleteLayoutPageTemplateCollection(layoutPageTemplateCollection);
 	}
 
 	@Rule
@@ -243,11 +249,9 @@ public class LayoutPageTemplateEntryIndexerReindexTest {
 			).build());
 	}
 
-	@DeleteAfterTestRun
-	private LayoutPageTemplateCollection _layoutPageTemplateCollection;
-
-	@DeleteAfterTestRun
-	private LayoutPageTemplateEntry _layoutPageTemplateEntry;
+	@Inject
+	private LayoutPageTemplateCollectionLocalService
+		_layoutPageTemplateCollectionLocalService;
 
 	@Inject
 	private LayoutPageTemplateEntryLocalService

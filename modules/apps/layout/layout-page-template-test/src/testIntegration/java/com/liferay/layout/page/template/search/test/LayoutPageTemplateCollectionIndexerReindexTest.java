@@ -17,7 +17,6 @@ import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
-import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
@@ -105,22 +104,22 @@ public class LayoutPageTemplateCollectionIndexerReindexTest {
 	@Test
 	@TestInfo("LPD-108334")
 	public void testReindexLayoutPageTemplateCollectionId() throws Exception {
-		_parentLayoutPageTemplateCollection =
+		LayoutPageTemplateCollection parentLayoutPageTemplateCollection =
 			LayoutPageTemplateTestUtil.addLayoutPageTemplateCollection(
 				TestPropsValues.getGroupId(),
 				LayoutPageTemplateCollectionTypeConstants.DISPLAY_PAGE);
 
 		long parentLayoutPageTemplateCollectionId =
-			_parentLayoutPageTemplateCollection.
+			parentLayoutPageTemplateCollection.
 				getLayoutPageTemplateCollectionId();
 
-		_layoutPageTemplateCollection =
+		LayoutPageTemplateCollection layoutPageTemplateCollection =
 			LayoutPageTemplateTestUtil.addLayoutPageTemplateCollection(
 				TestPropsValues.getGroupId(),
 				parentLayoutPageTemplateCollectionId,
 				LayoutPageTemplateCollectionTypeConstants.DISPLAY_PAGE);
 
-		String name = _layoutPageTemplateCollection.getName();
+		String name = layoutPageTemplateCollection.getName();
 
 		_assertFieldValue(
 			Field.FOLDER_ID,
@@ -128,11 +127,18 @@ public class LayoutPageTemplateCollectionIndexerReindexTest {
 
 		_layoutPageTemplateCollectionLocalService.
 			moveLayoutPageTemplateCollection(
-				_layoutPageTemplateCollection.
+				layoutPageTemplateCollection.
 					getLayoutPageTemplateCollectionId(),
 				0);
 
 		_assertFieldValue(Field.FOLDER_ID, "0", name);
+
+		_layoutPageTemplateCollectionLocalService.
+			deleteLayoutPageTemplateCollection(layoutPageTemplateCollection);
+
+		_layoutPageTemplateCollectionLocalService.
+			deleteLayoutPageTemplateCollection(
+				parentLayoutPageTemplateCollection);
 	}
 
 	@Rule
@@ -193,15 +199,9 @@ public class LayoutPageTemplateCollectionIndexerReindexTest {
 			).build());
 	}
 
-	@DeleteAfterTestRun
-	private LayoutPageTemplateCollection _layoutPageTemplateCollection;
-
 	@Inject
 	private LayoutPageTemplateCollectionLocalService
 		_layoutPageTemplateCollectionLocalService;
-
-	@DeleteAfterTestRun
-	private LayoutPageTemplateCollection _parentLayoutPageTemplateCollection;
 
 	@Inject
 	private SearchRequestBuilderFactory _searchRequestBuilderFactory;
