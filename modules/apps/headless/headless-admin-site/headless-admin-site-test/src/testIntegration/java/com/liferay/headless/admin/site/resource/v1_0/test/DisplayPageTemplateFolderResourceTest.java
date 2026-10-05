@@ -20,6 +20,7 @@ import com.liferay.layout.page.template.constants.LayoutPageTemplateConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateCollection;
 import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionLocalService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionService;
+import com.liferay.layout.page.template.test.util.LayoutPageTemplateTestUtil;
 import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
@@ -657,18 +658,12 @@ public class DisplayPageTemplateFolderResourceTest
 		throws Exception {
 
 		LayoutPageTemplateCollection layoutPageTemplateCollection =
-			_layoutPageTemplateCollectionLocalService.
-				addLayoutPageTemplateCollection(
-					displayPageTemplateFolder.getExternalReferenceCode(),
-					TestPropsValues.getUserId(), group.getGroupId(),
-					LayoutPageTemplateConstants.
-						PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
-					displayPageTemplateFolder.getKey(),
-					displayPageTemplateFolder.getName(),
-					displayPageTemplateFolder.getDescription(),
-					LayoutPageTemplateCollectionTypeConstants.DISPLAY_PAGE,
-					ServiceContextTestUtil.getServiceContext(
-						group.getGroupId(), TestPropsValues.getUserId()));
+			LayoutPageTemplateTestUtil.addLayoutPageTemplateCollection(
+				displayPageTemplateFolder.getDescription(),
+				displayPageTemplateFolder.getExternalReferenceCode(),
+				group.getGroupId(), displayPageTemplateFolder.getKey(),
+				displayPageTemplateFolder.getName(),
+				LayoutPageTemplateCollectionTypeConstants.DISPLAY_PAGE);
 
 		return displayPageTemplateFolderResource.
 			getDesignLibraryDisplayPageTemplateFolder(
