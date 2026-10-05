@@ -124,10 +124,10 @@ public class LayoutPageTemplateCollectionIndexerReindexTest {
 		String name = _layoutPageTemplateCollection.getName();
 
 		_assertFieldValue(
-			"layoutPageTemplateCollectionId",
+			Field.FOLDER_ID,
 			String.valueOf(parentLayoutPageTemplateCollectionId), name);
 
-		_assertSearchCount(1, parentLayoutPageTemplateCollectionId);
+		_assertFolderIdSearchCount(1, parentLayoutPageTemplateCollectionId);
 
 		_layoutPageTemplateCollectionLocalService.
 			moveLayoutPageTemplateCollection(
@@ -135,9 +135,9 @@ public class LayoutPageTemplateCollectionIndexerReindexTest {
 					getLayoutPageTemplateCollectionId(),
 				0);
 
-		_assertFieldValue("layoutPageTemplateCollectionId", "0", name);
+		_assertFieldValue(Field.FOLDER_ID, "0", name);
 
-		_assertSearchCount(0, parentLayoutPageTemplateCollectionId);
+		_assertFolderIdSearchCount(0, parentLayoutPageTemplateCollectionId);
 	}
 
 	@Rule
@@ -178,13 +178,7 @@ public class LayoutPageTemplateCollectionIndexerReindexTest {
 			fieldName, fieldValue, _search(queryString));
 	}
 
-	private void _assertNoFieldValues(String queryString) throws Exception {
-		FieldValuesAssert.assertFieldValues(
-			Collections.emptyMap(), _search(queryString));
-	}
-
-	private void _assertSearchCount(
-			int expectedCount, long layoutPageTemplateCollectionId)
+	private void _assertFolderIdSearchCount(int expectedCount, long folderId)
 		throws Exception {
 
 		SearchResponse searchResponse = _searcher.search(
@@ -192,9 +186,7 @@ public class LayoutPageTemplateCollectionIndexerReindexTest {
 			).addComplexQueryPart(
 				_complexQueryPartBuilderFactory.builder(
 				).query(
-					QueriesUtil.term(
-						"layoutPageTemplateCollectionId",
-						String.valueOf(layoutPageTemplateCollectionId))
+					QueriesUtil.term(Field.FOLDER_ID, String.valueOf(folderId))
 				).build()
 			).companyId(
 				TestPropsValues.getCompanyId()
@@ -209,6 +201,11 @@ public class LayoutPageTemplateCollectionIndexerReindexTest {
 		Assert.assertEquals(
 			searchResponse.toString(), expectedCount,
 			searchResponse.getTotalHits());
+	}
+
+	private void _assertNoFieldValues(String queryString) throws Exception {
+		FieldValuesAssert.assertFieldValues(
+			Collections.emptyMap(), _search(queryString));
 	}
 
 	private void _deleteDocument(long companyId, String uid) throws Exception {
