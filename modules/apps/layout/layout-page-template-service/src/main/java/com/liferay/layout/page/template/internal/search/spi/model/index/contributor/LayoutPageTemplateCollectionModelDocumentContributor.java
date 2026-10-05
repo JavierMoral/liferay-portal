@@ -31,6 +31,10 @@ public class LayoutPageTemplateCollectionModelDocumentContributor
 			Field.DESCRIPTION, layoutPageTemplateCollection.getDescription());
 		document.addText(Field.NAME, layoutPageTemplateCollection.getName());
 		document.addKeyword(Field.TYPE, layoutPageTemplateCollection.getType());
+		document.addKeyword(
+			"layoutPageTemplateCollectionId",
+			layoutPageTemplateCollection.
+				getParentLayoutPageTemplateCollectionId());
 	}
 
 }

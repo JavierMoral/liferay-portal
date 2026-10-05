@@ -29,6 +29,9 @@ public class LayoutPageTemplateEntryModelDocumentContributor
 		document.addText(Field.NAME, layoutPageTemplateEntry.getName());
 		document.addNumber(Field.STATUS, layoutPageTemplateEntry.getStatus());
 		document.addKeyword(Field.TYPE, layoutPageTemplateEntry.getType());
+		document.addKeyword(
+			"layoutPageTemplateCollectionId",
+			layoutPageTemplateEntry.getLayoutPageTemplateCollectionId());
 	}
 
 }
