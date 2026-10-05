@@ -5,9 +5,12 @@
 
 package com.liferay.layout.page.template.admin.web.internal.display.context;
 
+import com.liferay.design.library.util.DesignLibraryUtil;
 import com.liferay.info.item.InfoItemServiceRegistry;
 import com.liferay.layout.page.template.admin.web.internal.util.LayoutPageTemplatePortletUtil;
+import com.liferay.layout.page.template.constants.LayoutPageTemplateConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateCollection;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.test.TestInfo;
@@ -45,6 +48,7 @@ public class DisplayPageDisplayContextTest {
 
 	@After
 	public void tearDown() {
+		_designLibraryUtilMockedStatic.close();
 		_layoutPageTemplatePortletUtilMockedStatic.close();
 	}
 
@@ -56,13 +60,32 @@ public class DisplayPageDisplayContextTest {
 		_testGetLayoutPageTemplateCollectionIdWithoutCollection();
 	}
 
+	@Test
+	@TestInfo("LPD-108335")
+	public void testIsShowBreadcrumb() {
+		_testIsShowBreadcrumb(false);
+		_testIsShowBreadcrumb(true);
+	}
+
+	private DisplayPageDisplayContext _getDisplayPageDisplayContext() {
+		return new DisplayPageDisplayContext(
+			_httpServletRequest, _infoItemServiceRegistry,
+			_liferayPortletRequest, _liferayPortletResponse);
+	}
+
 	private long _getLayoutPageTemplateCollectionId() {
 		DisplayPageDisplayContext displayPageDisplayContext =
-			new DisplayPageDisplayContext(
-				_httpServletRequest, _infoItemServiceRegistry,
-				_liferayPortletRequest, _liferayPortletResponse);
+			_getDisplayPageDisplayContext();
 
 		return displayPageDisplayContext.getLayoutPageTemplateCollectionId();
+	}
+
+	private void _setUpDesignLibraryScope(boolean designLibraryScope) {
+		_designLibraryUtilMockedStatic.when(
+			() -> DesignLibraryUtil.isDesignLibraryScope(_group)
+		).thenReturn(
+			designLibraryScope
+		);
 	}
 
 	private void _setUpRequest(
@@ -94,6 +117,12 @@ public class DisplayPageDisplayContextTest {
 		);
 
 		Mockito.when(
+			themeDisplay.getScopeGroup()
+		).thenReturn(
+			_group
+		);
+
+		Mockito.when(
 			themeDisplay.getScopeGroupId()
 		).thenReturn(
 			_GROUP_ID
@@ -119,19 +148,40 @@ public class DisplayPageDisplayContextTest {
 	}
 
 	private void _testGetLayoutPageTemplateCollectionIdFromRequest() {
-		_setUpRequest(null, "-1");
+		long layoutPageTemplateCollectionId = RandomTestUtil.randomLong();
 
-		Assert.assertEquals(-1, _getLayoutPageTemplateCollectionId());
+		_setUpRequest(null, String.valueOf(layoutPageTemplateCollectionId));
+
+		Assert.assertEquals(
+			layoutPageTemplateCollectionId,
+			_getLayoutPageTemplateCollectionId());
 	}
 
 	private void _testGetLayoutPageTemplateCollectionIdWithoutCollection() {
 		_setUpRequest(null, null);
 
-		Assert.assertEquals(0, _getLayoutPageTemplateCollectionId());
+		Assert.assertEquals(
+			LayoutPageTemplateConstants.
+				PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
+			_getLayoutPageTemplateCollectionId());
+	}
+
+	private void _testIsShowBreadcrumb(boolean designLibraryScope) {
+		_setUpDesignLibraryScope(designLibraryScope);
+
+		DisplayPageDisplayContext displayPageDisplayContext =
+			_getDisplayPageDisplayContext();
+
+		Assert.assertEquals(
+			!designLibraryScope, displayPageDisplayContext.isShowBreadcrumb());
 	}
 
 	private static final long _GROUP_ID = RandomTestUtil.randomLong();
 
+	private final MockedStatic<DesignLibraryUtil>
+		_designLibraryUtilMockedStatic = Mockito.mockStatic(
+			DesignLibraryUtil.class);
+	private final Group _group = Mockito.mock(Group.class);
 	private final HttpServletRequest _httpServletRequest = Mockito.mock(
 		HttpServletRequest.class);
 	private final InfoItemServiceRegistry _infoItemServiceRegistry =
