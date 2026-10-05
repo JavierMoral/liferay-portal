@@ -156,7 +156,11 @@ public class DisplayPageTemplateFolderResourceImpl
 		long groupId = _getDesignLibraryGroupId(
 			designLibraryExternalReferenceCode);
 
-		if (!_hasViewDepotEntryPermission(groupId)) {
+		if (!_depotEntryModelResourcePermission.contains(
+				PermissionThreadLocal.getPermissionChecker(),
+				_depotEntryLocalService.getGroupDepotEntry(groupId),
+				ActionKeys.VIEW)) {
+
 			return Page.of(Collections.emptyList());
 		}
 
@@ -443,15 +447,6 @@ public class DisplayPageTemplateFolderResourceImpl
 					fetchLayoutPageTemplateCollection(
 						GetterUtil.getLong(
 							document.get(Field.ENTRY_CLASS_PK)))));
-	}
-
-	private boolean _hasViewDepotEntryPermission(long groupId)
-		throws Exception {
-
-		return _depotEntryModelResourcePermission.contains(
-			PermissionThreadLocal.getPermissionChecker(),
-			_depotEntryLocalService.getGroupDepotEntry(groupId),
-			ActionKeys.VIEW);
 	}
 
 	private DisplayPageTemplateFolder _toDesignLibraryDisplayPageTemplateFolder(
