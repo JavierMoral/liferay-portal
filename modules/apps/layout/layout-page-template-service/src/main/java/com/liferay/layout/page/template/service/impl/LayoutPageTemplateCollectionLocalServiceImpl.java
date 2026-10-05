@@ -406,7 +406,6 @@ public class LayoutPageTemplateCollectionLocalServiceImpl
 			sourceName);
 	}
 
-	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public LayoutPageTemplateCollection moveLayoutPageTemplateCollection(
 			long layoutPageTemplateCollectionId,
@@ -430,7 +429,8 @@ public class LayoutPageTemplateCollectionLocalServiceImpl
 		layoutPageTemplateCollection.setParentLayoutPageTemplateCollectionId(
 			parentLayoutPageTemplateCollectionId);
 
-		return updateLayoutPageTemplateCollection(layoutPageTemplateCollection);
+		return layoutPageTemplateCollectionLocalService.
+			updateLayoutPageTemplateCollection(layoutPageTemplateCollection);
 	}
 
 	@Indexable(type = IndexableType.REINDEX)

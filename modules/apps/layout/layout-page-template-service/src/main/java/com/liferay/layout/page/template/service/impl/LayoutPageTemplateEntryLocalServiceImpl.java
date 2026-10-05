@@ -731,7 +731,6 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 		}
 	}
 
-	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public LayoutPageTemplateEntry moveLayoutPageTemplateEntry(
 			long layoutPageTemplateEntryId,
@@ -755,7 +754,8 @@ public class LayoutPageTemplateEntryLocalServiceImpl
 		layoutPageTemplateEntry.setLayoutPageTemplateCollectionId(
 			targetLayoutPageTemplateCollectionId);
 
-		return updateLayoutPageTemplateEntry(layoutPageTemplateEntry);
+		return layoutPageTemplateEntryLocalService.
+			updateLayoutPageTemplateEntry(layoutPageTemplateEntry);
 	}
 
 	@Override
