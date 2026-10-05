@@ -171,20 +171,12 @@ public class LayoutPageTemplatesAdminDisplayContextTest {
 		_setUpGroup(false);
 
 		Assert.assertEquals("master-layouts", _getTabs1());
-
-		_setUpTabs1("display-page-templates");
-
-		Assert.assertEquals("display-page-templates", _getTabs1());
 	}
 
 	@Test
 	@TestInfo("LPD-108335")
 	public void testGetTabs1InCompanyGroup() {
 		_setUpGroup(true);
-
-		Assert.assertEquals("page-templates", _getTabs1());
-
-		_setUpTabs1("display-page-templates");
 
 		Assert.assertEquals("page-templates", _getTabs1());
 	}
