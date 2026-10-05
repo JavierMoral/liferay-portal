@@ -161,7 +161,7 @@ public class DisplayPageTemplateFolderResourceImpl
 		}
 
 		return _getDisplayPageTemplateFoldersPage(
-			filter, groupId, pagination, search, sorts,
+			aggregation, filter, groupId, pagination, search, sorts,
 			layoutPageTemplateCollection ->
 				_toDesignLibraryDisplayPageTemplateFolder(
 					designLibraryExternalReferenceCode,
@@ -305,7 +305,7 @@ public class DisplayPageTemplateFolderResourceImpl
 		throws Exception {
 
 		return _getDisplayPageTemplateFoldersPage(
-			filter,
+			aggregation, filter,
 			GroupUtil.getGroupId(
 				true, contextCompany.getCompanyId(), siteExternalReferenceCode),
 			pagination, search, sorts, this::_toDisplayPageTemplateFolder);
@@ -412,8 +412,8 @@ public class DisplayPageTemplateFolderResourceImpl
 	}
 
 	private Page<DisplayPageTemplateFolder> _getDisplayPageTemplateFoldersPage(
-			Filter filter, long groupId, Pagination pagination, String search,
-			Sort[] sorts,
+			Aggregation aggregation, Filter filter, long groupId,
+			Pagination pagination, String search, Sort[] sorts,
 			UnsafeFunction
 				<LayoutPageTemplateCollection, DisplayPageTemplateFolder,
 				 Exception> unsafeFunction)
@@ -428,6 +428,7 @@ public class DisplayPageTemplateFolderResourceImpl
 			queryConfig -> queryConfig.setSelectedFieldNames(
 				Field.ENTRY_CLASS_PK),
 			searchContext -> {
+				searchContext.addVulcanAggregation(aggregation);
 				searchContext.setAttribute(
 					Field.TYPE,
 					String.valueOf(
