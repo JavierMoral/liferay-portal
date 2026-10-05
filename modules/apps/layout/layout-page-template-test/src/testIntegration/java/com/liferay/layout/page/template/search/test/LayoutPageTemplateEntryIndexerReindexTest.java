@@ -6,8 +6,11 @@
 package com.liferay.layout.page.template.search.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.layout.page.template.constants.LayoutPageTemplateCollectionTypeConstants;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
+import com.liferay.layout.page.template.model.LayoutPageTemplateCollection;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
+import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionLocalService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.search.Field;
@@ -15,6 +18,7 @@ import com.liferay.portal.kernel.search.IndexWriterHelper;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
@@ -120,6 +124,57 @@ public class LayoutPageTemplateEntryIndexerReindexTest {
 		_assertNoFieldValues(name, null);
 	}
 
+	@Test
+	@TestInfo("LPD-107953")
+	public void testReindexLayoutPageTemplateCollectionId() throws Exception {
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				TestPropsValues.getGroupId());
+
+		LayoutPageTemplateCollection layoutPageTemplateCollection =
+			_layoutPageTemplateCollectionLocalService.
+				addLayoutPageTemplateCollection(
+					RandomTestUtil.randomString(), serviceContext.getUserId(),
+					TestPropsValues.getGroupId(), 0,
+					RandomTestUtil.randomString(),
+					RandomTestUtil.randomString(),
+					RandomTestUtil.randomString(),
+					LayoutPageTemplateCollectionTypeConstants.DISPLAY_PAGE,
+					serviceContext);
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
+				RandomTestUtil.randomString(), serviceContext.getUserId(),
+				TestPropsValues.getGroupId(),
+				layoutPageTemplateCollection.
+					getLayoutPageTemplateCollectionId(),
+				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0,
+				WorkflowConstants.STATUS_DRAFT, serviceContext);
+
+		String name = layoutPageTemplateEntry.getName();
+
+		Map<String, Serializable> parameters = Collections.singletonMap(
+			"types",
+			new String[] {
+				String.valueOf(
+					LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE)
+			});
+
+		_assertFieldValue(
+			"layoutPageTemplateCollectionId",
+			String.valueOf(
+				layoutPageTemplateCollection.
+					getLayoutPageTemplateCollectionId()),
+			name, parameters);
+
+		_layoutPageTemplateEntryLocalService.moveLayoutPageTemplateEntry(
+			layoutPageTemplateEntry.getLayoutPageTemplateEntryId(), 0);
+
+		_assertFieldValue(
+			"layoutPageTemplateCollectionId", "0", name, parameters);
+	}
+
 	@Rule
 	public SearchTestRule searchTestRule = new SearchTestRule();
 
@@ -201,6 +256,10 @@ public class LayoutPageTemplateEntryIndexerReindexTest {
 					searchTerm, parameters, searchContext)
 			).build());
 	}
+
+	@Inject
+	private LayoutPageTemplateCollectionLocalService
+		_layoutPageTemplateCollectionLocalService;
 
 	@Inject
 	private LayoutPageTemplateEntryLocalService

@@ -14,6 +14,7 @@ import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.IndexWriterHelper;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
@@ -99,6 +100,40 @@ public class LayoutPageTemplateCollectionIndexerReindexTest {
 		_assertNoFieldValues(name);
 	}
 
+	@Test
+	@TestInfo("LPD-107953")
+	public void testReindexLayoutPageTemplateCollectionId() throws Exception {
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				TestPropsValues.getGroupId());
+
+		LayoutPageTemplateCollection parentLayoutPageTemplateCollection =
+			_addLayoutPageTemplateCollection(0, serviceContext);
+
+		LayoutPageTemplateCollection layoutPageTemplateCollection =
+			_addLayoutPageTemplateCollection(
+				parentLayoutPageTemplateCollection.
+					getLayoutPageTemplateCollectionId(),
+				serviceContext);
+
+		String name = layoutPageTemplateCollection.getName();
+
+		_assertFieldValue(
+			"layoutPageTemplateCollectionId",
+			String.valueOf(
+				parentLayoutPageTemplateCollection.
+					getLayoutPageTemplateCollectionId()),
+			name);
+
+		_layoutPageTemplateCollectionLocalService.
+			moveLayoutPageTemplateCollection(
+				layoutPageTemplateCollection.
+					getLayoutPageTemplateCollectionId(),
+				0);
+
+		_assertFieldValue("layoutPageTemplateCollectionId", "0", name);
+	}
+
 	@Rule
 	public SearchTestRule searchTestRule = new SearchTestRule();
 
@@ -112,6 +147,22 @@ public class LayoutPageTemplateCollectionIndexerReindexTest {
 
 	@Inject
 	protected UIDFactory uidFactory;
+
+	private LayoutPageTemplateCollection _addLayoutPageTemplateCollection(
+			long parentLayoutPageTemplateCollectionId,
+			ServiceContext serviceContext)
+		throws Exception {
+
+		return _layoutPageTemplateCollectionLocalService.
+			addLayoutPageTemplateCollection(
+				RandomTestUtil.randomString(), serviceContext.getUserId(),
+				TestPropsValues.getGroupId(),
+				parentLayoutPageTemplateCollectionId,
+				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+				RandomTestUtil.randomString(),
+				LayoutPageTemplateCollectionTypeConstants.DISPLAY_PAGE,
+				serviceContext);
+	}
 
 	private void _assertFieldValue(
 			String fieldName, String fieldValue, String queryString)
