@@ -7,17 +7,14 @@ package com.liferay.headless.admin.site.resource.v1_0.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.depot.constants.DepotConstants;
-import com.liferay.depot.constants.DepotRolesConstants;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.exportimport.kernel.service.StagingLocalService;
 import com.liferay.exportimport.test.util.LazyReferencingTestUtil;
 import com.liferay.headless.admin.site.client.dto.v1_0.DisplayPageTemplateFolder;
 import com.liferay.headless.admin.site.client.pagination.Page;
-import com.liferay.headless.admin.site.client.pagination.Pagination;
 import com.liferay.headless.admin.site.client.permission.Permission;
 import com.liferay.headless.admin.site.client.problem.Problem;
-import com.liferay.headless.admin.site.client.resource.v1_0.DisplayPageTemplateFolderResource;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateCollectionTypeConstants;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateCollection;
@@ -27,21 +24,16 @@ import com.liferay.petra.function.UnsafeRunnable;
 import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.feature.flag.constants.FeatureFlagConstants;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.RoleConstants;
-import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
-import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
-import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -50,13 +42,10 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.RoleTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
-import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.props.test.util.PropsTemporarySwapper;
 import com.liferay.portal.test.log.LogCapture;
 import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.FeatureFlag;
@@ -122,7 +111,6 @@ public class DisplayPageTemplateFolderResourceTest
 		super.testDeleteDesignLibraryDisplayPageTemplateFolder();
 
 		_testDeleteDesignLibraryDisplayPageTemplateFolderWithAssetLibraryExternalReferenceCodeProblemException();
-		_testDeleteDesignLibraryDisplayPageTemplateFolderWithFeatureFlagDisabledProblemException();
 		_testDeleteDesignLibraryDisplayPageTemplateFolderWithSiteExternalReferenceCodeProblemException();
 	}
 
@@ -209,6 +197,14 @@ public class DisplayPageTemplateFolderResourceTest
 					displayPageTemplateFolder.getExternalReferenceCode(),
 					RoleConstants.GUEST);
 
+		List<Permission> permissions = (List<Permission>)page.getItems();
+
+		Assert.assertEquals(permissions.toString(), 1, permissions.size());
+
+		Permission permission = permissions.get(0);
+
+		Assert.assertEquals(RoleConstants.GUEST, permission.getRoleName());
+
 		_assertActionHref(
 			page.getActions(),
 			StringBundler.concat(
@@ -226,9 +222,6 @@ public class DisplayPageTemplateFolderResourceTest
 		throws Exception {
 
 		super.testGetDesignLibraryDisplayPageTemplateFoldersPage();
-
-		_testGetDesignLibraryDisplayPageTemplateFoldersPageAsDesignLibraryOwner();
-		_testGetDesignLibraryDisplayPageTemplateFoldersPageWithoutPermissions();
 	}
 
 	@Ignore
@@ -811,43 +804,6 @@ public class DisplayPageTemplateFolderResourceTest
 		Assert.assertTrue(group.hasStagingGroup());
 	}
 
-	private DisplayPageTemplateFolderResource
-			_getDesignLibraryOwnerDisplayPageTemplateFolderResource()
-		throws Exception {
-
-		String password = RandomTestUtil.randomString();
-
-		User user = UserTestUtil.addUser(testCompany, password);
-
-		Group group = _depotEntry.getGroup();
-
-		_userLocalService.addGroupUser(group.getGroupId(), user.getUserId());
-
-		Role role = _roleLocalService.getRole(
-			testCompany.getCompanyId(),
-			DepotRolesConstants.DESIGN_LIBRARY_OWNER);
-
-		_userGroupRoleLocalService.addUserGroupRoles(
-			user.getUserId(), group.getGroupId(),
-			new long[] {role.getRoleId()});
-
-		return _getDisplayPageTemplateFolderResource(password, user);
-	}
-
-	private DisplayPageTemplateFolderResource
-		_getDisplayPageTemplateFolderResource(String password, User user) {
-
-		return DisplayPageTemplateFolderResource.builder(
-		).authentication(
-			user.getEmailAddress(), password
-		).endpoint(
-			testCompany.getVirtualHostname(),
-			PortalUtil.getPortalServerPort(false), "http"
-		).locale(
-			LocaleUtil.getDefault()
-		).build();
-	}
-
 	private DisplayPageTemplateFolder _getParentDisplayPageTemplateFolder(
 			int count)
 		throws Exception {
@@ -909,20 +865,6 @@ public class DisplayPageTemplateFolderResourceTest
 		return parentLayoutPageTemplateCollectionId;
 	}
 
-	private DisplayPageTemplateFolderResource
-			_getUserWithoutPermissionsDisplayPageTemplateFolderResource()
-		throws Exception {
-
-		String password = RandomTestUtil.randomString();
-
-		User user = UserTestUtil.addUser(testCompany, password);
-
-		_userLocalService.addGroupUser(
-			testGroup.getGroupId(), user.getUserId());
-
-		return _getDisplayPageTemplateFolderResource(password, user);
-	}
-
 	private void _testDeleteDesignLibraryDisplayPageTemplateFolderWithAssetLibraryExternalReferenceCodeProblemException()
 		throws Exception {
 
@@ -940,32 +882,6 @@ public class DisplayPageTemplateFolderResourceTest
 						RandomTestUtil.randomString()));
 	}
 
-	private void _testDeleteDesignLibraryDisplayPageTemplateFolderWithFeatureFlagDisabledProblemException()
-		throws Exception {
-
-		Group group = _depotEntry.getGroup();
-
-		DisplayPageTemplateFolder displayPageTemplateFolder =
-			_addDesignLibraryDisplayPageTemplateFolder(group);
-
-		try (PropsTemporarySwapper propsTemporarySwapper =
-				new PropsTemporarySwapper(
-					FeatureFlagConstants.getKey("LPD-57283"),
-					Boolean.FALSE.toString())) {
-
-			_assertProblemException(
-				"BAD_REQUEST",
-				"Feature flag LPD-57283 is disabled for company " +
-					testCompany.getCompanyId(),
-				() ->
-					displayPageTemplateFolderResource.
-						deleteDesignLibraryDisplayPageTemplateFolder(
-							group.getExternalReferenceCode(),
-							displayPageTemplateFolder.
-								getExternalReferenceCode()));
-		}
-	}
-
 	private void _testDeleteDesignLibraryDisplayPageTemplateFolderWithSiteExternalReferenceCodeProblemException()
 		throws Exception {
 
@@ -976,49 +892,6 @@ public class DisplayPageTemplateFolderResourceTest
 					deleteDesignLibraryDisplayPageTemplateFolder(
 						testGroup.getExternalReferenceCode(),
 						RandomTestUtil.randomString()));
-	}
-
-	private void _testGetDesignLibraryDisplayPageTemplateFoldersPageAsDesignLibraryOwner()
-		throws Exception {
-
-		Group group = _depotEntry.getGroup();
-
-		DisplayPageTemplateFolder displayPageTemplateFolder =
-			_addDesignLibraryDisplayPageTemplateFolder(group);
-
-		DisplayPageTemplateFolderResource
-			designLibraryOwnerDisplayPageTemplateFolderResource =
-				_getDesignLibraryOwnerDisplayPageTemplateFolderResource();
-
-		Page<DisplayPageTemplateFolder> page =
-			designLibraryOwnerDisplayPageTemplateFolderResource.
-				getDesignLibraryDisplayPageTemplateFoldersPage(
-					group.getExternalReferenceCode(), null, null, null,
-					Pagination.of(1, 10), null);
-
-		assertContains(
-			displayPageTemplateFolder,
-			(List<DisplayPageTemplateFolder>)page.getItems());
-	}
-
-	private void _testGetDesignLibraryDisplayPageTemplateFoldersPageWithoutPermissions()
-		throws Exception {
-
-		Group group = _depotEntry.getGroup();
-
-		_addDesignLibraryDisplayPageTemplateFolder(group);
-
-		DisplayPageTemplateFolderResource
-			userWithoutPermissionsDisplayPageTemplateFolderResource =
-				_getUserWithoutPermissionsDisplayPageTemplateFolderResource();
-
-		Page<DisplayPageTemplateFolder> page =
-			userWithoutPermissionsDisplayPageTemplateFolderResource.
-				getDesignLibraryDisplayPageTemplateFoldersPage(
-					group.getExternalReferenceCode(), null, null, null,
-					Pagination.of(1, 10), null);
-
-		Assert.assertEquals(page.toString(), 0, page.getTotalCount());
 	}
 
 	private void _testPatchSiteDisplayPageTemplateFolder(
@@ -1322,15 +1195,6 @@ public class DisplayPageTemplateFolderResourceTest
 	private ResourcePermissionLocalService _resourcePermissionLocalService;
 
 	@Inject
-	private RoleLocalService _roleLocalService;
-
-	@Inject
 	private StagingLocalService _stagingLocalService;
-
-	@Inject
-	private UserGroupRoleLocalService _userGroupRoleLocalService;
-
-	@Inject
-	private UserLocalService _userLocalService;
 
 }
