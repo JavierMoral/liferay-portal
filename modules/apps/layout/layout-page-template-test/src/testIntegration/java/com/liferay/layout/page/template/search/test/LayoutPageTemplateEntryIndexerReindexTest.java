@@ -20,13 +20,16 @@ import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.search.filter.ComplexQueryPartBuilderFactory;
 import com.liferay.portal.search.model.uid.UIDFactory;
+import com.liferay.portal.search.query.QueriesUtil;
 import com.liferay.portal.search.searcher.SearchRequestBuilderFactory;
 import com.liferay.portal.search.searcher.SearchResponse;
 import com.liferay.portal.search.searcher.Searcher;
@@ -41,6 +44,7 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
 
+import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -125,13 +129,13 @@ public class LayoutPageTemplateEntryIndexerReindexTest {
 	}
 
 	@Test
-	@TestInfo("LPD-107953")
+	@TestInfo("LPD-108334")
 	public void testReindexLayoutPageTemplateCollectionId() throws Exception {
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(
 				TestPropsValues.getGroupId());
 
-		LayoutPageTemplateCollection layoutPageTemplateCollection =
+		_layoutPageTemplateCollection =
 			_layoutPageTemplateCollectionLocalService.
 				addLayoutPageTemplateCollection(
 					RandomTestUtil.randomString(), serviceContext.getUserId(),
@@ -142,17 +146,18 @@ public class LayoutPageTemplateEntryIndexerReindexTest {
 					LayoutPageTemplateCollectionTypeConstants.DISPLAY_PAGE,
 					serviceContext);
 
-		LayoutPageTemplateEntry layoutPageTemplateEntry =
+		long layoutPageTemplateCollectionId =
+			_layoutPageTemplateCollection.getLayoutPageTemplateCollectionId();
+
+		_layoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
 				RandomTestUtil.randomString(), serviceContext.getUserId(),
-				TestPropsValues.getGroupId(),
-				layoutPageTemplateCollection.
-					getLayoutPageTemplateCollectionId(),
+				TestPropsValues.getGroupId(), layoutPageTemplateCollectionId,
 				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE, 0,
 				WorkflowConstants.STATUS_DRAFT, serviceContext);
 
-		String name = layoutPageTemplateEntry.getName();
+		String name = _layoutPageTemplateEntry.getName();
 
 		Map<String, Serializable> parameters = Collections.singletonMap(
 			"types",
@@ -162,17 +167,17 @@ public class LayoutPageTemplateEntryIndexerReindexTest {
 			});
 
 		_assertFieldValue(
-			"layoutPageTemplateCollectionId",
-			String.valueOf(
-				layoutPageTemplateCollection.
-					getLayoutPageTemplateCollectionId()),
+			Field.FOLDER_ID, String.valueOf(layoutPageTemplateCollectionId),
 			name, parameters);
 
-		_layoutPageTemplateEntryLocalService.moveLayoutPageTemplateEntry(
-			layoutPageTemplateEntry.getLayoutPageTemplateEntryId(), 0);
+		_assertFolderIdSearchCount(1, layoutPageTemplateCollectionId);
 
-		_assertFieldValue(
-			"layoutPageTemplateCollectionId", "0", name, parameters);
+		_layoutPageTemplateEntryLocalService.moveLayoutPageTemplateEntry(
+			_layoutPageTemplateEntry.getLayoutPageTemplateEntryId(), 0);
+
+		_assertFieldValue(Field.FOLDER_ID, "0", name, parameters);
+
+		_assertFolderIdSearchCount(0, layoutPageTemplateCollectionId);
 	}
 
 	@Rule
@@ -196,6 +201,31 @@ public class LayoutPageTemplateEntryIndexerReindexTest {
 
 		FieldValuesAssert.assertFieldValue(
 			fieldName, fieldValue, _search(queryString, parameters));
+	}
+
+	private void _assertFolderIdSearchCount(int expectedCount, long folderId)
+		throws Exception {
+
+		SearchResponse searchResponse = _searcher.search(
+			_searchRequestBuilderFactory.builder(
+			).addComplexQueryPart(
+				_complexQueryPartBuilderFactory.builder(
+				).query(
+					QueriesUtil.term(Field.FOLDER_ID, String.valueOf(folderId))
+				).build()
+			).companyId(
+				TestPropsValues.getCompanyId()
+			).emptySearchEnabled(
+				true
+			).groupIds(
+				TestPropsValues.getGroupId()
+			).modelIndexerClasses(
+				LayoutPageTemplateEntry.class
+			).build());
+
+		Assert.assertEquals(
+			searchResponse.toString(), expectedCount,
+			searchResponse.getTotalHits());
 	}
 
 	private void _assertNoFieldValues(
@@ -258,8 +288,17 @@ public class LayoutPageTemplateEntryIndexerReindexTest {
 	}
 
 	@Inject
+	private ComplexQueryPartBuilderFactory _complexQueryPartBuilderFactory;
+
+	@DeleteAfterTestRun
+	private LayoutPageTemplateCollection _layoutPageTemplateCollection;
+
+	@Inject
 	private LayoutPageTemplateCollectionLocalService
 		_layoutPageTemplateCollectionLocalService;
+
+	@DeleteAfterTestRun
+	private LayoutPageTemplateEntry _layoutPageTemplateEntry;
 
 	@Inject
 	private LayoutPageTemplateEntryLocalService

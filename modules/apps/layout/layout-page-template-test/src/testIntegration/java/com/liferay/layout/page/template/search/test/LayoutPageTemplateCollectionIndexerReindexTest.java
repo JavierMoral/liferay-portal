@@ -16,10 +16,13 @@ import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.search.filter.ComplexQueryPartBuilderFactory;
 import com.liferay.portal.search.model.uid.UIDFactory;
+import com.liferay.portal.search.query.QueriesUtil;
 import com.liferay.portal.search.searcher.SearchRequestBuilderFactory;
 import com.liferay.portal.search.searcher.SearchResponse;
 import com.liferay.portal.search.searcher.Searcher;
@@ -30,6 +33,7 @@ import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.Collections;
 
+import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -101,37 +105,39 @@ public class LayoutPageTemplateCollectionIndexerReindexTest {
 	}
 
 	@Test
-	@TestInfo("LPD-107953")
+	@TestInfo("LPD-108334")
 	public void testReindexLayoutPageTemplateCollectionId() throws Exception {
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext(
 				TestPropsValues.getGroupId());
 
-		LayoutPageTemplateCollection parentLayoutPageTemplateCollection =
-			_addLayoutPageTemplateCollection(0, serviceContext);
+		_parentLayoutPageTemplateCollection = _addLayoutPageTemplateCollection(
+			0, serviceContext);
 
-		LayoutPageTemplateCollection layoutPageTemplateCollection =
-			_addLayoutPageTemplateCollection(
-				parentLayoutPageTemplateCollection.
-					getLayoutPageTemplateCollectionId(),
-				serviceContext);
+		long parentLayoutPageTemplateCollectionId =
+			_parentLayoutPageTemplateCollection.
+				getLayoutPageTemplateCollectionId();
 
-		String name = layoutPageTemplateCollection.getName();
+		_layoutPageTemplateCollection = _addLayoutPageTemplateCollection(
+			parentLayoutPageTemplateCollectionId, serviceContext);
+
+		String name = _layoutPageTemplateCollection.getName();
 
 		_assertFieldValue(
-			"layoutPageTemplateCollectionId",
-			String.valueOf(
-				parentLayoutPageTemplateCollection.
-					getLayoutPageTemplateCollectionId()),
-			name);
+			Field.FOLDER_ID,
+			String.valueOf(parentLayoutPageTemplateCollectionId), name);
+
+		_assertFolderIdSearchCount(1, parentLayoutPageTemplateCollectionId);
 
 		_layoutPageTemplateCollectionLocalService.
 			moveLayoutPageTemplateCollection(
-				layoutPageTemplateCollection.
+				_layoutPageTemplateCollection.
 					getLayoutPageTemplateCollectionId(),
 				0);
 
-		_assertFieldValue("layoutPageTemplateCollectionId", "0", name);
+		_assertFieldValue(Field.FOLDER_ID, "0", name);
+
+		_assertFolderIdSearchCount(0, parentLayoutPageTemplateCollectionId);
 	}
 
 	@Rule
@@ -172,6 +178,31 @@ public class LayoutPageTemplateCollectionIndexerReindexTest {
 			fieldName, fieldValue, _search(queryString));
 	}
 
+	private void _assertFolderIdSearchCount(int expectedCount, long folderId)
+		throws Exception {
+
+		SearchResponse searchResponse = _searcher.search(
+			_searchRequestBuilderFactory.builder(
+			).addComplexQueryPart(
+				_complexQueryPartBuilderFactory.builder(
+				).query(
+					QueriesUtil.term(Field.FOLDER_ID, String.valueOf(folderId))
+				).build()
+			).companyId(
+				TestPropsValues.getCompanyId()
+			).emptySearchEnabled(
+				true
+			).groupIds(
+				TestPropsValues.getGroupId()
+			).modelIndexerClasses(
+				LayoutPageTemplateCollection.class
+			).build());
+
+		Assert.assertEquals(
+			searchResponse.toString(), expectedCount,
+			searchResponse.getTotalHits());
+	}
+
 	private void _assertNoFieldValues(String queryString) throws Exception {
 		FieldValuesAssert.assertFieldValues(
 			Collections.emptyMap(), _search(queryString));
@@ -209,8 +240,17 @@ public class LayoutPageTemplateCollectionIndexerReindexTest {
 	}
 
 	@Inject
+	private ComplexQueryPartBuilderFactory _complexQueryPartBuilderFactory;
+
+	@DeleteAfterTestRun
+	private LayoutPageTemplateCollection _layoutPageTemplateCollection;
+
+	@Inject
 	private LayoutPageTemplateCollectionLocalService
 		_layoutPageTemplateCollectionLocalService;
+
+	@DeleteAfterTestRun
+	private LayoutPageTemplateCollection _parentLayoutPageTemplateCollection;
 
 	@Inject
 	private SearchRequestBuilderFactory _searchRequestBuilderFactory;
