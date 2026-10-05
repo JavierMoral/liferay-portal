@@ -9,6 +9,7 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateCollectionTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateCollection;
 import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionLocalService;
+import com.liferay.layout.page.template.test.util.LayoutPageTemplateTestUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.IndexWriterHelper;
@@ -107,19 +108,20 @@ public class LayoutPageTemplateCollectionIndexerReindexTest {
 	@Test
 	@TestInfo("LPD-108334")
 	public void testReindexLayoutPageTemplateCollectionId() throws Exception {
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(
-				TestPropsValues.getGroupId());
-
-		_parentLayoutPageTemplateCollection = _addLayoutPageTemplateCollection(
-			0, serviceContext);
+		_parentLayoutPageTemplateCollection =
+			LayoutPageTemplateTestUtil.addLayoutPageTemplateCollection(
+				TestPropsValues.getGroupId(),
+				LayoutPageTemplateCollectionTypeConstants.DISPLAY_PAGE);
 
 		long parentLayoutPageTemplateCollectionId =
 			_parentLayoutPageTemplateCollection.
 				getLayoutPageTemplateCollectionId();
 
-		_layoutPageTemplateCollection = _addLayoutPageTemplateCollection(
-			parentLayoutPageTemplateCollectionId, serviceContext);
+		_layoutPageTemplateCollection =
+			LayoutPageTemplateTestUtil.addLayoutPageTemplateCollection(
+				TestPropsValues.getGroupId(),
+				parentLayoutPageTemplateCollectionId,
+				LayoutPageTemplateCollectionTypeConstants.DISPLAY_PAGE);
 
 		String name = _layoutPageTemplateCollection.getName();
 
@@ -153,22 +155,6 @@ public class LayoutPageTemplateCollectionIndexerReindexTest {
 
 	@Inject
 	protected UIDFactory uidFactory;
-
-	private LayoutPageTemplateCollection _addLayoutPageTemplateCollection(
-			long parentLayoutPageTemplateCollectionId,
-			ServiceContext serviceContext)
-		throws Exception {
-
-		return _layoutPageTemplateCollectionLocalService.
-			addLayoutPageTemplateCollection(
-				RandomTestUtil.randomString(), serviceContext.getUserId(),
-				TestPropsValues.getGroupId(),
-				parentLayoutPageTemplateCollectionId,
-				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-				RandomTestUtil.randomString(),
-				LayoutPageTemplateCollectionTypeConstants.DISPLAY_PAGE,
-				serviceContext);
-	}
 
 	private void _assertFieldValue(
 			String fieldName, String fieldValue, String queryString)
