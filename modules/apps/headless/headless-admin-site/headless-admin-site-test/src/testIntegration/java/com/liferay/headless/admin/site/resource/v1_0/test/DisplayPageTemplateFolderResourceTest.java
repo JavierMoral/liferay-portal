@@ -7,6 +7,7 @@ package com.liferay.headless.admin.site.resource.v1_0.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.depot.constants.DepotConstants;
+import com.liferay.depot.constants.DepotRolesConstants;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.exportimport.kernel.service.StagingLocalService;
@@ -30,11 +31,16 @@ import com.liferay.portal.kernel.feature.flag.constants.FeatureFlagConstants;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.RoleConstants;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -189,10 +195,9 @@ public class DisplayPageTemplateFolderResourceTest
 	public void testGetDesignLibraryDisplayPageTemplateFolderPermissionsPage()
 		throws Exception {
 
-		Group group = _depotEntry.getGroup();
-
 		DisplayPageTemplateFolder displayPageTemplateFolder =
 			testGetDesignLibraryDisplayPageTemplateFolderPermissionsPage_addDisplayPageTemplateFolder();
+		Group group = _depotEntry.getGroup();
 
 		Page<Permission> page =
 			displayPageTemplateFolderResource.
@@ -219,6 +224,7 @@ public class DisplayPageTemplateFolderResourceTest
 
 		super.testGetDesignLibraryDisplayPageTemplateFoldersPage();
 
+		_testGetDesignLibraryDisplayPageTemplateFoldersPageAsDesignLibraryOwner();
 		_testGetDesignLibraryDisplayPageTemplateFoldersPageWithoutPermissions();
 	}
 
@@ -402,9 +408,9 @@ public class DisplayPageTemplateFolderResourceTest
 	public void testPutDesignLibraryDisplayPageTemplateFolderPermissionsPage()
 		throws Exception {
 
-		Group group = _depotEntry.getGroup();
 		DisplayPageTemplateFolder displayPageTemplateFolder =
 			testPutDesignLibraryDisplayPageTemplateFolderPermissionsPage_addDisplayPageTemplateFolder();
+		Group group = _depotEntry.getGroup();
 		Role role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
 
 		assertHttpResponseStatusCode(
@@ -453,6 +459,9 @@ public class DisplayPageTemplateFolderResourceTest
 		Assert.assertArrayEquals(
 			new String[] {"VIEW"}, permission.getActionIds());
 		Assert.assertEquals(role.getName(), permission.getRoleName());
+
+		_testPutDesignLibraryDisplayPageTemplateFolderPermissionsPageWithSiteExternalReferenceCodeProblemException(
+			role);
 	}
 
 	@Override
@@ -800,6 +809,43 @@ public class DisplayPageTemplateFolderResourceTest
 		Assert.assertTrue(group.hasStagingGroup());
 	}
 
+	private DisplayPageTemplateFolderResource
+			_getDesignLibraryOwnerDisplayPageTemplateFolderResource()
+		throws Exception {
+
+		String password = RandomTestUtil.randomString();
+
+		User user = UserTestUtil.addUser(testCompany, password);
+
+		Group group = _depotEntry.getGroup();
+
+		_userLocalService.addGroupUser(group.getGroupId(), user.getUserId());
+
+		Role role = _roleLocalService.getRole(
+			testCompany.getCompanyId(),
+			DepotRolesConstants.DESIGN_LIBRARY_OWNER);
+
+		_userGroupRoleLocalService.addUserGroupRoles(
+			user.getUserId(), group.getGroupId(),
+			new long[] {role.getRoleId()});
+
+		return _getDisplayPageTemplateFolderResource(password, user);
+	}
+
+	private DisplayPageTemplateFolderResource
+		_getDisplayPageTemplateFolderResource(String password, User user) {
+
+		return DisplayPageTemplateFolderResource.builder(
+		).authentication(
+			user.getEmailAddress(), password
+		).endpoint(
+			testCompany.getVirtualHostname(),
+			PortalUtil.getPortalServerPort(false), "http"
+		).locale(
+			LocaleUtil.getDefault()
+		).build();
+	}
+
 	private DisplayPageTemplateFolder _getParentDisplayPageTemplateFolder(
 			int count)
 		throws Exception {
@@ -861,6 +907,20 @@ public class DisplayPageTemplateFolderResourceTest
 		return parentLayoutPageTemplateCollectionId;
 	}
 
+	private DisplayPageTemplateFolderResource
+			_getUserWithoutPermissionsDisplayPageTemplateFolderResource()
+		throws Exception {
+
+		String password = RandomTestUtil.randomString();
+
+		User user = UserTestUtil.addUser(testCompany, password);
+
+		_userLocalService.addGroupUser(
+			testGroup.getGroupId(), user.getUserId());
+
+		return _getDisplayPageTemplateFolderResource(password, user);
+	}
+
 	private void _testDeleteDesignLibraryDisplayPageTemplateFolderWithAssetLibraryExternalReferenceCodeProblemException()
 		throws Exception {
 
@@ -916,6 +976,29 @@ public class DisplayPageTemplateFolderResourceTest
 						RandomTestUtil.randomString()));
 	}
 
+	private void _testGetDesignLibraryDisplayPageTemplateFoldersPageAsDesignLibraryOwner()
+		throws Exception {
+
+		Group group = _depotEntry.getGroup();
+
+		DisplayPageTemplateFolder displayPageTemplateFolder =
+			_addDesignLibraryDisplayPageTemplateFolder(group);
+
+		DisplayPageTemplateFolderResource
+			designLibraryOwnerDisplayPageTemplateFolderResource =
+				_getDesignLibraryOwnerDisplayPageTemplateFolderResource();
+
+		Page<DisplayPageTemplateFolder> page =
+			designLibraryOwnerDisplayPageTemplateFolderResource.
+				getDesignLibraryDisplayPageTemplateFoldersPage(
+					group.getExternalReferenceCode(), null, null, null,
+					Pagination.of(1, 10), null);
+
+		assertContains(
+			displayPageTemplateFolder,
+			(List<DisplayPageTemplateFolder>)page.getItems());
+	}
+
 	private void _testGetDesignLibraryDisplayPageTemplateFoldersPageWithoutPermissions()
 		throws Exception {
 
@@ -923,31 +1006,17 @@ public class DisplayPageTemplateFolderResourceTest
 
 		_addDesignLibraryDisplayPageTemplateFolder(group);
 
-		String password = RandomTestUtil.randomString();
-
-		User user = UserTestUtil.addUser(testCompany, password);
-
-		_userLocalService.addGroupUser(
-			testGroup.getGroupId(), user.getUserId());
-
-		DisplayPageTemplateFolderResource displayPageTemplateFolderResource =
-			DisplayPageTemplateFolderResource.builder(
-			).authentication(
-				user.getEmailAddress(), password
-			).endpoint(
-				testCompany.getVirtualHostname(),
-				PortalUtil.getPortalServerPort(false), "http"
-			).locale(
-				LocaleUtil.getDefault()
-			).build();
+		DisplayPageTemplateFolderResource
+			userWithoutPermissionsDisplayPageTemplateFolderResource =
+				_getUserWithoutPermissionsDisplayPageTemplateFolderResource();
 
 		Page<DisplayPageTemplateFolder> page =
-			displayPageTemplateFolderResource.
+			userWithoutPermissionsDisplayPageTemplateFolderResource.
 				getDesignLibraryDisplayPageTemplateFoldersPage(
 					group.getExternalReferenceCode(), null, null, null,
 					Pagination.of(1, 10), null);
 
-		Assert.assertEquals(0, page.getTotalCount());
+		Assert.assertEquals(page.toString(), 0, page.getTotalCount());
 	}
 
 	private void _testPatchSiteDisplayPageTemplateFolder(
@@ -1064,6 +1133,49 @@ public class DisplayPageTemplateFolderResourceTest
 					postSiteDisplayPageTemplateFolder(
 						testGroup.getExternalReferenceCode(),
 						displayPageTemplateFolder));
+	}
+
+	private void
+			_testPutDesignLibraryDisplayPageTemplateFolderPermissionsPageWithSiteExternalReferenceCodeProblemException(
+				Role role)
+		throws Exception {
+
+		DisplayPageTemplateFolder displayPageTemplateFolder =
+			testGetSiteDisplayPageTemplateFoldersPage_addDisplayPageTemplateFolder(
+				testGroup.getExternalReferenceCode(),
+				randomDisplayPageTemplateFolder());
+
+		_assertProblemException(
+			"BAD_REQUEST", null,
+			() ->
+				displayPageTemplateFolderResource.
+					putDesignLibraryDisplayPageTemplateFolderPermissionsPage(
+						testGroup.getExternalReferenceCode(),
+						displayPageTemplateFolder.getExternalReferenceCode(),
+						new Permission[] {
+							new Permission() {
+								{
+									setActionIds(new String[] {"VIEW"});
+									setRoleName(role.getName());
+								}
+							}
+						}));
+
+		LayoutPageTemplateCollection layoutPageTemplateCollection =
+			_layoutPageTemplateCollectionLocalService.
+				getLayoutPageTemplateCollectionByExternalReferenceCode(
+					displayPageTemplateFolder.getExternalReferenceCode(),
+					testGroup.getGroupId());
+
+		Assert.assertFalse(
+			_resourcePermissionLocalService.hasResourcePermission(
+				testCompany.getCompanyId(),
+				LayoutPageTemplateCollection.class.getName(),
+				ResourceConstants.SCOPE_INDIVIDUAL,
+				String.valueOf(
+					layoutPageTemplateCollection.
+						getLayoutPageTemplateCollectionId()),
+				role.getRoleId(), ActionKeys.VIEW));
 	}
 
 	private DisplayPageTemplateFolder _testPutSiteDisplayPageTemplateFolder(
@@ -1205,7 +1317,16 @@ public class DisplayPageTemplateFolderResourceTest
 		_layoutPageTemplateCollectionService;
 
 	@Inject
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Inject
+	private RoleLocalService _roleLocalService;
+
+	@Inject
 	private StagingLocalService _stagingLocalService;
+
+	@Inject
+	private UserGroupRoleLocalService _userGroupRoleLocalService;
 
 	@Inject
 	private UserLocalService _userLocalService;
