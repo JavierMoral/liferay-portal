@@ -406,6 +406,7 @@ public class LayoutPageTemplateCollectionLocalServiceImpl
 			sourceName);
 	}
 
+	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public LayoutPageTemplateCollection moveLayoutPageTemplateCollection(
 			long layoutPageTemplateCollectionId,
