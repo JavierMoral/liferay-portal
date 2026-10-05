@@ -133,16 +133,13 @@ public class LayoutPageTemplateEntryIndexerReindexTest {
 				TestPropsValues.getGroupId(),
 				LayoutPageTemplateCollectionTypeConstants.DISPLAY_PAGE);
 
-		long layoutPageTemplateCollectionId =
-			layoutPageTemplateCollection.getLayoutPageTemplateCollectionId();
-
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			LayoutPageTemplateTestUtil.addLayoutPageTemplateEntry(
-				layoutPageTemplateCollectionId, RandomTestUtil.randomString(),
+				layoutPageTemplateCollection.
+					getLayoutPageTemplateCollectionId(),
+				RandomTestUtil.randomString(),
 				LayoutPageTemplateEntryTypeConstants.DISPLAY_PAGE,
 				WorkflowConstants.STATUS_DRAFT);
-
-		String name = layoutPageTemplateEntry.getName();
 
 		Map<String, Serializable> parameters = Collections.singletonMap(
 			"types",
@@ -152,13 +149,18 @@ public class LayoutPageTemplateEntryIndexerReindexTest {
 			});
 
 		_assertFieldValue(
-			Field.FOLDER_ID, String.valueOf(layoutPageTemplateCollectionId),
-			name, parameters);
+			Field.FOLDER_ID,
+			String.valueOf(
+				layoutPageTemplateCollection.
+					getLayoutPageTemplateCollectionId()),
+			layoutPageTemplateEntry.getName(), parameters);
 
 		_layoutPageTemplateEntryLocalService.moveLayoutPageTemplateEntry(
 			layoutPageTemplateEntry.getLayoutPageTemplateEntryId(), 0);
 
-		_assertFieldValue(Field.FOLDER_ID, "0", name, parameters);
+		_assertFieldValue(
+			Field.FOLDER_ID, "0", layoutPageTemplateEntry.getName(),
+			parameters);
 
 		_layoutPageTemplateEntryLocalService.deleteLayoutPageTemplateEntry(
 			layoutPageTemplateEntry);

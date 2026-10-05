@@ -109,21 +109,19 @@ public class LayoutPageTemplateCollectionIndexerReindexTest {
 				TestPropsValues.getGroupId(),
 				LayoutPageTemplateCollectionTypeConstants.DISPLAY_PAGE);
 
-		long parentLayoutPageTemplateCollectionId =
-			parentLayoutPageTemplateCollection.
-				getLayoutPageTemplateCollectionId();
-
 		LayoutPageTemplateCollection layoutPageTemplateCollection =
 			LayoutPageTemplateTestUtil.addLayoutPageTemplateCollection(
 				TestPropsValues.getGroupId(),
-				parentLayoutPageTemplateCollectionId,
+				parentLayoutPageTemplateCollection.
+					getLayoutPageTemplateCollectionId(),
 				LayoutPageTemplateCollectionTypeConstants.DISPLAY_PAGE);
-
-		String name = layoutPageTemplateCollection.getName();
 
 		_assertFieldValue(
 			Field.FOLDER_ID,
-			String.valueOf(parentLayoutPageTemplateCollectionId), name);
+			String.valueOf(
+				parentLayoutPageTemplateCollection.
+					getLayoutPageTemplateCollectionId()),
+			layoutPageTemplateCollection.getName());
 
 		_layoutPageTemplateCollectionLocalService.
 			moveLayoutPageTemplateCollection(
@@ -131,7 +129,8 @@ public class LayoutPageTemplateCollectionIndexerReindexTest {
 					getLayoutPageTemplateCollectionId(),
 				0);
 
-		_assertFieldValue(Field.FOLDER_ID, "0", name);
+		_assertFieldValue(
+			Field.FOLDER_ID, "0", layoutPageTemplateCollection.getName());
 
 		_layoutPageTemplateCollectionLocalService.
 			deleteLayoutPageTemplateCollection(layoutPageTemplateCollection);
