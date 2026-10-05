@@ -413,35 +413,18 @@ public class DisplayPageTemplateFolderResourceTest
 		Group group = _depotEntry.getGroup();
 		Role role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
 
-		assertHttpResponseStatusCode(
-			200,
-			displayPageTemplateFolderResource.
-				putDesignLibraryDisplayPageTemplateFolderPermissionsPageHttpResponse(
-					group.getExternalReferenceCode(),
-					displayPageTemplateFolder.getExternalReferenceCode(),
-					new Permission[] {
-						new Permission() {
-							{
-								setActionIds(new String[] {"VIEW"});
-								setRoleName(role.getName());
-							}
+		displayPageTemplateFolderResource.
+			putDesignLibraryDisplayPageTemplateFolderPermissionsPage(
+				group.getExternalReferenceCode(),
+				displayPageTemplateFolder.getExternalReferenceCode(),
+				new Permission[] {
+					new Permission() {
+						{
+							setActionIds(new String[] {"VIEW"});
+							setRoleName(role.getName());
 						}
-					}));
-
-		assertHttpResponseStatusCode(
-			404,
-			displayPageTemplateFolderResource.
-				putDesignLibraryDisplayPageTemplateFolderPermissionsPageHttpResponse(
-					group.getExternalReferenceCode(),
-					displayPageTemplateFolder.getExternalReferenceCode(),
-					new Permission[] {
-						new Permission() {
-							{
-								setActionIds(new String[] {"-"});
-								setRoleName("-");
-							}
-						}
-					}));
+					}
+				});
 
 		Page<Permission> page =
 			displayPageTemplateFolderResource.
@@ -459,6 +442,22 @@ public class DisplayPageTemplateFolderResourceTest
 		Assert.assertArrayEquals(
 			new String[] {"VIEW"}, permission.getActionIds());
 		Assert.assertEquals(role.getName(), permission.getRoleName());
+
+		_assertProblemException(
+			"NOT_FOUND", null,
+			() ->
+				displayPageTemplateFolderResource.
+					putDesignLibraryDisplayPageTemplateFolderPermissionsPage(
+						group.getExternalReferenceCode(),
+						displayPageTemplateFolder.getExternalReferenceCode(),
+						new Permission[] {
+							new Permission() {
+								{
+									setActionIds(new String[] {"-"});
+									setRoleName("-");
+								}
+							}
+						}));
 
 		_testPutDesignLibraryDisplayPageTemplateFolderPermissionsPageWithSiteExternalReferenceCodeProblemException(
 			role);
