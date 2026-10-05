@@ -653,18 +653,13 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 			_serviceContext);
 	}
 
-	private void _assertEmbeddedDisplayPageTemplateFolderJSONObject(
-		JSONObject jsonObject,
+	private void _assertEmbeddedJSONObject(
+		JSONObject expectedJSONObject, JSONObject jsonObject,
 		LayoutPageTemplateCollection layoutPageTemplateCollection) {
 
-		Assert.assertNotNull(
-			layoutPageTemplateCollection.getName(), jsonObject);
-
 		JSONAssert.assertEquals(
-			JSONUtil.put(
+			expectedJSONObject.put(
 				"name", layoutPageTemplateCollection.getName()
-			).put(
-				"uuid", layoutPageTemplateCollection.getUuid()
 			).toString(),
 			jsonObject.toString(), JSONCompareMode.LENIENT);
 	}
@@ -680,22 +675,6 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 				"name", layoutPageTemplateEntry.getName()
 			).toString(),
 			jsonObject.toString(), JSONCompareMode.LENIENT);
-	}
-
-	private void _assertEmbeddedPageTemplateSetJSONObject(
-		JSONObject jsonObject,
-		LayoutPageTemplateCollection layoutPageTemplateCollection) {
-
-		Assert.assertNotNull(
-			layoutPageTemplateCollection.getName(), jsonObject);
-
-		JSONAssert.assertEquals(
-			JSONUtil.put(
-				"name", layoutPageTemplateCollection.getName()
-			).toString(),
-			jsonObject.toString(), JSONCompareMode.LENIENT);
-
-		Assert.assertFalse(jsonObject.toString(), jsonObject.has("uuid"));
 	}
 
 	private SearchPage<SearchResult> _assertFacetConfiguration(
@@ -1156,12 +1135,22 @@ public class SearchResultResourceTest extends BaseSearchResultResourceTestCase {
 					"JSONObject/embedded")),
 			"key");
 
-		_assertEmbeddedPageTemplateSetJSONObject(
-			embeddedJSONObjects.get(
-				layoutPageTemplateCollection1.
-					getLayoutPageTemplateCollectionKey()),
+		Assert.assertEquals(
+			embeddedJSONObjects.toString(), 2, embeddedJSONObjects.size());
+
+		JSONObject pageTemplateSetJSONObject = embeddedJSONObjects.get(
+			layoutPageTemplateCollection1.getLayoutPageTemplateCollectionKey());
+
+		_assertEmbeddedJSONObject(
+			_jsonFactory.createJSONObject(), pageTemplateSetJSONObject,
 			layoutPageTemplateCollection1);
-		_assertEmbeddedDisplayPageTemplateFolderJSONObject(
+
+		Assert.assertFalse(
+			pageTemplateSetJSONObject.toString(),
+			pageTemplateSetJSONObject.has("uuid"));
+
+		_assertEmbeddedJSONObject(
+			JSONUtil.put("uuid", layoutPageTemplateCollection2.getUuid()),
 			embeddedJSONObjects.get(
 				layoutPageTemplateCollection2.
 					getLayoutPageTemplateCollectionKey()),
