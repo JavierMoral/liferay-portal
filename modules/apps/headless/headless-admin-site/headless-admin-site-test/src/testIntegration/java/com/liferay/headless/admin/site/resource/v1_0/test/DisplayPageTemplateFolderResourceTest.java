@@ -180,6 +180,9 @@ public class DisplayPageTemplateFolderResourceTest
 					group.getExternalReferenceCode(),
 					displayPageTemplateFolder.getExternalReferenceCode());
 
+		assertEquals(displayPageTemplateFolder, getDisplayPageTemplateFolder);
+		assertValid(getDisplayPageTemplateFolder);
+
 		_assertActionHref(
 			getDisplayPageTemplateFolder.getActions(),
 			StringBundler.concat(
