@@ -38,4 +38,6 @@ public interface SiteConnectedGroupGroupProvider {
 			long[] groupIds, boolean checkContentSharingWithChildrenEnabled)
 		throws PortalException;
 
+	public long[] getDesignLibraryConnectedSiteGroupIds(long groupId);
+
 }
