@@ -7,6 +7,7 @@ package com.liferay.object.rest.internal.manager.v1_0;
 
 import com.liferay.account.exception.NoSuchGroupException;
 import com.liferay.depot.constants.DepotConstants;
+import com.liferay.depot.group.provider.SiteConnectedGroupGroupProvider;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.model.DepotEntryModel;
 import com.liferay.depot.service.DepotEntryLocalService;
@@ -134,7 +135,6 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.GroupThreadLocal;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Http;
-import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
@@ -191,6 +191,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -2370,6 +2371,28 @@ public class DefaultObjectEntryManagerImpl
 		return null;
 	}
 
+	private List<Long> _getConnectedDepotGroupIds(long groupId)
+		throws Exception {
+
+		long[] connectedSiteGroupIds =
+			_siteConnectedGroupGroupProvider.
+				getDesignLibraryConnectedSiteGroupIds(groupId);
+
+		if (ArrayUtil.isEmpty(connectedSiteGroupIds)) {
+			return TransformUtil.transform(
+				_depotEntryLocalService.getGroupConnectedDepotEntries(
+					groupId, DepotConstants.TYPE_ANY, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS),
+				DepotEntryModel::getGroupId);
+		}
+
+		return TransformUtil.transform(
+			_depotEntryLocalService.getGroupConnectedDepotEntries(
+				connectedSiteGroupIds, DepotConstants.TYPE_ANY,
+				QueryUtil.ALL_POS, QueryUtil.ALL_POS),
+			DepotEntryModel::getGroupId);
+	}
+
 	private String _getDateString(Date date) {
 		if (date == null) {
 			return StringPool.BLANK;
@@ -2456,31 +2479,24 @@ public class DefaultObjectEntryManagerImpl
 			ObjectScopeProvider objectScopeProvider)
 		throws Exception {
 
-		List<Long> groupIdsList = new ArrayList<>();
+		Set<Long> groupIds = new LinkedHashSet<>();
 
 		if (objectScopeProvider.isValidGroupId(groupId)) {
-			groupIdsList.add(groupId);
+			groupIds.add(groupId);
 		}
 
 		if (StringUtil.equals(
 				objectDefinition.getScope(),
 				ObjectDefinitionConstants.SCOPE_DEPOT)) {
 
-			groupIdsList.addAll(
-				TransformUtil.transform(
-					_depotEntryLocalService.getGroupConnectedDepotEntries(
-						groupId, DepotConstants.TYPE_ANY, QueryUtil.ALL_POS,
-						QueryUtil.ALL_POS),
-					DepotEntryModel::getGroupId));
+			groupIds.addAll(_getConnectedDepotGroupIds(groupId));
 		}
 
-		if (objectScopeProvider.isGroupAware() &&
-			ListUtil.isEmpty(groupIdsList)) {
-
+		if (objectScopeProvider.isGroupAware() && groupIds.isEmpty()) {
 			throw new NoSuchGroupException();
 		}
 
-		return groupIdsList.toArray(new Long[0]);
+		return groupIds.toArray(new Long[0]);
 	}
 
 	private BaseModel<ExternalReferenceCodeModel> _getManyToOneRelatedModel(
@@ -4482,6 +4498,9 @@ public class DefaultObjectEntryManagerImpl
 
 	@Reference
 	private SharingPermission _sharingPermission;
+
+	@Reference
+	private SiteConnectedGroupGroupProvider _siteConnectedGroupGroupProvider;
 
 	@Reference
 	private SubscriptionLocalService _subscriptionLocalService;
