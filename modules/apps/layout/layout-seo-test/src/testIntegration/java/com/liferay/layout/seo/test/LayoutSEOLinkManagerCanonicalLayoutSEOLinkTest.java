@@ -46,6 +46,7 @@ import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.FeatureFlagTestUtil;
@@ -312,10 +313,11 @@ public class LayoutSEOLinkManagerCanonicalLayoutSEOLinkTest {
 
 	@FeatureFlag("LPD-57283")
 	@Test
+	@TestInfo("LPD-108942")
 	public void testGetCanonicalLayoutSEOLink() throws Exception {
-		_testGetCanonicalLayoutSEOLinkSpaceCustomDisplayPage();
-		_testGetCanonicalLayoutSEOLinkSpaceDesignLibraryCustomDisplayPage();
-		_testGetCanonicalLayoutSEOLinkSpaceNoDisplayPage();
+		_testGetCanonicalLayoutSEOLinkCustomDisplayPage();
+		_testGetCanonicalLayoutSEOLinkDesignLibraryCustomDisplayPage();
+		_testGetCanonicalLayoutSEOLinkNoDisplayPage();
 	}
 
 	@Test
@@ -483,6 +485,7 @@ public class LayoutSEOLinkManagerCanonicalLayoutSEOLinkTest {
 	}
 
 	@Test
+	@TestInfo("LPD-108942")
 	public void testGetLocalizedLayoutSEOLinks() throws Exception {
 		GroupTestUtil.updateDisplaySettings(
 			_group.getGroupId(), Arrays.asList(LocaleUtil.SPAIN, LocaleUtil.US),
@@ -681,7 +684,7 @@ public class LayoutSEOLinkManagerCanonicalLayoutSEOLinkTest {
 		ServiceContextThreadLocal.pushServiceContext(_serviceContext);
 	}
 
-	private void _testGetCanonicalLayoutSEOLinkSpaceCustomDisplayPage()
+	private void _testGetCanonicalLayoutSEOLinkCustomDisplayPage()
 		throws Exception {
 
 		Group group = _addConnectedDepotGroup(DepotConstants.TYPE_SPACE);
@@ -731,7 +734,7 @@ public class LayoutSEOLinkManagerCanonicalLayoutSEOLinkTest {
 			});
 	}
 
-	private void _testGetCanonicalLayoutSEOLinkSpaceDesignLibraryCustomDisplayPage()
+	private void _testGetCanonicalLayoutSEOLinkDesignLibraryCustomDisplayPage()
 		throws Exception {
 
 		Group designLibraryGroup = _addConnectedDesignLibraryGroup();
@@ -786,7 +789,7 @@ public class LayoutSEOLinkManagerCanonicalLayoutSEOLinkTest {
 			});
 	}
 
-	private void _testGetCanonicalLayoutSEOLinkSpaceNoDisplayPage()
+	private void _testGetCanonicalLayoutSEOLinkNoDisplayPage()
 		throws Exception {
 
 		Group group = _addConnectedDepotGroup(DepotConstants.TYPE_SPACE);
