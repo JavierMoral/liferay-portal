@@ -9,6 +9,8 @@ export {default as ActionsComponentPropsTransformer} from './ActionsComponentPro
 
 export {default as AddDisplayPageTemplateDesignLibraryModalContent} from './AddDisplayPageTemplateDesignLibraryModalContent';
 
+export {default as AddDisplayPageTemplateFolderDesignLibraryModalContent} from './AddDisplayPageTemplateFolderDesignLibraryModalContent';
+
 export {default as AddLayoutPageTemplateEntryDesignLibraryModalContent} from './AddLayoutPageTemplateEntryDesignLibraryModalContent';
 
 export {default as ImportPageTemplates} from './ImportPageTemplates';
