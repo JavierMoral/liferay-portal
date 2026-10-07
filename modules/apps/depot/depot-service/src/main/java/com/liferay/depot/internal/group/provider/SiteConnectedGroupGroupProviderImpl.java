@@ -8,9 +8,12 @@ package com.liferay.depot.internal.group.provider;
 import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.group.provider.SiteConnectedGroupGroupProvider;
 import com.liferay.depot.model.DepotEntry;
+import com.liferay.depot.model.DepotEntryGroupRel;
+import com.liferay.depot.service.DepotEntryGroupRelLocalService;
 import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -119,6 +122,27 @@ public class SiteConnectedGroupGroupProviderImpl
 				groupIds, checkContentSharingWithChildrenEnabled),
 			ListUtil.toLongArray(depotEntries, DepotEntry::getGroupId));
 	}
+
+	@Override
+	public long[] getDesignLibraryConnectedSiteGroupIds(long groupId) {
+		DepotEntry depotEntry = _depotEntryLocalService.fetchGroupDepotEntry(
+			groupId);
+
+		if ((depotEntry == null) ||
+			(depotEntry.getType() != DepotConstants.TYPE_DESIGN_LIBRARY) ||
+			!FeatureFlagManagerUtil.isEnabled(
+				depotEntry.getCompanyId(), "LPD-57283")) {
+
+			return new long[0];
+		}
+
+		return ListUtil.toLongArray(
+			_depotEntryGroupRelLocalService.getDepotEntryGroupRels(depotEntry),
+			DepotEntryGroupRel::getToGroupId);
+	}
+
+	@Reference
+	private DepotEntryGroupRelLocalService _depotEntryGroupRelLocalService;
 
 	@Reference
 	private DepotEntryLocalService _depotEntryLocalService;

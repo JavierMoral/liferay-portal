@@ -10,8 +10,10 @@ import com.liferay.depot.constants.DepotConstants;
 import com.liferay.depot.constants.DepotRolesConstants;
 import com.liferay.depot.exception.DepotEntryNameException;
 import com.liferay.depot.model.DepotEntry;
+import com.liferay.depot.service.DepotEntryGroupRelLocalService;
 import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.DuplicateGroupException;
 import com.liferay.portal.kernel.exception.LocaleException;
 import com.liferay.portal.kernel.exception.NoSuchGroupException;
@@ -189,6 +191,78 @@ public class DepotEntryLocalServiceTest {
 	}
 
 	@Test
+	public void testGetCurrentAndGroupConnectedDepotEntries() throws Exception {
+		DepotEntry connectedDepotEntry1 = _addDepotEntry(
+			DepotConstants.TYPE_SPACE);
+		DepotEntry connectedDepotEntry2 = _addDepotEntry(
+			DepotConstants.TYPE_SPACE);
+		DepotEntry currentDepotEntry = _addDepotEntry(
+			DepotConstants.TYPE_SPACE);
+
+		_depotEntryGroupRelLocalService.addDepotEntryGroupRel(
+			connectedDepotEntry1.getDepotEntryId(),
+			currentDepotEntry.getGroupId());
+		_depotEntryGroupRelLocalService.addDepotEntryGroupRel(
+			connectedDepotEntry2.getDepotEntryId(),
+			currentDepotEntry.getGroupId());
+
+		Assert.assertEquals(
+			3,
+			_depotEntryLocalService.
+				getCurrentAndGroupConnectedDepotEntriesCount(
+					currentDepotEntry.getGroupId(), DepotConstants.TYPE_SPACE));
+
+		List<DepotEntry> depotEntries =
+			_depotEntryLocalService.getCurrentAndGroupConnectedDepotEntries(
+				currentDepotEntry.getGroupId(), DepotConstants.TYPE_SPACE, 0,
+				2);
+
+		Assert.assertEquals(depotEntries.toString(), 2, depotEntries.size());
+		Assert.assertEquals(
+			depotEntries.toString(), currentDepotEntry, depotEntries.get(0));
+
+		depotEntries =
+			_depotEntryLocalService.getCurrentAndGroupConnectedDepotEntries(
+				currentDepotEntry.getGroupId(), DepotConstants.TYPE_SPACE, 2,
+				4);
+
+		Assert.assertEquals(depotEntries.toString(), 1, depotEntries.size());
+		Assert.assertFalse(
+			depotEntries.toString(), depotEntries.contains(currentDepotEntry));
+	}
+
+	@Test
+	public void testGetCurrentAndGroupConnectedDepotEntriesCount()
+		throws Exception {
+
+		Group group = _addGroup();
+
+		DepotEntry depotEntry = _addDepotEntry(DepotConstants.TYPE_SPACE);
+
+		_depotEntryGroupRelLocalService.addDepotEntryGroupRel(
+			depotEntry.getDepotEntryId(), group.getGroupId());
+
+		Assert.assertEquals(
+			1,
+			_depotEntryLocalService.
+				getCurrentAndGroupConnectedDepotEntriesCount(
+					group.getGroupId(), DepotConstants.TYPE_SPACE));
+
+		Assert.assertEquals(
+			1,
+			_depotEntryLocalService.
+				getCurrentAndGroupConnectedDepotEntriesCount(
+					depotEntry.getGroupId(), DepotConstants.TYPE_SPACE));
+
+		Assert.assertEquals(
+			0,
+			_depotEntryLocalService.
+				getCurrentAndGroupConnectedDepotEntriesCount(
+					depotEntry.getGroupId(),
+					DepotConstants.TYPE_ASSET_LIBRARY));
+	}
+
+	@Test
 	public void testGetDepotEntryGroupIds() throws Exception {
 		List<Long> depotEntryGroupIds =
 			_depotEntryLocalService.getDepotEntryGroupIds(
@@ -293,6 +367,89 @@ public class DepotEntryLocalServiceTest {
 				depotEntry1, depotEntry2, depotEntry5, depotEntry6, depotEntry8,
 				depotEntry9, depotEntry10, depotEntry11),
 			user, true);
+	}
+
+	@Test
+	public void testGetGroupConnectedDepotEntries() throws Exception {
+		DepotEntry depotEntry1 = _addDepotEntry(DepotConstants.TYPE_SPACE);
+		DepotEntry depotEntry2 = _addDepotEntry(DepotConstants.TYPE_SPACE);
+		Group group1 = _addGroup();
+		Group group2 = _addGroup();
+
+		_depotEntryGroupRelLocalService.addDepotEntryGroupRel(
+			depotEntry1.getDepotEntryId(), group1.getGroupId());
+		_depotEntryGroupRelLocalService.addDepotEntryGroupRel(
+			depotEntry2.getDepotEntryId(), group1.getGroupId());
+		_depotEntryGroupRelLocalService.addDepotEntryGroupRel(
+			depotEntry2.getDepotEntryId(), group2.getGroupId());
+
+		long[] groupIds = {group1.getGroupId(), group2.getGroupId()};
+
+		List<DepotEntry> depotEntries =
+			_depotEntryLocalService.getGroupConnectedDepotEntries(
+				groupIds, DepotConstants.TYPE_SPACE, QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS);
+
+		Assert.assertEquals(depotEntries.toString(), 2, depotEntries.size());
+		Assert.assertTrue(
+			depotEntries.toString(), depotEntries.contains(depotEntry1));
+		Assert.assertTrue(
+			depotEntries.toString(), depotEntries.contains(depotEntry2));
+
+		depotEntries = _depotEntryLocalService.getGroupConnectedDepotEntries(
+			groupIds, DepotConstants.TYPE_SPACE, 0, 1);
+
+		Assert.assertEquals(depotEntries.toString(), 1, depotEntries.size());
+
+		depotEntries = _depotEntryLocalService.getGroupConnectedDepotEntries(
+			groupIds, DepotConstants.TYPE_ASSET_LIBRARY, QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS);
+
+		Assert.assertEquals(
+			depotEntries.toString(), Collections.emptyList(), depotEntries);
+	}
+
+	@Test
+	public void testGetGroupConnectedDepotEntriesCount() throws Exception {
+		DepotEntry depotEntry1 = _addDepotEntry(DepotConstants.TYPE_SPACE);
+		DepotEntry depotEntry2 = _addDepotEntry(DepotConstants.TYPE_SPACE);
+		Group group1 = _addGroup();
+		Group group2 = _addGroup();
+
+		_depotEntryGroupRelLocalService.addDepotEntryGroupRel(
+			depotEntry1.getDepotEntryId(), group1.getGroupId());
+		_depotEntryGroupRelLocalService.addDepotEntryGroupRel(
+			depotEntry2.getDepotEntryId(), group1.getGroupId());
+		_depotEntryGroupRelLocalService.addDepotEntryGroupRel(
+			depotEntry2.getDepotEntryId(), group2.getGroupId());
+
+		long[] groupIds = {group1.getGroupId(), group2.getGroupId()};
+
+		Assert.assertEquals(
+			2,
+			_depotEntryLocalService.getGroupConnectedDepotEntriesCount(
+				groupIds, DepotConstants.TYPE_SPACE));
+
+		Assert.assertEquals(
+			1,
+			_depotEntryLocalService.getGroupConnectedDepotEntriesCount(
+				new long[] {group2.getGroupId()}, DepotConstants.TYPE_SPACE));
+	}
+
+	@Test
+	public void testGetGroupConnectedDepotEntriesWithoutGroups()
+		throws Exception {
+
+		Assert.assertEquals(
+			Collections.emptyList(),
+			_depotEntryLocalService.getGroupConnectedDepotEntries(
+				new long[0], DepotConstants.TYPE_SPACE, QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS));
+
+		Assert.assertEquals(
+			0,
+			_depotEntryLocalService.getGroupConnectedDepotEntriesCount(
+				new long[0], DepotConstants.TYPE_SPACE));
 	}
 
 	@Test
@@ -536,6 +693,14 @@ public class DepotEntryLocalServiceTest {
 		return depotEntry;
 	}
 
+	private Group _addGroup() throws Exception {
+		Group group = GroupTestUtil.addGroup();
+
+		_groups.add(group);
+
+		return group;
+	}
+
 	private ServiceContext _getServiceContext(User user) throws Exception {
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext();
@@ -595,10 +760,16 @@ public class DepotEntryLocalServiceTest {
 	private final List<DepotEntry> _depotEntries = new ArrayList<>();
 
 	@Inject
+	private DepotEntryGroupRelLocalService _depotEntryGroupRelLocalService;
+
+	@Inject
 	private DepotEntryLocalService _depotEntryLocalService;
 
 	@Inject
 	private GroupLocalService _groupLocalService;
+
+	@DeleteAfterTestRun
+	private final List<Group> _groups = new ArrayList<>();
 
 	@Inject
 	private Language _language;

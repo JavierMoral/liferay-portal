@@ -42,6 +42,11 @@ public class SpaceDepotGroupItemSelectorProviderTest
 	}
 
 	@Override
+	protected int getDesignLibraryScopeGroupsCount() {
+		return 1;
+	}
+
+	@Override
 	protected String getLabel() {
 		return "Spaces";
 	}

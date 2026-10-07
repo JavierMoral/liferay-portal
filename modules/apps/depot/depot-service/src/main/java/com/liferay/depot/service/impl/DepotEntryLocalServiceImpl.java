@@ -13,6 +13,7 @@ import com.liferay.depot.exception.DepotEntryStagedException;
 import com.liferay.depot.internal.util.DepotRoleNameUtil;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.model.DepotEntryGroupRel;
+import com.liferay.depot.model.DepotEntryGroupRelTable;
 import com.liferay.depot.model.DepotEntryTable;
 import com.liferay.depot.service.DepotAppCustomizationLocalService;
 import com.liferay.depot.service.DepotEntryPinLocalService;
@@ -23,6 +24,7 @@ import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.sql.dsl.expression.Predicate;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
+import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.GroupKeyException;
 import com.liferay.portal.kernel.exception.LocaleException;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -44,9 +46,12 @@ import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -54,6 +59,8 @@ import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.Validator;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -205,6 +212,61 @@ public class DepotEntryLocalServiceImpl extends DepotEntryLocalServiceBaseImpl {
 	@Override
 	public DepotEntry fetchGroupDepotEntry(long groupId) {
 		return depotEntryPersistence.fetchByGroupId(groupId);
+	}
+
+	@Override
+	public List<DepotEntry> getCurrentAndGroupConnectedDepotEntries(
+			long groupId, int type, int start, int end)
+		throws PortalException {
+
+		DepotEntry currentDepotEntry = depotEntryPersistence.fetchByGroupId(
+			groupId);
+
+		if ((currentDepotEntry == null) ||
+			((type != DepotConstants.TYPE_ANY) &&
+			 (currentDepotEntry.getType() != type))) {
+
+			return getGroupConnectedDepotEntries(groupId, type, start, end);
+		}
+
+		List<DepotEntry> depotEntries = new ArrayList<>();
+
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS)) {
+			depotEntries.add(currentDepotEntry);
+			depotEntries.addAll(
+				getGroupConnectedDepotEntries(groupId, type, start, end));
+
+			return depotEntries;
+		}
+
+		if ((start <= 0) && (end > 0)) {
+			depotEntries.add(currentDepotEntry);
+		}
+
+		depotEntries.addAll(
+			getGroupConnectedDepotEntries(
+				groupId, type, Math.max(start - 1, 0), Math.max(end - 1, 0)));
+
+		return depotEntries;
+	}
+
+	@Override
+	public int getCurrentAndGroupConnectedDepotEntriesCount(
+		long groupId, int type) {
+
+		int count = getGroupConnectedDepotEntriesCount(groupId, type);
+
+		DepotEntry currentDepotEntry = depotEntryPersistence.fetchByGroupId(
+			groupId);
+
+		if ((currentDepotEntry != null) &&
+			((type == DepotConstants.TYPE_ANY) ||
+			 (currentDepotEntry.getType() == type))) {
+
+			count++;
+		}
+
+		return count;
 	}
 
 	@Override
@@ -362,12 +424,58 @@ public class DepotEntryLocalServiceImpl extends DepotEntryLocalServiceBaseImpl {
 	}
 
 	@Override
+	public List<DepotEntry> getGroupConnectedDepotEntries(
+			long[] groupIds, int type, int start, int end)
+		throws PortalException {
+
+		if (ArrayUtil.isEmpty(groupIds)) {
+			return Collections.emptyList();
+		}
+
+		List<Long> depotEntryIds = dslQuery(
+			DSLQueryFactoryUtil.selectDistinct(
+				DepotEntryGroupRelTable.INSTANCE.depotEntryId
+			).from(
+				DepotEntryGroupRelTable.INSTANCE
+			).where(
+				_getGroupConnectedDepotEntriesPredicate(
+					ArrayUtil.toArray(groupIds), type)
+			).orderBy(
+				DepotEntryGroupRelTable.INSTANCE.depotEntryId.ascending()
+			).limit(
+				start, end
+			));
+
+		return TransformUtil.transform(
+			depotEntryIds,
+			depotEntryId -> depotEntryPersistence.findByPrimaryKey(
+				depotEntryId));
+	}
+
+	@Override
 	public int getGroupConnectedDepotEntriesCount(long groupId, int type) {
 		if (type == DepotConstants.TYPE_ANY) {
 			return _depotEntryGroupRelPersistence.countByToGroupId(groupId);
 		}
 
 		return _depotEntryGroupRelPersistence.countByTGI_T(groupId, type);
+	}
+
+	@Override
+	public int getGroupConnectedDepotEntriesCount(long[] groupIds, int type) {
+		if (ArrayUtil.isEmpty(groupIds)) {
+			return 0;
+		}
+
+		return dslQueryCount(
+			DSLQueryFactoryUtil.countDistinct(
+				DepotEntryGroupRelTable.INSTANCE.depotEntryId
+			).from(
+				DepotEntryGroupRelTable.INSTANCE
+			).where(
+				_getGroupConnectedDepotEntriesPredicate(
+					ArrayUtil.toArray(groupIds), type)
+			));
 	}
 
 	@Override
@@ -468,11 +576,24 @@ public class DepotEntryLocalServiceImpl extends DepotEntryLocalServiceBaseImpl {
 
 		if (type == DepotConstants.TYPE_ANY) {
 			return _depotEntryGroupRelPersistence.findByToGroupId(
-				groupId, start, end);
+				groupId, start, end, _orderByComparator);
 		}
 
 		return _depotEntryGroupRelPersistence.findByTGI_T(
-			groupId, type, start, end);
+			groupId, type, start, end, _orderByComparator);
+	}
+
+	private Predicate _getGroupConnectedDepotEntriesPredicate(
+		Long[] groupIds, int type) {
+
+		Predicate predicate = DepotEntryGroupRelTable.INSTANCE.toGroupId.in(
+			groupIds);
+
+		if (type == DepotConstants.TYPE_ANY) {
+			return predicate;
+		}
+
+		return predicate.and(DepotEntryGroupRelTable.INSTANCE.type.eq(type));
 	}
 
 	private boolean _isStaged(DepotEntry depotEntry) throws PortalException {
@@ -546,6 +667,10 @@ public class DepotEntryLocalServiceImpl extends DepotEntryLocalServiceBaseImpl {
 	}
 
 	private static final String _ORGANIZATION_NAME_SUFFIX = " LFR_ORGANIZATION";
+
+	private static final OrderByComparator<DepotEntryGroupRel>
+		_orderByComparator = OrderByComparatorFactoryUtil.create(
+			"DepotEntryGroupRel", "depotEntryId", true);
 
 	@Reference
 	private DepotAppCustomizationLocalService

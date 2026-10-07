@@ -6950,6 +6950,57 @@ public class DefaultObjectEntryManagerImplTest
 			});
 	}
 
+	@FeatureFlag("LPD-57283")
+	@Test
+	public void testGetObjectEntriesWithScopeDepotFromDesignLibrary()
+		throws Exception {
+
+		DepotEntry depotEntry = _addDepotEntry(DepotConstants.TYPE_SPACE);
+		ObjectDefinition objectDefinition = _addObjectDefinition(
+			Collections.singletonList(
+				new TextObjectFieldBuilder(
+				).labelMap(
+					RandomTestUtil.randomLocaleStringMap()
+				).name(
+					"textObjectFieldName"
+				).build()),
+			ObjectDefinitionConstants.SCOPE_DEPOT);
+
+		_objectDefinitionSettingLocalService.addObjectDefinitionSetting(
+			TestPropsValues.getUserId(),
+			objectDefinition.getObjectDefinitionId(),
+			ObjectDefinitionSettingConstants.NAME_ACCEPTED_GROUP_IDS,
+			String.valueOf(depotEntry.getGroupId()));
+
+		ObjectEntry objectEntry = _addObjectEntry(
+			objectDefinition,
+			new ObjectEntry() {
+				{
+					properties = HashMapBuilder.<String, Object>put(
+						"textObjectFieldName", RandomTestUtil.randomString()
+					).build();
+				}
+			},
+			String.valueOf(depotEntry.getGroupId()));
+
+		Group group = GroupTestUtil.addGroup();
+
+		_depotEntryGroupRelLocalService.addDepotEntryGroupRel(
+			depotEntry.getDepotEntryId(), group.getGroupId());
+
+		DepotEntry designLibraryDepotEntry = _addDepotEntry(
+			DepotConstants.TYPE_DESIGN_LIBRARY);
+
+		_depotEntryGroupRelLocalService.addDepotEntryGroupRel(
+			designLibraryDepotEntry.getDepotEntryId(), group.getGroupId());
+
+		assertEquals(
+			_getObjectEntries(
+				objectDefinition,
+				String.valueOf(designLibraryDepotEntry.getGroupId())),
+			Collections.singletonList(objectEntry));
+	}
+
 	@Test
 	public void testGetObjectEntry() throws Exception {
 
