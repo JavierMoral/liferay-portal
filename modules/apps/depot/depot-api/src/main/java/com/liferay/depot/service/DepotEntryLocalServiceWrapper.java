@@ -269,6 +269,23 @@ public class DepotEntryLocalServiceWrapper
 		return _depotEntryLocalService.getActionableDynamicQuery();
 	}
 
+	@Override
+	public java.util.List<DepotEntry> getCurrentAndGroupConnectedDepotEntries(
+			long groupId, int type, int start, int end)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _depotEntryLocalService.getCurrentAndGroupConnectedDepotEntries(
+			groupId, type, start, end);
+	}
+
+	@Override
+	public int getCurrentAndGroupConnectedDepotEntriesCount(
+		long groupId, int type) {
+
+		return _depotEntryLocalService.
+			getCurrentAndGroupConnectedDepotEntriesCount(groupId, type);
+	}
+
 	/**
 	 * Returns a range of all the depot entries.
 	 *
@@ -436,9 +453,24 @@ public class DepotEntryLocalServiceWrapper
 	}
 
 	@Override
+	public java.util.List<DepotEntry> getGroupConnectedDepotEntries(
+			long[] groupIds, int type, int start, int end)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _depotEntryLocalService.getGroupConnectedDepotEntries(
+			groupIds, type, start, end);
+	}
+
+	@Override
 	public int getGroupConnectedDepotEntriesCount(long groupId, int type) {
 		return _depotEntryLocalService.getGroupConnectedDepotEntriesCount(
 			groupId, type);
+	}
+
+	@Override
+	public int getGroupConnectedDepotEntriesCount(long[] groupIds, int type) {
+		return _depotEntryLocalService.getGroupConnectedDepotEntriesCount(
+			groupIds, type);
 	}
 
 	@Override
@@ -547,4 +579,4 @@ public class DepotEntryLocalServiceWrapper
 	private DepotEntryLocalService _depotEntryLocalService;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-4632591
+// LIFERAY-SERVICE-BUILDER-HASH:728336219

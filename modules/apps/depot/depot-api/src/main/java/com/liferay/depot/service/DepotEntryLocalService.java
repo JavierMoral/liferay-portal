@@ -231,6 +231,15 @@ public interface DepotEntryLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ActionableDynamicQuery getActionableDynamicQuery();
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<DepotEntry> getCurrentAndGroupConnectedDepotEntries(
+			long groupId, int type, int start, int end)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getCurrentAndGroupConnectedDepotEntriesCount(
+		long groupId, int type);
+
 	/**
 	 * Returns a range of all the depot entries.
 	 *
@@ -341,7 +350,15 @@ public interface DepotEntryLocalService
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<DepotEntry> getGroupConnectedDepotEntries(
+			long[] groupIds, int type, int start, int end)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getGroupConnectedDepotEntriesCount(long groupId, int type);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getGroupConnectedDepotEntriesCount(long[] groupIds, int type);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DepotEntry getGroupDepotEntry(long groupId) throws PortalException;
@@ -401,4 +418,4 @@ public interface DepotEntryLocalService
 		throws E;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-1578473779
+// LIFERAY-SERVICE-BUILDER-HASH:-524174297
