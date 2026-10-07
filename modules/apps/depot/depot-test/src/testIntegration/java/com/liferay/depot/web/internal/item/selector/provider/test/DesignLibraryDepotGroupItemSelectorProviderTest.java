@@ -60,6 +60,11 @@ public class DesignLibraryDepotGroupItemSelectorProviderTest
 	}
 
 	@Override
+	protected int getDesignLibraryScopeGroupsCount() {
+		return 2;
+	}
+
+	@Override
 	protected String getLabel() {
 		return "Design Libraries";
 	}
