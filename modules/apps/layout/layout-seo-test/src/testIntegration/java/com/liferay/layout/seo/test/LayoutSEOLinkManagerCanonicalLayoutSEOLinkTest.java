@@ -484,22 +484,38 @@ public class LayoutSEOLinkManagerCanonicalLayoutSEOLinkTest {
 
 	@Test
 	public void testGetLocalizedLayoutSEOLinks() throws Exception {
-		_group = GroupTestUtil.updateDisplaySettings(
+		GroupTestUtil.updateDisplaySettings(
 			_group.getGroupId(), Arrays.asList(LocaleUtil.SPAIN, LocaleUtil.US),
 			LocaleUtil.US);
 
-		JournalArticle journalArticle = _addConnectedSpaceJournalArticle();
+		Group group = _addConnectedDepotGroup(DepotConstants.TYPE_SPACE);
 
-		_addDefaultDisplayPageTemplate(_group.getGroupId(), journalArticle);
+		JournalArticle journalArticle = _addJournalArticle(
+			group.getGroupId(),
+			ServiceContextTestUtil.getServiceContext(
+				group.getGroupId(), TestPropsValues.getUserId()));
 
-		Layout layout = _addCustomDisplayPageTemplateLayout(
-			_group.getGroupId(), journalArticle);
+		long classNameId = _portal.getClassNameId(
+			JournalArticle.class.getName());
+
+		DisplayPageTemplateTestUtil.addDisplayPageTemplate(
+			_group.getGroupId(), classNameId,
+			journalArticle.getDDMStructureKey(), true,
+			WorkflowConstants.STATUS_APPROVED);
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
+				_group.getGroupId(), classNameId,
+				journalArticle.getDDMStructureKey(), false,
+				WorkflowConstants.STATUS_APPROVED);
+
+		Layout layout = _layoutLocalService.getLayout(
+			layoutPageTemplateEntry.getPlid());
 
 		ThemeDisplay themeDisplay = _getThemeDisplay(journalArticle, layout);
 
 		String url = _getCustomDisplayPageURL(
-			_portal.getClassNameId(JournalArticle.class.getName()),
-			journalArticle, layout, themeDisplay);
+			classNameId, journalArticle, layout, themeDisplay);
 
 		_pushServiceContext(themeDisplay, url);
 
@@ -546,38 +562,6 @@ public class LayoutSEOLinkManagerCanonicalLayoutSEOLinkTest {
 			TestPropsValues.getCompanyId(), true, "LPD-57283");
 
 		return _addConnectedDepotGroup(DepotConstants.TYPE_DESIGN_LIBRARY);
-	}
-
-	private JournalArticle _addConnectedSpaceJournalArticle() throws Exception {
-		Group group = _addConnectedDepotGroup(DepotConstants.TYPE_SPACE);
-
-		return _addJournalArticle(
-			group.getGroupId(),
-			ServiceContextTestUtil.getServiceContext(
-				group.getGroupId(), TestPropsValues.getUserId()));
-	}
-
-	private Layout _addCustomDisplayPageTemplateLayout(
-			long groupId, JournalArticle journalArticle)
-		throws Exception {
-
-		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
-				groupId, _portal.getClassNameId(JournalArticle.class.getName()),
-				journalArticle.getDDMStructureKey(), false,
-				WorkflowConstants.STATUS_APPROVED);
-
-		return _layoutLocalService.getLayout(layoutPageTemplateEntry.getPlid());
-	}
-
-	private void _addDefaultDisplayPageTemplate(
-			long groupId, JournalArticle journalArticle)
-		throws Exception {
-
-		DisplayPageTemplateTestUtil.addDisplayPageTemplate(
-			groupId, _portal.getClassNameId(JournalArticle.class.getName()),
-			journalArticle.getDDMStructureKey(), true,
-			WorkflowConstants.STATUS_APPROVED);
 	}
 
 	private JournalArticle _addJournalArticle() throws Exception {
@@ -700,18 +684,34 @@ public class LayoutSEOLinkManagerCanonicalLayoutSEOLinkTest {
 	private void _testGetCanonicalLayoutSEOLinkSpaceCustomDisplayPage()
 		throws Exception {
 
-		JournalArticle journalArticle = _addConnectedSpaceJournalArticle();
+		Group group = _addConnectedDepotGroup(DepotConstants.TYPE_SPACE);
 
-		_addDefaultDisplayPageTemplate(_group.getGroupId(), journalArticle);
+		JournalArticle journalArticle = _addJournalArticle(
+			group.getGroupId(),
+			ServiceContextTestUtil.getServiceContext(
+				group.getGroupId(), TestPropsValues.getUserId()));
 
-		Layout layout = _addCustomDisplayPageTemplateLayout(
-			_group.getGroupId(), journalArticle);
+		long classNameId = _portal.getClassNameId(
+			JournalArticle.class.getName());
+
+		DisplayPageTemplateTestUtil.addDisplayPageTemplate(
+			_group.getGroupId(), classNameId,
+			journalArticle.getDDMStructureKey(), true,
+			WorkflowConstants.STATUS_APPROVED);
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
+				_group.getGroupId(), classNameId,
+				journalArticle.getDDMStructureKey(), false,
+				WorkflowConstants.STATUS_APPROVED);
+
+		Layout layout = _layoutLocalService.getLayout(
+			layoutPageTemplateEntry.getPlid());
 
 		ThemeDisplay themeDisplay = _getThemeDisplay(journalArticle, layout);
 
 		String url = _getCustomDisplayPageURL(
-			_portal.getClassNameId(JournalArticle.class.getName()),
-			journalArticle, layout, themeDisplay);
+			classNameId, journalArticle, layout, themeDisplay);
 
 		_pushServiceContext(themeDisplay, url);
 
@@ -734,24 +734,38 @@ public class LayoutSEOLinkManagerCanonicalLayoutSEOLinkTest {
 	private void _testGetCanonicalLayoutSEOLinkSpaceDesignLibraryCustomDisplayPage()
 		throws Exception {
 
-		JournalArticle journalArticle = _addConnectedSpaceJournalArticle();
-
 		Group designLibraryGroup = _addConnectedDesignLibraryGroup();
 
-		_addDefaultDisplayPageTemplate(
-			designLibraryGroup.getGroupId(), journalArticle);
+		Group group = _addConnectedDepotGroup(DepotConstants.TYPE_SPACE);
+
+		JournalArticle journalArticle = _addJournalArticle(
+			group.getGroupId(),
+			ServiceContextTestUtil.getServiceContext(
+				group.getGroupId(), TestPropsValues.getUserId()));
+
+		long classNameId = _portal.getClassNameId(
+			JournalArticle.class.getName());
+
+		DisplayPageTemplateTestUtil.addDisplayPageTemplate(
+			designLibraryGroup.getGroupId(), classNameId,
+			journalArticle.getDDMStructureKey(), true,
+			WorkflowConstants.STATUS_APPROVED);
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
+				designLibraryGroup.getGroupId(), classNameId,
+				journalArticle.getDDMStructureKey(), false,
+				WorkflowConstants.STATUS_APPROVED);
 
 		Layout virtualLayout = new VirtualLayout(
-			_addCustomDisplayPageTemplateLayout(
-				designLibraryGroup.getGroupId(), journalArticle),
+			_layoutLocalService.getLayout(layoutPageTemplateEntry.getPlid()),
 			_group);
 
 		ThemeDisplay themeDisplay = _getThemeDisplay(
 			journalArticle, virtualLayout);
 
 		String url = _getCustomDisplayPageURL(
-			_portal.getClassNameId(JournalArticle.class.getName()),
-			journalArticle, virtualLayout, themeDisplay);
+			classNameId, journalArticle, virtualLayout, themeDisplay);
 
 		_pushServiceContext(themeDisplay, url);
 
@@ -775,16 +789,29 @@ public class LayoutSEOLinkManagerCanonicalLayoutSEOLinkTest {
 	private void _testGetCanonicalLayoutSEOLinkSpaceNoDisplayPage()
 		throws Exception {
 
-		JournalArticle journalArticle = _addConnectedSpaceJournalArticle();
+		Group group = _addConnectedDepotGroup(DepotConstants.TYPE_SPACE);
 
-		Layout layout = _addCustomDisplayPageTemplateLayout(
-			_group.getGroupId(), journalArticle);
+		JournalArticle journalArticle = _addJournalArticle(
+			group.getGroupId(),
+			ServiceContextTestUtil.getServiceContext(
+				group.getGroupId(), TestPropsValues.getUserId()));
+
+		long classNameId = _portal.getClassNameId(
+			JournalArticle.class.getName());
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			DisplayPageTemplateTestUtil.addDisplayPageTemplate(
+				_group.getGroupId(), classNameId,
+				journalArticle.getDDMStructureKey(), false,
+				WorkflowConstants.STATUS_APPROVED);
+
+		Layout layout = _layoutLocalService.getLayout(
+			layoutPageTemplateEntry.getPlid());
 
 		ThemeDisplay themeDisplay = _getThemeDisplay(journalArticle, layout);
 
 		String url = _getCustomDisplayPageURL(
-			_portal.getClassNameId(JournalArticle.class.getName()),
-			journalArticle, layout, themeDisplay);
+			classNameId, journalArticle, layout, themeDisplay);
 
 		_pushServiceContext(themeDisplay, url);
 
