@@ -74,7 +74,7 @@ public class ViewSpaceSitesSummarySectionDisplayContext {
 				dropdownItem.putData("groupId", _groupId);
 				dropdownItem.putData("title", _getSpaceSitesHeaderTitle());
 				dropdownItem.setLabel(
-					_language.get(_httpServletRequest, "connect-sites"));
+					_language.get(_httpServletRequest, "connect"));
 			}
 		).build();
 	}
@@ -82,12 +82,14 @@ public class ViewSpaceSitesSummarySectionDisplayContext {
 	public Map<String, Object> getEmptyState() {
 		return HashMapBuilder.<String, Object>put(
 			"description",
-			_language.get(_httpServletRequest, "connect-sites-to-this-space")
+			_language.get(
+				_httpServletRequest,
+				"connect-sites-and-libraries-to-this-space")
 		).put(
 			"image", "/states/cms_empty_state.svg"
 		).put(
 			"title",
-			_language.get(_httpServletRequest, "no-connected-sites-yet")
+			_language.get(_httpServletRequest, "nothing-is-connected-yet")
 		).build();
 	}
 
@@ -114,7 +116,7 @@ public class ViewSpaceSitesSummarySectionDisplayContext {
 	public Map<String, Object> getHeaderProps() throws Exception {
 		Map<String, Object> headerProps =
 			SpaceSummaryHeaderUtil.getSpaceSummaryHeaderProps(
-				getAPIURL(), null, _httpServletRequest, "view-all-sites",
+				getAPIURL(), null, _httpServletRequest, "view-all-connections",
 				HashMapBuilder.<String, Object>put(
 					"hasConnectSitesPermission", _hasConnectSitesPermission()
 				).build(),
@@ -123,7 +125,7 @@ public class ViewSpaceSitesSummarySectionDisplayContext {
 				).put(
 					"externalReferenceCode", _externalReferenceCode
 				).build(),
-				"sites", StringPool.BLANK);
+				"connections", StringPool.BLANK);
 
 		headerProps.put("totalCount", _getDepotEntryGroupRelsCount());
 
@@ -157,7 +159,7 @@ public class ViewSpaceSitesSummarySectionDisplayContext {
 
 	private String _getSpaceSitesHeaderTitle() throws Exception {
 		return StringBundler.concat(
-			_language.get(_httpServletRequest, "sites"), StringPool.SPACE,
+			_language.get(_httpServletRequest, "connections"), StringPool.SPACE,
 			StringPool.OPEN_PARENTHESIS, _getDepotEntryGroupRelsCount(),
 			StringPool.CLOSE_PARENTHESIS);
 	}
