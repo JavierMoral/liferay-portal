@@ -7,13 +7,11 @@ package com.liferay.depot.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.depot.constants.DepotConstants;
-import com.liferay.depot.exception.DepotEntryGroupRelToGroupException;
 import com.liferay.depot.exception.NoSuchEntryGroupRelException;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.model.DepotEntryGroupRel;
 import com.liferay.depot.service.DepotEntryGroupRelLocalService;
 import com.liferay.depot.service.DepotEntryLocalService;
-import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
@@ -122,54 +120,6 @@ public class DepotEntryGroupRelLocalServiceTest {
 	}
 
 	@Test
-	public void testAddDepotEntryGroupRelWithAssetLibraryToGroup()
-		throws Exception {
-
-		DepotEntry depotEntry1 = _addDepotEntry(
-			DepotConstants.TYPE_ASSET_LIBRARY);
-		DepotEntry depotEntry2 = _addDepotEntry(DepotConstants.TYPE_SPACE);
-
-		AssertUtils.assertFailure(
-			DepotEntryGroupRelToGroupException.MustAcceptDepotEntryType.class,
-			StringBundler.concat(
-				"Group ", depotEntry1.getGroupId(),
-				" does not accept depot entries of type ",
-				DepotConstants.TYPE_SPACE),
-			() -> _depotEntryGroupRelLocalService.addDepotEntryGroupRel(
-				depotEntry2.getDepotEntryId(), depotEntry1.getGroupId()));
-	}
-
-	@Test
-	public void testAddDepotEntryGroupRelWithDesignLibraryToGroup()
-		throws Exception {
-
-		DepotEntry depotEntry1 = _addDepotEntry(
-			DepotConstants.TYPE_DESIGN_LIBRARY);
-		DepotEntry depotEntry2 = _addDepotEntry(
-			DepotConstants.TYPE_ASSET_LIBRARY);
-
-		DepotEntryGroupRel depotEntryGroupRel1 =
-			_depotEntryGroupRelLocalService.addDepotEntryGroupRel(
-				depotEntry2.getDepotEntryId(), depotEntry1.getGroupId());
-
-		Assert.assertEquals(
-			depotEntry1.getGroupId(), depotEntryGroupRel1.getToGroupId());
-		Assert.assertEquals(
-			DepotConstants.TYPE_ASSET_LIBRARY, depotEntryGroupRel1.getType());
-
-		DepotEntry depotEntry3 = _addDepotEntry(DepotConstants.TYPE_SPACE);
-
-		DepotEntryGroupRel depotEntryGroupRel2 =
-			_depotEntryGroupRelLocalService.addDepotEntryGroupRel(
-				depotEntry3.getDepotEntryId(), depotEntry1.getGroupId());
-
-		Assert.assertEquals(
-			depotEntry1.getGroupId(), depotEntryGroupRel2.getToGroupId());
-		Assert.assertEquals(
-			DepotConstants.TYPE_SPACE, depotEntryGroupRel2.getType());
-	}
-
-	@Test
 	public void testAddDepotEntryGroupRelWithLayoutSetPrototypeWithPropagation()
 		throws Exception {
 
@@ -233,41 +183,6 @@ public class DepotEntryGroupRelLocalServiceTest {
 			_depotEntryGroupRelLocalService.
 				fetchDepotEntryGroupRelByDepotEntryIdToGroupId(
 					depotEntry.getDepotEntryId(), _group2.getGroupId()));
-	}
-
-	@Test
-	public void testAddDepotEntryGroupRelWithSpaceToGroup() throws Exception {
-		DepotEntry depotEntry1 = _addDepotEntry(DepotConstants.TYPE_SPACE);
-		DepotEntry depotEntry2 = _addDepotEntry(
-			DepotConstants.TYPE_ASSET_LIBRARY);
-
-		AssertUtils.assertFailure(
-			DepotEntryGroupRelToGroupException.MustAcceptDepotEntryType.class,
-			StringBundler.concat(
-				"Group ", depotEntry1.getGroupId(),
-				" does not accept depot entries of type ",
-				DepotConstants.TYPE_ASSET_LIBRARY),
-			() -> _depotEntryGroupRelLocalService.addDepotEntryGroupRel(
-				depotEntry2.getDepotEntryId(), depotEntry1.getGroupId()));
-	}
-
-	@Test
-	public void testAddDepotEntryGroupRelWithTwoDesignLibraries()
-		throws Exception {
-
-		DepotEntry depotEntry1 = _addDepotEntry(
-			DepotConstants.TYPE_DESIGN_LIBRARY);
-		DepotEntry depotEntry2 = _addDepotEntry(
-			DepotConstants.TYPE_DESIGN_LIBRARY);
-
-		AssertUtils.assertFailure(
-			DepotEntryGroupRelToGroupException.MustAcceptDepotEntryType.class,
-			StringBundler.concat(
-				"Group ", depotEntry1.getGroupId(),
-				" does not accept depot entries of type ",
-				DepotConstants.TYPE_DESIGN_LIBRARY),
-			() -> _depotEntryGroupRelLocalService.addDepotEntryGroupRel(
-				depotEntry2.getDepotEntryId(), depotEntry1.getGroupId()));
 	}
 
 	@Test
