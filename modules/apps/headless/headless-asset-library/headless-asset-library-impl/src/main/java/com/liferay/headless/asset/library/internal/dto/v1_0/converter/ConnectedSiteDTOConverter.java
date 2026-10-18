@@ -102,12 +102,12 @@ public class ConnectedSiteDTOConverter
 					});
 				setType(
 					() -> {
-						DepotEntry depotEntry =
+						DepotEntry groupDepotEntry =
 							_depotEntryLocalService.fetchGroupDepotEntry(
 								group.getGroupId());
 
-						if ((depotEntry != null) &&
-							(depotEntry.getType() ==
+						if ((groupDepotEntry != null) &&
+							(groupDepotEntry.getType() ==
 								DepotConstants.TYPE_DESIGN_LIBRARY)) {
 
 							return ConnectedSite.Type.DESIGN_LIBRARY;

@@ -16,11 +16,11 @@ public class DepotEntryGroupRelToGroupException extends PortalException {
 	public static class MustAcceptDepotEntryType
 		extends DepotEntryGroupException {
 
-		public MustAcceptDepotEntryType(long toGroupId, int type) {
+		public MustAcceptDepotEntryType(int depotEntryType, long toGroupId) {
 			super(
 				StringBundler.concat(
-					"Group ", toGroupId,
-					" does not accept depot entries of type ", type));
+					"A depot entry of type ", depotEntryType,
+					" cannot be connected to group ", toGroupId));
 		}
 
 	}

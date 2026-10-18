@@ -6,7 +6,6 @@
 package com.liferay.depot.service.impl;
 
 import com.liferay.depot.constants.DepotConstants;
-import com.liferay.depot.exception.DepotEntryGroupRelToGroupException;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.model.DepotEntryGroupRel;
 import com.liferay.depot.service.base.DepotEntryGroupRelLocalServiceBaseImpl;
@@ -17,7 +16,6 @@ import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
-import com.liferay.portal.kernel.util.ArrayUtil;
 
 import java.util.List;
 
@@ -47,11 +45,6 @@ public class DepotEntryGroupRelLocalServiceImpl
 			return depotEntryGroupRel;
 		}
 
-		DepotEntry depotEntry = _depotEntryPersistence.findByPrimaryKey(
-			depotEntryId);
-
-		_validateToGroup(depotEntry, toGroupId);
-
 		depotEntryGroupRel = depotEntryGroupRelPersistence.create(
 			counterLocalService.increment());
 
@@ -60,6 +53,10 @@ public class DepotEntryGroupRelLocalServiceImpl
 		depotEntryGroupRel.setDepotEntryId(depotEntryId);
 		depotEntryGroupRel.setSearchable(searchable);
 		depotEntryGroupRel.setToGroupId(toGroupId);
+
+		DepotEntry depotEntry = _depotEntryPersistence.findByPrimaryKey(
+			depotEntryId);
+
 		depotEntryGroupRel.setType(depotEntry.getType());
 
 		ServiceContext serviceContext =
@@ -210,29 +207,6 @@ public class DepotEntryGroupRelLocalServiceImpl
 
 		return depotEntryGroupRelPersistence.update(depotEntryGroupRel);
 	}
-
-	private void _validateToGroup(DepotEntry depotEntry, long toGroupId)
-		throws PortalException {
-
-		DepotEntry toDepotEntry = _depotEntryPersistence.fetchByGroupId(
-			toGroupId);
-
-		if (toDepotEntry == null) {
-			return;
-		}
-
-		if ((toDepotEntry.getType() != DepotConstants.TYPE_DESIGN_LIBRARY) ||
-			!ArrayUtil.contains(
-				_DESIGN_LIBRARY_ACCEPTED_TYPES, depotEntry.getType())) {
-
-			throw new DepotEntryGroupRelToGroupException.
-				MustAcceptDepotEntryType(toGroupId, depotEntry.getType());
-		}
-	}
-
-	private static final int[] _DESIGN_LIBRARY_ACCEPTED_TYPES = {
-		DepotConstants.TYPE_ASSET_LIBRARY, DepotConstants.TYPE_SPACE
-	};
 
 	@Reference
 	private DepotEntryPersistence _depotEntryPersistence;
