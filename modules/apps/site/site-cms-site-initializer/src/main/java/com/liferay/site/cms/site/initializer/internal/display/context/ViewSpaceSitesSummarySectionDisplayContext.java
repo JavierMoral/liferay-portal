@@ -13,6 +13,7 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
@@ -81,10 +82,7 @@ public class ViewSpaceSitesSummarySectionDisplayContext {
 
 	public Map<String, Object> getEmptyState() {
 		return HashMapBuilder.<String, Object>put(
-			"description",
-			_language.get(
-				_httpServletRequest,
-				"connect-sites-and-libraries-to-this-space")
+			"description", _getEmptyStateDescription()
 		).put(
 			"image", "/states/cms_empty_state.svg"
 		).put(
@@ -135,6 +133,19 @@ public class ViewSpaceSitesSummarySectionDisplayContext {
 	private int _getDepotEntryGroupRelsCount() throws Exception {
 		return _depotEntryGroupRelLocalService.getDepotEntryGroupRelsCount(
 			_depotEntryService.getGroupDepotEntry(_groupId));
+	}
+
+	private String _getEmptyStateDescription() {
+		if (FeatureFlagManagerUtil.isEnabled(
+				_themeDisplay.getCompanyId(), "LPD-57283")) {
+
+			return _language.get(
+				_httpServletRequest,
+				"connect-sites-and-libraries-to-this-space");
+		}
+
+		return _language.get(
+			_httpServletRequest, "connect-sites-to-this-space");
 	}
 
 	private FDSActionDropdownItem _getSearchableFDSActionDropdownItem(

@@ -29,7 +29,11 @@ enum ConnectableKind {
 	SITE_TEMPLATES = 'site-templates',
 }
 
-const DESIGN_LIBRARIES_API_URL = `${location.origin}/o/headless-asset-library/v1.0/asset-libraries`;
+const DESIGN_LIBRARIES_API_URL = `${location.origin}/o/headless-asset-library/v1.0/asset-libraries?filter=${encodeURIComponent(
+	`type eq '${DESIGN_LIBRARY_TYPE}'`
+)}`;
+
+const designLibrariesEnabled = Boolean(Liferay.FeatureFlags['LPD-57283']);
 
 const SITES_API_URL = `${location.origin}/o/headless-admin-site/v1.0/sites`;
 
@@ -65,6 +69,22 @@ const getConnectableType = (kind: ConnectableKind) => {
 	return SITE_TYPE;
 };
 
+const getConnectionLabel = (site: Site) => {
+	if (isDesignLibrary(site)) {
+		return `${site.descriptiveName} (${Liferay.Language.get('design-library')})`;
+	}
+
+	if (isSiteTemplate(site)) {
+		return `${site.descriptiveName} (${Liferay.Language.get('site-template')})`;
+	}
+
+	if (site.stagingType === 'STAGING') {
+		return `${site.descriptiveName} (${Liferay.Language.get('staging')})`;
+	}
+
+	return site.descriptiveName;
+};
+
 const getDisconnectedMessage = (site: Site) => {
 	if (isDesignLibrary(site)) {
 		return Liferay.Language.get(
@@ -81,22 +101,6 @@ const getDisconnectedMessage = (site: Site) => {
 	return Liferay.Language.get(
 		'site-x-was-successfully-disconnected-from-the-space'
 	);
-};
-
-const getConnectionLabel = (site: Site) => {
-	if (isDesignLibrary(site)) {
-		return `${site.descriptiveName} (${Liferay.Language.get('design-library')})`;
-	}
-
-	if (isSiteTemplate(site)) {
-		return `${site.descriptiveName} (${Liferay.Language.get('site-template')})`;
-	}
-
-	if (site.stagingType === 'STAGING') {
-		return `${site.descriptiveName} (${Liferay.Language.get('staging')})`;
-	}
-
-	return site.descriptiveName;
 };
 
 const ConnectableActions = ({
@@ -213,14 +217,6 @@ const ConnectableSelector = ({
 				connection.type === getConnectableType(kind)
 		);
 
-	const designLibrariesAPIURL = useMemo(() => {
-		const url = new URL(DESIGN_LIBRARIES_API_URL);
-
-		url.searchParams.set('filter', `type eq '${DESIGN_LIBRARY_TYPE}'`);
-
-		return url.toString();
-	}, []);
-
 	const sitesAPIURL = useMemo(() => {
 		const url = new URL(SITES_API_URL);
 
@@ -244,7 +240,7 @@ const ConnectableSelector = ({
 		url.searchParams.set('active', 'true');
 
 		connections
-			.filter((connection) => isSiteTemplate(connection))
+			.filter((connection) => connection.type === SITE_TEMPLATE_TYPE)
 			.forEach((connection) =>
 				url.searchParams.append(
 					'excludedSiteExternalReferenceCodes',
@@ -345,6 +341,24 @@ const ConnectableSelector = ({
 		}
 	};
 
+	const options = [
+		{
+			label: Liferay.Language.get('sites'),
+			value: ConnectableKind.SITES as string,
+		},
+		{
+			label: Liferay.Language.get('site-templates'),
+			value: ConnectableKind.SITE_TEMPLATES as string,
+		},
+	];
+
+	if (designLibrariesEnabled) {
+		options.push({
+			label: Liferay.Language.get('design-libraries'),
+			value: ConnectableKind.DESIGN_LIBRARIES as string,
+		});
+	}
+
 	return (
 		<div className="align-items-end autofit-row c-gap-3 c-mb-4">
 			<div className="autofit-col autofit-col-expand">
@@ -355,20 +369,7 @@ const ConnectableSelector = ({
 						setKind(value as ConnectableKind);
 						resetSelection();
 					}}
-					options={[
-						{
-							label: Liferay.Language.get('sites'),
-							value: ConnectableKind.SITES,
-						},
-						{
-							label: Liferay.Language.get('site-templates'),
-							value: ConnectableKind.SITE_TEMPLATES,
-						},
-						{
-							label: Liferay.Language.get('design-libraries'),
-							value: ConnectableKind.DESIGN_LIBRARIES,
-						},
-					]}
+					options={options}
 					selectValue={kind}
 				>
 					{kind === ConnectableKind.SITES && (
@@ -470,10 +471,10 @@ const ConnectableSelector = ({
 
 					{kind === ConnectableKind.DESIGN_LIBRARIES && (
 						<ItemSelector
-							apiURL={designLibrariesAPIURL}
+							apiURL={DESIGN_LIBRARIES_API_URL}
 							id="connectableSelector"
 							items={designLibrary ? [designLibrary] : []}
-							key={designLibrariesAPIURL}
+							key={DESIGN_LIBRARIES_API_URL}
 							onItemsChange={(items: DesignLibrary[]) => {
 								if (items.length) {
 									const item = items[0];
@@ -597,16 +598,20 @@ export default function SpaceConnectedSitesModal({
 			<ClayModal.Header
 				closeButtonAriaLabel={Liferay.Language.get('close')}
 			>
-				{Liferay.Language.get('all-sites')}
+				{Liferay.Language.get('connections')}
 			</ClayModal.Header>
 
 			<ClayModal.Body>
 				{hasConnectSitesPermission && (
 					<>
 						<p className="c-mb-4 text-secondary">
-							{Liferay.Language.get(
-								'connect-sites-and-site-templates-to-this-space'
-							)}
+							{designLibrariesEnabled
+								? Liferay.Language.get(
+										'connect-sites-and-libraries-to-this-space'
+									)
+								: Liferay.Language.get(
+										'connect-sites-and-site-templates-to-this-space'
+									)}
 						</p>
 
 						<ConnectableSelector
@@ -620,7 +625,7 @@ export default function SpaceConnectedSitesModal({
 				{!connections.length ? (
 					<div className="text-center">
 						<h2 className="font-weight-semi-bold text-4">
-							{Liferay.Language.get('no-sites-are-connected-yet')}
+							{Liferay.Language.get('nothing-is-connected-yet')}
 						</h2>
 					</div>
 				) : (
@@ -630,7 +635,7 @@ export default function SpaceConnectedSitesModal({
 								className="c-mb-2 c-mt-n2 d-block"
 								id={listLabelId}
 							>
-								{Liferay.Language.get('connected-sites')}
+								{Liferay.Language.get('connections')}
 							</label>
 						)}
 
