@@ -265,10 +265,10 @@ public interface ContactsEngineClient {
 		throws FaroEngineClientException;
 
 	public Results<Account> getAccounts(
-		FaroProject faroProject, String channelId, String filterString,
-		boolean includeAnonymousUsers, String query, String rangeEnd,
-		Integer rangeKey, String rangeStart, String segmentId, int cur,
-		int delta, String sortString);
+		FaroProject faroProject, String accountLifecycleId, String channelId,
+		String filterString, boolean includeAnonymousUsers, String query,
+		String rangeEnd, Integer rangeKey, String rangeStart, String segmentId,
+		int cur, int delta, String sortString);
 
 	public Results<Account> getAccounts(
 		FaroProject faroProject, String channelId, String filterString,
@@ -375,6 +375,11 @@ public interface ContactsEngineClient {
 			String id, String query, String sortString, int cur, int delta)
 		throws FaroEngineClientException;
 
+	public Results<Individual> getCampaignIndividuals(
+			FaroProject faroProject, long channelId, String id, String query,
+			String sortString, int cur, int delta)
+		throws FaroEngineClientException;
+
 	public List<CampaignMetric> getCampaignMetrics(
 			FaroProject faroProject, long channelId)
 		throws FaroEngineClientException;
@@ -449,6 +454,9 @@ public interface ContactsEngineClient {
 		FaroProject faroProject, String id, String context, int count);
 
 	public long getDataSourceMetricsAccountsCount(
+		FaroProject faroProject, String dataSourceId);
+
+	public long getDataSourceMetricsCampaignsCount(
 		FaroProject faroProject, String dataSourceId);
 
 	public long getDataSourceMetricsEventsCount(
@@ -750,5 +758,7 @@ public interface ContactsEngineClient {
 		FaroProject faroProject, String cronExpression, String frequencyType,
 		Date scheduleEndDate, Date scheduleStartDate, String scheduleType,
 		Long segmentId);
+
+	public void validateConnection(FaroProject faroProject) throws Exception;
 
 }

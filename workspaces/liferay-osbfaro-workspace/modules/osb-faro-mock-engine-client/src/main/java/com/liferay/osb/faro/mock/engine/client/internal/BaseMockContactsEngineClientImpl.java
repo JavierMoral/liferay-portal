@@ -478,14 +478,15 @@ public abstract class BaseMockContactsEngineClientImpl
 
 	@Override
 	public Results<Account> getAccounts(
-		FaroProject faroProject, String channelId, String filterString,
-		boolean includeAnonymousUsers, String query, String rangeEnd,
-		Integer rangeKey, String rangeStart, String segmentId, int cur,
-		int delta, String sortString) {
+		FaroProject faroProject, String accountLifecycleId, String channelId,
+		String filterString, boolean includeAnonymousUsers, String query,
+		String rangeEnd, Integer rangeKey, String rangeStart, String segmentId,
+		int cur, int delta, String sortString) {
 
 		return contactsEngineClient.getAccounts(
-			faroProject, channelId, filterString, includeAnonymousUsers, query,
-			rangeEnd, rangeKey, rangeStart, segmentId, cur, delta, sortString);
+			faroProject, accountLifecycleId, channelId, filterString,
+			includeAnonymousUsers, query, rangeEnd, rangeKey, rangeStart,
+			segmentId, cur, delta, sortString);
 	}
 
 	@Override
@@ -717,6 +718,16 @@ public abstract class BaseMockContactsEngineClientImpl
 	}
 
 	@Override
+	public Results<Individual> getCampaignIndividuals(
+			FaroProject faroProject, long channelId, String id, String query,
+			String sortString, int cur, int delta)
+		throws FaroEngineClientException {
+
+		return contactsEngineClient.getCampaignIndividuals(
+			faroProject, channelId, id, query, sortString, cur, delta);
+	}
+
+	@Override
 	public List<CampaignMetric> getCampaignMetrics(
 			FaroProject faroProject, long channelId)
 		throws FaroEngineClientException {
@@ -885,6 +896,14 @@ public abstract class BaseMockContactsEngineClientImpl
 		FaroProject faroProject, String dataSourceId) {
 
 		return contactsEngineClient.getDataSourceMetricsAccountsCount(
+			faroProject, dataSourceId);
+	}
+
+	@Override
+	public long getDataSourceMetricsCampaignsCount(
+		FaroProject faroProject, String dataSourceId) {
+
+		return contactsEngineClient.getDataSourceMetricsCampaignsCount(
 			faroProject, dataSourceId);
 	}
 
@@ -1505,6 +1524,11 @@ public abstract class BaseMockContactsEngineClientImpl
 		return contactsEngineClient.updateSegmentActivation(
 			faroProject, cronExpression, frequencyType, scheduleEndDate,
 			scheduleStartDate, scheduleType, segmentId);
+	}
+
+	@Override
+	public void validateConnection(FaroProject faroProject) throws Exception {
+		contactsEngineClient.validateConnection(faroProject);
 	}
 
 	@Reference(
