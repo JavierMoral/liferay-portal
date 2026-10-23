@@ -342,9 +342,9 @@ public class ConnectedSiteResourceTest
 		DepotEntry spaceDepotEntry = _addDepotEntry(DepotConstants.TYPE_SPACE);
 
 		_assertUnacceptedDepotEntryType(
-			spaceDepotEntry.getGroup(), assetLibraryDepotEntry);
-		_assertUnacceptedDepotEntryType(
 			assetLibraryDepotEntry.getGroup(), spaceDepotEntry);
+		_assertUnacceptedDepotEntryType(
+			spaceDepotEntry.getGroup(), assetLibraryDepotEntry);
 
 		DepotEntry designLibraryDepotEntry1 = _addDepotEntry(
 			DepotConstants.TYPE_DESIGN_LIBRARY);

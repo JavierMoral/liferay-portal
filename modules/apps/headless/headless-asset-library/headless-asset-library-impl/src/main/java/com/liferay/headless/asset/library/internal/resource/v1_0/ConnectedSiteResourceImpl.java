@@ -193,17 +193,16 @@ public class ConnectedSiteResourceImpl extends BaseConnectedSiteResourceImpl {
 		if ((connectedSiteDepotEntry.getType() !=
 				DepotConstants.TYPE_DESIGN_LIBRARY) ||
 			!ArrayUtil.contains(
-				_DESIGN_LIBRARY_ACCEPTED_TYPES, depotEntry.getType())) {
+				new int[] {
+					DepotConstants.TYPE_ASSET_LIBRARY, DepotConstants.TYPE_SPACE
+				},
+				depotEntry.getType())) {
 
 			throw new DepotEntryGroupRelToGroupException.
 				MustAcceptDepotEntryType(
 					depotEntry.getType(), connectedSiteGroup.getGroupId());
 		}
 	}
-
-	private static final int[] _DESIGN_LIBRARY_ACCEPTED_TYPES = {
-		DepotConstants.TYPE_ASSET_LIBRARY, DepotConstants.TYPE_SPACE
-	};
 
 	@Reference(
 		target = "(component.name=com.liferay.headless.asset.library.internal.dto.v1_0.converter.ConnectedSiteDTOConverter)"
