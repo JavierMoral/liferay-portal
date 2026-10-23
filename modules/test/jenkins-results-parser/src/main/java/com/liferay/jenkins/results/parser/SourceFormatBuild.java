@@ -187,15 +187,8 @@ public class SourceFormatBuild
 		WorkspaceGitRepository workspaceGitRepository =
 			workspace.getPrimaryWorkspaceGitRepository();
 
-		workspaceGitRepository.setUsePullRequestBaseRepository(true);
-
-		String upstreamBranchSHA = getParameterValue(
-			"GITHUB_UPSTREAM_BRANCH_SHA");
-
-		if (JenkinsResultsParserUtil.isSHA(upstreamBranchSHA)) {
-			workspaceGitRepository.setBaseBranchSHA(upstreamBranchSHA);
-		}
-
+		workspaceGitRepository.setBaseBranchUsername(
+			pullRequest.getOwnerUsername());
 		workspaceGitRepository.setGitHubURL(pullRequest.getHtmlURL());
 
 		String senderBranchSHA = getParameterValue("GITHUB_SENDER_BRANCH_SHA");
