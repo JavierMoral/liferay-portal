@@ -252,11 +252,16 @@ public class OrphanReferencesDataCleanupUtil {
 
 				retryCount++;
 
-				if (_log.isWarnEnabled()) {
-					_log.warn(
+				if (_log.isDebugEnabled()) {
+					_log.debug(
 						"Retrying delete after a database deadlock: " +
 							deleteSQL,
 						sqlException);
+				}
+				else if (_log.isInfoEnabled()) {
+					_log.info(
+						"Retrying delete after a database deadlock: " +
+							deleteSQL);
 				}
 
 				try {
@@ -476,8 +481,7 @@ public class OrphanReferencesDataCleanupUtil {
 		OrphanReferencesDataCleanupUtil.class);
 
 	private static final List<String> _excludedTableNames = new ArrayList<>(
-		Arrays.asList(
-			"Audit_AuditEvent", "CyrusUser", "CyrusVirtual", "SystemEvent"));
+		Arrays.asList("Audit_AuditEvent", "SystemEvent"));
 	private static final List<String> _normalizedExcludedTableNames =
 		new ArrayList<>();
 	private static final RetryAcceptor _retryAcceptor = new SQLStateAcceptor();

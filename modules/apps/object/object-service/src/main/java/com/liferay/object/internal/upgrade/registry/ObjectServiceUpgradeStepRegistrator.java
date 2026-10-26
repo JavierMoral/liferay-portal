@@ -713,8 +713,12 @@ public class ObjectServiceUpgradeStepRegistrator
 
 		registry.register("12.0.0", "12.0.1", new DummyUpgradeStep());
 
+		registry.register("12.0.1", "12.0.2", new DummyUpgradeStep());
+
+		registry.register("12.0.2", "12.0.3", new DummyUpgradeStep());
+
 		registry.register(
-			"12.0.1", "12.1.0",
+			"12.0.3", "12.1.0",
 			new com.liferay.object.internal.upgrade.v12_1_0.
 				ObjectDefinitionSettingUpgradeProcess());
 
@@ -736,8 +740,12 @@ public class ObjectServiceUpgradeStepRegistrator
 
 		registry.register("13.1.0", "13.2.0", new DummyUpgradeStep());
 
+		registry.register("13.2.0", "13.2.1", new DummyUpgradeStep());
+
+		registry.register("13.2.1", "13.2.2", new DummyUpgradeStep());
+
 		registry.register(
-			"13.2.0", "13.3.0",
+			"13.2.2", "13.3.0",
 			new com.liferay.object.internal.upgrade.v13_2_0.
 				ObjectDefinitionExternalReferenceCodeUpgradeProcess(
 					_systemObjectDefinitionManagerRegistry));

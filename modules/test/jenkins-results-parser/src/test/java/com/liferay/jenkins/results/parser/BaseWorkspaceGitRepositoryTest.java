@@ -154,9 +154,82 @@ public class BaseWorkspaceGitRepositoryTest
 	}
 
 	@Test
+	public void testSetBaseBranchSHA() throws Exception {
+		_testSetBaseBranchSHA(false);
+		_testSetBaseBranchSHA(true);
+	}
+
+	@Test
+	public void testSetBaseBranchUsername() throws Exception {
+		DefaultWorkspaceGitRepository defaultWorkspaceGitRepository =
+			_newDefaultWorkspaceGitRepository();
+
+		JSONObject jsonObject = defaultWorkspaceGitRepository.getJSONObject();
+
+		try (MockedStatic<GitUtil> gitUtilMockedStatic = Mockito.mockStatic(
+				GitUtil.class);
+			MockedStatic<PullRequestFactory> pullRequestFactoryMockedStatic =
+				Mockito.mockStatic(PullRequestFactory.class)) {
+
+			defaultWorkspaceGitRepository.setBaseBranchUsername(
+				jsonObject.getString("base_branch_username"));
+
+			gitUtilMockedStatic.verifyNoInteractions();
+			pullRequestFactoryMockedStatic.verifyNoInteractions();
+		}
+
+		Assert.assertFalse(
+			jsonObject.optBoolean("use_pull_request_base_repository"));
+
+		String baseBranchUsername = RandomTestUtil.randomString();
+		RemoteGitBranch senderRemoteGitBranch = _newRemoteGitBranch(
+			RandomTestUtil.randomSHA(), RandomTestUtil.randomString());
+		RemoteGitBranch upstreamRemoteGitBranch = _newRemoteGitBranch(
+			RandomTestUtil.randomSHA(), baseBranchUsername);
+
+		try (MockedStatic<GitUtil> gitUtilMockedStatic = _mockGitUtil(
+				senderRemoteGitBranch,
+				_getUpstreamGitHubURL(
+					defaultWorkspaceGitRepository, baseBranchUsername),
+				upstreamRemoteGitBranch);
+			MockedStatic<PullRequestFactory> pullRequestFactoryMockedStatic =
+				_mockPullRequestFactory(
+					_newPullRequest(
+						senderRemoteGitBranch,
+						_newRemoteGitBranch(
+							RandomTestUtil.randomSHA(),
+							RandomTestUtil.randomString())))) {
+
+			defaultWorkspaceGitRepository.setGitHubURL(_newGitHubURL(true));
+
+			defaultWorkspaceGitRepository.setBaseBranchUsername(
+				baseBranchUsername);
+		}
+
+		testEquals(
+			baseBranchUsername,
+			defaultWorkspaceGitRepository.getBaseBranchUsername());
+		testEquals(
+			upstreamRemoteGitBranch.getSHA(),
+			defaultWorkspaceGitRepository.getBaseBranchSHA());
+	}
+
+	@Test
 	public void testSetGitHubURL() throws Exception {
 		_testSetGitHubURL(false);
 		_testSetGitHubURL(true);
+	}
+
+	@Test
+	public void testSetRebase() throws Exception {
+		_testSetRebase(false);
+		_testSetRebase(true);
+	}
+
+	@Test
+	public void testSetSenderBranchSHA() throws Exception {
+		_testSetSenderBranchSHA(false);
+		_testSetSenderBranchSHA(true);
 	}
 
 	@Test
@@ -370,6 +443,15 @@ public class BaseWorkspaceGitRepositoryTest
 		return actualBranchName;
 	}
 
+	private String _getUpstreamGitHubURL(
+		DefaultWorkspaceGitRepository defaultWorkspaceGitRepository,
+		String username) {
+
+		return JenkinsResultsParserUtil.combine(
+			"https://github.com/", username, "/",
+			defaultWorkspaceGitRepository.getName(), "/tree/master");
+	}
+
 	private boolean _isFullDotGitDirArchiveRequired(String workingDirectoryName)
 		throws Exception {
 
@@ -412,11 +494,6 @@ public class BaseWorkspaceGitRepositoryTest
 			defaultWorkspaceGitRepository
 		).touchGitArchives();
 
-		Mockito.doNothing(
-		).when(
-			defaultWorkspaceGitRepository
-		).updateBuildDatabase();
-
 		defaultWorkspaceGitRepository.setSnapshot(snapshot);
 
 		defaultWorkspaceGitRepository.promoteGitArchive();
@@ -458,11 +535,6 @@ public class BaseWorkspaceGitRepositoryTest
 		Mockito.doNothing(
 		).when(
 			defaultWorkspaceGitRepository
-		).updateBuildDatabase();
-
-		Mockito.doNothing(
-		).when(
-			defaultWorkspaceGitRepository
 		).uploadDotGitArchive();
 
 		Mockito.doNothing(
@@ -487,6 +559,49 @@ public class BaseWorkspaceGitRepositoryTest
 		).uploadGitArchive();
 
 		return defaultWorkspaceGitRepository.isSnapshot();
+	}
+
+	private MockedStatic<GitUtil> _mockGitUtil(
+		RemoteGitBranch senderRemoteGitBranch, String upstreamGitHubURL,
+		RemoteGitBranch upstreamRemoteGitBranch) {
+
+		MockedStatic<GitUtil> gitUtilMockedStatic = Mockito.mockStatic(
+			GitUtil.class);
+
+		gitUtilMockedStatic.when(
+			() -> GitUtil.getRemoteGitRef(Mockito.anyString())
+		).thenAnswer(
+			invocation -> {
+				if (upstreamGitHubURL.equals(invocation.getArgument(0))) {
+					return upstreamRemoteGitBranch;
+				}
+
+				return senderRemoteGitBranch;
+			}
+		);
+
+		gitUtilMockedStatic.when(
+			() -> GitUtil.isValidGitHubRefURL(Mockito.anyString())
+		).thenReturn(
+			true
+		);
+
+		return gitUtilMockedStatic;
+	}
+
+	private MockedStatic<PullRequestFactory> _mockPullRequestFactory(
+		PullRequest pullRequest) {
+
+		MockedStatic<PullRequestFactory> pullRequestFactoryMockedStatic =
+			Mockito.mockStatic(PullRequestFactory.class);
+
+		pullRequestFactoryMockedStatic.when(
+			() -> PullRequestFactory.newPullRequest(Mockito.anyString())
+		).thenReturn(
+			pullRequest
+		);
+
+		return pullRequestFactoryMockedStatic;
 	}
 
 	private DefaultWorkspaceGitRepository _newDefaultWorkspaceGitRepository()
@@ -522,8 +637,6 @@ public class BaseWorkspaceGitRepositoryTest
 		jsonObject.put(
 			"base_branch_head_sha", baseBranchSHA
 		).put(
-			"base_branch_sha", baseBranchSHA
-		).put(
 			"base_branch_username", baseBranchUsername
 		).put(
 			"directory",
@@ -539,14 +652,32 @@ public class BaseWorkspaceGitRepositoryTest
 		).put(
 			"sender_branch_name", "master"
 		).put(
-			"sender_branch_sha", senderBranchSHA
-		).put(
 			"sender_branch_username", RandomTestUtil.randomString()
 		).put(
 			"upstream_branch_name", "master"
 		);
 
-		return Mockito.spy(new DefaultWorkspaceGitRepository(jsonObject));
+		DefaultWorkspaceGitRepository defaultWorkspaceGitRepository =
+			Mockito.spy(new DefaultWorkspaceGitRepository(jsonObject));
+
+		Mockito.doNothing(
+		).when(
+			defaultWorkspaceGitRepository
+		).updateBuildDatabase();
+
+		return defaultWorkspaceGitRepository;
+	}
+
+	private String _newGitHubURL(boolean pullRequest) {
+		String gitHubURL = JenkinsResultsParserUtil.combine(
+			"https://github.com/", RandomTestUtil.randomString(), "/",
+			RandomTestUtil.randomString());
+
+		if (pullRequest) {
+			return gitHubURL + "/pull/1";
+		}
+
+		return gitHubURL + "/tree/" + RandomTestUtil.randomString();
 	}
 
 	private List<LocalGitCommit> _newLocalGitCommits(int count) {
@@ -564,6 +695,27 @@ public class BaseWorkspaceGitRepositoryTest
 		}
 
 		return localGitCommits;
+	}
+
+	private PullRequest _newPullRequest(
+		RemoteGitBranch senderRemoteGitBranch,
+		RemoteGitBranch upstreamRemoteGitBranch) {
+
+		PullRequest pullRequest = Mockito.mock(PullRequest.class);
+
+		Mockito.doReturn(
+			senderRemoteGitBranch
+		).when(
+			pullRequest
+		).getSenderRemoteGitBranch();
+
+		Mockito.doReturn(
+			upstreamRemoteGitBranch
+		).when(
+			pullRequest
+		).getUpstreamRemoteGitBranch();
+
+		return pullRequest;
 	}
 
 	private RemoteGitBranch _newRemoteGitBranch(String sha, String username) {
@@ -588,6 +740,39 @@ public class BaseWorkspaceGitRepositoryTest
 		).getUsername();
 
 		return remoteGitBranch;
+	}
+
+	private void _setGitHubURL(
+		DefaultWorkspaceGitRepository defaultWorkspaceGitRepository,
+		boolean pullRequest, RemoteGitBranch senderRemoteGitBranch,
+		RemoteGitBranch upstreamRemoteGitBranch) {
+
+		RemoteGitBranch gitUtilSenderRemoteGitBranch = senderRemoteGitBranch;
+		RemoteGitBranch pullRequestSenderRemoteGitBranch =
+			senderRemoteGitBranch;
+
+		if (pullRequest) {
+			gitUtilSenderRemoteGitBranch = _newRemoteGitBranch(
+				RandomTestUtil.randomSHA(), RandomTestUtil.randomString());
+		}
+		else {
+			pullRequestSenderRemoteGitBranch = _newRemoteGitBranch(
+				RandomTestUtil.randomSHA(), RandomTestUtil.randomString());
+		}
+
+		try (MockedStatic<GitUtil> gitUtilMockedStatic = _mockGitUtil(
+				gitUtilSenderRemoteGitBranch,
+				_getUpstreamGitHubURL(defaultWorkspaceGitRepository, "liferay"),
+				upstreamRemoteGitBranch);
+			MockedStatic<PullRequestFactory> pullRequestFactoryMockedStatic =
+				_mockPullRequestFactory(
+					_newPullRequest(
+						pullRequestSenderRemoteGitBranch,
+						upstreamRemoteGitBranch))) {
+
+			defaultWorkspaceGitRepository.setGitHubURL(
+				_newGitHubURL(pullRequest));
+		}
 	}
 
 	private void _setUpEnvironment(String jobName, String jobVariant) {
@@ -649,8 +834,9 @@ public class BaseWorkspaceGitRepositoryTest
 			defaultWorkspaceGitRepository, "_upstreamRemoteGitRef",
 			upstreamRemoteGitRef);
 
-		defaultWorkspaceGitRepository.setUsePullRequestBaseRepository(
-			usePullRequestBaseRepository);
+		ReflectionTestUtil.invoke(
+			defaultWorkspaceGitRepository, "_setUsePullRequestBaseRepository",
+			new Class<?>[] {boolean.class}, usePullRequestBaseRepository);
 
 		try (MockedStatic<GitHubDevSyncUtil> gitHubDevSyncUtilMockedStatic =
 				Mockito.mockStatic(GitHubDevSyncUtil.class)) {
@@ -926,8 +1112,9 @@ public class BaseWorkspaceGitRepositoryTest
 		DefaultWorkspaceGitRepository defaultWorkspaceGitRepository =
 			_newDefaultWorkspaceGitRepository(true);
 
-		defaultWorkspaceGitRepository.setUsePullRequestBaseRepository(
-			usePullRequestBaseRepository);
+		ReflectionTestUtil.invoke(
+			defaultWorkspaceGitRepository, "_setUsePullRequestBaseRepository",
+			new Class<?>[] {boolean.class}, usePullRequestBaseRepository);
 
 		String expectedUsername = "liferay";
 
@@ -1093,79 +1280,123 @@ public class BaseWorkspaceGitRepositoryTest
 		_testPrepareGitWorkingDirectory(gitArchiveEnabled, true);
 	}
 
-	private void _testSetGitHubURL(boolean usePullRequestBaseRepository)
+	private void _testSetBaseBranchSHA(boolean pullRequest) throws Exception {
+		DefaultWorkspaceGitRepository defaultWorkspaceGitRepository =
+			_newDefaultWorkspaceGitRepository();
+
+		String baseBranchSHA = RandomTestUtil.randomSHA();
+
+		defaultWorkspaceGitRepository.setBaseBranchSHA(baseBranchSHA);
+
+		_setGitHubURL(
+			defaultWorkspaceGitRepository, pullRequest,
+			_newRemoteGitBranch(
+				RandomTestUtil.randomSHA(), RandomTestUtil.randomString()),
+			_newRemoteGitBranch(
+				RandomTestUtil.randomSHA(), RandomTestUtil.randomString()));
+
+		testEquals(
+			baseBranchSHA, defaultWorkspaceGitRepository.getBaseBranchSHA());
+	}
+
+	private void _testSetGitHubURL(boolean pullRequest) throws Exception {
+		DefaultWorkspaceGitRepository defaultWorkspaceGitRepository =
+			_newDefaultWorkspaceGitRepository();
+
+		RemoteGitBranch senderRemoteGitBranch = _newRemoteGitBranch(
+			RandomTestUtil.randomSHA(), RandomTestUtil.randomString());
+		RemoteGitBranch upstreamRemoteGitBranch = _newRemoteGitBranch(
+			RandomTestUtil.randomSHA(), "liferay");
+
+		_setGitHubURL(
+			defaultWorkspaceGitRepository, pullRequest, senderRemoteGitBranch,
+			upstreamRemoteGitBranch);
+
+		String expectedBaseBranchSHA = senderRemoteGitBranch.getSHA();
+
+		if (pullRequest) {
+			expectedBaseBranchSHA = upstreamRemoteGitBranch.getSHA();
+		}
+
+		testEquals(
+			expectedBaseBranchSHA,
+			defaultWorkspaceGitRepository.getBaseBranchSHA());
+		testEquals(
+			"liferay", defaultWorkspaceGitRepository.getBaseBranchUsername());
+		testEquals(
+			senderRemoteGitBranch.getName(),
+			defaultWorkspaceGitRepository.getSenderBranchName());
+		testEquals(
+			senderRemoteGitBranch.getUsername(),
+			defaultWorkspaceGitRepository.getSenderBranchUsername());
+	}
+
+	private void _testSetRebase(boolean overrideBaseBranchSHA)
 		throws Exception {
 
 		DefaultWorkspaceGitRepository defaultWorkspaceGitRepository =
 			_newDefaultWorkspaceGitRepository();
 
-		Mockito.doNothing(
-		).when(
-			defaultWorkspaceGitRepository
-		).updateBuildDatabase();
-
-		defaultWorkspaceGitRepository.setUsePullRequestBaseRepository(
-			usePullRequestBaseRepository);
-
-		PullRequest pullRequest = Mockito.mock(PullRequest.class);
-
-		RemoteGitBranch baseRemoteGitBranch = _newRemoteGitBranch(
+		RemoteGitBranch upstreamRemoteGitBranch = _newRemoteGitBranch(
 			RandomTestUtil.randomSHA(), RandomTestUtil.randomString());
 
-		Mockito.doReturn(
-			baseRemoteGitBranch
-		).when(
-			pullRequest
-		).getBaseRemoteGitBranch();
+		_setGitHubURL(
+			defaultWorkspaceGitRepository, false,
+			_newRemoteGitBranch(
+				RandomTestUtil.randomSHA(), RandomTestUtil.randomString()),
+			upstreamRemoteGitBranch);
 
-		RemoteGitBranch senderRemoteGitBranch = _newRemoteGitBranch(
-			RandomTestUtil.randomSHA(), RandomTestUtil.randomString());
+		String expectedBaseBranchSHA = upstreamRemoteGitBranch.getSHA();
 
-		Mockito.doReturn(
-			senderRemoteGitBranch
-		).when(
-			pullRequest
-		).getSenderRemoteGitBranch();
+		if (overrideBaseBranchSHA) {
+			expectedBaseBranchSHA = RandomTestUtil.randomSHA();
+
+			defaultWorkspaceGitRepository.setBaseBranchSHA(
+				expectedBaseBranchSHA);
+		}
+
+		defaultWorkspaceGitRepository.setRebase(true);
+
+		JSONObject jsonObject = defaultWorkspaceGitRepository.getJSONObject();
+
+		DefaultWorkspaceGitRepository rebuiltDefaultWorkspaceGitRepository =
+			new DefaultWorkspaceGitRepository(
+				new JSONObject(jsonObject.toString()));
+
+		testEquals(
+			expectedBaseBranchSHA,
+			rebuiltDefaultWorkspaceGitRepository.getBaseBranchSHA());
+	}
+
+	private void _testSetSenderBranchSHA(boolean pullRequest) throws Exception {
+		DefaultWorkspaceGitRepository defaultWorkspaceGitRepository =
+			_newDefaultWorkspaceGitRepository();
+
+		String senderBranchSHA = RandomTestUtil.randomSHA();
+
+		defaultWorkspaceGitRepository.setSenderBranchSHA(senderBranchSHA);
 
 		RemoteGitBranch upstreamRemoteGitBranch = _newRemoteGitBranch(
 			RandomTestUtil.randomSHA(), RandomTestUtil.randomString());
 
-		Mockito.doReturn(
-			upstreamRemoteGitBranch
-		).when(
-			pullRequest
-		).getUpstreamRemoteGitBranch();
+		_setGitHubURL(
+			defaultWorkspaceGitRepository, pullRequest,
+			_newRemoteGitBranch(
+				RandomTestUtil.randomSHA(), RandomTestUtil.randomString()),
+			upstreamRemoteGitBranch);
 
-		String gitHubURL = JenkinsResultsParserUtil.combine(
-			"https://github.com/", RandomTestUtil.randomString(), "/",
-			RandomTestUtil.randomString(), "/pull/1");
+		String expectedBaseBranchSHA = senderBranchSHA;
 
-		try (MockedStatic<PullRequestFactory> pullRequestFactoryMockedStatic =
-				Mockito.mockStatic(PullRequestFactory.class)) {
-
-			pullRequestFactoryMockedStatic.when(
-				() -> PullRequestFactory.newPullRequest(gitHubURL)
-			).thenReturn(
-				pullRequest
-			);
-
-			defaultWorkspaceGitRepository.setGitHubURL(gitHubURL);
+		if (pullRequest) {
+			expectedBaseBranchSHA = upstreamRemoteGitBranch.getSHA();
 		}
 
-		RemoteGitBranch expectedRemoteGitBranch = upstreamRemoteGitBranch;
-
-		if (usePullRequestBaseRepository) {
-			expectedRemoteGitBranch = baseRemoteGitBranch;
-		}
-
-		JSONObject jsonObject = defaultWorkspaceGitRepository.getJSONObject();
-
 		testEquals(
-			expectedRemoteGitBranch.getSHA(),
-			jsonObject.getString("base_branch_sha"));
+			expectedBaseBranchSHA,
+			defaultWorkspaceGitRepository.getBaseBranchSHA());
 		testEquals(
-			expectedRemoteGitBranch.getUsername(),
-			jsonObject.getString("base_branch_username"));
+			senderBranchSHA,
+			defaultWorkspaceGitRepository.getSenderBranchSHA());
 	}
 
 	private void _testTearDown(

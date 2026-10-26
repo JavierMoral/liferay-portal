@@ -20,11 +20,11 @@ type ContentAgeRange = {
 export type AssetStatistics = {
 	approvedCount: number;
 	brokenLinksCount: number;
-	duplicatedCount?: number;
 	expiredCount: number;
 	expiringSoonCount: number;
 	inDraftCount: number;
 	longStandingDraftsCount: number;
+	missingRequiredFieldsCount: number;
 	overdueWorkflowTasksCount: number;
 	pendingCount: number;
 	reviewDateOverdueCount: number;
@@ -43,18 +43,6 @@ export type Contributor = {
 export type Contributors = {
 	contributors: Contributor[];
 	totalCount: number;
-};
-
-export type DuplicateTitle = {
-	frequency: number;
-	term: string;
-};
-
-export type DuplicateTopicAsset = {
-	dateModified: string;
-	embedded?: {id: number};
-	entryClassName: string;
-	title: string;
 };
 
 export type FacetBucket = {
@@ -83,19 +71,13 @@ const CONTENT_AGE_RANGES: ContentAgeRange[] = [
 
 const CONTRIBUTORS_AGGREGATION_NAME = 'contributors';
 
-const DUPLICATE_TITLES_AGGREGATION_NAME = 'duplicateTitles';
-
 const LONG_STANDING_DRAFT_DAYS = 30;
 
 export const GOVERNANCE_ASSET_LIST_PAGE_SIZE = 8;
 
 const MAX_CONTRIBUTORS = 7;
 
-const MAX_FACET_TERMS = 10000;
-
 export const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
-
-const MINIMUM_DUPLICATE_FREQUENCY = 2;
 
 const NESTED_FIELDS = 'embedded,systemProperties.objectDefinitionBrief';
 
@@ -129,28 +111,10 @@ async function getAssetStatistics(
 ) {
 	const scope = assetLibraryId ? `assetLibraryId=${assetLibraryId}&` : '';
 
-	const [statistics, similarityClusters] = await Promise.all([
-		ApiHelper.get<AssetStatistics>(
-			`/o/headless-cms/v1.0/asset-statistics?${scope}`,
-			signal
-		),
-		ApiHelper.get<{totalCount: number}>(
-			`/o/headless-cms/v1.0/similarity-clusters?${scope}pageSize=1`,
-			signal
-		),
-	]);
-
-	if (!statistics.data) {
-		return statistics;
-	}
-
-	return {
-		...statistics,
-		data: {
-			...statistics.data,
-			duplicatedCount: similarityClusters.data?.totalCount,
-		},
-	};
+	return ApiHelper.get<AssetStatistics>(
+		`/o/headless-cms/v1.0/asset-statistics?${scope}`,
+		signal
+	);
 }
 
 async function getContributors(
@@ -343,6 +307,41 @@ function getAssetListURL(filter: string, sort: string, groupId?: number) {
 	return `${SEARCH_URL}?${searchParams}`;
 }
 
+function getAssetsByIdsURL(ids: number[]) {
+	const searchParams = new URLSearchParams({
+		emptySearch: 'true',
+		filter: ids.map((id) => `entryClassPK eq ${id}`).join(' or '),
+		nestedFields: NESTED_FIELDS,
+		pageSize: String(ids.length),
+	});
+
+	return `${SEARCH_URL}?${searchParams}`;
+}
+
+function getQualityAssetsURL(path: string, assetLibraryId?: string) {
+	const searchParams = new URLSearchParams({
+		pageSize: String(GOVERNANCE_ASSET_LIST_PAGE_SIZE),
+		sort: 'title:asc',
+	});
+
+	if (assetLibraryId) {
+		searchParams.set('assetLibraryId', assetLibraryId);
+	}
+
+	return `/o/headless-cms/v1.0/${path}?${searchParams}`;
+}
+
+function getBrokenLinkAssetsURL(assetLibraryId?: string) {
+	return getQualityAssetsURL('broken-link-assets', assetLibraryId);
+}
+
+function getMissingRequiredFieldsAssetsURL(assetLibraryId?: string) {
+	return getQualityAssetsURL(
+		'missing-required-fields-assets',
+		assetLibraryId
+	);
+}
+
 function getDateInDays(days: number) {
 	return new Date(Date.now() + days * MILLISECONDS_PER_DAY);
 }
@@ -365,100 +364,15 @@ function getLongStandingDraftsURL(filter: string, groupId?: number) {
 	);
 }
 
-async function getCMSEntryClassNames(
-	ercContentStructures: string,
-	ercFileTypes: string,
-	signal?: AbortSignal
-) {
-	const filter = encodeURIComponent(
-		`objectFolderExternalReferenceCode eq '${ercContentStructures}' or objectFolderExternalReferenceCode eq '${ercFileTypes}'`
-	);
-
-	const {data} = await ApiHelper.get<{items: {className: string}[]}>(
-		`/o/object-admin/v1.0/object-definitions?filter=${filter}&pageSize=-1`,
-		signal
-	);
-
-	return (data?.items ?? []).map(({className}) => className).join(',');
-}
-
-async function getDuplicateTitles({
-	entryClassNames,
-	signal,
-	siteId,
-}: {
-	entryClassNames: string;
-	signal?: AbortSignal;
-	siteId?: number;
-}): Promise<DuplicateTitle[] | undefined> {
-	if (!entryClassNames) {
-		return undefined;
-	}
-
-	const searchParams = new URLSearchParams({
-		entryClassNames,
-		pageSize: '1',
-	});
-
-	if (siteId) {
-		searchParams.set('filter', `groupIds/any(g:g eq ${siteId})`);
-	}
-
-	const {data} = await ApiHelper.post<{
-		searchFacets?: Record<string, DuplicateTitle[]>;
-	}>(
-		`/o/search/v1.0/search?${searchParams}`,
-		{
-			attributes: {'search.empty.search': true},
-			facetConfigurations: [
-				{
-					aggregationName: DUPLICATE_TITLES_AGGREGATION_NAME,
-					attributes: {
-						field: `localized_title_${Liferay.ThemeDisplay.getLanguageId()}_sortable.keyword_lowercase`,
-					},
-					frequencyThreshold: MINIMUM_DUPLICATE_FREQUENCY,
-					maxTerms: MAX_FACET_TERMS,
-					name: 'custom',
-				},
-			],
-		},
-		signal
-	);
-
-	if (!data) {
-		return undefined;
-	}
-
-	return data.searchFacets?.[DUPLICATE_TITLES_AGGREGATION_NAME] ?? [];
-}
-
-async function getDuplicateTopicsCount({
-	entryClassNames,
-	signal,
-	siteId,
-}: {
-	entryClassNames: string;
-	signal?: AbortSignal;
-	siteId?: number;
-}) {
-	const titles = await getDuplicateTitles({entryClassNames, signal, siteId});
-
-	if (!titles) {
-		return undefined;
-	}
-
-	return titles.reduce((count, {frequency}) => count + frequency, 0);
-}
-
 export default {
 	getAssetStatistics,
-	getCMSEntryClassNames,
+	getAssetsByIdsURL,
+	getBrokenLinkAssetsURL,
 	getContentAgeDistribution,
 	getContentProgress,
 	getContributors,
-	getDuplicateTitles,
-	getDuplicateTopicsCount,
 	getFreshnessListURL,
 	getLongStandingDraftsThresholdDate,
 	getLongStandingDraftsURL,
+	getMissingRequiredFieldsAssetsURL,
 };

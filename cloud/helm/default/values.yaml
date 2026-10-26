@@ -50,6 +50,8 @@ clientExtensions:
         operatorServiceAccount:
             name: dxp-operator
             namespace: dxp-operator-system
+    policy:
+        allowedNamespaces: []
 configmap:
     annotations: {}
     data: {}
@@ -128,6 +130,7 @@ customInitContainers:
 
                             mkdir --parents \
                                 /temp/liferay \
+                                /temp/liferay/deploy \
                                 /temp/liferay/logs \
                                 /temp/liferay/metrics \
                                 /temp/liferay/reports \
@@ -203,7 +206,7 @@ customInitContainers:
                                     <Sender className="org.apache.catalina.tribes.transport.ReplicationTransmitter">
                                         <Transport
                                             className="org.apache.catalina.tribes.transport.nio.PooledParallelSender"
-                                            timeout="300000"
+                                            timeout="{{ dig "sessionReplication" "transportTimeoutMs" 300000 (.tomcat | default dict) | int64 }}"
                                         />
                                     </Sender>
                                 </Channel>
@@ -212,7 +215,7 @@ customInitContainers:
 
                             sed --in-place '/<Engine/r'<(echo "${SERVER_XML_CLUSTER}") /temp/tomcat/conf/server.xml
 
-                            if [ -d /opt/liferay/deploy ] && [ -z "$(ls --all /temp/liferay/deploy/*license* 2>/dev/null)" ]
+                            if [ -d /opt/liferay/deploy ] && [ -n "$(ls --almost-all /opt/liferay/deploy 2>/dev/null)" ] && [ -z "$(ls --all /temp/liferay/deploy/*license* 2>/dev/null)" ]
                             then
                                 if [ ! -d /temp/liferay/data/license ] || [ -z "$(ls --all /temp/liferay/data/license/*.li 2>/dev/null)" ]
                                 then
@@ -319,6 +322,11 @@ customVolumes:
                 defaultMode: 0755
                 name: liferay-init-scripts-default
             name: liferay-init-scripts-default
+database:
+    engine: ""
+    host: ""
+    port: ""
+    tlsRequired: false
 dependencies: {}
 env:
     -   name: DNS_MEMBERSHIP_SERVICE_NAME
@@ -393,12 +401,13 @@ licensing:
     activationCodeSecretName: ""
     dxpVersion: ""
     enabled: false
+    environmentName: ""
     offline: false
     offlineActivationBundle: ""
     onlineActivationWorkflow:
         clusterRoleName: online-activation-cluster-role
         clusterWorkflowTemplateName: online-activation-cluster-workflow-template
-        enabled: true
+        enabled: false
         serviceAccountName: online-activation-service-account
         ttlSecondsAfterCompletion: 3600
         userAccess:
@@ -434,6 +443,9 @@ network:
     forceHttpsRedirect: false
     gatewayName: ""
     hostnames: []
+    hsts:
+        enabled: true
+        value: max-age=31536000; includeSubDomains; preload
     perHostnameRoutes: false
     securityPolicyAuthorizationSpec: {}
     sessionPersistence:
@@ -535,6 +547,8 @@ startupProbe:
 tolerations: []
 tomcat:
     maxThreads: ""
+    sessionReplication:
+        transportTimeoutMs: 300000
 updateStrategy:
     type: RollingUpdate
 volumeClaimTemplates:

@@ -12,6 +12,7 @@ import com.liferay.headless.pim.client.dto.v1_0.Status;
 import com.liferay.headless.pim.client.pagination.Page;
 import com.liferay.headless.pim.client.pagination.Pagination;
 import com.liferay.object.model.ObjectEntry;
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.test.rule.FeatureFlag;
@@ -21,7 +22,7 @@ import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.site.pim.site.initializer.constants.PIMObjectEntryFolderConstants;
 import com.liferay.site.pim.site.initializer.engine.PIMLinkEngine;
 import com.liferay.site.pim.site.initializer.link.PIMLinkType;
-import com.liferay.site.pim.site.initializer.test.util.PIMBaseSKUTestUtil;
+import com.liferay.site.pim.site.initializer.test.util.PIMBasicProductTestUtil;
 import com.liferay.site.pim.site.initializer.test.util.PIMTestUtil;
 import com.liferay.site.pim.site.initializer.test.util.link.TestPIMLinkType;
 
@@ -88,7 +89,7 @@ public class LinkReferenceResourceTest
 		DepotEntry depotEntry = PIMTestUtil.addSpaceDepotEntry();
 
 		ObjectEntry sourceObjectEntry =
-			PIMBaseSKUTestUtil.addPIMBaseSKUObjectEntry(
+			PIMBasicProductTestUtil.addPIMBasicProductObjectEntry(
 				depotEntry.getGroupId());
 
 		Page<LinkReference> page = _getLinkReferencesPage(
@@ -97,14 +98,15 @@ public class LinkReferenceResourceTest
 		Assert.assertEquals(0, page.getTotalCount());
 
 		ObjectEntry targetObjectEntry1 =
-			PIMBaseSKUTestUtil.addPIMBaseSKUObjectEntry(
-				depotEntry.getGroupId(), "sku-alpha", null, "Product",
-				PIMObjectEntryFolderConstants.EXTERNAL_REFERENCE_CODE_PRODUCTS);
+			PIMBasicProductTestUtil.addPIMBasicProductObjectEntry(
+				depotEntry.getGroupId(), null,
+				PIMObjectEntryFolderConstants.EXTERNAL_REFERENCE_CODE_PRODUCTS,
+				"sku-alpha", "Product");
 		ObjectEntry targetObjectEntry2 =
-			PIMBaseSKUTestUtil.addPIMBaseSKUObjectEntry(
-				depotEntry.getGroupId(), RandomTestUtil.randomString(), null,
-				"Beta Product",
-				PIMObjectEntryFolderConstants.EXTERNAL_REFERENCE_CODE_PRODUCTS);
+			PIMBasicProductTestUtil.addPIMBasicProductObjectEntry(
+				depotEntry.getGroupId(), null,
+				PIMObjectEntryFolderConstants.EXTERNAL_REFERENCE_CODE_PRODUCTS,
+				RandomTestUtil.randomString(), "Beta Product");
 
 		_pimLinkEngine.addPIMLinks(
 			sourceObjectEntry,
@@ -112,12 +114,10 @@ public class LinkReferenceResourceTest
 
 		page = _getLinkReferencesPage(sourceObjectEntry, Pagination.of(1, 20));
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(3, page.getTotalCount());
 
 		List<LinkReference> linkReferences =
 			(List<LinkReference>)page.getItems();
-
-		Assert.assertNull(_getLinkReference(linkReferences, sourceObjectEntry));
 
 		_assertLinkReference(linkReferences, targetObjectEntry1);
 		_assertLinkReference(linkReferences, targetObjectEntry2);
@@ -148,6 +148,32 @@ public class LinkReferenceResourceTest
 			RandomTestUtil.randomString());
 
 		Assert.assertEquals(0, page.getTotalCount());
+
+		_pimLinkEngine.setPrimaryPIMLink(targetObjectEntry1, _TYPE);
+
+		page = _getLinkReferencesPage(sourceObjectEntry, Pagination.of(1, 20));
+
+		linkReferences = (List<LinkReference>)page.getItems();
+
+		Assert.assertEquals(
+			Arrays.asList(
+				sourceObjectEntry.getExternalReferenceCode(),
+				targetObjectEntry2.getExternalReferenceCode(),
+				targetObjectEntry1.getExternalReferenceCode()),
+			TransformUtil.transform(
+				linkReferences, LinkReference::getExternalReferenceCode));
+
+		_assertLinkReference(linkReferences, sourceObjectEntry);
+		_assertLinkReference(linkReferences, targetObjectEntry2);
+
+		LinkReference linkReference = _getLinkReference(
+			linkReferences, targetObjectEntry1);
+
+		Map<String, Map<String, String>> actions = linkReference.getActions();
+
+		Assert.assertNull(actions.get("setPrimary"));
+
+		Assert.assertTrue(linkReference.getPrimary());
 	}
 
 	@Override
@@ -156,24 +182,24 @@ public class LinkReferenceResourceTest
 		DepotEntry depotEntry = PIMTestUtil.addSpaceDepotEntry();
 
 		ObjectEntry sourceObjectEntry =
-			PIMBaseSKUTestUtil.addPIMBaseSKUObjectEntry(
+			PIMBasicProductTestUtil.addPIMBasicProductObjectEntry(
 				depotEntry.getGroupId());
 
 		_pimLinkEngine.addPIMLinks(
 			sourceObjectEntry,
 			Arrays.asList(
-				PIMBaseSKUTestUtil.addPIMBaseSKUObjectEntry(
+				PIMBasicProductTestUtil.addPIMBasicProductObjectEntry(
 					depotEntry.getGroupId()),
-				PIMBaseSKUTestUtil.addPIMBaseSKUObjectEntry(
+				PIMBasicProductTestUtil.addPIMBasicProductObjectEntry(
 					depotEntry.getGroupId()),
-				PIMBaseSKUTestUtil.addPIMBaseSKUObjectEntry(
+				PIMBasicProductTestUtil.addPIMBasicProductObjectEntry(
 					depotEntry.getGroupId())),
 			_TYPE);
 
 		Page<LinkReference> page = _getLinkReferencesPage(
 			sourceObjectEntry, Pagination.of(1, 2));
 
-		Assert.assertEquals(3, page.getTotalCount());
+		Assert.assertEquals(4, page.getTotalCount());
 
 		List<LinkReference> linkReferences =
 			(List<LinkReference>)page.getItems();
@@ -197,6 +223,24 @@ public class LinkReferenceResourceTest
 		Assert.assertTrue(href, href.contains("/links?className="));
 
 		Assert.assertEquals("DELETE", deleteAction.get("method"));
+
+		Map<String, String> getAction = actions.get("get");
+
+		href = getAction.get("href");
+
+		Assert.assertTrue(href, href.contains("/links?className="));
+
+		Assert.assertEquals("GET", getAction.get("method"));
+
+		Map<String, String> setPrimaryAction = actions.get("setPrimary");
+
+		href = setPrimaryAction.get("href");
+
+		Assert.assertTrue(href, href.contains("/links/primary?className="));
+
+		Assert.assertEquals("PUT", setPrimaryAction.get("method"));
+
+		Assert.assertFalse(linkReference.getPrimary());
 
 		Status status = linkReference.getStatus();
 

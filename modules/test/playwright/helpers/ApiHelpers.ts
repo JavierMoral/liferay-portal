@@ -8,7 +8,7 @@ import {
 	ObjectDefinitionAPI,
 	ObjectFolderAPI,
 	ObjectRelationshipAPI,
-} from '@liferay/object-admin-rest-client-js';
+} from '@liferay/object-admin-rest-client-js/v1_0';
 import {Page} from '@playwright/test';
 
 import {
@@ -661,6 +661,9 @@ export class DataApiHelpers extends ApiHelpers {
 						item.applicationName!,
 						item.id
 					);
+				}
+				else if (item.type === 'objectEntryFolder') {
+					await this.objectFolder.deleteObjectEntryFolder(item.id);
 				}
 				else if (item.type === 'objectFolder') {
 					const objectFolderRESTClient =

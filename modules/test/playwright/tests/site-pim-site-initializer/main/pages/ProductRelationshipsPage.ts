@@ -43,6 +43,16 @@ export class ProductRelationshipsPage {
 				.check();
 		}
 
+		await expect(
+			this.selectorDialog
+				.locator('.management-bar')
+				.getByText(
+					new RegExp(
+						`^(All Selected \\()?${names.length} of \\d+ Items( Selected|\\))$`
+					)
+				)
+		).toBeVisible();
+
 		await this.selectorConfirmButton.click();
 
 		await expect(this.selectorDialog).toBeHidden();
@@ -52,10 +62,21 @@ export class ProductRelationshipsPage {
 		}
 	}
 
+	async clickItemAction(action: string, name: string) {
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: this.page.getByRole('menuitem', {
+				exact: true,
+				name: action,
+			}),
+			trigger: this.getRelatedProduct(name).getByRole('button', {
+				name: `${name} Actions`,
+			}),
+		});
+	}
+
 	async removeRelationship(name: string) {
-		await this.getRelatedProduct(name)
-			.getByRole('button', {name: 'Remove'})
-			.click();
+		await this.clickItemAction('Remove', name);
 
 		await this.page
 			.locator('.modal-content')
@@ -65,7 +86,15 @@ export class ProductRelationshipsPage {
 		await expect(this.getRelatedProduct(name)).toBeHidden();
 	}
 
+	getPrimaryCell(name: string) {
+		return this.getRelatedProduct(name).locator('.cell-primary');
+	}
+
 	getRelatedProduct(name: string) {
 		return this.rows.filter({hasText: name});
+	}
+
+	getViewingLabel(name: string) {
+		return this.getRelatedProduct(name).getByText('viewing', {exact: true});
 	}
 }

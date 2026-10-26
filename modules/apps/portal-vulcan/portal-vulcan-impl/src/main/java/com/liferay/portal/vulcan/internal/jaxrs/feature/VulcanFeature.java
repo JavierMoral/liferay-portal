@@ -22,9 +22,11 @@ import com.liferay.portal.odata.sort.SortParserProvider;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineExportTaskResourceFactory;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResourceFactory;
 import com.liferay.portal.vulcan.extension.ExtensionProviderRegistry;
+import com.liferay.portal.vulcan.feature.flag.FeatureFlagChecker;
 import com.liferay.portal.vulcan.internal.configuration.admin.service.HeadlessAPICacheManagedServiceFactory;
 import com.liferay.portal.vulcan.internal.jaxrs.container.request.filter.CTContainerRequestFilter;
 import com.liferay.portal.vulcan.internal.jaxrs.container.request.filter.ContextContainerRequestFilter;
+import com.liferay.portal.vulcan.internal.jaxrs.container.request.filter.FeatureFlagContainerRequestFilter;
 import com.liferay.portal.vulcan.internal.jaxrs.container.request.filter.LogContainerRequestFilter;
 import com.liferay.portal.vulcan.internal.jaxrs.container.request.filter.NestedFieldsContainerRequestFilter;
 import com.liferay.portal.vulcan.internal.jaxrs.container.request.filter.TransactionContainerRequestFilter;
@@ -90,7 +92,6 @@ import org.osgi.service.cm.ManagedServiceFactory;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ServiceScope;
 import org.osgi.service.jaxrs.whiteboard.JaxrsWhiteboardConstants;
 
 /**
@@ -106,7 +107,7 @@ import org.osgi.service.jaxrs.whiteboard.JaxrsWhiteboardConstants;
 		JaxrsWhiteboardConstants.JAX_RS_EXTENSION + "=true",
 		JaxrsWhiteboardConstants.JAX_RS_NAME + "=Liferay.Vulcan"
 	},
-	scope = ServiceScope.PROTOTYPE, service = Feature.class
+	service = Feature.class
 )
 public class VulcanFeature implements Feature {
 
@@ -182,6 +183,9 @@ public class VulcanFeature implements Feature {
 		featureContext.register(
 			new EntityExtensionHandlerContextResolver(
 				_extensionProviderRegistry));
+		featureContext.register(
+			new FeatureFlagContainerRequestFilter(_featureFlagChecker, _portal),
+			Priorities.USER - 20);
 		featureContext.register(new MultipartBodyMessageBodyReader());
 		featureContext.register(
 			new NestedFieldsWriterInterceptor(
@@ -236,6 +240,9 @@ public class VulcanFeature implements Feature {
 
 	@Reference
 	private ExtensionProviderRegistry _extensionProviderRegistry;
+
+	@Reference
+	private FeatureFlagChecker _featureFlagChecker;
 
 	@Reference
 	private FilterParserProvider _filterParserProvider;

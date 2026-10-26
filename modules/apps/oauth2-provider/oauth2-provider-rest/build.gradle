@@ -9,7 +9,6 @@ dependencies {
 	compileOnly group: "com.liferay", name: "jakarta.ws.rs", version: "3.1.0.LIFERAY-PATCHED-1"
 	compileOnly group: "com.liferay", name: "org.apache.cxf.core", version: "3.6.13.JAKARTA-LIFERAY-PATCHED-1"
 	compileOnly group: "com.liferay", name: "org.apache.cxf.rt.frontend.jaxrs", version: "3.6.13.JAKARTA-LIFERAY-PATCHED-1"
-	compileOnly group: "com.liferay", name: "org.apache.cxf.rt.rs.extension.providers", version: "3.6.13.JAKARTA-LIFERAY-PATCHED-1"
 	compileOnly group: "com.liferay", name: "org.apache.cxf.rt.rs.json.basic", version: "3.6.13.JAKARTA-LIFERAY-PATCHED-1"
 	compileOnly group: "com.liferay", name: "org.apache.cxf.rt.rs.security.jose", version: "3.6.13.JAKARTA-LIFERAY-PATCHED-1"
 	compileOnly group: "com.liferay", name: "org.apache.cxf.rt.rs.security.jose.jaxrs", version: "3.6.13.JAKARTA-LIFERAY-PATCHED-1"
@@ -34,6 +33,7 @@ dependencies {
 	compileOnly project(":apps:oauth2-provider:oauth2-provider-scope-spi")
 	compileOnly project(":apps:portal-configuration:portal-configuration-module-configuration-api")
 	compileOnly project(":apps:portal-remote:portal-remote-cors-api")
+	compileOnly project(":apps:portal-security:portal-security-api")
 	compileOnly project(":apps:portal-security:portal-security-key-api")
 	compileOnly project(":apps:portal-security:portal-security-service-access-policy-api")
 	compileOnly project(":apps:portal-vulcan:portal-vulcan-api")
