@@ -18,8 +18,13 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.orm.QueryDefinition;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.WorkflowDefinitionLink;
 import com.liferay.portal.kernel.portlet.PortletRequestModel;
+import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionUtil;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
@@ -29,7 +34,10 @@ import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.kernel.workflow.WorkflowHandler;
+import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
 
 import java.io.File;
 import java.io.Serializable;
@@ -248,8 +256,10 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 		DDMStructure ddmStructure = _ddmStructureService.getStructure(
 			ddmStructureId);
 
-		_ddmStructureModelResourcePermission.contains(
+		_ddmStructureModelResourcePermission.check(
 			getPermissionChecker(), ddmStructure, ActionKeys.UPDATE);
+
+		_checkClassNameIdAndClassPK(classNameId, classPK, ddmStructureId);
 
 		return journalArticleLocalService.addArticleDefaultValues(
 			getUserId(), groupId, classNameId, classPK, titleMap,
@@ -359,8 +369,15 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 		DDMStructure ddmStructure = _ddmStructureService.getStructure(
 			ddmStructureId);
 
-		_ddmStructureModelResourcePermission.contains(
+		_ddmStructureModelResourcePermission.check(
 			getPermissionChecker(), ddmStructure, ActionKeys.UPDATE);
+
+		JournalArticle journalArticle = journalArticleLocalService.getArticle(
+			groupId, articleId);
+
+		_checkClassNameIdAndClassPK(
+			journalArticle.getClassNameId(), journalArticle.getClassPK(),
+			ddmStructureId);
 
 		journalArticleLocalService.deleteArticleDefaultValues(
 			groupId, articleId, ddmStructureId);
@@ -667,6 +684,9 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 		QueryDefinition<JournalArticle> queryDefinition = new QueryDefinition<>(
 			WorkflowConstants.STATUS_ANY);
 
+		queryDefinition.setOwnerUserId(
+			_getOwnerUserId(groupId, WorkflowConstants.STATUS_ANY));
+
 		return journalArticleFinder.filterFindByG_F_L(
 			groupId, folderIds, locale, queryDefinition);
 	}
@@ -682,6 +702,9 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 
 		QueryDefinition<JournalArticle> queryDefinition = new QueryDefinition<>(
 			WorkflowConstants.STATUS_ANY, start, end, orderByComparator);
+
+		queryDefinition.setOwnerUserId(
+			_getOwnerUserId(groupId, WorkflowConstants.STATUS_ANY));
 
 		return journalArticleFinder.filterFindByG_F_L(
 			groupId, folderIds, locale, queryDefinition);
@@ -1061,6 +1084,8 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 
 		QueryDefinition<JournalArticle> queryDefinition = new QueryDefinition<>(
 			status);
+
+		queryDefinition.setOwnerUserId(_getOwnerUserId(groupId, status));
 
 		return journalArticleFinder.filterCountByG_F(
 			groupId, folderIds, queryDefinition);
@@ -1569,6 +1594,8 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 		QueryDefinition<JournalArticle> queryDefinition = new QueryDefinition<>(
 			status, start, end, orderByComparator);
 
+		queryDefinition.setOwnerUserId(_getOwnerUserId(groupId, status));
+
 		Locale locale = LocaleUtil.getMostRelevantLocale();
 
 		return journalArticleFinder.filterFindByG_ST_L(
@@ -1577,8 +1604,13 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 
 	@Override
 	public int getLatestArticlesCount(long groupId, int status) {
+		QueryDefinition<JournalArticle> queryDefinition = new QueryDefinition<>(
+			status);
+
+		queryDefinition.setOwnerUserId(_getOwnerUserId(groupId, status));
+
 		return journalArticleFinder.filterCountByG_ST(
-			groupId, status, new QueryDefinition<>(status));
+			groupId, status, queryDefinition);
 	}
 
 	/**
@@ -1902,6 +1934,8 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 		_portletResourcePermission.check(
 			getPermissionChecker(), groupId, ActionKeys.SUBSCRIBE);
 
+		_checkUserId(userId);
+
 		journalArticleLocalService.subscribeStructure(
 			groupId, userId, ddmStructureId);
 	}
@@ -1934,6 +1968,8 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 
 		_portletResourcePermission.check(
 			getPermissionChecker(), groupId, ActionKeys.SUBSCRIBE);
+
+		_checkUserId(userId);
 
 		journalArticleLocalService.unsubscribeStructure(
 			groupId, userId, ddmStructureId);
@@ -1988,6 +2024,8 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 				_journalFolderModelResourcePermission, getPermissionChecker(),
 				groupId, folderId, ActionKeys.ADD_ARTICLE);
 		}
+
+		_checkUserId(userId);
 
 		return journalArticleLocalService.updateArticle(
 			userId, groupId, folderId, articleId, version, titleMap,
@@ -2199,8 +2237,12 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 		DDMStructure ddmStructure = _ddmStructureService.getStructure(
 			journalArticle.getDDMStructureId());
 
-		_ddmStructureModelResourcePermission.contains(
+		_ddmStructureModelResourcePermission.check(
 			getPermissionChecker(), ddmStructure, ActionKeys.UPDATE);
+
+		_checkClassNameIdAndClassPK(
+			journalArticle.getClassNameId(), journalArticle.getClassPK(),
+			journalArticle.getDDMStructureId());
 
 		return journalArticleLocalService.updateArticleDefaultValues(
 			getUserId(), groupId, articleId, titleMap, descriptionMap, content,
@@ -2275,13 +2317,81 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 		JournalArticle article = journalArticlePersistence.findByG_A_V(
 			groupId, articleId, version);
 
-		_journalArticleModelResourcePermission.check(
-			getPermissionChecker(), article, ActionKeys.UPDATE);
+		if (status == WorkflowConstants.STATUS_EXPIRED) {
+			_journalArticleModelResourcePermission.check(
+				getPermissionChecker(), article, ActionKeys.EXPIRE);
+		}
+		else {
+			_journalArticleModelResourcePermission.check(
+				getPermissionChecker(), article, ActionKeys.UPDATE);
+
+			WorkflowHandler<?> workflowHandler =
+				WorkflowHandlerRegistryUtil.getWorkflowHandler(
+					JournalArticle.class.getName());
+
+			WorkflowDefinitionLink workflowDefinitionLink =
+				workflowHandler.getWorkflowDefinitionLink(
+					article.getCompanyId(), article.getGroupId(),
+					article.getId());
+
+			if (workflowDefinitionLink != null) {
+				throw new PrincipalException();
+			}
+		}
 
 		return journalArticleLocalService.updateStatus(
 			getUserId(), article, status, articleURL, serviceContext,
 			new HashMap<String, Serializable>());
 	}
+
+	private void _checkClassNameIdAndClassPK(
+			long classNameId, long classPK, long ddmStructureId)
+		throws PortalException {
+
+		if ((classNameId != _portal.getClassNameId(DDMStructure.class)) ||
+			(classPK != ddmStructureId)) {
+
+			throw new PrincipalException.MustHavePermission(
+				getPermissionChecker(), DDMStructure.class.getName(),
+				ddmStructureId, ActionKeys.UPDATE);
+		}
+	}
+
+	private void _checkUserId(long userId) throws PortalException {
+		if (userId != getUserId()) {
+			throw new PrincipalException();
+		}
+	}
+
+	private long _getOwnerUserId(long groupId, int status) {
+		if ((status != WorkflowConstants.STATUS_ANY) &&
+			(status != WorkflowConstants.STATUS_DRAFT) &&
+			(status != WorkflowConstants.STATUS_SCHEDULED)) {
+
+			return 0;
+		}
+
+		try {
+			PermissionChecker permissionChecker = getPermissionChecker();
+
+			if (permissionChecker.hasPermission(
+					groupId, JournalArticle.class.getName(),
+					JournalArticle.class.getName(), ActionKeys.UPDATE)) {
+
+				return 0;
+			}
+
+			return permissionChecker.getUserId();
+		}
+		catch (PrincipalException principalException) {
+			_log.error(principalException);
+		}
+
+		return 0;
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		JournalArticleServiceImpl.class);
 
 	@Reference(
 		target = "(model.class.name=com.liferay.dynamic.data.mapping.model.DDMStructure)"
@@ -2306,6 +2416,9 @@ public class JournalArticleServiceImpl extends JournalArticleServiceBaseImpl {
 
 	@Reference
 	private JournalFolderService _journalFolderService;
+
+	@Reference
+	private Portal _portal;
 
 	@Reference(
 		target = "(resource.name=" + JournalConstants.RESOURCE_NAME + ")"

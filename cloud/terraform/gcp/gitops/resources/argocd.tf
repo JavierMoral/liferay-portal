@@ -70,6 +70,10 @@ resource "kubernetes_manifest" "infrastructure_applicationset" {
 											value=local.gateway_name
 										},
 										{
+											name="overlayBucket.enabled"
+											value="false"
+										},
+										{
 											name="projectId"
 											value=var.infrastructure_git_repo_config.target.slugProjectId
 										},
@@ -376,6 +380,19 @@ resource "kubernetes_manifest" "liferay_applicationset" {
 						namespace="liferay-${var.liferay_git_repo_config.target.namespaceSuffix}"
 						server="https://kubernetes.default.svc"
 					}
+					ignoreDifferences=[
+						{
+							group=""
+							jsonPointers=["/data"]
+							kind="Secret"
+							name="liferay-default"
+						},
+						{
+							group="apps"
+							kind="StatefulSet"
+							managedFieldsManagers=["liferay-dxp-operator"]
+						},
+					]
 					project=local.liferay_appproject_name
 					sources=[
 						merge(
@@ -385,6 +402,10 @@ resource "kubernetes_manifest" "liferay_applicationset" {
 										{
 											name="${local.liferay_helm_chart_config.values_scope_prefix}environmentId"
 											value=var.liferay_git_repo_config.target.slugEnvironmentId
+										},
+										{
+											name="${local.liferay_helm_chart_config.values_scope_prefix}licensing.onlineActivationWorkflow.enabled"
+											value="true"
 										},
 										{
 											name="${local.liferay_helm_chart_config.values_scope_prefix}marketplace.csi.volumeAttributes.ip"
@@ -433,19 +454,6 @@ resource "kubernetes_manifest" "liferay_applicationset" {
 							ref="values"
 							repoURL=var.liferay_git_repo_url
 							targetRevision=var.liferay_git_repo_config.revision
-						},
-					]
-					ignoreDifferences=[
-						{
-							group=""
-							jsonPointers=["/data"]
-							kind="Secret"
-							name="liferay-default"
-						},
-						{
-							group="apps"
-							kind="StatefulSet"
-							managedFieldsManagers=["liferay-dxp-operator"]
 						},
 					]
 					syncPolicy={
@@ -576,6 +584,10 @@ resource "kubernetes_manifest" "observability_application" {
 								{
 									name="cloudProvider"
 									value="gcp"
+								},
+								{
+									name="gcp.clusterName"
+									value="${var.deployment_name}-gke"
 								},
 								{
 									name="gcp.projectId"
@@ -728,7 +740,7 @@ resource "kubernetes_manifest" "resources_applicationset" {
 							selfHeal=true
 						}
 						managedNamespaceMetadata={
-							labels = {
+							labels={
 								"pod-security.kubernetes.io/enforce"="restricted"
 							}
 						}

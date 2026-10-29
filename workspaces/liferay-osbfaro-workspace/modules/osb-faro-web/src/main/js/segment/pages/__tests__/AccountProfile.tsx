@@ -2,7 +2,6 @@ import * as API from 'shared/api';
 import AccountProfile from '../AccountProfile';
 import DataSourcesProvider from 'shared/context/dataSources';
 import mockStore from 'test/mock-store';
-import ModalRenderer from 'shared/components/ModalRenderer';
 import React from 'react';
 import {ChannelContext} from 'shared/context/channel';
 import {cleanup, fireEvent, render, screen} from '@testing-library/react';
@@ -55,8 +54,6 @@ jest.mock('shared/hooks/useTimeZone', () => ({
 const renderAccountProfile = (data = {}) =>
 	render(
 		<Provider store={mockStore()}>
-			<ModalRenderer />
-
 			<MemoryRouter>
 				<ChannelContext.Provider value={mockChannelContext() as any}>
 					<DataSourcesProvider groupId="23">
@@ -135,8 +132,10 @@ describe('AccountProfile', () => {
 		).toMatch(/\/segments\/0\/edit$/);
 	});
 
-	it('should list the accounts matching the segment', () => {
+	it('should list the accounts matching the segment', async () => {
 		renderAccountProfile();
+
+		await screen.findByTestId('fds-component');
 
 		expect(screen.getByText('SEGMENT MEMBERSHIP')).toBeTruthy();
 		expect(lastApiURL).toBe(
@@ -145,8 +144,10 @@ describe('AccountProfile', () => {
 		expect(lastDataSetId).toBe('segment-accounts-dataset');
 	});
 
-	it('should list the accounts matching the segment without any filter applied', () => {
+	it('should list the accounts matching the segment without any filter applied', async () => {
 		renderAccountProfile();
+
+		await screen.findByTestId('fds-component');
 
 		const preloadedFilters = lastFilters?.filter(
 			({preloadedData}) => preloadedData
@@ -176,7 +177,7 @@ describe('AccountProfile', () => {
 		expect(screen.getByText('"Technology"')).toBeTruthy();
 	});
 
-	it('should open the manage notifications modal with the workspace and segment IDs', () => {
+	it('should open the manage notifications modal with the workspace and segment IDs', async () => {
 		renderAccountProfile({id: '456'});
 
 		fireEvent.click(screen.getByRole('button', {name: 'Menu'}));
@@ -186,7 +187,7 @@ describe('AccountProfile', () => {
 		);
 
 		expect(
-			screen.getByText('Manage Segment Notifications')
+			await screen.findByText('Manage Segment Notifications')
 		).toBeInTheDocument();
 
 		expect(API.preferences.fetchSegmentNotifications).toHaveBeenCalledWith({

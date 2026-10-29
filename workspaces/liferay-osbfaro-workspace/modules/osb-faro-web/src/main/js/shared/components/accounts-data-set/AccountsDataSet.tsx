@@ -4,6 +4,8 @@ import Loading from 'shared/components/Loading';
 import React from 'react';
 import {
 	columns,
+	EMPTY_STATE_IMAGE,
+	EMPTY_STATE_REDUCED_MOTION_IMAGE,
 	FrontendDataSet,
 	pagination,
 	rangeSelectors,
@@ -28,7 +30,7 @@ interface IAccountsDataSetProps {
 	fieldCatalog?: ICatalogField[];
 	groupId: string;
 	industryFilter?: string;
-	lifecycleStageFilter?: LifecycleStages;
+	lifecycleStageFilter?: string;
 	rangeKeyFilter?: RangeKeyTimeRanges;
 	segmentFilter?: string;
 	segmentName?: string;
@@ -38,7 +40,8 @@ interface IAccountsDataSetProps {
 interface ILifecycleStageFieldValue {
 	externalReferenceCode: string;
 	id: string;
-	stageType: LifecycleStages;
+	stageName?: string;
+	stageType?: LifecycleStages;
 }
 
 const buildSelectionPreloadedData = (value?: string, label?: string) =>
@@ -79,8 +82,11 @@ const AccountsDataSet: React.FC<IAccountsDataSetProps> = ({
 		lifecycleStageFieldValues?.items ?? [];
 
 	const lifecycleStageItems = lifecycleStages.map(
-		({externalReferenceCode, stageType}) => ({
-			label: lifecycleStagesLabelMap[stageType].label,
+		({externalReferenceCode, stageName, stageType}) => ({
+			label:
+				stageName ??
+				(stageType && lifecycleStagesLabelMap[stageType]?.label) ??
+				externalReferenceCode,
 			value: externalReferenceCode,
 		})
 	);
@@ -90,9 +96,7 @@ const AccountsDataSet: React.FC<IAccountsDataSetProps> = ({
 	);
 
 	const preloadedLifecycleStage = lifecycleStageFilter
-		? lifecycleStages.find(
-				({stageType}) => stageType === lifecycleStageFilter
-			)
+		? lifecycleStages.find(({id}) => id === lifecycleStageFilter)
 		: undefined;
 
 	// The data set reads `filters` only when its reducer is initialized on
@@ -148,7 +152,8 @@ const AccountsDataSet: React.FC<IAccountsDataSetProps> = ({
 					description: Liferay.Language.get(
 						'no-accounts-were-synced-from-the-connected-data-sources'
 					),
-					image: '/states/satellite.svg',
+					image: EMPTY_STATE_IMAGE,
+					imageReducedMotion: EMPTY_STATE_REDUCED_MOTION_IMAGE,
 					title: Liferay.Language.get('no-accounts-found'),
 				}}
 				filters={[
@@ -174,11 +179,11 @@ const AccountsDataSet: React.FC<IAccountsDataSetProps> = ({
 									name: 'status',
 									preloadedData: buildSelectionPreloadedData(
 										preloadedLifecycleStage?.externalReferenceCode,
-										lifecycleStageFilter
-											? lifecycleStagesLabelMap[
-													lifecycleStageFilter
-												].label
-											: undefined
+										lifecycleStageItems.find(
+											({value}) =>
+												value ===
+												preloadedLifecycleStage?.externalReferenceCode
+										)?.label
 									),
 									type: 'selection' as const,
 								},

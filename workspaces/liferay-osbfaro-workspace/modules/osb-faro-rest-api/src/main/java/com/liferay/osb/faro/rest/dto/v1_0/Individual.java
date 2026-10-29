@@ -46,11 +46,11 @@ import java.util.function.Supplier;
  */
 @Generated("")
 @GraphQLName(
-	description = "A single individual synced to Analytics Cloud. Individuals are aggregated from data sources configured to sync to Analytics Cloud, and may be either 'known' (identified by email) or 'anonymous' (browser-tracked only).",
+	description = "A single individual synced to Analytics Cloud. Individuals are aggregated from data sources configured to sync to Analytics Cloud, and may be either 'known' (identified by email) or 'anonymous' (browser tracked only).",
 	value = "Individual"
 )
 @io.swagger.v3.oas.annotations.media.Schema(
-	description = "A single individual synced to Analytics Cloud. Individuals are aggregated from data sources configured to sync to Analytics Cloud, and may be either 'known' (identified by email) or 'anonymous' (browser-tracked only)."
+	description = "A single individual synced to Analytics Cloud. Individuals are aggregated from data sources configured to sync to Analytics Cloud, and may be either 'known' (identified by email) or 'anonymous' (browser tracked only)."
 )
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "Individual")
@@ -692,7 +692,7 @@ public class Individual implements Serializable {
 	private Supplier<String> _nameSupplier;
 
 	@io.swagger.v3.oas.annotations.media.Schema(
-		description = "Profile classification. KNOWN individuals are identified by email/account; ANONYMOUS individuals are browser-tracked only."
+		description = "Profile classification. KNOWN individuals are identified by email/account; ANONYMOUS individuals are browser tracked only."
 	)
 	@JsonGetter("profileType")
 	@Valid
@@ -741,7 +741,7 @@ public class Individual implements Serializable {
 	}
 
 	@GraphQLField(
-		description = "Profile classification. KNOWN individuals are identified by email/account; ANONYMOUS individuals are browser-tracked only."
+		description = "Profile classification. KNOWN individuals are identified by email/account; ANONYMOUS individuals are browser tracked only."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected ProfileType profileType;
@@ -921,28 +921,7 @@ public class Individual implements Serializable {
 
 			sb.append("\"demographics\": ");
 
-			if (demographics instanceof Collection) {
-				sb.append(
-					JSONFactoryUtil.createJSONArray(
-						(Collection<?>)demographics));
-			}
-			else if (demographics instanceof Map) {
-				sb.append(
-					JSONFactoryUtil.createJSONObject((Map<?, ?>)demographics));
-			}
-			else if (demographics instanceof Object[]) {
-				sb.append(
-					JSONFactoryUtil.createJSONArray(
-						Arrays.asList((Object[])demographics)));
-			}
-			else if (demographics instanceof String) {
-				sb.append("\"");
-				sb.append(_escape((String)demographics));
-				sb.append("\"");
-			}
-			else {
-				sb.append(demographics);
-			}
+			sb.append(_toJSON(demographics));
 		}
 
 		String emailAddress = getEmailAddress();
@@ -1214,6 +1193,27 @@ public class Individual implements Serializable {
 		return sb.toString();
 	}
 
+	private static String _toJSON(Object value) {
+		if (value instanceof Collection) {
+			return String.valueOf(
+				JSONFactoryUtil.createJSONArray((Collection<?>)value));
+		}
+		else if (value instanceof Map) {
+			return String.valueOf(
+				JSONFactoryUtil.createJSONObject((Map<?, ?>)value));
+		}
+		else if (value instanceof Object[]) {
+			return String.valueOf(
+				JSONFactoryUtil.createJSONArray(
+					Arrays.asList((Object[])value)));
+		}
+		else if (value instanceof String) {
+			return StringBundler.concat("\"", _escape(value), "\"");
+		}
+
+		return String.valueOf(value);
+	}
+
 	private static final String[][] _JSON_ESCAPE_STRINGS = {
 		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
 		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
@@ -1222,4 +1222,4 @@ public class Individual implements Serializable {
 	private Map<String, Serializable> _extendedProperties;
 
 }
-// LIFERAY-REST-BUILDER-HASH:383417997
+// LIFERAY-REST-BUILDER-HASH:-324686737

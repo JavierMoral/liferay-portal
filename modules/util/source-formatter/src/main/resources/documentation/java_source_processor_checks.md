@@ -54,7 +54,7 @@ EqualClauseIfStatementsCheck | [Styling](styling_checks.md#styling-checks) | Fin
 [ExceptionMessageCheck](check/message_check.md#messagecheck) | [Styling](styling_checks.md#styling-checks) | Validates messages that are passed to exceptions. |
 ExceptionPrintStackTraceCheck | [Bug Prevention](bug_prevention_checks.md#bug-prevention-checks) | Avoid using printStackTrace. |
 ExceptionVariableNameCheck | [Naming Conventions](naming_conventions_checks.md#naming-conventions-checks) | Validates variable names that have type `*Exception`. |
-FIPSTLSVerificationCheck | [Security](security_checks.md#security-checks) | Finds outbound TLS verification bypasses that are not guarded by `PropsValues.FIPS_ENABLED`, see LPD-93649. |
+FIPSTLSVerificationCheck | [Security](security_checks.md#security-checks) | Finds outbound TLS verification bypasses that are not guarded by `PropsValues.FIPS_ENABLED`. |
 FactoryCheck | [Bug Prevention](bug_prevention_checks.md#bug-prevention-checks) | Finds cases where `*Factory` should be used when creating new instances of an object. |
 [FetchContractCatchCheck](check/fetch_contract_catch_check.md#fetchcontractcatchcheck) | [Bug Prevention](bug_prevention_checks.md#bug-prevention-checks) | Finds code blocks that use `try-catch` to handle `NoSuch*Exception` or `PortalException` during entity lookups, which should be replaced by `fetch*` methods. |
 FilterStringWhitespaceCheck | [Bug Prevention](bug_prevention_checks.md#bug-prevention-checks) | Finds missing and unnecessary whitespace in the value of the filter string in `ServiceTrackerFactory.open` or `WaiterUtil.waitForFilter`. |
@@ -109,6 +109,7 @@ JavaEmptyLinesCheck | [Styling](styling_checks.md#styling-checks) | Finds missin
 JavaEntityFieldsMapOrderCheck | [Styling](styling_checks.md#styling-checks) | Sorts entity fields when calling `EntityFieldsMapFactory.create` and `EntityModel.toEntityFieldsMap`. |
 JavaExceptionCheck | [Naming Conventions](naming_conventions_checks.md#naming-conventions-checks) | Checks that variable names of exceptions in `catch` statements follow naming conventions. |
 JavaExpandoBridgeAttributesCallOrderCheck | [Bug Prevention](bug_prevention_checks.md#bug-prevention-checks) | Ensure `setExpandoBridgeAttributes` is the final setter called on a model before model persistence. |
+JavaFeatureFlagAnnotationCheck | [Bug Prevention](bug_prevention_checks.md#bug-prevention-checks) | Checks that feature flags are declared with `x-feature-flag` in `rest-openapi.yaml` instead of using the annotation `@FeatureFlag`. |
 JavaFeatureFlagManagerUtilCheck | [Bug Prevention](bug_prevention_checks.md#bug-prevention-checks) | Finds cases where `FeatureFlagManagerUtil.isEnabled` should be used and incorrect use of it. |
 JavaFeatureFlagsAndTestInfoAnnotationCheck | [Styling](styling_checks.md#styling-checks) | Sorts the values in `@FeatureFlags` and `@TestInfo` annotation. |
 JavaFinalVariableCheck | [Styling](styling_checks.md#styling-checks) | Finds cases of unneeded `final` modifiers for variables and parameters. |
@@ -292,6 +293,7 @@ ReturnVariableDeclarationAsUsedCheck | [Miscellaneous](miscellaneous_checks.md#m
 SafeCloseableMissingCloseCheck | [Bug Prevention](bug_prevention_checks.md#bug-prevention-checks) | Finds missing `close()` calls for `SafeCloseable` instances. |
 SealedAndNonsealedModifierCheck | [Performance](performance_checks.md#performance-checks) | Finds usage of `sealed` and `non-sealed`. |
 SecretComparisonCheck | [Security](security_checks.md#security-checks) | Finds secrets compared with a method that returns at the first differing byte. |
+SecretResolverCheck | [Security](security_checks.md#security-checks) | Finds configuration credentials read without resolving them through `SecretResolver` or `SecretResolverUtil`. |
 SelfReferenceCheck | [Bug Prevention](bug_prevention_checks.md#bug-prevention-checks) | Finds cases of unnecessary reference to its own class. |
 SemiColonCheck | [Styling](styling_checks.md#styling-checks) | Finds cases of unnecessary semicolon. |
 [ServiceComponentRuntimeCheck](check/service_component_runtime_check.md#servicecomponentruntimecheck) | [Bug Prevention](bug_prevention_checks.md#bug-prevention-checks) | Checks `ServiceComponentRuntime` usage in test classes. |

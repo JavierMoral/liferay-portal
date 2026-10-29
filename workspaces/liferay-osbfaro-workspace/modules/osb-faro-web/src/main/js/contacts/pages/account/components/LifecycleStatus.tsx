@@ -20,6 +20,7 @@ import {sub} from 'shared/util/lang';
 import {Text} from '@clayui/core';
 import {useParams} from 'react-router-dom';
 import {useRequest} from 'shared/hooks/useRequest';
+import {sortBy} from 'lodash';
 
 interface LifecycleStatusProps {
 	className?: string;
@@ -32,14 +33,19 @@ const getStageLabel = (stage: IAccountLifecycleStageStatus) => {
 };
 
 const LifecycleStatus: React.FC<LifecycleStatusProps> = ({className}) => {
-	const {groupId = '', id: accountId = ''} = useParams<{
+	const {
+		channelId,
+		groupId = '',
+		id: accountId = '',
+	} = useParams<{
+		channelId: string;
 		groupId: string;
 		id: string;
 	}>();
 
 	const {data: lifecyclesData, loading: lifecyclesLoading} = useRequest({
 		dataSourceFn: API.lifecycle.fetchAccountLifecycles,
-		variables: {groupId},
+		variables: {channelId, groupId},
 	});
 
 	const accountLifecycle = lifecyclesData?.[0];
@@ -58,9 +64,10 @@ const LifecycleStatus: React.FC<LifecycleStatusProps> = ({className}) => {
 		lifecyclesLoading || (Boolean(accountLifecycle?.id) && statusLoading);
 
 	const lifecycle: IAccountLifecycleStatus | undefined = statusData;
-	const stages = (lifecycle?.accountLifecycleStageStatuses ?? [])
-		.slice()
-		.sort((a, b) => a.displayOrder - b.displayOrder);
+	const stages = sortBy(
+		lifecycle?.accountLifecycleStageStatuses ?? [],
+		'priority'
+	);
 
 	const progressionStages = stages.filter(
 		(stage) => stage.stageType !== LifecycleStages.AT_RISK

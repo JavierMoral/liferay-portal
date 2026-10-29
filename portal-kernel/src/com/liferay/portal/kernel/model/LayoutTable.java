@@ -60,6 +60,8 @@ public class LayoutTable extends BaseTable<LayoutTable> {
 		"classNameId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
 	public final Column<LayoutTable, Long> classPK = createColumn(
 		"classPK", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
+	public final Column<LayoutTable, Long> launchSetId = createColumn(
+		"launchSetId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
 	public final Column<LayoutTable, String> name = createColumn(
 		"name", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<LayoutTable, Clob> title = createColumn(
@@ -106,6 +108,9 @@ public class LayoutTable extends BaseTable<LayoutTable> {
 	public final Column<LayoutTable, String> masterLayoutPageTemplateEntryERC =
 		createColumn(
 			"masterLPTEERC", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
+	public final Column<LayoutTable, String>
+		masterLayoutPageTemplateEntryScopeERC = createColumn(
+			"masterLPTESERC", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<LayoutTable, String> portletLayoutPageTemplateEntryERC =
 		createColumn(
 			"portletLPTEERC", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
@@ -138,4 +143,4 @@ public class LayoutTable extends BaseTable<LayoutTable> {
 	}
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:932250876
+// LIFERAY-SERVICE-BUILDER-HASH:1013046953

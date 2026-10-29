@@ -453,7 +453,7 @@ public class MainServlet extends HttpServlet {
 		long companyId = PortalInstances.getCompanyId(httpServletRequest);
 
 		if (_processCompanyInactiveRequest(
-				httpServletRequest, httpServletResponse, companyId)) {
+				httpServletRequest, httpServletResponse)) {
 
 			if (_log.isDebugEnabled()) {
 				_log.debug("Processed company inactive request");
@@ -894,8 +894,10 @@ public class MainServlet extends HttpServlet {
 				}
 
 				ActionMapping actionMapping = new ActionMapping(
-					moduleConfig, actionElement.attributeValue("forward"),
-					actionElement.attributeValue("path"), action);
+					action, actionElement.attributeValue("forward"),
+					GetterUtil.getBoolean(
+						actionElement.attributeValue("layout-required"), true),
+					moduleConfig, actionElement.attributeValue("path"));
 
 				for (Element forwardElement :
 						actionElement.elements("forward")) {
@@ -978,6 +980,21 @@ public class MainServlet extends HttpServlet {
 		return portlets;
 	}
 
+	private boolean _isCompanyActive(HttpServletRequest httpServletRequest) {
+		try {
+			Company company = PortalUtil.getCompany(httpServletRequest, false);
+
+			if (company != null) {
+				return company.isActive();
+			}
+		}
+		catch (Exception exception) {
+			_log.error(exception);
+		}
+
+		return false;
+	}
+
 	private long _loginUser(
 			HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse, long companyId,
@@ -1046,10 +1063,10 @@ public class MainServlet extends HttpServlet {
 
 	private boolean _processCompanyInactiveRequest(
 			HttpServletRequest httpServletRequest,
-			HttpServletResponse httpServletResponse, long companyId)
+			HttpServletResponse httpServletResponse)
 		throws IOException {
 
-		if (PortalInstances.isCompanyActive(companyId)) {
+		if (_isCompanyActive(httpServletRequest)) {
 			return false;
 		}
 

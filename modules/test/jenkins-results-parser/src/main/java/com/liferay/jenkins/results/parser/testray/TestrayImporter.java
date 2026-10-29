@@ -536,8 +536,8 @@ public class TestrayImporter {
 
 		String testrayCaseName = testrayCaseResult.getName();
 
-		if (testrayCaseName.length() > 150) {
-			testrayCaseName = testrayCaseName.substring(0, 150);
+		if (testrayCaseName.length() > 250) {
+			testrayCaseName = testrayCaseName.substring(0, 250);
 		}
 
 		testcasePropertiesMap.put("testray.testcase.name", testrayCaseName);
@@ -710,7 +710,19 @@ public class TestrayImporter {
 		AxisTestClassGroup axisTestClassGroup,
 		TestrayCaseResult topLevelTestrayCaseResult) {
 
+		Job job = axisTestClassGroup.getJob();
+
+		if ((job != null) && (job.getTestrayContext() == null)) {
+			job.setTestrayContext(_testrayContext);
+		}
+
 		TestrayRun testrayRun = axisTestClassGroup.getTestrayRun();
+
+		if (testrayRun == null) {
+			throw new RuntimeException(
+				"Unable to find a Testray run for " +
+					axisTestClassGroup.getAxisName());
+		}
 
 		TestrayBuild testrayBuild = testrayRun.getTestrayBuild();
 
@@ -777,26 +789,26 @@ public class TestrayImporter {
 
 		testrayCaseResults.add(buildTestrayCaseResult);
 
+		PortalLogBatchBuildTestrayCaseResult
+			portalLogBatchBuildTestrayCaseResult =
+				TestrayFactory.newPortalLogTestrayCaseResult(
+					axisTestClassGroup, testrayBuild, _topLevelBuildReport);
+
+		if (!JenkinsResultsParserUtil.isNullOrEmpty(
+				portalLogBatchBuildTestrayCaseResult.getErrors())) {
+
+			portalLogBatchBuildTestrayCaseResult.setParentTestrayCaseResult(
+				buildTestrayCaseResult);
+			portalLogBatchBuildTestrayCaseResult.setTestrayRun(testrayRun);
+
+			testrayCaseResults.add(portalLogBatchBuildTestrayCaseResult);
+		}
+
 		if (axisTestClassGroup instanceof FunctionalAxisTestClassGroup ||
 			axisTestClassGroup instanceof JSUnitAxisTestClassGroup ||
 			axisTestClassGroup instanceof JUnitAxisTestClassGroup ||
 			axisTestClassGroup instanceof ModulesAxisTestClassGroup ||
 			axisTestClassGroup instanceof WorkspacesCompileAxisTestClassGroup) {
-
-			PortalLogBatchBuildTestrayCaseResult
-				portalLogBatchBuildTestrayCaseResult =
-					TestrayFactory.newPortalLogTestrayCaseResult(
-						axisTestClassGroup, testrayBuild, _topLevelBuildReport);
-
-			if (!JenkinsResultsParserUtil.isNullOrEmpty(
-					portalLogBatchBuildTestrayCaseResult.getErrors())) {
-
-				portalLogBatchBuildTestrayCaseResult.setParentTestrayCaseResult(
-					buildTestrayCaseResult);
-				portalLogBatchBuildTestrayCaseResult.setTestrayRun(testrayRun);
-
-				testrayCaseResults.add(portalLogBatchBuildTestrayCaseResult);
-			}
 
 			for (TestClass testClass : axisTestClassGroup.getTestClasses()) {
 				if (_isTestClassFileReported(testClass)) {

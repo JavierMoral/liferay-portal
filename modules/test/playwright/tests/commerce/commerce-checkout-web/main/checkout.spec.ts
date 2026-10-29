@@ -31,7 +31,12 @@ import {waitForAlert} from '../../../../utils/waitForAlert';
 import getFragmentDefinition from '../../../layout-content-page-editor-web/main/utils/getFragmentDefinition';
 import getPageDefinition from '../../../layout-content-page-editor-web/main/utils/getPageDefinition';
 import getWidgetDefinition from '../../../layout-content-page-editor-web/main/utils/getWidgetDefinition';
-import {createAccountWithBuyerUser, miniumSetUp} from '../../utils/commerce';
+import {
+	activateChannelPaymentMethod,
+	createAccountWithBuyerUser,
+	miniumSetUp,
+	selectCurrentAccount,
+} from '../../utils/commerce';
 import {getDateFormatted, setFutureDate} from '../../utils/date';
 
 export const test = mergeTests(
@@ -1715,6 +1720,12 @@ test(
 				}
 			);
 
+			await activateChannelPaymentMethod(
+				apiHelpers,
+				channel.id,
+				'paypal'
+			);
+
 			const warehouse =
 				await apiHelpers.headlessCommerceAdminInventoryApiHelper.postWarehouses(
 					{
@@ -1917,8 +1928,10 @@ test(
 	}) => {
 		test.setTimeout(120000);
 
-		const initiateCheckout = async (site: string) => {
-			await globalMenuPage.goToSite(site);
+		const initiateCheckout = async (account, site) => {
+			await selectCurrentAccount(account.id, apiHelpers, site.id);
+
+			await globalMenuPage.goToSite(site.name);
 
 			await page.waitForLoadState('networkidle');
 
@@ -2072,8 +2085,8 @@ test(
 		const siteName1 = 'Minium-' + getRandomInt();
 		const siteName2 = 'Minium-' + getRandomInt();
 
-		await miniumSetUp(apiHelpers, siteName1);
-		await miniumSetUp(apiHelpers, siteName2);
+		const {site: site1} = await miniumSetUp(apiHelpers, siteName1);
+		const {site: site2} = await miniumSetUp(apiHelpers, siteName2);
 
 		await setDefaultAddresses(account, billingAddress, shippingAddress);
 
@@ -2178,7 +2191,7 @@ test(
 		).toBeVisible();
 
 		try {
-			await initiateCheckout(siteName1);
+			await initiateCheckout(account, site1);
 
 			await checkoutPage.performCheckoutUntilStep('Order Summary');
 
@@ -2202,7 +2215,7 @@ test(
 				editAccountChannelDefaultsPage.shippingAddressAllOtherChannelsText
 			).toBeVisible();
 
-			await initiateCheckout(siteName2);
+			await initiateCheckout(account, site2);
 
 			await checkoutPage.performCheckoutUntilStep('Order Summary');
 
