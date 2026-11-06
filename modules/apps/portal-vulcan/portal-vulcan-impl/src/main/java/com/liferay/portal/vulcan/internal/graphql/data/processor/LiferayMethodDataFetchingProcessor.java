@@ -8,6 +8,7 @@ package com.liferay.portal.vulcan.internal.graphql.data.processor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.liferay.depot.service.DepotEntryLocalService;
+import com.liferay.oauth2.provider.scope.ScopeChecker;
 import com.liferay.osgi.service.tracker.collections.list.ServiceTrackerList;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Company;
@@ -33,6 +34,7 @@ import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.aggregation.Aggregation;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResource;
 import com.liferay.portal.vulcan.batch.engine.resource.VulcanBatchEngineImportTaskResourceFactory;
+import com.liferay.portal.vulcan.feature.flag.FeatureFlagChecker;
 import com.liferay.portal.vulcan.graphql.contributor.GraphQLContributor;
 import com.liferay.portal.vulcan.internal.accept.language.AcceptLanguageImpl;
 import com.liferay.portal.vulcan.internal.graphql.util.GraphQLUtil;
@@ -60,6 +62,7 @@ import jakarta.validation.ValidationException;
 import jakarta.validation.constraints.NotNull;
 
 import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.core.UriInfo;
@@ -77,6 +80,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiFunction;
+import java.util.function.Supplier;
 
 import org.apache.cxf.common.util.StringUtils;
 import org.apache.cxf.jaxrs.impl.UriInfoImpl;
@@ -84,18 +88,16 @@ import org.apache.cxf.message.ExchangeImpl;
 import org.apache.cxf.message.Message;
 import org.apache.cxf.message.MessageImpl;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-
 /**
  * @author Carlos Correa
  */
 public class LiferayMethodDataFetchingProcessor {
 
 	public LiferayMethodDataFetchingProcessor(
-		BundleContext bundleContext, CompanyLocalService companyLocalService,
+		CompanyLocalService companyLocalService,
 		DepotEntryLocalService depotEntryLocalService,
 		ExpressionConvert<Filter> expressionConvert,
+		FeatureFlagChecker featureFlagChecker,
 		FilterParserProvider filterParserProvider,
 		ServiceTrackerList<GraphQLContributor>
 			graphQLContributorServiceTrackerList,
@@ -104,14 +106,15 @@ public class LiferayMethodDataFetchingProcessor {
 		ResourceActionLocalService resourceActionLocalService,
 		ResourcePermissionLocalService resourcePermissionLocalService,
 		RoleLocalService roleLocalService,
+		Supplier<ScopeChecker> scopeCheckerSupplier,
 		SortParserProvider sortParserProvider,
 		VulcanBatchEngineImportTaskResourceFactory
 			vulcanBatchEngineImportTaskResourceFactory) {
 
-		_bundleContext = bundleContext;
 		_companyLocalService = companyLocalService;
 		_depotEntryLocalService = depotEntryLocalService;
 		_expressionConvert = expressionConvert;
+		_featureFlagChecker = featureFlagChecker;
 		_filterParserProvider = filterParserProvider;
 		_graphQLContributorServiceTrackerList =
 			graphQLContributorServiceTrackerList;
@@ -122,6 +125,7 @@ public class LiferayMethodDataFetchingProcessor {
 		_resourceActionLocalService = resourceActionLocalService;
 		_resourcePermissionLocalService = resourcePermissionLocalService;
 		_roleLocalService = roleLocalService;
+		_scopeCheckerSupplier = scopeCheckerSupplier;
 		_sortParserProvider = sortParserProvider;
 		_vulcanBatchEngineImportTaskResourceFactory =
 			vulcanBatchEngineImportTaskResourceFactory;
@@ -134,9 +138,14 @@ public class LiferayMethodDataFetchingProcessor {
 			Object source)
 		throws Exception {
 
+		long companyId = _portal.getCompanyId(httpServletRequest);
+
+		if (!_featureFlagChecker.isEnabled(companyId, method)) {
+			throw new NotFoundException();
+		}
+
 		Pagination pagination = _paginationProvider.getPagination(
-			_portal.getCompanyId(httpServletRequest),
-			_getIntegerValue(arguments, "page"),
+			companyId, _getIntegerValue(arguments, "page"),
 			_getIntegerValue(arguments, "pageSize"));
 
 		Parameter[] parameters = method.getParameters();
@@ -379,7 +388,7 @@ public class LiferayMethodDataFetchingProcessor {
 
 				field.setAccessible(true);
 
-				field.set(instance, _getScopeChecker());
+				field.set(instance, _scopeCheckerSupplier.get());
 
 				continue;
 			}
@@ -666,18 +675,6 @@ public class LiferayMethodDataFetchingProcessor {
 		return null;
 	}
 
-	private Object _getScopeChecker() {
-		ServiceReference<?> serviceReference =
-			_bundleContext.getServiceReference(
-				"com.liferay.oauth2.provider.scope.ScopeChecker");
-
-		if (serviceReference != null) {
-			return _bundleContext.getService(serviceReference);
-		}
-
-		return null;
-	}
-
 	private Object _getService(Class<?> clazz) {
 		for (Object service : _graphQLContributorServiceTrackerList) {
 			if (clazz.isAssignableFrom(service.getClass())) {
@@ -688,10 +685,10 @@ public class LiferayMethodDataFetchingProcessor {
 		return null;
 	}
 
-	private final BundleContext _bundleContext;
 	private final CompanyLocalService _companyLocalService;
 	private final DepotEntryLocalService _depotEntryLocalService;
 	private final ExpressionConvert<Filter> _expressionConvert;
+	private final FeatureFlagChecker _featureFlagChecker;
 	private final FilterParserProvider _filterParserProvider;
 	private final ServiceTrackerList<GraphQLContributor>
 		_graphQLContributorServiceTrackerList;
@@ -703,6 +700,7 @@ public class LiferayMethodDataFetchingProcessor {
 	private final ResourcePermissionLocalService
 		_resourcePermissionLocalService;
 	private final RoleLocalService _roleLocalService;
+	private final Supplier<ScopeChecker> _scopeCheckerSupplier;
 	private final SortParserProvider _sortParserProvider;
 	private final VulcanBatchEngineImportTaskResourceFactory
 		_vulcanBatchEngineImportTaskResourceFactory;

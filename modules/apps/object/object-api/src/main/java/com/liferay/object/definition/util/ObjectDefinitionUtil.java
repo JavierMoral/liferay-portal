@@ -155,6 +155,7 @@ public class ObjectDefinitionUtil {
 		"com.liferay.content.marketing.platform.site.initializer",
 		"com.liferay.content.site.generator.impl", "com.liferay.cookies.impl",
 		"com.liferay.digital.sales.room.site.initializer",
+		"com.liferay.digital.signature.impl",
 		"com.liferay.frontend.data.set.admin.web",
 		"com.liferay.frontend.data.set.impl",
 		"com.liferay.headless.builder.impl",
@@ -236,6 +237,12 @@ public class ObjectDefinitionUtil {
 		).put(
 			"DataSetUserConfiguration", "/data-set-admin/user-configurations"
 		).put(
+			"DSRequest", "/digital-signature/requests"
+		).put(
+			"DSRequestDocument", "/digital-signature/request-documents"
+		).put(
+			"DSRequestRecipient", "/digital-signature/request-recipients"
+		).put(
 			"DSRRoom", "/digital-sales-room/rooms"
 		).put(
 			"FunctionalCookieEntry", "/functional-cookies-entries"
@@ -260,13 +267,18 @@ public class ObjectDefinitionUtil {
 		).put(
 			"PersonalizationCookieEntry", "/personalization-cookies-entries"
 		).put(
-			"PIMBaseSku", "/pim/base-skus"
+			"PIMBasicProduct", "/pim/basic-products"
 		).put(
 			"PIMCatalog", "/pim/catalogs"
 		).put(
 			"PIMConnector", "/pim/connectors"
 		).put(
+			"PIMConnectorConfigurationLiferayCommerce",
+			"/pim/connector-configuration-liferay-commerce"
+		).put(
 			"PIMConnectorFieldMapping", "/pim/connector-field-mappings"
+		).put(
+			"PIMConnectorFieldMappingRule", "/pim/connector-field-mapping-rules"
 		).put(
 			"PIMLink", "/pim/links"
 		).build();

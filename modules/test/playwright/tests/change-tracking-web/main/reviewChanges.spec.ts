@@ -37,7 +37,6 @@ export const test = mergeTests(
 	featureFlagsTest({
 		'LPD-35013': {enabled: true},
 		'LPD-84028': {enabled: true},
-		'LPS-164563': {enabled: true},
 	}),
 	isolatedSiteTest,
 	journalPagesTest,
@@ -256,9 +255,6 @@ test('LPD-29088 Assert Publication Overview panel is visible', async ({
 				' (5): Document (3) Message Boards Message (1) Message Boards Thread (1)'
 		)
 	).toBeVisible();
-	await expect(
-		page.getByText(site2.name + ' (2):  Blogs Entry (2)')
-	).toBeVisible();
 
 	await apiHelpers.headlessChangeTracking.publishCTCollection(
 		ctCollection.body.id
@@ -280,9 +276,6 @@ test('LPD-29088 Assert Publication Overview panel is visible', async ({
 			site1.name +
 				' (5): Document (3) Message Boards Message (1) Message Boards Thread (1)'
 		)
-	).toBeVisible();
-	await expect(
-		page.getByText(site2.name + ' (2):   Blogs Entry (2)')
 	).toBeVisible();
 });
 

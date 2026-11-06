@@ -7,6 +7,7 @@ package com.liferay.jenkins.results.parser;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.CountingInputStream;
+import com.google.common.net.PercentEscaper;
 
 import com.liferay.poshi.core.pql.PQLEntityFactory;
 
@@ -90,6 +91,7 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
@@ -113,6 +115,10 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.http.message.BasicNameValuePair;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
@@ -193,6 +199,24 @@ public class JenkinsResultsParserUtil {
 
 			cacheFile.deleteOnExit();
 		}
+	}
+
+	public static String buildFormContent(Map<String, String> parameters) {
+		if ((parameters == null) || parameters.isEmpty()) {
+			return "";
+		}
+
+		Map<String, String> sortedParameters = new TreeMap<>(parameters);
+
+		List<NameValuePair> nameValuePairs = new ArrayList<>(
+			sortedParameters.size());
+
+		for (Map.Entry<String, String> entry : sortedParameters.entrySet()) {
+			nameValuePairs.add(
+				new BasicNameValuePair(entry.getKey(), entry.getValue()));
+		}
+
+		return URLEncodedUtils.format(nameValuePairs, StandardCharsets.UTF_8);
 	}
 
 	public static void clearCache() {
@@ -530,6 +554,22 @@ public class JenkinsResultsParserUtil {
 		return new URL(uriASCIIString.replace("#", "%23"));
 	}
 
+	public static String encodeLegacyURLPart(String part) {
+		try {
+			part = URLEncoder.encode(part, StandardCharsets.UTF_8.name());
+
+			part = part.replaceAll("\\+", "%20");
+
+			part = part.replaceAll("%21", "!");
+			part = part.replaceAll("%25", "%");
+
+			return part.replaceAll("%2B", "+");
+		}
+		catch (UnsupportedEncodingException unsupportedEncodingException) {
+			throw new RuntimeException(unsupportedEncodingException);
+		}
+	}
+
 	public static String encodeURLParameterPart(String parameterPart) {
 		try {
 			parameterPart = URLEncoder.encode(
@@ -664,7 +704,7 @@ public class JenkinsResultsParserUtil {
 					combine("http://", jenkinsMasterName, "/script"));
 			}
 
-			URL urlObject = new URL(fixURL(url));
+			URL urlObject = new URL(normalizeURL(url));
 
 			HttpURLConnection httpURLConnection =
 				(HttpURLConnection)urlObject.openConnection();
@@ -685,7 +725,8 @@ public class JenkinsResultsParserUtil {
 			try (OutputStream outputStream =
 					httpURLConnection.getOutputStream()) {
 
-				String post = "script=" + URLEncoder.encode(script, "UTF-8");
+				String post = buildFormContent(
+					Collections.singletonMap("script", script));
 
 				outputStream.write(post.getBytes("UTF-8"));
 
@@ -1363,11 +1404,14 @@ public class JenkinsResultsParserUtil {
 		}
 
 		if (jsonObject == null) {
-			String buildParametersURL = getLocalURL(
-				buildURL + "api/json?tree=actions[parameters[name,value]]");
-
 			try {
-				jsonObject = toJSONObject(buildParametersURL);
+				URIBuilder uriBuilder = newURIBuilder(
+					getLocalURL(buildURL + "api/json"));
+
+				uriBuilder.addParameter(
+					"tree", "actions[parameters[name,value]]");
+
+				jsonObject = toJSONObject(uriBuilder.toString());
 			}
 			catch (IOException ioException) {
 				throw new RuntimeException(ioException);
@@ -1973,6 +2017,26 @@ public class JenkinsResultsParserUtil {
 		return matchingFiles.get(0);
 	}
 
+	public static long getGeneratedTime(String content) {
+		long generatedTime = 0;
+
+		for (Pattern pattern : _generatedTimePatterns) {
+			Matcher matcher = pattern.matcher(content);
+
+			while (matcher.find()) {
+				long timestamp = Long.parseLong(matcher.group("timestamp"));
+
+				if ((generatedTime != 0) && (timestamp >= generatedTime)) {
+					continue;
+				}
+
+				generatedTime = timestamp;
+			}
+		}
+
+		return generatedTime;
+	}
+
 	public static String getGitDirectoryName(
 		String repositoryName, String upstreamBranchName) {
 
@@ -2035,8 +2099,12 @@ public class JenkinsResultsParserUtil {
 	}
 
 	public static String getGitHubApiSearchUrl(List<String> filters) {
-		return combine(
-			"https://api.github.com/search/issues?q=", join("+", filters));
+		URIBuilder uriBuilder = newURIBuilder(
+			"https://api.github.com/search/issues");
+
+		uriBuilder.addParameter("q", join(" ", filters));
+
+		return uriBuilder.toString();
 	}
 
 	public static List<String> getGitHubCacheHostnames() {
@@ -2362,8 +2430,11 @@ public class JenkinsResultsParserUtil {
 
 	public static String getJenkinsBuildResult(String buildURL) {
 		try {
-			JSONObject jsonObject = toJSONObject(
-				buildURL + "/api/json?tree=result", false);
+			URIBuilder uriBuilder = newURIBuilder(buildURL + "/api/json");
+
+			uriBuilder.addParameter("tree", "result");
+
+			JSONObject jsonObject = toJSONObject(uriBuilder.toString(), false);
 
 			if (!jsonObject.has("result") || jsonObject.isNull("result")) {
 				return null;
@@ -2967,29 +3038,25 @@ public class JenkinsResultsParserUtil {
 		String baseInvocationURL, String blacklist, int invokedBatchSize,
 		String jobName) {
 
-		StringBuilder sb = new StringBuilder();
-
-		sb.append(getJenkinsLoadBalancerURL());
-		sb.append("?baseInvocationURL=");
-		sb.append(baseInvocationURL);
-
-		if (blacklist != null) {
-			sb.append("&blacklist=");
-			sb.append(blacklist);
-		}
-
-		if (invokedBatchSize > 0) {
-			sb.append("&invokedJobBatchSize=");
-			sb.append(invokedBatchSize);
-		}
-
-		if (!isNullOrEmpty(jobName)) {
-			sb.append("&jobName=");
-			sb.append(fixURL(jobName));
-		}
-
 		try {
-			JSONObject jsonObject = toJSONObject(sb.toString(), false);
+			URIBuilder uriBuilder = newURIBuilder(getJenkinsLoadBalancerURL());
+
+			uriBuilder.addParameter("baseInvocationURL", baseInvocationURL);
+
+			if (blacklist != null) {
+				uriBuilder.addParameter("blacklist", blacklist);
+			}
+
+			if (invokedBatchSize > 0) {
+				uriBuilder.addParameter(
+					"invokedJobBatchSize", String.valueOf(invokedBatchSize));
+			}
+
+			if (!isNullOrEmpty(jobName)) {
+				uriBuilder.addParameter("jobName", jobName);
+			}
+
+			JSONObject jsonObject = toJSONObject(uriBuilder.toString(), false);
 
 			return jsonObject.getString("mostAvailableMasterURL");
 		}
@@ -3234,6 +3301,34 @@ public class JenkinsResultsParserUtil {
 		}
 
 		return propertyOptions;
+	}
+
+	public static Map<String, String> getQueryParameters(String queryString) {
+		Map<String, String> parameters = new LinkedHashMap<>();
+
+		if (isNullOrEmpty(queryString)) {
+			return parameters;
+		}
+
+		queryString = queryString.replace("#", "%23");
+
+		URIBuilder uriBuilder = newURIBuilder("?" + queryString);
+
+		for (NameValuePair nameValuePair : uriBuilder.getQueryParams()) {
+			String name = nameValuePair.getName();
+
+			if (parameters.containsKey(name)) {
+				System.out.println(
+					"WARNING: Ignoring the repeated query string parameter \"" +
+						name + "\"");
+
+				continue;
+			}
+
+			parameters.put(name, nameValuePair.getValue());
+		}
+
+		return parameters;
 	}
 
 	public static String getRandomGitHubDevNodeHostname() {
@@ -3892,9 +3987,9 @@ public class JenkinsResultsParserUtil {
 		String jenkinsJobURL, Map<String, String> buildParameters,
 		int timeout) {
 
-		StringBuilder sb = new StringBuilder();
-
 		try {
+			Map<String, String> parameters = new HashMap<>();
+
 			if (buildParameters != null) {
 				for (Map.Entry<String, String> buildParameter :
 						buildParameters.entrySet()) {
@@ -3905,16 +4000,8 @@ public class JenkinsResultsParserUtil {
 						continue;
 					}
 
-					sb.append(
-						URLEncoder.encode(buildParameter.getKey(), "UTF-8"));
-					sb.append("=");
-					sb.append(URLEncoder.encode(value, "UTF-8"));
-					sb.append("&");
+					parameters.put(buildParameter.getKey(), value);
 				}
-			}
-
-			if (sb.length() > 0) {
-				sb.deleteCharAt(sb.length() - 1);
 			}
 
 			Map<String, String> requestHeaders = new HashMap<>();
@@ -3925,8 +4012,8 @@ public class JenkinsResultsParserUtil {
 			return getJenkinsBuildQueueId(
 				StreamURLReader.getResponseHeader(
 					"Location", getJenkinsHTTPAuthorization(),
-					HttpRequestMethod.POST, sb.toString(), requestHeaders,
-					timeout,
+					HttpRequestMethod.POST, buildFormContent(parameters),
+					requestHeaders, timeout,
 					combine(
 						getLocalURL(jenkinsJobURL), "/buildWithParameters")));
 		}
@@ -4303,9 +4390,14 @@ public class JenkinsResultsParserUtil {
 				JSONObject topLevelBuildsJSONObject;
 
 				try {
-					topLevelBuildsJSONObject = toJSONObject(
+					URIBuilder uriBuilder = newURIBuilder(
 						jenkinsMaster.getRemoteURL() +
-							"/view/Top%20Level/api/json?tree=jobs[name]");
+							"/view/Top%20Level/api/json");
+
+					uriBuilder.addParameter("tree", "jobs[name]");
+
+					topLevelBuildsJSONObject = toJSONObject(
+						uriBuilder.toString());
 				}
 				catch (IOException ioException) {
 					throw new RuntimeException(ioException);
@@ -4579,6 +4671,92 @@ public class JenkinsResultsParserUtil {
 			}
 
 		};
+	}
+
+	public static URIBuilder newURIBuilder(String url) {
+		try {
+			return new URIBuilder(url);
+		}
+		catch (URISyntaxException uriSyntaxException1) {
+			try {
+				return new URIBuilder(normalizeURL(url));
+			}
+			catch (URISyntaxException uriSyntaxException2) {
+				throw new RuntimeException(
+					"Unable to parse the URL " + url, uriSyntaxException2);
+			}
+		}
+	}
+
+	public static URIBuilder newURIBuilder(
+		String url, Map<String, String> parameters) {
+
+		URIBuilder uriBuilder = newURIBuilder(url);
+
+		if ((parameters == null) || parameters.isEmpty()) {
+			return uriBuilder;
+		}
+
+		Map<String, String> sortedParameters = new TreeMap<>(parameters);
+
+		for (Map.Entry<String, String> entry : sortedParameters.entrySet()) {
+			uriBuilder.setParameter(entry.getKey(), entry.getValue());
+		}
+
+		return uriBuilder;
+	}
+
+	public static String normalizeURL(String url) {
+		if (isNullOrEmpty(url) ||
+			(_isLegalURI(url) && !_hasNonASCIICharacter(url) &&
+			 !_hasRawSquareBracket(url))) {
+
+			return url;
+		}
+
+		String fragment = null;
+
+		String remainder = url;
+
+		int index = remainder.indexOf('#');
+
+		if (index != -1) {
+			fragment = remainder.substring(index + 1);
+			remainder = remainder.substring(0, index);
+		}
+
+		String queryString = null;
+
+		index = remainder.indexOf('?');
+
+		if (index != -1) {
+			queryString = remainder.substring(index + 1);
+			remainder = remainder.substring(0, index);
+		}
+
+		StringBuilder sb = new StringBuilder();
+
+		sb.append(_escape(_LEGAL_PATH_CHARACTERS, remainder));
+
+		if (queryString != null) {
+			sb.append("?");
+			sb.append(_escape(_LEGAL_QUERY_CHARACTERS, queryString));
+		}
+
+		if (fragment != null) {
+			sb.append("#");
+			sb.append(_escape(_LEGAL_QUERY_CHARACTERS, fragment));
+		}
+
+		String normalizedURL = sb.toString();
+
+		if (!_isLegalURI(normalizedURL)) {
+			System.out.println("WARNING: Unable to normalize the URL " + url);
+
+			return url;
+		}
+
+		return normalizedURL;
 	}
 
 	public static <T> List<List<T>> partitionByCount(List<T> list, int count) {
@@ -6029,16 +6207,15 @@ public class JenkinsResultsParserUtil {
 				return;
 			}
 
-			StringBuilder sb = new StringBuilder();
-
-			sb.append("grant_type=client_credentials&client_id=");
-			sb.append(_clientId);
-			sb.append("&client_secret=");
-			sb.append(_clientSecret);
-
 			try {
+				Map<String, String> parameters = new HashMap<>();
+
+				parameters.put("client_id", _clientId);
+				parameters.put("client_secret", _clientSecret);
+				parameters.put("grant_type", "client_credentials");
+
 				JSONObject jsonObject = toJSONObject(
-					String.valueOf(_tokenURL), sb.toString());
+					String.valueOf(_tokenURL), buildFormContent(parameters));
 
 				_token = jsonObject.getString("access_token");
 				_tokenExpirationDate = new Date(
@@ -6220,6 +6397,36 @@ public class JenkinsResultsParserUtil {
 
 	private static String _combineCommandArgs(String... args) {
 		return join(" ", args);
+	}
+
+	private static String _escape(String legalCharacters, String value) {
+		StringBuilder sb = new StringBuilder(value.length());
+
+		int i = 0;
+
+		while (i < value.length()) {
+			char c = value.charAt(i);
+
+			if ((c == '%') && _isEscapeSequence(i, value)) {
+				sb.append(value, i, i + 3);
+
+				i = i + 3;
+			}
+			else if (_isLegalCharacter(c, legalCharacters)) {
+				sb.append(c);
+
+				i++;
+			}
+			else {
+				int endIndex = value.offsetByCodePoints(i, 1);
+
+				sb.append(_percentEscaper.escape(value.substring(i, endIndex)));
+
+				i = endIndex;
+			}
+		}
+
+		return sb.toString();
 	}
 
 	private static String _escapePropertiesValue(String value) {
@@ -6951,6 +7158,32 @@ public class JenkinsResultsParserUtil {
 		return hostName + ":" + filePath;
 	}
 
+	private static boolean _hasNonASCIICharacter(String url) {
+		for (int i = 0; i < url.length(); i++) {
+			if (url.charAt(i) > 127) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private static boolean _hasRawSquareBracket(String url) {
+		int index = url.indexOf('?');
+
+		if (index == -1) {
+			return false;
+		}
+
+		String remainder = url.substring(index + 1);
+
+		if ((remainder.indexOf('[') != -1) || (remainder.indexOf(']') != -1)) {
+			return true;
+		}
+
+		return false;
+	}
+
 	private static void _initializeRedactTokens() {
 		Properties properties = null;
 
@@ -6980,6 +7213,24 @@ public class JenkinsResultsParserUtil {
 		}
 	}
 
+	private static boolean _isEscapeSequence(int index, String value) {
+		if ((index + 2) >= value.length()) {
+			return false;
+		}
+
+		for (int i = index + 1; i <= (index + 2); i++) {
+			char c = value.charAt(i);
+
+			if (((c < '0') || (c > '9')) && ((c < 'A') || (c > 'F')) &&
+				((c < 'a') || (c > 'f'))) {
+
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 	private static boolean _isJSONExpectedAndActualEqual(
 		Object expected, Object actual) {
 
@@ -7004,6 +7255,31 @@ public class JenkinsResultsParserUtil {
 		}
 
 		return true;
+	}
+
+	private static boolean _isLegalCharacter(char c, String legalCharacters) {
+		if (((c >= 'A') && (c <= 'Z')) || ((c >= 'a') && (c <= 'z')) ||
+			((c >= '0') && (c <= '9'))) {
+
+			return true;
+		}
+
+		if (legalCharacters.indexOf(c) != -1) {
+			return true;
+		}
+
+		return false;
+	}
+
+	private static boolean _isLegalURI(String url) {
+		try {
+			new URI(url);
+
+			return true;
+		}
+		catch (URISyntaxException uriSyntaxException) {
+			return false;
+		}
 	}
 
 	private static synchronized Set<String> _loadForbiddenRedactTokens() {
@@ -7053,6 +7329,11 @@ public class JenkinsResultsParserUtil {
 		"http://test-1-0/userContent/bundles/test-portal-acceptance-upstream";
 
 	private static final String _JENKINS_DIST_ROOT_PATH_DEFAULT = "/tmp/dist";
+
+	private static final String _LEGAL_PATH_CHARACTERS = "-._~!$&'()*+,;=:@/";
+
+	private static final String _LEGAL_QUERY_CHARACTERS =
+		_LEGAL_PATH_CHARACTERS + "?";
 
 	private static final long _MILLIS_BASH_COMMAND_TIMEOUT_DEFAULT =
 		1000 * 60 * 60;
@@ -7112,6 +7393,11 @@ public class JenkinsResultsParserUtil {
 			"(?<name>[^/:\\s]+)(:(?<version>[^@:\\s]+))?)" +
 				"(@sha256:[^\\s]+)?");
 	private static volatile Set<String> _forbiddenRedactTokens;
+	private static final List<Pattern> _generatedTimePatterns = Arrays.asList(
+		Pattern.compile(
+			"var\\s+\\w*GeneratedDate\\s*=\\s*new Date\\(" +
+				"(?<timestamp>\\d+)\\)"),
+		Pattern.compile("\"modification_date\"\\s*:\\s*(?<timestamp>\\d+)"));
 	private static JSONArray _gitDirectoriesJSONArray;
 	private static final DateFormat _gitHubDateFormat;
 	private static final Pattern _gitSHAPattern = Pattern.compile(
@@ -7141,6 +7427,8 @@ public class JenkinsResultsParserUtil {
 			")?((files|releases).liferay.com)");
 	private static final Pattern _nestedPropertyPattern = Pattern.compile(
 		"\\$\\{([^\\}]+)\\}");
+	private static final PercentEscaper _percentEscaper = new PercentEscaper(
+		"", false);
 	private static final Pattern _poshiFileNamePattern = Pattern.compile(
 		".*\\.(function|macro|path|prose|testcase)");
 	private static final Set<String> _redactTokens = new HashSet<>();

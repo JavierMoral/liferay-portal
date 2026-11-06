@@ -353,10 +353,28 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
-	public void testFeatureFlagsAnnotationTest() throws Exception {
+	public void testFeatureFlagAnnotation() throws Exception {
 		test(
 			SourceProcessorTestParameters.create(
-				"FeatureFlagsAnnotationTest.testjava"
+				"FeatureFlagAnnotation.testjava"
+			).addExpectedMessage(
+				"Declare the feature flag with \"x-feature-flag\" in " +
+					"\"rest-openapi.yaml\" instead of using the annotation " +
+						"\"@FeatureFlag\"",
+				13
+			).addExpectedMessage(
+				"Declare the feature flag with \"x-feature-flag\" in " +
+					"\"rest-openapi.yaml\" instead of using the annotation " +
+						"\"@FeatureFlag\"",
+				16
+			));
+	}
+
+	@Test
+	public void testFeatureFlagsAnnotationInTest() throws Exception {
+		test(
+			SourceProcessorTestParameters.create(
+				"FeatureFlagsAnnotationInTest.testjava"
 			).addExpectedMessage(
 				"Use annotation \"@FeatureFlags\" instead of \"PropsUtil." +
 					"addProperties\" for feature flag",
@@ -1249,7 +1267,7 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
-	public void testSizeIsZeroCheck() throws Exception {
+	public void testSizeIsZero() throws Exception {
 		test(
 			SourceProcessorTestParameters.create(
 				"SizeIsZero.testjava"
@@ -1419,8 +1437,61 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 	}
 
 	@Test
+	public void testToSQLCall() throws Exception {
+		test(
+			"ToSQLCall.testjava",
+			"Use \"toSQL(string -> {}, astNodeListener)\" instead of " +
+				"\"toSQL(astNodeListener)\" when the SQL string is unused, " +
+					"see LPD-113238",
+			19);
+	}
+
+	@Test
 	public void testTruncateLongLines() throws Exception {
 		test("TruncateLongLines.testjava");
+	}
+
+	@Test
+	public void testTypedPropertyKey() throws Exception {
+		test(
+			SourceProcessorTestParameters.create(
+				"TypedPropertyKey.testjava"
+			).addExpectedMessage(
+				"The typed key syntax \"service.ranking:Integer\" is only " +
+					"parsed in component property strings, use the plain key " +
+						"\"service.ranking\" with a typed value",
+				30
+			).addExpectedMessage(
+				"The typed key syntax \"service.ranking:Integer\" is only " +
+					"parsed in component property strings, use the plain key " +
+						"\"service.ranking\" with a typed value",
+				37
+			).addExpectedMessage(
+				"The typed key syntax \"order:Double\" is only parsed in " +
+					"component property strings, use the plain key \"order\" " +
+						"with a typed value",
+				44
+			).addExpectedMessage(
+				"The typed key syntax \"order:Double\" is only parsed in " +
+					"component property strings, use the plain key \"order\" " +
+						"in a filter",
+				46
+			).addExpectedMessage(
+				"The typed key syntax \"order:Double\" is only parsed in " +
+					"component property strings, use the plain key \"order\" " +
+						"in a filter",
+				47
+			).addExpectedMessage(
+				"The typed key syntax \"service.ranking:Integer\" is only " +
+					"parsed in component property strings, use the plain key " +
+						"\"service.ranking\" in a filter",
+				47
+			).addExpectedMessage(
+				"The typed key syntax \"service.ranking:Integer\" is only " +
+					"parsed in component property strings, use the plain key " +
+						"\"service.ranking\" in a filter",
+				50
+			));
 	}
 
 	@Test
@@ -1473,6 +1544,42 @@ public class JavaSourceProcessorTest extends BaseSourceProcessorTestCase {
 				"Replace it by inline calls to the \"UpgradeProcessFactory\" " +
 					"class in the registrator class",
 			13);
+	}
+
+	@Test
+	public void testUnresolvedCredentialReads() throws Exception {
+		test(
+			SourceProcessorTestParameters.create(
+				"unresolvedcredentialreads/UnresolvedCredentialReads.testjava"
+			).addDependentFileName(
+				"unresolvedcredentialreads/portal-impl/src/com/liferay/portal" +
+					"/configuration/SecretResolverConfiguration.testjava"
+			).addExpectedMessage(
+				"Resolve \"password()\" through \"SecretResolver\" or " +
+					"\"SecretResolverUtil\" before using the value, see " +
+						"LPD-107260",
+				27
+			).addExpectedMessage(
+				"Resolve \"password()\" through \"SecretResolver\" or " +
+					"\"SecretResolverUtil\" before using the value, see " +
+						"LPD-107260",
+				49
+			).addExpectedMessage(
+				"Resolve \"password()\" through \"SecretResolver\" or " +
+					"\"SecretResolverUtil\" before using the value, see " +
+						"LPD-107260",
+				65
+			).addExpectedMessage(
+				"Resolve \"password()\" through \"SecretResolver\" or " +
+					"\"SecretResolverUtil\" before using the value, see " +
+						"LPD-107260",
+				69
+			).addExpectedMessage(
+				"Resolve \"password()\" through \"SecretResolver\" or " +
+					"\"SecretResolverUtil\" before using the value, see " +
+						"LPD-107260",
+				90
+			));
 	}
 
 	@Test

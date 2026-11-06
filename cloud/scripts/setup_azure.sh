@@ -24,49 +24,20 @@ function main {
 
 	configuration_json_file=$(resolve_config_json "${1}")
 
-	generate_tfvars "azure" "${configuration_json_file}" "aks"
+	_validate_setup_values "${configuration_json_file}"
 
-	generate_tfvars "azure" "${configuration_json_file}" "platform"
+	export_database_engine "${configuration_json_file}"
 
-	az_login "${configuration_json_file}"
+	prepare_terraform_stacks "azure" "aks" "${configuration_json_file}"
 
-	local terraform_args=()
+	log_in "${configuration_json_file}"
 
-	while IFS= read -r terraform_arg
-	do
-		terraform_args+=("${terraform_arg}")
-	done < <(get_terraform_args "${configuration_json_file}")
-
-	if jq --exit-status '.tfstate | objects' "${configuration_json_file}" &> /dev/null
+	if has_remote_tfstate "${configuration_json_file}"
 	then
-		local container_name
-		local deployment_name
-		local region
-		local resource_group_name
-		local storage_account_name
-
-		container_name="$(jq --raw-output '.tfstate.container_name' "${configuration_json_file}")"
-		deployment_name="$(jq --raw-output '.deployment_name' "${configuration_json_file}")"
-		region="$(jq --raw-output '.region' "${configuration_json_file}")"
-		resource_group_name="$(jq --raw-output '.tfstate.resource_group_name' "${configuration_json_file}")"
-		storage_account_name="$(jq --raw-output '.tfstate.storage_account_name' "${configuration_json_file}")"
-
-		_create_tfstate_storage "${container_name}" "${region}" "${resource_group_name}" "${storage_account_name}"
-
-		_grant_tfstate_access "${container_name}" "${resource_group_name}" "${storage_account_name}"
-
-		generate_remote_backend_overrides "${container_name}" "${deployment_name}" "${region}" "${resource_group_name}" "${storage_account_name}"
-	else
-		generate_local_backend_overrides "azure" "aks" "platform"
+		_create_tfstate_storage "${configuration_json_file}"
 	fi
 
-	_set_up_azure_aks "${terraform_args[@]}"
-
-	connect_to_cluster
-
-	set_up_platform "azure" "${terraform_args[@]}"
-
-	install_liferay_platform_chart "azure" "${configuration_json_file}"
+	set_up "azure" "aks" "${configuration_json_file}"
 }
 
 function _configure_storage_account {
@@ -107,38 +78,51 @@ function _create_storage_account {
 }
 
 function _create_tfstate_storage {
-	local container_name="${1}"
-	local region="${2}"
-	local resource_group_name="${3}"
-	local storage_account_name="${4}"
+	local configuration_json_file="${1}"
+
+	local container_name
+
+	container_name=$(jq --raw-output '.tfstate.container_name' "${configuration_json_file}")
+
+	local region
+
+	region=$(jq --raw-output '.region' "${configuration_json_file}")
+
+	local resource_group_name
+
+	resource_group_name=$(jq --raw-output '.tfstate.resource_group_name' "${configuration_json_file}")
+
+	local storage_account_name
+
+	storage_account_name=$(jq --raw-output '.tfstate.storage_account_name' "${configuration_json_file}")
 
 	if ! az group show --name "${resource_group_name}" &> /dev/null
 	then
-		_log "Creating resource group ${resource_group_name}."
+		log_tfstate_setup "Creating resource group ${resource_group_name}."
 
 		az group create --location "${region}" --name "${resource_group_name}" --output none
 
-		_log "Resource group ${resource_group_name} was created successfully."
+		log_tfstate_setup "Resource group ${resource_group_name} was created successfully."
 	else
-		_log "Resource group ${resource_group_name} already exists. Skipping creation process."
+		log_tfstate_setup "Resource group ${resource_group_name} already exists. Skipping creation process."
 	fi
 
 	if ! az storage account show --name "${storage_account_name}" --resource-group "${resource_group_name}" &> /dev/null
 	then
-		_log "Creating storage account ${storage_account_name}."
+		log_tfstate_setup "Creating storage account ${storage_account_name}."
 
 		_create_storage_account "${region}" "${resource_group_name}" "${storage_account_name}"
 
-		_log "Storage account ${storage_account_name} was created successfully."
+		log_tfstate_setup "Storage account ${storage_account_name} was created successfully."
 	else
-		_log "Storage account ${storage_account_name} already exists. Skipping creation process."
+		log_tfstate_setup "Storage account ${storage_account_name} already exists. Skipping creation process."
 	fi
 
-	_log "Configuring storage account ${storage_account_name}."
+	log_tfstate_setup "Configuring storage account ${storage_account_name}."
 
 	_configure_storage_account "${resource_group_name}" "${storage_account_name}"
 
-	_log "Storage account ${storage_account_name} was configured successfully."
+	log_tfstate_setup "Storage account ${storage_account_name} was configured successfully."
 
 	if ! az storage container show \
 		--account-name "${storage_account_name}" \
@@ -146,7 +130,7 @@ function _create_tfstate_storage {
 		--name "${container_name}" \
 		&> /dev/null
 	then
-		_log "Creating storage container ${container_name}."
+		log_tfstate_setup "Creating storage container ${container_name}."
 
 		az storage container create \
 			--account-name "${storage_account_name}" \
@@ -154,10 +138,12 @@ function _create_tfstate_storage {
 			--name "${container_name}" \
 			--output none
 
-		_log "Storage container ${container_name} was created successfully."
+		log_tfstate_setup "Storage container ${container_name} was created successfully."
 	else
-		_log "Storage container ${container_name} already exists. Skipping creation process."
+		log_tfstate_setup "Storage container ${container_name} already exists. Skipping creation process."
 	fi
+
+	_grant_tfstate_access "${container_name}" "${resource_group_name}" "${storage_account_name}"
 }
 
 function _grant_tfstate_access {
@@ -183,7 +169,7 @@ function _grant_tfstate_access {
 
 	user_id=$(az ad signed-in-user show --output tsv --query id)
 
-	_log "Assigning the Storage Blob Data Contributor role on the storage container ${container_name} to the current Azure user."
+	log_tfstate_setup "Assigning the Storage Blob Data Contributor role on the storage container ${container_name} to the current Azure user."
 
 	az role assignment create \
 		--assignee-object-id "${user_id}" \
@@ -194,7 +180,7 @@ function _grant_tfstate_access {
 
 	local timeout_minutes=5
 
-	_log "Waiting up to ${timeout_minutes} minutes for the role assignment to take effect."
+	log_tfstate_setup "Waiting up to ${timeout_minutes} minutes for the role assignment to take effect."
 
 	local timeout
 
@@ -210,7 +196,7 @@ function _grant_tfstate_access {
 		sleep 10
 	done
 
-	_log "Unable to access the storage container ${container_name} after ${timeout_minutes} minutes." >&2
+	log_tfstate_setup "Unable to access the storage container ${container_name} after ${timeout_minutes} minutes." >&2
 
 	return 1
 }
@@ -228,22 +214,24 @@ function _has_tfstate_access {
 		&> /dev/null
 }
 
-function _log {
-	echo "[Tfstate storage configuration] ${1}"
-}
+function _validate_setup_values {
+	local configuration_json_file="${1}"
 
-function _set_up_azure_aks {
-	push_directory "${ROOT_CLOUD_DIR}/terraform/azure/aks"
+	local chart_registry
 
-	echo "Setting up the Azure AKS cluster."
+	chart_registry=$(jq --raw-output '.artifacts.charts."liferay-azure-infrastructure-provider".registry // error("artifacts.charts.liferay-azure-infrastructure-provider.registry is missing")' "${configuration_json_file}")
 
-	terraform init
+	local chart_version
 
-	terraform apply -input=false "${@}"
+	chart_version=$(jq --raw-output '.artifacts.charts."liferay-azure-infrastructure-provider".version // error("artifacts.charts.liferay-azure-infrastructure-provider.version is missing")' "${configuration_json_file}")
 
-	echo "Azure AKS cluster setup complete."
-
-	pop_directory
+	helm \
+		template \
+		--values <(jq '.setup | ."liferay-subchart-backup-restore".database.engine = .database.engine' "${configuration_json_file}") \
+		--version "${chart_version}" \
+		liferay-azure-infrastructure-provider \
+		"oci://${chart_registry}/liferay-azure-infrastructure-provider" \
+		> /dev/null
 }
 
 main "${@}"

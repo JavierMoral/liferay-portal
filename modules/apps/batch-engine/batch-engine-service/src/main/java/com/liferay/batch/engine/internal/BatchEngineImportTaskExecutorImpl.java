@@ -11,6 +11,7 @@ import com.liferay.batch.engine.BatchEngineTaskContentType;
 import com.liferay.batch.engine.BatchEngineTaskExecuteStatus;
 import com.liferay.batch.engine.BatchEngineTaskItemDelegate;
 import com.liferay.batch.engine.BatchEngineTaskItemDelegateRegistry;
+import com.liferay.batch.engine.BatchEngineTaskItemDelegateRegistry.BatchEngineTaskItemDelegateSafeCloseable;
 import com.liferay.batch.engine.BatchEngineTaskOperation;
 import com.liferay.batch.engine.ItemClassRegistry;
 import com.liferay.batch.engine.action.ImportTaskPostAction;
@@ -62,6 +63,8 @@ import com.liferay.portal.kernel.transaction.TransactionConfig;
 import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.PropsValues;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -74,6 +77,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import org.osgi.framework.BundleContext;
@@ -91,13 +95,20 @@ public class BatchEngineImportTaskExecutorImpl
 
 	@Override
 	public void execute(BatchEngineImportTask batchEngineImportTask) {
-		BatchEngineTaskItemDelegate<?> batchEngineTaskItemDelegate =
-			_batchEngineTaskItemDelegateRegistry.getBatchEngineTaskItemDelegate(
-				batchEngineImportTask.getCompanyId(),
-				batchEngineImportTask.getClassName(),
-				batchEngineImportTask.getTaskItemDelegateName());
+		try (BatchEngineTaskItemDelegateSafeCloseable
+				batchEngineTaskItemDelegateSafeCloseable =
+					_batchEngineTaskItemDelegateRegistry.
+						getBatchEngineTaskItemDelegateWithSafeCloseable(
+							batchEngineImportTask.getCompanyId(),
+							batchEngineImportTask.getClassName(),
+							batchEngineImportTask.getTaskItemDelegateName())) {
 
-		execute(batchEngineImportTask, batchEngineTaskItemDelegate, true);
+			execute(
+				batchEngineImportTask,
+				batchEngineTaskItemDelegateSafeCloseable.
+					getBatchEngineTaskItemDelegate(),
+				true);
+		}
 	}
 
 	@Override
@@ -489,6 +500,13 @@ public class BatchEngineImportTaskExecutorImpl
 			Class<?> itemClass = _itemClassRegistry.getItemClass(
 				batchEngineTaskItemDelegate);
 
+			Set<String> passwordFieldNames = Collections.emptySet();
+
+			if (Validator.isNotNull(PropsValues.BATCH_ENGINE_ENCRYPTION_KEY)) {
+				passwordFieldNames = PasswordFieldUtil.getPasswordFieldNames(
+					itemClass);
+			}
+
 			int processedItemsCount = 0;
 
 			while (true) {
@@ -499,7 +517,8 @@ public class BatchEngineImportTaskExecutorImpl
 				try {
 					T item = _readItem(
 						batchEngineImportTask, batchEngineImportTaskItemReader,
-						batchEngineImportTask.getFieldNameMapping(), itemClass);
+						batchEngineImportTask.getFieldNameMapping(), itemClass,
+						passwordFieldNames);
 
 					if (item == null) {
 						break;
@@ -657,7 +676,8 @@ public class BatchEngineImportTaskExecutorImpl
 	private <T> T _readItem(
 			BatchEngineImportTask batchEngineImportTask,
 			BatchEngineImportTaskItemReader batchEngineImportTaskItemReader,
-			Map<String, Serializable> fieldNameMapping, Class<?> itemClass)
+			Map<String, Serializable> fieldNameMapping, Class<?> itemClass,
+			Set<String> passwordFieldNames)
 		throws Exception {
 
 		Map<String, Object> fieldNameValueMap =
@@ -676,8 +696,10 @@ public class BatchEngineImportTaskExecutorImpl
 
 		return (T)BatchEngineImportTaskItemReaderUtil.convertValue(
 			batchEngineImportTask, itemClass,
-			BatchEngineImportTaskItemReaderUtil.mapFieldNames(
-				fieldNameMapping, fieldNameValueMap),
+			PasswordFieldUtil.replacePasswordFields(
+				BatchEngineImportTaskItemReaderUtil.mapFieldNames(
+					fieldNameMapping, fieldNameValueMap),
+				passwordFieldNames, PasswordFieldUtil::decrypt),
 			_itemReaderPostActions.toList());
 	}
 

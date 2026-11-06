@@ -229,7 +229,7 @@
 							<execute-analytics-cloud dir="${analytics.cloud.faro.dir}" timeout="${analytics.cloud.faro.timeout}">
 								export FARO_ENVIRONMENT_NAME=local
 
-								./gradlew buildDockerImage
+								./gradlew buildDockerImage -Dliferay.ci=true
 
 								docker tag ${analytics.cloud.faro.image.name} ${analytics.cloud.faro.tag.name}
 
@@ -805,6 +805,15 @@ OSB_FARO_FRONTEND_URL=${analytics.cloud.faro.frontend.url}</echo>
 					<create-analytics-cloud-docker-compose start.analytics.cloud="true" />
 
 					<print-file file.name="${analytics.cloud.docker.test.yaml}" />
+
+					<if>
+						<available file="${project.dir}/dist/liferay-docker-asah.tar" />
+						<then>
+							<execute>
+								docker load --input ${project.dir}/dist/liferay-docker-asah.tar
+							</execute>
+						</then>
+					</if>
 
 					<trycatch>
 						<try>

@@ -16,8 +16,6 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.ClassedModel;
 import com.liferay.portal.kernel.model.GroupedModel;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
-import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.util.List;
@@ -59,13 +57,17 @@ public class AuditMessageBuilder {
 		long groupId, long accountEntryId, String className, String classPK,
 		String contextName, String eventType, List<Attribute> attributes) {
 
+		return buildAuditMessage(
+			groupId, accountEntryId, null, className, classPK, contextName,
+			eventType, null, attributes);
+	}
+
+	public static AuditMessage buildAuditMessage(
+		long groupId, long accountEntryId, String action, String className,
+		String classPK, String contextName, String eventType,
+		String resourceType, List<Attribute> attributes) {
+
 		long companyId = CompanyThreadLocal.getCompanyId();
-
-		long userId = 0;
-
-		if (PrincipalThreadLocal.getName() != null) {
-			userId = GetterUtil.getLong(PrincipalThreadLocal.getName());
-		}
 
 		AuditRequestContext auditRequestContext =
 			AuditRequestContextThreadLocal.getAuditRequestContext();
@@ -78,16 +80,6 @@ public class AuditMessageBuilder {
 		JSONObject additionalInfoJSONObject =
 			JSONFactoryUtil.createJSONObject();
 
-		if ((realUserId > 0) && (userId != realUserId)) {
-			additionalInfoJSONObject.put(
-				"doAsUserEmailAddress", PortalUtil.getUserEmailAddress(userId)
-			).put(
-				"doAsUserId", String.valueOf(userId)
-			).put(
-				"doAsUserName", PortalUtil.getUserName(userId, StringPool.BLANK)
-			);
-		}
-
 		if (attributes != null) {
 			additionalInfoJSONObject.put(
 				"attributes", _getAttributesJSONArray(attributes));
@@ -95,8 +87,8 @@ public class AuditMessageBuilder {
 
 		return new AuditMessage(
 			groupId, companyId, realUserId, realUserName, null, accountEntryId,
-			additionalInfoJSONObject, className, classPK, contextName,
-			eventType, null);
+			action, additionalInfoJSONObject, className, classPK, contextName,
+			eventType, null, resourceType);
 	}
 
 	public static AuditMessage buildAuditMessage(
@@ -114,6 +106,15 @@ public class AuditMessageBuilder {
 
 		return buildAuditMessage(
 			0, 0, className, classPK, null, eventType, attributes);
+	}
+
+	public static AuditMessage buildAuditMessage(
+		String action, String className, long classPK, String eventType,
+		String resourceType, List<Attribute> attributes) {
+
+		return buildAuditMessage(
+			0, 0, action, className, String.valueOf(classPK), null, eventType,
+			resourceType, attributes);
 	}
 
 	private static JSONArray _getAttributesJSONArray(

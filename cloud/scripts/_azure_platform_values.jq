@@ -30,7 +30,7 @@ $configuration[0] as $configuration
 					{
 						parameters: [
 							{
-								name: "global.azure.prometheusWorkspaceEndpoint",
+								name: "liferay-default.autoscaling.keda.prometheusTriggerMetadata.serverAddress",
 								value: $prometheus_workspace_endpoint
 							}
 						]
@@ -148,3 +148,12 @@ $configuration[0] as $configuration
 	}
 }
 | platform_values($configuration; "liferay-azure-infrastructure-provider"; "liferay-azure")
+* {
+	platformComponents: {
+		values: {
+			database: {
+				engine: $configuration.setup.database.engine
+			}
+		}
+	}
+}

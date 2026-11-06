@@ -48,43 +48,192 @@ function check_utils {
 	done
 }
 
-function generate_local_backend_overrides {
+function confirm_teardown {
+	local cluster_type="${1}"
+
+	echo "This will destroy the ${cluster_type} cluster and the Liferay platform."
+	echo ""
+
+	if ! is_confirmed "continue"
+	then
+		echo "The teardown was canceled."
+
+		exit 1
+	fi
+}
+
+function get_tfstate_prefix {
+	jq --raw-output 'if .tfstate then "\(.deployment_name)/\(.region)/" else "" end' "${1}"
+}
+
+function has_remote_tfstate {
+	jq --exit-status '.tfstate | objects' "${1}" &> /dev/null
+}
+
+function is_confirmed {
+	local reply
+
+	read -p "Type \"yes\" to ${1}: " -r reply
+
+	[[ ${reply} == yes ]]
+}
+
+function log_tfstate_setup {
+	echo "[Tfstate storage configuration] ${1}"
+}
+
+function prepare_terraform_stacks {
 	local cloud="${1}"
+	local cluster_terraform_stack="${2}"
+	local configuration_json_file="${3}"
 
-	local terraform_stack
+	_generate_tfvars "${cloud}" "${configuration_json_file}" "${cluster_terraform_stack}"
 
-	for terraform_stack in "${@:2}"
-	do
-		cat > "${ROOT_CLOUD_DIR}/terraform/${cloud}/${terraform_stack}/backend_override.tf" <<EOF
-terraform {
-	backend "local" {}
-}
-EOF
-	done
+	_generate_tfvars "${cloud}" "${configuration_json_file}" "platform"
+
+	_generate_backend_overrides "${cloud}" "${configuration_json_file}" "${cluster_terraform_stack}" "platform"
 }
 
-function generate_tfvars {
-	local cloud="${1}"
-	local configuration_json_file="${2}"
-	local terraform_stack="${3}"
-
-	local tfvars_file="${ROOT_CLOUD_DIR}/terraform/${cloud}/${terraform_stack}/config.auto.tfvars.json"
-
-	echo "Generating ${tfvars_file} from ${configuration_json_file}."
-
-	jq --arg terraform_stack "${terraform_stack}" '(.terraform.common // {}) * (.terraform[$terraform_stack] // {}) * {deployment_name, region}' "${configuration_json_file}" > "${tfvars_file}"
-
-	echo "${tfvars_file} was generated successfully."
-}
-
-function get_terraform_args {
+function resolve_config_json {
 	local configuration_json_file="${1}"
+
+	local resolved_configuration_json_file
+
+	resolved_configuration_json_file=$(mktemp)
+
+	jq --slurp '.[0] * .[1]' "${SCRIPTS_DIR}/config.json.defaults" "${configuration_json_file}" > "${resolved_configuration_json_file}"
+
+	echo "${resolved_configuration_json_file}"
+}
+
+function run_terraform {
+	local cloud="${1}"
+	local terraform_stack="${2}"
+
+	terraform -chdir="${ROOT_CLOUD_DIR}/terraform/${cloud}/${terraform_stack}" "${@:3}"
+}
+
+function set_up {
+	local cloud="${1}"
+	local cluster_terraform_stack="${2}"
+	local configuration_json_file="${3}"
+
+	_export_terraform_options "${configuration_json_file}"
+
+	local tfstate_prefix
+
+	tfstate_prefix=$(get_tfstate_prefix "${configuration_json_file}")
+
+	echo "Setting up the Kubernetes cluster."
+
+	_init_terraform "${cloud}" "${cluster_terraform_stack}" "${tfstate_prefix}"
+
+	run_terraform "${cloud}" "${cluster_terraform_stack}" apply
+
+	echo "Kubernetes cluster setup complete."
+
+	local cluster_name
+
+	cluster_name=$(run_terraform "${cloud}" "${cluster_terraform_stack}" output -raw cluster_name)
+
+	_connect_to_cluster "${cluster_name}" "${cluster_terraform_stack}"
+
+	echo "Setting up the Liferay platform."
+
+	_init_terraform "${cloud}" "platform" "${tfstate_prefix}"
+
+	run_terraform "${cloud}" "platform" apply
+
+	echo "Liferay platform setup complete."
+
+	_install_liferay_platform_chart "${cloud}" "${cluster_name}" "${configuration_json_file}"
+}
+
+function tear_down {
+	local cloud="${1}"
+	local cluster_terraform_stack="${2}"
+	local configuration_json_file="${3}"
+
+	_export_terraform_options "${configuration_json_file}"
+
+	local tfstate_prefix
+
+	tfstate_prefix=$(get_tfstate_prefix "${configuration_json_file}")
+
+	_init_terraform "${cloud}" "${cluster_terraform_stack}" "${tfstate_prefix}"
+
+	local cluster_name
+
+	cluster_name=$(run_terraform "${cloud}" "${cluster_terraform_stack}" output -json | jq --raw-output '.cluster_name.value // empty')
+
+	if [[ -n ${cluster_name} ]]
+	then
+		_connect_to_cluster "${cluster_name}" "${cluster_terraform_stack}"
+
+		_uninstall_liferay_platform_chart
+
+		_delete_persistent_volumes
+	else
+		echo "There is no Kubernetes cluster in the Terraform state. Skipping the Liferay platform root application uninstall and the persistent volume deletion."
+	fi
+
+	echo "Destroying the Liferay platform."
+
+	_init_terraform "${cloud}" "platform" "${tfstate_prefix}"
+
+	run_terraform "${cloud}" "platform" destroy
+
+	echo "Liferay platform teardown complete."
+
+	echo "Destroying the Kubernetes cluster."
+
+	run_terraform "${cloud}" "${cluster_terraform_stack}" destroy
+
+	echo "Kubernetes cluster teardown complete."
+}
+
+function _connect_to_cluster {
+	local cluster_name="${1}"
+	local cluster_terraform_stack="${2}"
+
+	echo "Connecting to the Kubernetes cluster."
+
+	export KUBE_CONFIG_PATH="${HOME}/.kube/config"
+
+	update_kubeconfig "${cluster_name}" "${cluster_terraform_stack}"
+}
+
+function _delete_persistent_volumes {
+	echo "Deleting the persistent volume claims."
+
+	kubectl \
+		delete \
+		persistentvolumeclaims \
+		--all \
+		--all-namespaces \
+		--timeout 10m0s \
+		--wait
+
+	echo "Waiting for the persistent volumes to be deleted."
+
+	kubectl \
+		wait \
+		persistentvolumes \
+		--all \
+		--for delete \
+		--timeout 10m0s
+}
+
+function _export_terraform_options {
+	local configuration_json_file="${1}"
+
+	export TF_INPUT=0
+
+	local terraform_args=()
 
 	local auto_approve
 
 	auto_approve=$(jq --raw-output '.options.auto_approve // false' "${configuration_json_file}")
-
-	local terraform_args=()
 
 	if [[ ${auto_approve} == true ]]
 	then
@@ -100,34 +249,78 @@ function get_terraform_args {
 		terraform_args+=("-parallelism=${parallelism}")
 	fi
 
-	if [ ${#terraform_args[@]} -gt 0 ]
-	then
-		printf '%s\n' "${terraform_args[@]}"
-	fi
+	export TF_CLI_ARGS_apply="${terraform_args[*]}"
+	export TF_CLI_ARGS_destroy="${terraform_args[*]}"
 }
 
-function get_terraform_outputs {
-	local cloud="${1}"
-	local terraform_stack="${2}"
-
-	push_directory "${ROOT_CLOUD_DIR}/terraform/${cloud}/${terraform_stack}"
-
-	terraform output -json
-
-	pop_directory
-}
-
-function install_liferay_platform_chart {
+function _generate_backend_overrides {
 	local cloud="${1}"
 	local configuration_json_file="${2}"
 
+	local backend=$'\tbackend "local" {}'
+
+	if has_remote_tfstate "${configuration_json_file}"
+	then
+		backend=$(get_remote_backend "${configuration_json_file}")
+	fi
+
+	local terraform_stack
+
+	for terraform_stack in "${@:3}"
+	do
+		cat > "${ROOT_CLOUD_DIR}/terraform/${cloud}/${terraform_stack}/backend_override.tf" <<EOF
+terraform {
+${backend}
+}
+EOF
+	done
+}
+
+function _generate_tfvars {
+	local cloud="${1}"
+	local configuration_json_file="${2}"
+	local terraform_stack="${3}"
+
+	local tfvars_file="${ROOT_CLOUD_DIR}/terraform/${cloud}/${terraform_stack}/config.auto.tfvars.json"
+
+	echo "Generating ${tfvars_file} from ${configuration_json_file}."
+
+	jq --arg terraform_stack "${terraform_stack}" '(.terraform.common // {}) * (.terraform[$terraform_stack] // {}) * {deployment_name, region}' "${configuration_json_file}" > "${tfvars_file}"
+
+	echo "${tfvars_file} was generated successfully."
+}
+
+function _init_terraform {
+	local cloud="${1}"
+	local terraform_stack="${2}"
+	local tfstate_prefix="${3}"
+
+	local init_args=()
+
+	if [[ -n ${tfstate_prefix} ]]
+	then
+		init_args+=("-backend-config=$(get_tfstate_path_setting "${tfstate_prefix}${terraform_stack}")")
+	fi
+
+	run_terraform "${cloud}" "${terraform_stack}" init "${init_args[@]}"
+}
+
+function _install_liferay_platform_chart {
+	local cloud="${1}"
+	local cluster_name="${2}"
+	local configuration_json_file="${3}"
+
 	local platform_repo_url
-	local platform_target_revision
-	local platform_values
 
 	platform_repo_url=$(jq --raw-output '"oci://\(.artifacts.charts."liferay-platform".registry // error("artifacts.charts.liferay-platform.registry is missing"))/liferay-platform"' "${configuration_json_file}")
+
+	local platform_target_revision
+
 	platform_target_revision=$(jq --raw-output '.artifacts.charts."liferay-platform".version // error("artifacts.charts.liferay-platform.version is missing")' "${configuration_json_file}")
-	platform_values=$(get_terraform_outputs "${cloud}" "platform" | jq --from-file "${SCRIPTS_DIR}/_${cloud}_platform_values.jq" --slurpfile configuration "${configuration_json_file}")
+
+	local platform_values
+
+	platform_values=$(run_terraform "${cloud}" "platform" output -json | jq --arg cluster_name "${cluster_name}" --from-file "${SCRIPTS_DIR}/_${cloud}_platform_values.jq" --slurpfile configuration "${configuration_json_file}")
 
 	echo "Applying the Liferay platform root application."
 
@@ -141,38 +334,14 @@ function install_liferay_platform_chart {
 		--version "${platform_target_revision}"
 }
 
-function pop_directory {
-	popd > /dev/null
-}
+function _uninstall_liferay_platform_chart {
+	echo "Uninstalling the Liferay platform root application."
 
-function push_directory {
-	pushd "${1}" > /dev/null
-}
-
-function resolve_config_json {
-	local configuration_json_file="${1}"
-
-	local resolved_configuration_json_file
-
-	resolved_configuration_json_file=$(mktemp)
-
-	jq --slurp '.[0] * .[1]' "${SCRIPTS_DIR}/config.json.defaults" "${configuration_json_file}" > "${resolved_configuration_json_file}"
-
-	echo "${resolved_configuration_json_file}"
-}
-
-function set_up_platform {
-	local cloud="${1}"
-
-	push_directory "${ROOT_CLOUD_DIR}/terraform/${cloud}/platform"
-
-	echo "Setting up the Liferay platform."
-
-	terraform init
-
-	terraform apply -input=false "${@:2}"
-
-	echo "Liferay platform setup complete."
-
-	pop_directory
+	helm \
+		uninstall \
+		liferay-platform \
+		--ignore-not-found \
+		--namespace argocd-system \
+		--timeout 30m0s \
+		--wait
 }

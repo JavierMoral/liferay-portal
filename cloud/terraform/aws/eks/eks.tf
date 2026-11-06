@@ -3,6 +3,18 @@ module "eks" {
 		amazon-cloudwatch-observability={
 			configuration_values=jsonencode(
 				{
+					agent={
+						resources={
+							limits={
+								cpu="500m"
+								memory="1Gi"
+							}
+							requests={
+								cpu="250m"
+								memory="128Mi"
+							}
+						}
+					},
 					containerLogs={
 						enabled=true
 					},
@@ -15,6 +27,12 @@ module "eks" {
 								monitorAllServices=false
 							}
 						}
+						tolerations=[
+							{
+								key="CriticalAddonsOnly"
+								operator="Exists"
+							},
+						]
 					},
 					neuronMonitor={
 						enabled=false
@@ -57,7 +75,7 @@ module "eks" {
 	cloudwatch_log_group_retention_in_days=90
 	compute_config={
 		enabled=true
-		node_pools=["general-purpose"]
+		node_pools=["system"]
 	}
 	create_cloudwatch_log_group=true
 	create_kms_key=false
@@ -184,13 +202,13 @@ resource "aws_kms_key" "eks_secrets" {
 		})
 }
 resource "kubernetes_storage_class_v1" "gp3_storage_class" {
+	allow_volume_expansion=true
 	allowed_topologies {
 		match_label_expressions {
 			key="eks.amazonaws.com/compute-type"
 			values=["auto"]
 		}
 	}
-	allow_volume_expansion=true
 	depends_on=[time_sleep.cluster_addons_ready_time_buffer]
 	metadata {
 		annotations={

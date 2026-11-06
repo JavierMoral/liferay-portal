@@ -138,6 +138,19 @@ public class MonitorMetricsWriter {
 		return monitorResult.getTimestamp() / 1000;
 	}
 
+	private List<String> _getLinkURLs(Monitor monitor) {
+		MonitorResult monitorResult =
+			_monitorResultStore.getLatestMonitorResult(monitor.getId());
+
+		List<String> linkURLs = monitorResult.getLinkURLs();
+
+		if (linkURLs != null) {
+			return linkURLs;
+		}
+
+		return monitor.getLinkURLs();
+	}
+
 	private String _getMessage(Monitor monitor) {
 		MonitorResult monitorResult =
 			_monitorResultStore.getLatestMonitorResult(monitor.getId());
@@ -180,13 +193,13 @@ public class MonitorMetricsWriter {
 			_monitorResultStore.getLatestMonitorResult(monitor.getId());
 
 		if (monitorResult == null) {
-			return MonitorResult.Status.UNKNOWN.getSeverityRank();
+			return MonitorResult.Status.CRITICAL.getSeverityRank();
 		}
 
 		MonitorResult.Status status = monitorResult.getStatus();
 
 		if (status == null) {
-			return MonitorResult.Status.UNKNOWN.getSeverityRank();
+			return MonitorResult.Status.CRITICAL.getSeverityRank();
 		}
 
 		return status.getSeverityRank();
@@ -274,8 +287,18 @@ public class MonitorMetricsWriter {
 				gaugeDataPointSnapshotBuilder =
 					GaugeSnapshot.GaugeDataPointSnapshot.builder();
 
-			gaugeDataPointSnapshotBuilder.labels(
-				Labels.of("message", message, "monitor", monitor.getId()));
+			Labels labels = Labels.of(
+				"message", message, "monitor", monitor.getId());
+
+			List<String> linkURLs = _getLinkURLs(monitor);
+
+			if (!linkURLs.isEmpty()) {
+				labels = labels.add(
+					"links", JenkinsResultsParserUtil.join("\n", linkURLs));
+			}
+
+			gaugeDataPointSnapshotBuilder.labels(labels);
+
 			gaugeDataPointSnapshotBuilder.value(1);
 
 			gaugeSnapshotBuilder.dataPoint(
@@ -289,8 +312,7 @@ public class MonitorMetricsWriter {
 		GaugeSnapshot.Builder gaugeSnapshotBuilder = GaugeSnapshot.builder();
 
 		gaugeSnapshotBuilder.help(
-			"Monitor status severity rank, 0 OK, 1 UNKNOWN, 2 WARN, 3 " +
-				"CRITICAL");
+			"Monitor status severity rank, 0 OK, 2 WARN, 3 CRITICAL");
 		gaugeSnapshotBuilder.name("monitor_status");
 
 		for (Monitor monitor : _monitors) {

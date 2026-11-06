@@ -58,6 +58,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.utils.URIBuilder;
 
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
@@ -85,11 +86,13 @@ public abstract class BaseTopLevelBuild
 
 	@Override
 	public void addTestrayAttachmentURL(URL testrayAttachmentURL) {
-		if (_testrayAttachmentURLs.contains(testrayAttachmentURL)) {
-			return;
-		}
+		synchronized (_testrayAttachmentURLs) {
+			if (_testrayAttachmentURLs.contains(testrayAttachmentURL)) {
+				return;
+			}
 
-		_testrayAttachmentURLs.add(testrayAttachmentURL);
+			_testrayAttachmentURLs.add(testrayAttachmentURL);
+		}
 	}
 
 	@Override
@@ -539,58 +542,65 @@ public abstract class BaseTopLevelBuild
 	}
 
 	@Override
-	public synchronized List<URL> getTestrayAttachmentURLs() {
-		return _testrayAttachmentURLs;
+	public List<URL> getTestrayAttachmentURLs() {
+		synchronized (_testrayAttachmentURLs) {
+			return new ArrayList<>(_testrayAttachmentURLs);
+		}
 	}
 
 	@Override
-	public synchronized URL getTestrayCaseResultURL() {
-		if (_testrayCaseResultURL != null) {
+	public URL getTestrayCaseResultURL() {
+		synchronized (_testrayCaseResultURLLock) {
+			if (_testrayCaseResultURL != null) {
+				return _testrayCaseResultURL;
+			}
+
+			TestrayCaseResult.Status status = null;
+
+			if (getResult() == null) {
+				status = TestrayCaseResult.Status.INCOMPLETE;
+			}
+
+			TestrayContext testrayContext = getTestrayContext();
+
+			TopLevelStandaloneBuildTestrayCaseResult
+				topLevelStandaloneBuildTestrayCaseResult =
+					TestrayFactory.newTopLevelStandaloneBuildTestrayCaseResult(
+						status, testrayContext.getTestrayBuild(),
+						getTopLevelBuildReport());
+
+			topLevelStandaloneBuildTestrayCaseResult.initTestrayRun(getJob());
+
+			_testrayCaseResultURL =
+				topLevelStandaloneBuildTestrayCaseResult.
+					getTestrayCaseResultURL();
+
+			if (_testrayCaseResultURL != null) {
+				_testrayCaseResult = topLevelStandaloneBuildTestrayCaseResult;
+			}
+
 			return _testrayCaseResultURL;
 		}
-
-		TestrayCaseResult.Status status = null;
-
-		if (getResult() == null) {
-			status = TestrayCaseResult.Status.INCOMPLETE;
-		}
-
-		TestrayContext testrayContext = getTestrayContext();
-
-		TopLevelStandaloneBuildTestrayCaseResult
-			topLevelStandaloneBuildTestrayCaseResult =
-				TestrayFactory.newTopLevelStandaloneBuildTestrayCaseResult(
-					status, testrayContext.getTestrayBuild(),
-					getTopLevelBuildReport());
-
-		topLevelStandaloneBuildTestrayCaseResult.initTestrayRun(getJob());
-
-		_testrayCaseResultURL =
-			topLevelStandaloneBuildTestrayCaseResult.getTestrayCaseResultURL();
-
-		if (_testrayCaseResultURL != null) {
-			_testrayCaseResult = topLevelStandaloneBuildTestrayCaseResult;
-		}
-
-		return _testrayCaseResultURL;
 	}
 
 	@Override
-	public synchronized TestrayContext getTestrayContext() {
-		if (_testrayContext != null) {
+	public TestrayContext getTestrayContext() {
+		synchronized (_testrayContextLock) {
+			if (_testrayContext != null) {
+				return _testrayContext;
+			}
+
+			_testrayContext = TestrayFactory.newTestrayContext(
+				getBuildDatabase(), this);
+
+			Job job = getJob();
+
+			if (job != null) {
+				job.setTestrayContext(_testrayContext);
+			}
+
 			return _testrayContext;
 		}
-
-		_testrayContext = TestrayFactory.newTestrayContext(
-			getBuildDatabase(), this);
-
-		Job job = getJob();
-
-		if (job != null) {
-			job.setTestrayContext(_testrayContext);
-		}
-
-		return _testrayContext;
 	}
 
 	public TimelineData getTimelineData() {
@@ -603,13 +613,16 @@ public abstract class BaseTopLevelBuild
 			return null;
 		}
 
-		if (_topLevelBuildReport != null) {
+		synchronized (_topLevelBuildReportLock) {
+			if (_topLevelBuildReport != null) {
+				return _topLevelBuildReport;
+			}
+
+			_topLevelBuildReport = BuildReportFactory.newTopLevelBuildReport(
+				this);
+
 			return _topLevelBuildReport;
 		}
-
-		_topLevelBuildReport = BuildReportFactory.newTopLevelBuildReport(this);
-
-		return _topLevelBuildReport;
 	}
 
 	@Override
@@ -713,8 +726,13 @@ public abstract class BaseTopLevelBuild
 		}
 
 		try {
+			URIBuilder uriBuilder = JenkinsResultsParserUtil.newURIBuilder(
+				buildURL + "/api/json");
+
+			uriBuilder.addParameter("tree", "result");
+
 			JSONObject buildJSONObject = JenkinsResultsParserUtil.toJSONObject(
-				buildURL + "/api/json?tree=result");
+				uriBuilder.toString());
 
 			if (!JenkinsResultsParserUtil.isNullOrEmpty(
 					buildJSONObject.optString("result", null))) {
@@ -1044,13 +1062,9 @@ public abstract class BaseTopLevelBuild
 	}
 
 	protected Element getBaseBranchDetailsElement() {
-		String baseBranchURL = JenkinsResultsParserUtil.combine(
-			"https://github.com/liferay/", getBaseGitRepositoryName(), "/tree/",
-			getBranchName());
-
+		String baseBranchSHA = null;
+		String baseBranchUsername = "liferay";
 		String baseGitRepositoryName = getBaseGitRepositoryName();
-
-		String baseGitRepositorySHA = null;
 
 		if ((this instanceof WorkspaceBuild) && !fromArchive) {
 			WorkspaceBuild workspaceBuild = (WorkspaceBuild)this;
@@ -1060,34 +1074,39 @@ public abstract class BaseTopLevelBuild
 			WorkspaceGitRepository workspaceGitRepository =
 				workspace.getPrimaryWorkspaceGitRepository();
 
-			baseGitRepositorySHA = workspaceGitRepository.getBaseBranchSHA();
+			baseBranchSHA = workspaceGitRepository.getBaseBranchSHA();
+			baseBranchUsername = workspaceGitRepository.getBaseBranchUsername();
 		}
 		else if (!baseGitRepositoryName.equals("liferay-jenkins-ee") &&
 				 baseGitRepositoryName.endsWith("-ee")) {
 
-			baseGitRepositorySHA = getBaseGitRepositorySHA(
+			baseBranchSHA = getBaseGitRepositorySHA(
 				baseGitRepositoryName.substring(
 					0, baseGitRepositoryName.length() - 3));
 		}
 		else {
-			baseGitRepositorySHA = getBaseGitRepositorySHA(
-				baseGitRepositoryName);
+			baseBranchSHA = getBaseGitRepositorySHA(baseGitRepositoryName);
 		}
+
+		String baseBranchURL = JenkinsResultsParserUtil.combine(
+			"https://github.com/", baseBranchUsername, "/",
+			baseGitRepositoryName, "/tree/", getBranchName());
 
 		Element baseGitBranchDetailsElement = Dom4JUtil.getNewElement(
 			"p", null, "Branch Name: ",
 			Dom4JUtil.getNewAnchorElement(baseBranchURL, getBranchName()));
 
-		if (baseGitRepositorySHA != null) {
+		if (baseBranchSHA != null) {
 			String baseGitRepositoryCommitURL =
-				"https://github.com/liferay/" + baseGitRepositoryName +
-					"/commit/" + baseGitRepositorySHA;
+				JenkinsResultsParserUtil.combine(
+					"https://github.com/", baseBranchUsername, "/",
+					baseGitRepositoryName, "/commit/", baseBranchSHA);
 
 			Dom4JUtil.addToElement(
 				baseGitBranchDetailsElement, Dom4JUtil.getNewElement("br"),
 				"Branch GIT ID: ",
 				Dom4JUtil.getNewAnchorElement(
-					baseGitRepositoryCommitURL, baseGitRepositorySHA));
+					baseGitRepositoryCommitURL, baseBranchSHA));
 		}
 
 		return baseGitBranchDetailsElement;
@@ -2681,7 +2700,10 @@ public abstract class BaseTopLevelBuild
 	private final List<URL> _testrayAttachmentURLs = new ArrayList<>();
 	private TestrayCaseResult _testrayCaseResult;
 	private URL _testrayCaseResultURL;
+	private final Object _testrayCaseResultURLLock = new Object();
 	private TestrayContext _testrayContext;
+	private final Object _testrayContextLock = new Object();
 	private TopLevelBuildReport _topLevelBuildReport;
+	private final Object _topLevelBuildReportLock = new Object();
 
 }

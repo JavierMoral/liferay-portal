@@ -7,15 +7,16 @@ package com.liferay.style.book.internal.util;
 
 import com.liferay.frontend.token.definition.util.FrontendTokenDefinitionUtil;
 import com.liferay.petra.string.CharPool;
-import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.style.book.constants.StyleBookConstants;
 import com.liferay.style.book.exception.StyleBookEntryFrontendTokensValuesException;
+import com.liferay.style.book.util.FrontendTokensValuesUtil;
 
 import java.util.List;
 
@@ -42,8 +43,12 @@ public class StyleBookEntryFrontendTokensValuesUtil {
 				frontendTokensValues);
 		}
 		catch (JSONException jsonException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(jsonException);
+			}
+
 			throw new StyleBookEntryFrontendTokensValuesException.
-				MustBeValidJSON(jsonException);
+				MustBeValidJSON();
 		}
 
 		List<String> customFrontendTokenNames =
@@ -72,8 +77,9 @@ public class StyleBookEntryFrontendTokensValuesUtil {
 						customFrontendTokenNames, key, themeId);
 				}
 
-				String namespacedKey = StringBundler.concat(
-					tokenDefinitionId, StringPool.COLON, key);
+				String namespacedKey =
+					FrontendTokensValuesUtil.getFrontendTokensValuesKey(
+						tokenDefinitionId, key);
 
 				if (frontendTokensValuesJSONObject.has(namespacedKey)) {
 					continue;
@@ -94,10 +100,10 @@ public class StyleBookEntryFrontendTokensValuesUtil {
 
 			frontendTokenValueJSONObject.put(
 				"name",
-				StringBundler.concat(
+				FrontendTokensValuesUtil.getFrontendTokensValuesKey(
 					_getFrontendTokenDefinitionId(
 						customFrontendTokenNames, name, themeId),
-					StringPool.COLON, name));
+					name));
 		}
 
 		return frontendTokensValuesJSONObject.toString();
@@ -121,5 +127,8 @@ public class StyleBookEntryFrontendTokensValuesUtil {
 
 		return true;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		StyleBookEntryFrontendTokensValuesUtil.class);
 
 }

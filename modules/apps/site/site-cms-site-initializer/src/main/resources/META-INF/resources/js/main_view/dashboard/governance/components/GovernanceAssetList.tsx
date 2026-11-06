@@ -3,10 +3,12 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
+import ClayAlert from '@clayui/alert';
 import {Text} from '@clayui/core';
 import ClayLink from '@clayui/link';
 import {
 	FrontendDataSet,
+	IFrontendDataSetProps,
 	IItemActionsData,
 } from '@liferay/frontend-data-set-web';
 import {sub} from 'frontend-js-web';
@@ -21,28 +23,130 @@ import {GovernanceAdditionalProps} from '../types';
 
 const EMPTY_STATE_IMAGE = '/states/cms_empty_state.svg';
 
-const VIEWS = [
-	{
-		contentRenderer: 'table',
-		default: true,
-		label: Liferay.Language.get('table'),
-		name: 'table',
-		schema: {
-			fields: [
-				{
-					actionId: 'actionLink',
-					contentRenderer: 'assetRenderer',
-					fieldName: 'embedded.title',
-					label: Liferay.Language.get('title'),
-				},
-			],
+export function getGovernanceAssetListViews({
+	actionId,
+	fieldName,
+}: {
+	actionId: string;
+	fieldName: string;
+}) {
+	return [
+		{
+			contentRenderer: 'table',
+			default: true,
+			label: Liferay.Language.get('table'),
+			name: 'table',
+			schema: {
+				fields: [
+					{
+						actionId,
+						contentRenderer: 'assetRenderer',
+						fieldName,
+						label: Liferay.Language.get('title'),
+					},
+				],
+			},
+			thumbnail: 'table',
 		},
-		thumbnail: 'table',
-	},
-];
+	];
+}
 
 export function getGovernanceAssetListPanelId(id: string) {
 	return `${id}-panel`;
+}
+
+export function GovernanceListPanel({
+	alertMessage,
+	count,
+	description,
+	emptyStateDescription = '',
+	emptyStateTitle,
+	fdsProps,
+	id,
+	title,
+	viewAllHref,
+}: {
+	alertMessage?: string;
+	count: number;
+	description: string;
+	emptyStateDescription?: string;
+	emptyStateTitle: string;
+	fdsProps: Partial<IFrontendDataSetProps> &
+		Pick<IFrontendDataSetProps, 'views'>;
+	id: string;
+	title: string;
+	viewAllHref: string;
+}) {
+	const titleId = `${id}-title`;
+
+	return (
+		<section
+			aria-labelledby={titleId}
+			className="border rounded-lg"
+			id={getGovernanceAssetListPanelId(id)}
+		>
+			<div className="pt-3 px-3">
+				<div className="align-items-center d-flex justify-content-between mb-2 pb-1">
+					<span className="font-weight-semi-bold text-4" id={titleId}>
+						{title}
+					</span>
+
+					<ClayLink
+						aria-label={sub(
+							Liferay.Language.get('view-all-x'),
+							title
+						)}
+						borderless
+						className="font-weight-semi-bold text-3"
+						href={viewAllHref}
+						small
+					>
+						{Liferay.Language.get('view-all')}
+					</ClayLink>
+				</div>
+
+				<span className="text-3 text-secondary">{description}</span>
+
+				{alertMessage ? (
+					<ClayAlert
+						className="mt-3"
+						displayType="info"
+						title={`${Liferay.Language.get('info')}:`}
+					>
+						{alertMessage}
+					</ClayAlert>
+				) : null}
+			</div>
+
+			<div className="cms-fds-fluid cms-governance-asset-list custom-empty-state">
+				<FrontendDataSet
+					{...fdsProps}
+					emptyState={{
+						description: emptyStateDescription,
+						image: EMPTY_STATE_IMAGE,
+						title: emptyStateTitle,
+					}}
+					id={id}
+					showManagementBar={false}
+					showPagination={false}
+					showSearch={false}
+					style="fluid"
+				/>
+			</div>
+
+			{count ? (
+				<div className="p-3">
+					<Text color="secondary" size={3}>
+						{sub(
+							Liferay.Language.get('showing-x-of-x-items'),
+							Math.min(count, GOVERNANCE_ASSET_LIST_PAGE_SIZE),
+							count
+						)}
+					</Text>
+				</div>
+			) : null}
+		</section>
+	);
 }
 
 export function GovernanceAssetList({
@@ -50,7 +154,7 @@ export function GovernanceAssetList({
 	apiURL,
 	count,
 	description,
-	emptyStateDescription = '',
+	emptyStateDescription,
 	emptyStateTitle,
 	id,
 	itemActionIds,
@@ -87,8 +191,8 @@ export function GovernanceAssetList({
 	}, [id, reloadStatistics]);
 
 	const fdsProps = useMemo(
-		() =>
-			getDashboardAssetListFDSProps({
+		() => ({
+			...getDashboardAssetListFDSProps({
 				additionalProps,
 				apiURL,
 				id,
@@ -100,6 +204,11 @@ export function GovernanceAssetList({
 				onDataChange: reloadStatistics,
 				renderSubtitle,
 			}),
+			views: getGovernanceAssetListViews({
+				actionId: 'actionLink',
+				fieldName: 'embedded.title',
+			}),
+		}),
 		[
 			additionalProps,
 			apiURL,
@@ -110,65 +219,16 @@ export function GovernanceAssetList({
 		]
 	);
 
-	const titleId = `${id}-title`;
-
 	return (
-		<section
-			aria-labelledby={titleId}
-			className="border rounded-lg"
-			id={getGovernanceAssetListPanelId(id)}
-		>
-			<div className="pt-3 px-3">
-				<div className="align-items-center d-flex justify-content-between mb-2 pb-1">
-					<span className="font-weight-semi-bold text-4" id={titleId}>
-						{title}
-					</span>
-
-					<ClayLink
-						aria-label={sub(
-							Liferay.Language.get('view-all-x'),
-							title
-						)}
-						borderless
-						className="font-weight-semi-bold text-3"
-						href={viewAllHref}
-						small
-					>
-						{Liferay.Language.get('view-all')}
-					</ClayLink>
-				</div>
-
-				<span className="text-3 text-secondary">{description}</span>
-			</div>
-
-			<div className="cms-fds-fluid cms-governance-asset-list custom-empty-state">
-				<FrontendDataSet
-					{...fdsProps}
-					emptyState={{
-						description: emptyStateDescription,
-						image: EMPTY_STATE_IMAGE,
-						title: emptyStateTitle,
-					}}
-					id={id}
-					showManagementBar={false}
-					showPagination={false}
-					showSearch={false}
-					style="fluid"
-					views={VIEWS}
-				/>
-			</div>
-
-			{count ? (
-				<div className="p-3">
-					<Text color="secondary" size={3}>
-						{sub(
-							Liferay.Language.get('showing-x-of-x-items'),
-							Math.min(count, GOVERNANCE_ASSET_LIST_PAGE_SIZE),
-							count
-						)}
-					</Text>
-				</div>
-			) : null}
-		</section>
+		<GovernanceListPanel
+			count={count}
+			description={description}
+			emptyStateDescription={emptyStateDescription}
+			emptyStateTitle={emptyStateTitle}
+			fdsProps={fdsProps}
+			id={id}
+			title={title}
+			viewAllHref={viewAllHref}
+		/>
 	);
 }
