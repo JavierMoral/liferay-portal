@@ -125,7 +125,8 @@ public class DLFileEntryTypeLocalServiceImpl
 
 		_validateFileEntryTypeKey(groupId, fileEntryTypeKey);
 
-		_validateDDMStructures(fileEntryTypeKey, new long[] {dataDefinitionId});
+		_validateDDMStructures(
+			groupId, fileEntryTypeKey, new long[] {dataDefinitionId});
 
 		DLFileEntryType dlFileEntryType = dlFileEntryTypePersistence.create(
 			counterLocalService.increment());
@@ -246,7 +247,9 @@ public class DLFileEntryTypeLocalServiceImpl
 		DDMStructure ddmStructure = DDMStructureManagerUtil.fetchStructure(
 			dlFileEntryType.getDataDefinitionId());
 
-		if (ddmStructure == null) {
+		if ((ddmStructure == null) ||
+			(ddmStructure.getGroupId() != dlFileEntryType.getGroupId())) {
+
 			ddmStructure = DDMStructureManagerUtil.fetchStructure(
 				dlFileEntryType.getGroupId(),
 				_classNameLocalService.getClassNameId(
@@ -283,16 +286,6 @@ public class DLFileEntryTypeLocalServiceImpl
 			dlFileEntryTypePersistence.findByPrimaryKey(fileEntryTypeId);
 
 		dlFileEntryTypeLocalService.deleteFileEntryType(dlFileEntryType);
-	}
-
-	@Override
-	public void deleteFileEntryTypeByExternalReferenceCode(
-			String externalReferenceCode, long groupId)
-		throws PortalException {
-
-		dlFileEntryTypeLocalService.deleteFileEntryType(
-			getDLFileEntryTypeByExternalReferenceCode(
-				externalReferenceCode, groupId));
 	}
 
 	@Override
@@ -788,7 +781,7 @@ public class DLFileEntryTypeLocalServiceImpl
 	}
 
 	private void _validateDDMStructures(
-			String fileEntryTypeKey, long[] ddmStructureIds)
+			long groupId, String fileEntryTypeKey, long[] ddmStructureIds)
 		throws NoSuchMetadataSetException {
 
 		if (ddmStructureIds.length == 0) {
@@ -801,7 +794,9 @@ public class DLFileEntryTypeLocalServiceImpl
 			DDMStructure ddmStructure = DDMStructureManagerUtil.fetchStructure(
 				ddmStructureId);
 
-			if (ddmStructure == null) {
+			if ((ddmStructure == null) ||
+				(ddmStructure.getGroupId() != groupId)) {
+
 				throw new NoSuchMetadataSetException(
 					"{ddmStructureId=" + ddmStructureId + "}");
 			}

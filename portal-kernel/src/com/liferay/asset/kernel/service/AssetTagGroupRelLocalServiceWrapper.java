@@ -130,6 +130,16 @@ public class AssetTagGroupRelLocalServiceWrapper
 		_assetTagGroupRelLocalService.deleteAssetTagGroupRelsByTagId(tagId);
 	}
 
+	@Override
+	public void deleteAssetTagGroupRelsByTagIdAndDepotEntryType(
+			long tagId, int depotEntryType)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_assetTagGroupRelLocalService.
+			deleteAssetTagGroupRelsByTagIdAndDepotEntryType(
+				tagId, depotEntryType);
+	}
+
 	/**
 	 * @throws PortalException
 	 */
@@ -342,13 +352,6 @@ public class AssetTagGroupRelLocalServiceWrapper
 	}
 
 	@Override
-	public java.util.List<AssetTagGroupRel> getAssetTagGroupRelsByTagId(
-		long tagId) {
-
-		return _assetTagGroupRelLocalService.getAssetTagGroupRelsByTagId(tagId);
-	}
-
-	@Override
 	public java.util.List<AssetTagGroupRel>
 		getAssetTagGroupRelsByTagIdAndDepotEntryType(
 			long tagId, int depotEntryType) {
@@ -500,4 +503,4 @@ public class AssetTagGroupRelLocalServiceWrapper
 	private AssetTagGroupRelLocalService _assetTagGroupRelLocalService;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:32159417
+// LIFERAY-SERVICE-BUILDER-HASH:-788949252

@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Properties;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import org.junit.Assert;
@@ -24,30 +25,6 @@ import org.mockito.Mockito;
  * @author Kenji Heigel
  */
 public class PullRequestTest extends com.liferay.jenkins.results.parser.Test {
-
-	@Test
-	public void testGetBaseRemoteGitBranch() {
-		String ownerUsername = RandomTestUtil.randomString();
-		String repositoryName = RandomTestUtil.randomString();
-
-		PullRequest pullRequest = _newPullRequest(
-			RandomTestUtil.randomInt(), ownerUsername, repositoryName);
-
-		try (MockedStatic<GitUtil> gitUtilMockedStatic = Mockito.mockStatic(
-				GitUtil.class)) {
-
-			pullRequest.getBaseRemoteGitBranch();
-
-			gitUtilMockedStatic.verify(
-				() -> GitUtil.getRemoteGitBranch(
-					ArgumentMatchers.eq("master"),
-					ArgumentMatchers.any(File.class),
-					ArgumentMatchers.eq(
-						JenkinsResultsParserUtil.combine(
-							"git@github.com:", ownerUsername, "/",
-							repositoryName, ".git"))));
-		}
-	}
 
 	@Test
 	public void testGetCIMergeSHA() throws Exception {
@@ -123,6 +100,55 @@ public class PullRequestTest extends com.liferay.jenkins.results.parser.Test {
 
 		Assert.assertTrue(pullRequest.hasRequiredPassingTestSuites());
 		Assert.assertFalse(pullRequest.hasRequiredPassingTestSuites(true));
+	}
+
+	@Test
+	public void testRemoveLabel() throws Exception {
+		Properties buildProperties = new Properties();
+
+		buildProperties.setProperty(
+			"github.pull.request.update.enabled", "true");
+
+		JenkinsResultsParserUtil.setBuildProperties(buildProperties);
+
+		mockURLReaders();
+
+		String labelNamePrefix = RandomTestUtil.randomString();
+		String labelNameSuffix = RandomTestUtil.randomString();
+
+		String labelName = JenkinsResultsParserUtil.combine(
+			labelNamePrefix, "/%20", labelNameSuffix);
+
+		int number = RandomTestUtil.randomInt();
+
+		setURLReaderOutput(
+			String.valueOf(
+				new JSONObject(
+				).put(
+					"labels",
+					new JSONArray(
+					).put(
+						new JSONObject(
+						).put(
+							"name", labelName
+						)
+					)
+				)),
+			"/pulls/" + number);
+
+		String labelURLPath = JenkinsResultsParserUtil.combine(
+			"/issues/", String.valueOf(number), "/labels/", labelNamePrefix,
+			"%2F%2520", labelNameSuffix);
+
+		setURLReaderOutput("", labelURLPath);
+
+		PullRequest pullRequest = _newPullRequest(
+			number, RandomTestUtil.randomString(),
+			RandomTestUtil.randomString());
+
+		pullRequest.removeLabel(labelName);
+
+		verifyURLReaderAttemptsCount(1, labelURLPath);
 	}
 
 	private PullRequest _newPullRequest() {

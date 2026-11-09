@@ -618,7 +618,9 @@ test(
 			.optionSelector('Color')
 			.selectOption({label: 'Black'});
 
-		await expect(await productDetailsPage.uomTable('Unit')).toBeVisible();
+		await expect(
+			await productDetailsPage.uomTable('Package')
+		).toBeVisible();
 		await expect(
 			await productDetailsPage.priceField('$ 50.00 / Box')
 		).toBeVisible();
@@ -981,7 +983,7 @@ test('LPD-39598 Can view SKU UOM discount is applied on product details page', a
 
 	await expect(
 		await productDetailsPage.priceField(
-			'$ 10.00',
+			`$ 10.00 / ${uom1.name['en_US']}`,
 			productDetailsPage.priceContainer
 		)
 	).toBeVisible();
@@ -1004,7 +1006,7 @@ test('LPD-39598 Can view SKU UOM discount is applied on product details page', a
 
 	await expect(
 		await productDetailsPage.priceField(
-			'$ 20.00',
+			`$ 20.00 / ${uom2.name['en_US']}`,
 			productDetailsPage.priceContainer
 		)
 	).toBeVisible();
@@ -1041,7 +1043,7 @@ test('LPD-39598 Can view SKU UOM discount is applied on product details page', a
 
 	await expect(
 		await productDetailsPage.priceField(
-			'$ 10.00',
+			`$ 10.00 / ${uom1.name['en_US']}`,
 			productDetailsPage.priceContainer
 		)
 	).toBeVisible();
@@ -1055,7 +1057,7 @@ test('LPD-39598 Can view SKU UOM discount is applied on product details page', a
 
 	await expect(
 		await productDetailsPage.priceField(
-			'$ 10.00',
+			'$ 5.00',
 			productDetailsPage.priceContainer
 		)
 	).toBeVisible();
@@ -1064,7 +1066,7 @@ test('LPD-39598 Can view SKU UOM discount is applied on product details page', a
 
 	await expect(
 		await productDetailsPage.priceField(
-			'$ 20.00',
+			`$ 20.00 / ${uom2.name['en_US']}`,
 			productDetailsPage.priceContainer
 		)
 	).toBeVisible();

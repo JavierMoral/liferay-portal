@@ -2032,3 +2032,55 @@ Use the Instance key for an application that applies to one virtual instance, an
 ### Why was this change made?
 
 Configuration mixed settings that apply to the whole installation with settings that apply to one virtual instance. The Control Panel root is rebuilt around that distinction as a System scope and an Instance scope, which left Configuration empty.
+
+---------------------------------------
+
+## Changed the CMP Project and Task Description Fields to Rich Text
+- **Date:** 2026-Oct-19
+- **JIRA Ticket:** [LPD-107347](https://liferay.atlassian.net/browse/LPD-107347)
+
+### What changed?
+
+The `description` field of the CMPProject and CMPTask object definitions has the Rich Text business type instead of Long Text. An upgrade process converts the existing descriptions to HTML: blank lines separate paragraphs, single line breaks are kept as line breaks, and `<`, `>` and `&` are escaped so that plain text is not interpreted as HTML. The `/o/cmp/projects` and `/o/cmp/tasks` endpoints return HTML in `description` and expose a read-only `descriptionRawText` property with the text content. Rich Text fields are not part of the OData entity model, so `description` is no longer accepted in the `filter` and `sort` parameters of those endpoints. The `descriptionRawText` property is not exposed in GraphQL or in the generated OpenAPI document, and it is ignored when it is sent in a request body.
+
+### Who is affected?
+
+This affects integrations that read a project's or a task's `description` and expect plain text, that filter or sort projects or tasks by `description`, or that write `description` and expect the value to be displayed verbatim. End users see a rich text editor on the project and task edit pages.
+
+### How should I update my code?
+
+Read `descriptionRawText` when the text content is needed, and treat `description` as HTML. Remove `description` from `filter` and `sort` expressions, and use the `search` parameter to match projects or tasks by their description. When writing a description, send HTML; a plain string is still accepted and is stored as is.
+
+### Why was this change made?
+
+Long Text stores plain text, so project and task descriptions could not carry headings, lists, tables or images. Rich Text is the Objects business type for HTML content and the one the CMS content fields already use, so the descriptions reuse the same editor and the same API contract instead of introducing a parallel field. The fields keep their names and external reference codes so that existing integrations keep addressing the same properties, which is why the change in the values' contract is documented here instead of going through a deprecation.
+
+---------------------------------------
+
+## Renamed Columns Without Their Type
+- **Date:** 2026-Oct-22
+- **JIRA Ticket:** [LPD-4267](https://liferay.atlassian.net/browse/LPD-4267)
+
+### What changed?
+
+The column rename operation takes the new column name only. The third argument of `UpgradeProcessFactory.alterColumnName`, `BaseDBProcess.alterColumnName` and `DB.alterColumnName` was the new column definition, for example `"iFrameURL VARCHAR(1024) null"`, and is now the new column name, for example `"iFrameURL"`. The same applies to the second argument of `LiveUpgradeProcessFactory.alterColumnName`. A new column name that still contains a type is renamed to its first word, and a warning is logged. On MySQL and MariaDB the rename now runs `rename column` instead of `change column`. The `alter_column_name <table> <old column> <new column>` statement that `runSQL` accepts also takes the new column name only and rejects a trailing type.
+
+### Who is affected?
+
+This affects developers whose upgrade processes rename a column with one of these methods. The code still compiles because the argument is still a `String`, and an upgrade step that passes a type logs a warning when it runs.
+
+### How should I update my code?
+
+Pass the new column name only:
+
+```java
+UpgradeProcessFactory.alterColumnName("RemoteAppEntry", "url", "iFrameURL")
+```
+
+The column keeps its existing type, nullability and default value.
+
+### Why was this change made?
+
+The type was only needed for MySQL 5.7, which cannot rename a column without restating its definition. A type that did not match the column in the database failed the upgrade with `Type change is not allowed when altering column name`. Support for MySQL 5.7 and MariaDB 10.2 and 10.4 ends in 2026.Q4, so the type is no longer needed.
+
+---------------------------------------

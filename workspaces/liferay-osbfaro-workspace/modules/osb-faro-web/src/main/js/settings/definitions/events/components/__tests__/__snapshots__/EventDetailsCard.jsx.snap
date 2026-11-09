@@ -155,7 +155,11 @@ exports[`EventDetailsCard should render 1`] = `
               <td
                 class="table-cell-expand text-truncate"
               >
-                -
+                <span
+                  class="text-secondary"
+                >
+                  –
+                </span>
               </td>
               <td
                 class="table-cell-expand-smaller text-truncate"
@@ -164,7 +168,7 @@ exports[`EventDetailsCard should render 1`] = `
               </td>
               <td>
                 <span
-                  class="label label-lg label-inverse-info"
+                  class="label label-sm label-inverse-info"
                 >
                   <span
                     class="label-item label-item-expand"
@@ -225,7 +229,11 @@ exports[`EventDetailsCard should render 1`] = `
               <td
                 class="table-cell-expand text-truncate"
               >
-                -
+                <span
+                  class="text-secondary"
+                >
+                  –
+                </span>
               </td>
               <td
                 class="table-cell-expand-smaller text-truncate"
@@ -234,7 +242,7 @@ exports[`EventDetailsCard should render 1`] = `
               </td>
               <td>
                 <span
-                  class="label label-lg label-inverse-info"
+                  class="label label-sm label-inverse-info"
                 >
                   <span
                     class="label-item label-item-expand"
@@ -295,7 +303,11 @@ exports[`EventDetailsCard should render 1`] = `
               <td
                 class="table-cell-expand text-truncate"
               >
-                -
+                <span
+                  class="text-secondary"
+                >
+                  –
+                </span>
               </td>
               <td
                 class="table-cell-expand-smaller text-truncate"
@@ -304,7 +316,7 @@ exports[`EventDetailsCard should render 1`] = `
               </td>
               <td>
                 <span
-                  class="label label-lg label-inverse-info"
+                  class="label label-sm label-inverse-info"
                 >
                   <span
                     class="label-item label-item-expand"
@@ -365,7 +377,11 @@ exports[`EventDetailsCard should render 1`] = `
               <td
                 class="table-cell-expand text-truncate"
               >
-                -
+                <span
+                  class="text-secondary"
+                >
+                  –
+                </span>
               </td>
               <td
                 class="table-cell-expand-smaller text-truncate"
@@ -374,7 +390,7 @@ exports[`EventDetailsCard should render 1`] = `
               </td>
               <td>
                 <span
-                  class="label label-lg label-inverse-info"
+                  class="label label-sm label-inverse-info"
                 >
                   <span
                     class="label-item label-item-expand"
@@ -435,7 +451,11 @@ exports[`EventDetailsCard should render 1`] = `
               <td
                 class="table-cell-expand text-truncate"
               >
-                -
+                <span
+                  class="text-secondary"
+                >
+                  –
+                </span>
               </td>
               <td
                 class="table-cell-expand-smaller text-truncate"
@@ -444,7 +464,7 @@ exports[`EventDetailsCard should render 1`] = `
               </td>
               <td>
                 <span
-                  class="label label-lg label-inverse-info"
+                  class="label label-sm label-inverse-info"
                 >
                   <span
                     class="label-item label-item-expand"

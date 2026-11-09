@@ -245,16 +245,6 @@ public class DDMStructureLinkLocalServiceUtil {
 	}
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static List<DDMStructureLink> getClassNameStructureLinks(
-		long classNameId) {
-
-		return getService().getClassNameStructureLinks(classNameId);
-	}
-
-	/**
 	 * Returns the ddm structure link with the primary key.
 	 *
 	 * @param structureLinkId the primary key of the ddm structure link
@@ -318,12 +308,6 @@ public class DDMStructureLinkLocalServiceUtil {
 		return getService().getPersistedModel(primaryKeyObj);
 	}
 
-	public static DDMStructureLink getStructureLink(long structureLinkId)
-		throws PortalException {
-
-		return getService().getStructureLink(structureLinkId);
-	}
-
 	public static List<DDMStructureLink> getStructureLinks(long structureId) {
 		return getService().getStructureLinks(structureId);
 	}
@@ -364,42 +348,6 @@ public class DDMStructureLinkLocalServiceUtil {
 
 		return getService().getStructureLinkStructures(
 			classNameId, classPK, start, end);
-	}
-
-	public static List<com.liferay.dynamic.data.mapping.model.DDMStructure>
-			getStructureLinkStructures(
-				long classNameId, long classPK, String keywords)
-		throws PortalException {
-
-		return getService().getStructureLinkStructures(
-			classNameId, classPK, keywords);
-	}
-
-	public static List<com.liferay.dynamic.data.mapping.model.DDMStructure>
-			getStructureLinkStructures(
-				long classNameId, long classPK, String keywords, int start,
-				int end)
-		throws PortalException {
-
-		return getService().getStructureLinkStructures(
-			classNameId, classPK, keywords, start, end);
-	}
-
-	public static List<com.liferay.dynamic.data.mapping.model.DDMStructure>
-			getStructureLinkStructures(
-				long classNameId, long classPK, String keywords, int start,
-				int end, OrderByComparator<DDMStructureLink> orderByComparator)
-		throws PortalException {
-
-		return getService().getStructureLinkStructures(
-			classNameId, classPK, keywords, start, end, orderByComparator);
-	}
-
-	public static int getStructureLinkStructuresCount(
-		long classNameId, long classPK, String keywords) {
-
-		return getService().getStructureLinkStructuresCount(
-			classNameId, classPK, keywords);
 	}
 
 	public static DDMStructureLink getUniqueStructureLink(
@@ -444,4 +392,4 @@ public class DDMStructureLinkLocalServiceUtil {
 			DDMStructureLinkLocalService.class);
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-665775855
+// LIFERAY-SERVICE-BUILDER-HASH:-340775591

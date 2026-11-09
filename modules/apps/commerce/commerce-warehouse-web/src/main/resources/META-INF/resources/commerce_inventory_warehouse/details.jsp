@@ -12,9 +12,9 @@ CommerceInventoryWarehousesDisplayContext cIWarehousesDisplayContext = (Commerce
 
 CommerceInventoryWarehouse commerceInventoryWarehouse = cIWarehousesDisplayContext.getCommerceInventoryWarehouse();
 
-String countryTwoLettersISOCode = BeanParamUtil.getString(commerceInventoryWarehouse, request, "countryTwoLettersISOCode");
+String countryTwoLettersISOCode = ParamUtil.getString(request, "countryTwoLettersISOCode", GetterUtil.get(commerceInventoryWarehouse, CommerceInventoryWarehouse::getCountryTwoLettersISOCode, StringPool.BLANK));
 
-String commerceRegionCode = BeanParamUtil.getString(commerceInventoryWarehouse, request, "commerceRegionCode");
+String commerceRegionCode = ParamUtil.getString(request, "commerceRegionCode", GetterUtil.get(commerceInventoryWarehouse, CommerceInventoryWarehouse::getCommerceRegionCode, StringPool.BLANK));
 %>
 
 <liferay-ui:error exception="<%= CommerceGeocoderException.class %>">
@@ -84,7 +84,7 @@ String commerceRegionCode = BeanParamUtil.getString(commerceInventoryWarehouse, 
 
 		<div class="col">
 			<commerce-ui:panel
-				title='<%= LanguageUtil.get(request, "address") %>'
+				title='<%= LanguageUtil.get(request, "address[postal]") %>'
 			>
 				<div class="row">
 					<div class="col-lg-6">

@@ -271,16 +271,6 @@ public class DDMFormInstanceLocalServiceImpl
 	}
 
 	@Override
-	public void deleteFormInstances(long groupId) throws PortalException {
-		List<DDMFormInstance> ddmFormInstances =
-			ddmFormInstancePersistence.findByGroupId(groupId);
-
-		for (DDMFormInstance ddmFormInstance : ddmFormInstances) {
-			deleteFormInstance(ddmFormInstance);
-		}
-	}
-
-	@Override
 	public DDMFormInstance fetchFormInstance(long ddmFormInstanceId) {
 		return ddmFormInstancePersistence.fetchByPrimaryKey(ddmFormInstanceId);
 	}
@@ -290,13 +280,6 @@ public class DDMFormInstanceLocalServiceImpl
 		throws PortalException {
 
 		return ddmFormInstancePersistence.findByPrimaryKey(ddmFormInstanceId);
-	}
-
-	@Override
-	public DDMFormInstance getFormInstance(String uuid, long ddmFormInstanceId)
-		throws PortalException {
-
-		return ddmFormInstancePersistence.findByUUID_G(uuid, ddmFormInstanceId);
 	}
 
 	@Override
@@ -347,32 +330,6 @@ public class DDMFormInstanceLocalServiceImpl
 
 		return ddmFormInstanceFinder.findByKeywords(
 			companyId, groupId, keywords, start, end, orderByComparator);
-	}
-
-	@Override
-	public List<DDMFormInstance> search(
-		long companyId, long groupId, String[] names, String[] descriptions,
-		boolean andOperator, int start, int end,
-		OrderByComparator<DDMFormInstance> orderByComparator) {
-
-		return ddmFormInstanceFinder.findByC_G_N_D(
-			companyId, groupId, names, descriptions, andOperator, start, end,
-			orderByComparator);
-	}
-
-	@Override
-	public int searchCount(long companyId, long groupId, String keywords) {
-		return ddmFormInstanceFinder.countByKeywords(
-			companyId, groupId, keywords);
-	}
-
-	@Override
-	public int searchCount(
-		long companyId, long groupId, String[] names, String[] descriptions,
-		boolean andOperator) {
-
-		return ddmFormInstanceFinder.countByC_G_N_D(
-			companyId, groupId, names, descriptions, andOperator);
 	}
 
 	@Override

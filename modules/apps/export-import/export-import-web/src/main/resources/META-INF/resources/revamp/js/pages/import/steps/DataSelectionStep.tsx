@@ -3,7 +3,6 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import ClayLayout from '@clayui/layout';
 import React, {useId} from 'react';
 
 import ScopeSection from '../../../components/ScopeSection';
@@ -11,21 +10,23 @@ import SectionHeader from '../../../components/SectionHeader';
 import {
 	FormikFieldCheckbox,
 	FormikFieldContentSelector,
+	FormikFieldGroups,
 } from '../../../components/forms/formik';
 import {ImportPreview} from '../../../types/exportImportPreview';
+import {toPortletDataHandlerSections} from '../../../utils/contentSelection';
+import {getScopeSubtitle} from '../../../utils/getScopeSubtitle';
 import FileSummary from './FileSummary';
-import SiteSelection from './SiteSelection';
 
 export default function DataSelectionStep({
 	commentsAndRatingsEnabled = false,
 	importPreview,
-	lookAndFeelEnabled = false,
 	siteSelectionEnabled = false,
+	spaceSelectionEnabled = false,
 }: {
 	commentsAndRatingsEnabled?: boolean;
 	importPreview?: ImportPreview;
-	lookAndFeelEnabled?: boolean;
 	siteSelectionEnabled?: boolean;
+	spaceSelectionEnabled?: boolean;
 }) {
 	const labelId = useId();
 
@@ -33,22 +34,54 @@ export default function DataSelectionStep({
 		return null;
 	}
 
+	const sites =
+		siteSelectionEnabled && importPreview.sites?.length
+			? importPreview.sites
+			: undefined;
+
+	const previewSpaces = importPreview.assetLibraries?.filter(
+		({type}) => type === 'Space'
+	);
+
+	const spaces =
+		spaceSelectionEnabled && previewSpaces?.length
+			? previewSpaces
+			: undefined;
+
 	return (
 		<>
 			<FileSummary importPreview={importPreview} />
 
-			{siteSelectionEnabled && !!importPreview.previewSites?.length && (
+			{(sites || spaces) && (
 				<ScopeSection
-					subtitle={Liferay.Language.get(
-						'import-complete-sites-from-your-file,-including-all-their-pages,-content,-and-settings'
-					)}
+					subtitle={getScopeSubtitle('import', {
+						siteSelectionEnabled: !!sites,
+						spaceSelectionEnabled: !!spaces,
+					})}
 				>
-					<SiteSelection previewSites={importPreview.previewSites} />
+					{sites && (
+						<FormikFieldGroups
+							groups={sites}
+							name="siteExternalReferenceCodes"
+							process="import"
+							totalCount={sites.length}
+							type="site"
+						/>
+					)}
+
+					{spaces && (
+						<FormikFieldGroups
+							groups={spaces}
+							name="spaceExternalReferenceCodes"
+							process="import"
+							totalCount={spaces.length}
+							type="space"
+						/>
+					)}
 				</ScopeSection>
 			)}
 
 			<SectionHeader
-				className="mt-4"
 				id={labelId}
 				subtitle={Liferay.Language.get(
 					'select-the-data-from-your-file-that-you-would-like-to-import'
@@ -56,35 +89,30 @@ export default function DataSelectionStep({
 				title={Liferay.Language.get('data-selection')}
 			/>
 
-			<ClayLayout.Sheet className="option-group">
-				<FormikFieldCheckbox
-					description={Liferay.Language.get(
-						'export-import-permissions-help'
-					)}
-					label={Liferay.Language.get('import-permissions')}
-					name="permissions"
-				/>
-
-				{importPreview.deletionCount > 0 && (
-					<FormikFieldCheckbox
-						description={Liferay.Language.get('deletions-help')}
-						label={Liferay.Language.get(
-							'replicate-selected-deletions'
-						)}
-						name="deletions"
-					/>
+			<FormikFieldCheckbox
+				description={Liferay.Language.get(
+					'export-import-permissions-help'
 				)}
-			</ClayLayout.Sheet>
+				label={Liferay.Language.get('import-permissions')}
+				name="permissions"
+			/>
+
+			{importPreview.deletionCount > 0 && (
+				<FormikFieldCheckbox
+					description={Liferay.Language.get('deletions-help')}
+					label={Liferay.Language.get('replicate-selected-deletions')}
+					name="deletions"
+				/>
+			)}
 
 			<div data-testid="data-selection-section">
 				<FormikFieldContentSelector
 					aria-labelledby={labelId}
 					commentsAndRatingsEnabled={commentsAndRatingsEnabled}
-					lookAndFeelEnabled={lookAndFeelEnabled}
 					name="contentSelection"
-					previewPortletDataHandlerSections={
-						importPreview.previewPortletDataHandlerSections
-					}
+					portletDataHandlerSections={toPortletDataHandlerSections(
+						importPreview.portletDataHandlers
+					)}
 					process="import"
 				/>
 			</div>

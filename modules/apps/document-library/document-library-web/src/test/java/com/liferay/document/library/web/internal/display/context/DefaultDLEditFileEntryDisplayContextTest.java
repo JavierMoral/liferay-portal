@@ -6,13 +6,12 @@
 package com.liferay.document.library.web.internal.display.context;
 
 import com.liferay.document.library.kernel.model.DLFileEntryType;
+import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.document.library.kernel.util.DLValidator;
 import com.liferay.document.library.web.internal.display.context.helper.FileEntryDisplayContextHelper;
 import com.liferay.dynamic.data.mapping.form.values.factory.DDMFormValuesFactory;
 import com.liferay.dynamic.data.mapping.storage.DDMStorageEngineManager;
-import com.liferay.portal.bean.BeanPropertiesImpl;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
-import com.liferay.portal.kernel.bean.BeanPropertiesUtil;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
@@ -20,10 +19,10 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -37,11 +36,44 @@ public class DefaultDLEditFileEntryDisplayContextTest {
 	public static LiferayUnitTestRule liferayUnitTestRule =
 		LiferayUnitTestRule.INSTANCE;
 
-	@Before
-	public void setUp() {
-		BeanPropertiesUtil beanPropertiesUtil = new BeanPropertiesUtil();
+	@Test
+	public void testGetPublishButtonLabel() throws Exception {
+		DefaultDLEditFileEntryDisplayContext
+			defaultDLEditFileEntryDisplayContext =
+				_getDefaultDLEditFileEntryDisplayContext();
 
-		beanPropertiesUtil.setBeanProperties(new BeanPropertiesImpl());
+		FileEntryDisplayContextHelper fileEntryDisplayContextHelper =
+			Mockito.mock(FileEntryDisplayContextHelper.class);
+
+		ReflectionTestUtil.setFieldValue(
+			defaultDLEditFileEntryDisplayContext,
+			"_fileEntryDisplayContextHelper", fileEntryDisplayContextHelper);
+
+		try (MockedStatic<DLUtil> dlUtilMockedStatic = Mockito.mockStatic(
+				DLUtil.class)) {
+
+			dlUtilMockedStatic.when(
+				() -> DLUtil.hasWorkflowDefinitionLink(
+					Mockito.anyLong(), Mockito.anyLong(), Mockito.anyLong(),
+					Mockito.anyLong())
+			).thenReturn(
+				true
+			);
+
+			Assert.assertEquals(
+				"submit-for-workflow",
+				defaultDLEditFileEntryDisplayContext.getPublishButtonLabel());
+
+			Mockito.when(
+				fileEntryDisplayContextHelper.isCheckedOut()
+			).thenReturn(
+				true
+			);
+
+			Assert.assertEquals(
+				"save",
+				defaultDLEditFileEntryDisplayContext.getPublishButtonLabel());
+		}
 	}
 
 	@Test

@@ -29,7 +29,6 @@ import com.liferay.dynamic.data.mapping.storage.DDMStorageEngineManager;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.module.configuration.ConfigurationProvider;
-import com.liferay.portal.kernel.bean.BeanParamUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.model.Group;
@@ -193,6 +192,10 @@ public class DefaultDLEditFileEntryDisplayContext
 
 	@Override
 	public String getPublishButtonLabel() {
+		if (_fileEntryDisplayContextHelper.isCheckedOut()) {
+			return "save";
+		}
+
 		if (_hasFolderWorkflowDefinitionLink()) {
 			return "submit-for-workflow";
 		}
@@ -200,9 +203,7 @@ public class DefaultDLEditFileEntryDisplayContext
 		DLPortletInstanceSettings dlPortletInstanceSettings =
 			_dlRequestHelper.getDLPortletInstanceSettings();
 
-		if (dlPortletInstanceSettings.isEnableFileEntryDrafts() ||
-			_fileEntryDisplayContextHelper.isCheckedOut()) {
-
+		if (dlPortletInstanceSettings.isEnableFileEntryDrafts()) {
 			return "save";
 		}
 
@@ -465,8 +466,9 @@ public class DefaultDLEditFileEntryDisplayContext
 
 	private boolean _hasFolderWorkflowDefinitionLink() {
 		try {
-			long folderId = BeanParamUtil.getLong(
-				_fileEntry, _dlRequestHelper.getRequest(), "folderId");
+			long folderId = ParamUtil.getLong(
+				_dlRequestHelper.getRequest(), "folderId",
+				GetterUtil.get(_fileEntry, FileEntry::getFolderId, 0L));
 
 			long fileEntryTypeId =
 				DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_BASIC_DOCUMENT;

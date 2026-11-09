@@ -14,7 +14,6 @@ import com.liferay.portal.kernel.repository.RepositoryFactory;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.RepositoryLocalService;
-import com.liferay.portal.kernel.settings.SettingsLocatorHelper;
 import com.liferay.portal.kernel.upgrade.BaseStagingGroupTypeSettingsUpgradeProcess;
 import com.liferay.portal.upgrade.registry.UpgradeStepRegistrator;
 
@@ -33,9 +32,7 @@ public class DLWebUpgradeStepRegistrator implements UpgradeStepRegistrator {
 
 		registry.register("0.0.1", "0.0.2", new UpgradeAdminPortlets());
 
-		registry.register(
-			"0.0.2", "1.0.0",
-			new UpgradePortletSettings(_settingsLocatorHelper));
+		registry.register("0.0.2", "1.0.0", new UpgradePortletSettings());
 
 		registry.register(
 			"1.0.0", "1.0.1",
@@ -64,6 +61,13 @@ public class DLWebUpgradeStepRegistrator implements UpgradeStepRegistrator {
 			"1.2.0", "1.3.0",
 			new com.liferay.document.library.web.internal.upgrade.v1_3_0.
 				UpgradePortletPreferences(_groupLocalService));
+
+		registry.register(
+			"1.3.0", "1.4.0",
+			new com.liferay.document.library.web.internal.upgrade.v1_4_0.
+				UpgradePortletPreferences(
+					_dlAppLocalService, _groupLocalService,
+					_repositoryLocalService));
 	}
 
 	@Reference
@@ -82,8 +86,5 @@ public class DLWebUpgradeStepRegistrator implements UpgradeStepRegistrator {
 
 	@Reference
 	private RepositoryLocalService _repositoryLocalService;
-
-	@Reference
-	private SettingsLocatorHelper _settingsLocatorHelper;
 
 }

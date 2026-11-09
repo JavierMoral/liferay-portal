@@ -281,18 +281,6 @@ public class DDMStructureLinkLocalServiceWrapper
 	}
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public java.util.List<DDMStructureLink> getClassNameStructureLinks(
-		long classNameId) {
-
-		return _ddmStructureLinkLocalService.getClassNameStructureLinks(
-			classNameId);
-	}
-
-	/**
 	 * Returns the ddm structure link with the primary key.
 	 *
 	 * @param structureLinkId the primary key of the ddm structure link
@@ -365,13 +353,6 @@ public class DDMStructureLinkLocalServiceWrapper
 	}
 
 	@Override
-	public DDMStructureLink getStructureLink(long structureLinkId)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _ddmStructureLinkLocalService.getStructureLink(structureLinkId);
-	}
-
-	@Override
 	public java.util.List<DDMStructureLink> getStructureLinks(
 		long structureId) {
 
@@ -425,48 +406,6 @@ public class DDMStructureLinkLocalServiceWrapper
 
 		return _ddmStructureLinkLocalService.getStructureLinkStructures(
 			classNameId, classPK, start, end);
-	}
-
-	@Override
-	public java.util.List<com.liferay.dynamic.data.mapping.model.DDMStructure>
-			getStructureLinkStructures(
-				long classNameId, long classPK, String keywords)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _ddmStructureLinkLocalService.getStructureLinkStructures(
-			classNameId, classPK, keywords);
-	}
-
-	@Override
-	public java.util.List<com.liferay.dynamic.data.mapping.model.DDMStructure>
-			getStructureLinkStructures(
-				long classNameId, long classPK, String keywords, int start,
-				int end)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _ddmStructureLinkLocalService.getStructureLinkStructures(
-			classNameId, classPK, keywords, start, end);
-	}
-
-	@Override
-	public java.util.List<com.liferay.dynamic.data.mapping.model.DDMStructure>
-			getStructureLinkStructures(
-				long classNameId, long classPK, String keywords, int start,
-				int end,
-				com.liferay.portal.kernel.util.OrderByComparator
-					<DDMStructureLink> orderByComparator)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _ddmStructureLinkLocalService.getStructureLinkStructures(
-			classNameId, classPK, keywords, start, end, orderByComparator);
-	}
-
-	@Override
-	public int getStructureLinkStructuresCount(
-		long classNameId, long classPK, String keywords) {
-
-		return _ddmStructureLinkLocalService.getStructureLinkStructuresCount(
-			classNameId, classPK, keywords);
 	}
 
 	@Override
@@ -546,4 +485,4 @@ public class DDMStructureLinkLocalServiceWrapper
 	private DDMStructureLinkLocalService _ddmStructureLinkLocalService;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-1981699892
+// LIFERAY-SERVICE-BUILDER-HASH:-2000733692

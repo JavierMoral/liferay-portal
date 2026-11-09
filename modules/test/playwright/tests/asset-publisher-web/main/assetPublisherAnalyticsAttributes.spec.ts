@@ -141,7 +141,11 @@ test(
 
 		await pageEditorPage.publishPage();
 
-		await page.goto(`/web${site.friendlyUrlPath}${layout.friendlyUrlPath}`);
+		await expect(async () => {
+			await page.goto(
+				`/web${site.friendlyUrlPath}${layout.friendlyUrlPath}`
+			);
+		}).toPass();
 
 		for (const [name, titleElement] of Object.entries(displayTemplates)) {
 			const titleLocator = page.locator(
@@ -238,12 +242,7 @@ test(
 		let space;
 
 		await expect(async () => {
-			space = await apiHelpers.headlessAssetLibrary.createAssetLibrary({
-				externalReferenceCode: getRandomString(),
-				name: `Space ${getRandomString()}`,
-				settings: {},
-				type: 'Space',
-			});
+			space = await apiHelpers.headlessAssetLibrary.createSpace();
 		}).toPass();
 
 		await apiHelpers.headlessAssetLibrary.connectSite(

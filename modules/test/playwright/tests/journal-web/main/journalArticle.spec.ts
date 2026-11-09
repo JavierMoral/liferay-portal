@@ -778,7 +778,7 @@ baseTest(
 		await journalPage.changeView('Table');
 
 		await expect(
-			page.getByRole('cell', {name: 'Description'})
+			page.getByRole('columnheader', {name: 'Description'})
 		).toBeVisible();
 
 		await page
@@ -805,9 +805,9 @@ baseTest(
 
 		await journalPage.goto(site.friendlyUrlPath);
 
-		await expect(page.getByRole('cell', {name: 'Description'})).toHaveCount(
-			0
-		);
+		await expect(
+			page.getByRole('columnheader', {name: 'Description'})
+		).toHaveCount(0);
 	}
 );
 
@@ -2453,6 +2453,187 @@ ckeditor4Test(
 			.getAttribute('data-fileentryid');
 
 		await expect(moonImageFileEntryId).not.toBe(satelliteImageFileEntryId);
+	}
+);
+
+ckeditor4Test(
+	'Reset translation restores the default language value of a required rich text field',
+	{tag: '@LPD-109677'},
+	async ({apiHelpers, journalEditArticlePage, journalPage, page, site}) => {
+		const richTextFieldName = 'RichText';
+
+		const structure = await apiHelpers.dataEngine.createStructure(
+			site.id,
+			getDataStructureDefinition({
+				defaultLanguageId: 'en_US',
+				fields: [
+					{
+						fieldType: 'rich_text',
+						name: richTextFieldName,
+						required: true,
+					},
+				],
+				name: getRandomString(),
+			})
+		);
+
+		const defaultValue = getRandomString();
+		const title = getRandomString();
+		const translatedValue = getRandomString();
+
+		await apiHelpers.headlessDelivery.postStructuredContent({
+			contentFields: [
+				{
+					contentFieldValue: {data: `<p>${defaultValue}</p>`},
+					contentFieldValue_i18n: {
+						'ca-ES': {data: `<p>${translatedValue}</p>`},
+						'en-US': {data: `<p>${defaultValue}</p>`},
+					},
+					name: richTextFieldName,
+				},
+			],
+			contentStructureId: Number(structure.id),
+			datePublished: null,
+			siteId: site.id,
+			title,
+			title_i18n: {'ca-ES': title, 'en-US': title},
+		});
+
+		await journalPage.goto(site.friendlyUrlPath);
+
+		await journalEditArticlePage.editArticle(title);
+
+		const richTextEditable = page
+			.locator(`[data-field-name="${richTextFieldName}"]`)
+			.frameLocator('iframe')
+			.getByRole('textbox', {name: richTextFieldName});
+
+		await expect(richTextEditable).toHaveText(defaultValue);
+
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: page.getByRole('option', {
+				name: 'Catalan Language: Translated',
+			}),
+			trigger: page.getByRole('combobox', {name: 'Select a language'}),
+		});
+
+		await expect(richTextEditable).toHaveText(translatedValue);
+
+		await page.getByLabel('Translation Options').click();
+
+		await page.getByRole('button', {name: 'Reset Translation'}).click();
+
+		await page.getByRole('button', {name: 'Delete'}).click();
+
+		await expect(richTextEditable).toHaveText(defaultValue);
+	}
+);
+
+ckeditor4Test(
+	'Reset translation removes the translation of a Rich Text field',
+	{tag: '@LPD-111320'},
+	async ({apiHelpers, journalEditArticlePage, journalPage, page, site}) => {
+		const richTextFieldName = 'RichText';
+
+		const structure = await apiHelpers.dataEngine.createStructure(
+			site.id,
+			getDataStructureDefinition({
+				defaultLanguageId: 'en_US',
+				fields: [
+					{
+						fieldType: 'rich_text',
+						name: richTextFieldName,
+						required: true,
+					},
+				],
+				name: getRandomString(),
+			})
+		);
+
+		const defaultValue = getRandomString();
+		const title = getRandomString();
+
+		await apiHelpers.headlessDelivery.postStructuredContent({
+			contentFields: [
+				{
+					contentFieldValue: {data: `<p>${defaultValue}</p>`},
+					contentFieldValue_i18n: {
+						'ca-ES': {data: `<p>${getRandomString()}</p>`},
+						'en-US': {data: `<p>${defaultValue}</p>`},
+					},
+					name: richTextFieldName,
+				},
+			],
+			contentStructureId: Number(structure.id),
+			datePublished: null,
+			siteId: site.id,
+			title,
+			title_i18n: {'ca-ES': title, 'en-US': title},
+		});
+
+		await journalPage.goto(site.friendlyUrlPath);
+
+		await journalEditArticlePage.editArticle(title);
+
+		const translationButton = page.getByRole('combobox', {
+			name: 'Select a language',
+		});
+
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: page.getByRole('option', {
+				name: 'Catalan Language: Translated',
+			}),
+			trigger: translationButton,
+		});
+
+		await page.getByLabel('Translation Options').click();
+
+		await page.getByRole('button', {name: 'Reset Translation'}).click();
+
+		await page.getByRole('button', {name: 'Delete'}).click();
+
+		const richTextEditable = page
+			.locator(`[data-field-name="${richTextFieldName}"]`)
+			.frameLocator('iframe')
+			.getByRole('textbox', {name: richTextFieldName});
+
+		await expect(richTextEditable).toHaveText(defaultValue);
+
+		await page.waitForLoadState('networkidle');
+
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: page.getByRole('option', {
+				name: 'English Language: Default',
+			}),
+			trigger: translationButton,
+		});
+
+		await clickAndExpectToBeVisible({
+			autoClick: true,
+			target: page.getByRole('option', {
+				name: 'Catalan Language: Not Translated',
+			}),
+			trigger: translationButton,
+		});
+
+		await expect(richTextEditable).toHaveText(defaultValue);
+
+		await journalEditArticlePage.publishArticle(true);
+
+		await waitForAlert(page, `Success:${title} was updated successfully.`);
+
+		await journalEditArticlePage.editArticle(title);
+
+		await clickAndExpectToBeVisible({
+			autoClick: false,
+			target: page.getByRole('option', {
+				name: 'Catalan Language: Not Translated',
+			}),
+			trigger: translationButton,
+		});
 	}
 );
 

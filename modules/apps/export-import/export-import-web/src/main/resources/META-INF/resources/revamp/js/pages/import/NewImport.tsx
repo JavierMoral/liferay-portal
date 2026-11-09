@@ -3,8 +3,6 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import ClayButton from '@clayui/button';
-import ClayIcon from '@clayui/icon';
 import React, {useState} from 'react';
 
 import {Wizard, WizardStep} from '../../components/Wizard';
@@ -13,8 +11,13 @@ import {postImportProcess} from '../../services/postImportProcess';
 import {ImportPreview} from '../../types/exportImportPreview';
 import {DataStrategy, UserIdStrategy} from '../../types/exportImportProcess';
 import {Scope} from '../../types/scope';
-import {toProcessRequestFlags} from '../../utils/contentSelection';
-import {toRequestPortletDataHandlers} from '../../utils/toRequestPortletDataHandlers';
+import {
+	toPortletDataHandlerSections,
+	toProcessRequestFlags,
+} from '../../utils/contentSelection';
+import {navigateToProcesses} from '../../utils/navigateToProcesses';
+import {toGroupReferences} from '../../utils/toGroupReferences';
+import {toPortletDataHandlers} from '../../utils/toPortletDataHandlers';
 import DataSelectionStep from './steps/DataSelectionStep';
 import FileSelectionStep from './steps/FileSelectionStep';
 import SettingsStep, {SETTINGS_STEP_INITIAL_VALUES} from './steps/SettingsStep';
@@ -24,17 +27,17 @@ export function NewImport({
 	commentsAndRatingsEnabled = false,
 	importPreviewAPIURL,
 	importProcessAPIURL,
-	lookAndFeelEnabled = false,
 	scope,
 	siteSelectionEnabled = false,
+	spaceSelectionEnabled = false,
 }: {
 	backURL: string;
 	commentsAndRatingsEnabled?: boolean;
 	importPreviewAPIURL: string;
 	importProcessAPIURL: string;
-	lookAndFeelEnabled?: boolean;
 	scope: Scope;
 	siteSelectionEnabled?: boolean;
+	spaceSelectionEnabled?: boolean;
 }) {
 	const [importPreview, setImportPreview] = useState<
 		ImportPreview | undefined
@@ -43,9 +46,6 @@ export function NewImport({
 	return (
 		<Wizard backURL={backURL}>
 			<WizardStep
-				description={Liferay.Language.get(
-					'name-your-import-process-and-upload-your-file'
-				)}
 				initialValues={{
 					fileSelector: undefined,
 					name: '',
@@ -69,36 +69,28 @@ export function NewImport({
 					deletions: false,
 					permissions: false,
 					siteExternalReferenceCodes: [],
+					spaceExternalReferenceCodes: [],
 				}}
 				isStepValid={(values) =>
 					!!values.contentSelection ||
-					!!values.siteExternalReferenceCodes?.length
+					!!values.siteExternalReferenceCodes?.length ||
+					!!values.spaceExternalReferenceCodes?.length
 				}
 				title={Liferay.Language.get('data-selection')}
 			>
 				<DataSelectionStep
 					commentsAndRatingsEnabled={commentsAndRatingsEnabled}
 					importPreview={importPreview}
-					lookAndFeelEnabled={lookAndFeelEnabled}
 					siteSelectionEnabled={siteSelectionEnabled}
+					spaceSelectionEnabled={spaceSelectionEnabled}
 				/>
 			</WizardStep>
 
 			<WizardStep
-				actionButton={
-					<ClayButton type="submit">
-						<span className="inline-item inline-item-before">
-							<ClayIcon className="mr-1" symbol="import" />
-						</span>
-
-						{Liferay.Language.get('import')}
-					</ClayButton>
-				}
-				description={Liferay.Language.get(
-					'set-up-your-import-configuration'
-				)}
+				actionButtonLabel={Liferay.Language.get('import')}
+				actionButtonSymbol="import"
 				initialValues={SETTINGS_STEP_INITIAL_VALUES}
-				onSubmit={async (values) => {
+				onSubmit={async (values, {setStatus}) => {
 					if (!importPreview) {
 						Liferay.Util.openToast({
 							message: Liferay.Language.get(
@@ -117,18 +109,26 @@ export function NewImport({
 					const result = await postImportProcess({
 						importProcessRequest: {
 							...toProcessRequestFlags(contentSelection),
+							...(spaceSelectionEnabled && {
+								assetLibraries: toGroupReferences(
+									values.spaceExternalReferenceCodes as string[]
+								),
+							}),
 							dataStrategy: values.dataStrategy as DataStrategy,
 							deletions: !!values.deletions,
 							name: values.name,
 							permissions: !!values.permissions,
-							requestPortletDataHandlers:
-								toRequestPortletDataHandlers(
-									importPreview.previewPortletDataHandlerSections ??
-										[],
-									values.contentSelection
+							portletDataHandlers: toPortletDataHandlers(
+								toPortletDataHandlerSections(
+									importPreview.portletDataHandlers ?? []
 								),
-							siteExternalReferenceCodes:
-								values.siteExternalReferenceCodes,
+								contentSelection
+							),
+							...(siteSelectionEnabled && {
+								sites: toGroupReferences(
+									values.siteExternalReferenceCodes as string[]
+								),
+							}),
 							userIdStrategy:
 								values.userIdStrategy as UserIdStrategy,
 						},
@@ -144,7 +144,11 @@ export function NewImport({
 						return;
 					}
 
-					Liferay.Util.navigate(backURL);
+					navigateToProcesses(
+						setStatus,
+						Liferay.Language.get('the-process-has-started'),
+						backURL
+					);
 				}}
 				title={Liferay.Language.get('settings')}
 			>

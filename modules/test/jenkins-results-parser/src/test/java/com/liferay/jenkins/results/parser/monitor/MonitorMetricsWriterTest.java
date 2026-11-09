@@ -114,14 +114,13 @@ public class MonitorMetricsWriterTest
 				"monitor_message_info{message=\"", message,
 				"\",monitor=\"disk\"} 1.0\n",
 				"# HELP monitor_status Monitor status severity rank, ",
-				"0 OK, 1 UNKNOWN, 2 WARN, 3 CRITICAL\n",
-				"# TYPE monitor_status gauge\n",
+				"0 OK, 2 WARN, 3 CRITICAL\n", "# TYPE monitor_status gauge\n",
 				"monitor_status{monitor=\"disk\",severity=\"high\",",
 				"type=\"resource-threshold\"} 3.0\n",
 				"monitor_status{monitor=\"queue\",severity=\"medium\",",
 				"type=\"job-health\"} 0.0\n",
 				"monitor_status{monitor=\"testray\",severity=\"low\",",
-				"type=\"external-status\"} 1.0\n"),
+				"type=\"external-status\"} 3.0\n"),
 			read(metricsFile));
 	}
 
@@ -317,6 +316,52 @@ public class MonitorMetricsWriterTest
 	}
 
 	@Test
+	public void testWriteLinks() throws Exception {
+		MonitorResultStore monitorResultStore = new MonitorResultStore();
+
+		String message = RandomTestUtil.randomString();
+
+		monitorResultStore.store(
+			"disk",
+			new MonitorResult(
+				message, null, MonitorResult.Status.CRITICAL,
+				RandomTestUtil.randomLong()));
+
+		File metricsFile = new File(
+			temporaryFolder.getRoot(), RandomTestUtil.randomString());
+
+		String linkURL = "https://" + RandomTestUtil.randomString();
+
+		_write(
+			metricsFile, monitorResultStore,
+			Arrays.<Monitor>asList(
+				new TestMonitor(
+					_newMonitorConfig(
+						"disk", MonitorConfig.Severity.HIGH,
+						"resource-threshold")) {
+
+					@Override
+					public List<String> getLinkURLs() {
+						return Arrays.asList(
+							linkURL + "/job/a (b)\"c", linkURL);
+					}
+
+				}));
+
+		String content = read(metricsFile);
+
+		Assert.assertTrue(
+			content,
+			content.contains(
+				JenkinsResultsParserUtil.combine(
+					"monitor_message_info{links=\"", linkURL,
+					"/job/a (b)\\\"c\\n", linkURL, "\",message=\"", message,
+					"\",monitor=\"disk\"} 1.0\n")));
+
+		testEquals(content.indexOf("links="), content.lastIndexOf("links="));
+	}
+
+	@Test
 	public void testWriteMessage() throws Exception {
 		for (MonitorResult.Status status : MonitorResult.Status.values()) {
 			if (status == MonitorResult.Status.OK) {
@@ -409,7 +454,7 @@ public class MonitorMetricsWriterTest
 			content,
 			content.contains(
 				"monitor_status{monitor=\"disk\",severity=\"high\"," +
-					"type=\"resource-threshold\"} 1.0\n"));
+					"type=\"resource-threshold\"} 3.0\n"));
 	}
 
 	@Test
@@ -432,6 +477,21 @@ public class MonitorMetricsWriterTest
 			temporaryFolder.getRoot(), metricsFileName + ".tmp");
 
 		Assert.assertFalse(temporaryFile.exists());
+	}
+
+	@Test
+	public void testWriteResultLinks() throws Exception {
+		String resultLinkURL = "https://" + RandomTestUtil.randomString();
+
+		String content = _writeResultLinks(
+			Collections.singletonList(resultLinkURL));
+
+		Assert.assertTrue(
+			content, content.contains("links=\"" + resultLinkURL + "\""));
+
+		content = _writeResultLinks(Collections.<String>emptyList());
+
+		Assert.assertFalse(content, content.contains("links="));
 	}
 
 	@Test
@@ -721,6 +781,37 @@ public class MonitorMetricsWriterTest
 
 			monitorMetricsWriter.write();
 		}
+	}
+
+	private String _writeResultLinks(List<String> linkURLs) throws Exception {
+		MonitorResultStore monitorResultStore = new MonitorResultStore();
+
+		monitorResultStore.store(
+			"disk",
+			new MonitorResult(
+				linkURLs, RandomTestUtil.randomString(), null,
+				MonitorResult.Status.CRITICAL, RandomTestUtil.randomLong()));
+
+		File metricsFile = new File(
+			temporaryFolder.getRoot(), RandomTestUtil.randomString());
+
+		_write(
+			metricsFile, monitorResultStore,
+			Arrays.<Monitor>asList(
+				new TestMonitor(
+					_newMonitorConfig(
+						"disk", MonitorConfig.Severity.HIGH,
+						"resource-threshold")) {
+
+					@Override
+					public List<String> getLinkURLs() {
+						return Collections.singletonList(
+							"https://" + RandomTestUtil.randomString());
+					}
+
+				}));
+
+		return read(metricsFile);
 	}
 
 }

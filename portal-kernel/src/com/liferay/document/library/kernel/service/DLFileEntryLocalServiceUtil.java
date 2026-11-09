@@ -128,15 +128,6 @@ public class DLFileEntryLocalServiceUtil {
 	}
 
 	public static DLFileEntry checkOutFileEntry(
-			long userId, long fileEntryId,
-			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws PortalException {
-
-		return getService().checkOutFileEntry(
-			userId, fileEntryId, serviceContext);
-	}
-
-	public static DLFileEntry checkOutFileEntry(
 			long userId, long fileEntryId, String owner, long expirationTime,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws PortalException {
@@ -224,12 +215,6 @@ public class DLFileEntryLocalServiceUtil {
 		return getService().deleteDLFileEntry(fileEntryId);
 	}
 
-	public static void deleteFileEntries(long groupId, long folderId)
-		throws PortalException {
-
-		getService().deleteFileEntries(groupId, folderId);
-	}
-
 	public static void deleteFileEntries(
 			long groupId, long folderId, boolean includeTrashedEntries)
 		throws PortalException {
@@ -263,14 +248,6 @@ public class DLFileEntryLocalServiceUtil {
 		return getService().deleteFileEntry(userId, fileEntryId);
 	}
 
-	public static DLFileEntry deleteFileEntryByExternalReferenceCode(
-			String externalReferenceCode, long groupId)
-		throws PortalException {
-
-		return getService().deleteFileEntryByExternalReferenceCode(
-			externalReferenceCode, groupId);
-	}
-
 	public static DLFileEntry deleteFileVersion(
 			long userId, long fileEntryId, String version)
 		throws PortalException {
@@ -292,21 +269,6 @@ public class DLFileEntryLocalServiceUtil {
 		throws PortalException {
 
 		getService().deleteRepositoryFileEntries(repositoryId);
-	}
-
-	public static void deleteRepositoryFileEntries(
-			long repositoryId, long folderId)
-		throws PortalException {
-
-		getService().deleteRepositoryFileEntries(repositoryId, folderId);
-	}
-
-	public static void deleteRepositoryFileEntries(
-			long repositoryId, long folderId, boolean includeTrashedEntries)
-		throws PortalException {
-
-		getService().deleteRepositoryFileEntries(
-			repositoryId, folderId, includeTrashedEntries);
 	}
 
 	public static <T> T dslQuery(DSLQuery dslQuery) {
@@ -478,13 +440,6 @@ public class DLFileEntryLocalServiceUtil {
 	}
 
 	public static List<DLFileEntry> getDDMStructureFileEntries(
-		long groupId, long[] ddmStructureIds) {
-
-		return getService().getDDMStructureFileEntries(
-			groupId, ddmStructureIds);
-	}
-
-	public static List<DLFileEntry> getDDMStructureFileEntries(
 		long[] ddmStructureIds) {
 
 		return getService().getDDMStructureFileEntries(ddmStructureIds);
@@ -595,10 +550,6 @@ public class DLFileEntryLocalServiceUtil {
 		return getService().getExtraSettingsFileEntries(start, end);
 	}
 
-	public static int getExtraSettingsFileEntriesCount() {
-		return getService().getExtraSettingsFileEntriesCount();
-	}
-
 	public static InputStream getFileAsStream(long fileEntryId, String version)
 		throws PortalException {
 
@@ -704,15 +655,6 @@ public class DLFileEntryLocalServiceUtil {
 			queryDefinition);
 	}
 
-	public static int getFileEntriesCount(
-		long groupId, long userId, List<Long> folderIds, String[] mimeTypes,
-		com.liferay.portal.kernel.dao.orm.QueryDefinition<DLFileEntry>
-			queryDefinition) {
-
-		return getService().getFileEntriesCount(
-			groupId, userId, folderIds, mimeTypes, queryDefinition);
-	}
-
 	public static DLFileEntry getFileEntry(long fileEntryId)
 		throws PortalException {
 
@@ -741,13 +683,6 @@ public class DLFileEntryLocalServiceUtil {
 		return getService().getFileEntryByFileName(groupId, folderId, fileName);
 	}
 
-	public static DLFileEntry getFileEntryByName(
-			long groupId, long folderId, String name)
-		throws PortalException {
-
-		return getService().getFileEntryByName(groupId, folderId, name);
-	}
-
 	public static DLFileEntry getFileEntryByUuidAndGroupId(
 			String uuid, long groupId)
 		throws PortalException {
@@ -762,56 +697,12 @@ public class DLFileEntryLocalServiceUtil {
 	}
 
 	public static List<DLFileEntry> getGroupFileEntries(
-		long groupId, int start, int end) {
-
-		return getService().getGroupFileEntries(groupId, start, end);
-	}
-
-	public static List<DLFileEntry> getGroupFileEntries(
-		long groupId, int start, int end,
-		OrderByComparator<DLFileEntry> orderByComparator) {
-
-		return getService().getGroupFileEntries(
-			groupId, start, end, orderByComparator);
-	}
-
-	public static List<DLFileEntry> getGroupFileEntries(
-		long groupId, long userId, int start, int end) {
-
-		return getService().getGroupFileEntries(groupId, userId, start, end);
-	}
-
-	public static List<DLFileEntry> getGroupFileEntries(
-		long groupId, long userId, int start, int end,
-		OrderByComparator<DLFileEntry> orderByComparator) {
-
-		return getService().getGroupFileEntries(
-			groupId, userId, start, end, orderByComparator);
-	}
-
-	public static List<DLFileEntry> getGroupFileEntries(
-		long groupId, long userId, long rootFolderId, int start, int end,
-		OrderByComparator<DLFileEntry> orderByComparator) {
-
-		return getService().getGroupFileEntries(
-			groupId, userId, rootFolderId, start, end, orderByComparator);
-	}
-
-	public static List<DLFileEntry> getGroupFileEntries(
 		long groupId, long userId, long repositoryId, long rootFolderId,
 		int start, int end, OrderByComparator<DLFileEntry> orderByComparator) {
 
 		return getService().getGroupFileEntries(
 			groupId, userId, repositoryId, rootFolderId, start, end,
 			orderByComparator);
-	}
-
-	public static int getGroupFileEntriesCount(long groupId) {
-		return getService().getGroupFileEntriesCount(groupId);
-	}
-
-	public static int getGroupFileEntriesCount(long groupId, long userId) {
-		return getService().getGroupFileEntriesCount(groupId, userId);
 	}
 
 	public static
@@ -841,16 +732,6 @@ public class DLFileEntryLocalServiceUtil {
 		throws PortalException {
 
 		return getService().getPersistedModel(primaryKeyObj);
-	}
-
-	public static List<DLFileEntry> getRepositoryFileEntries(
-		long repositoryId, int start, int end) {
-
-		return getService().getRepositoryFileEntries(repositoryId, start, end);
-	}
-
-	public static int getRepositoryFileEntriesCount(long repositoryId) {
-		return getService().getRepositoryFileEntriesCount(repositoryId);
 	}
 
 	public static String getUniqueTitle(
@@ -902,10 +783,6 @@ public class DLFileEntryLocalServiceUtil {
 
 		return getService().moveFileEntry(
 			userId, fileEntryId, newFolderId, serviceContext);
-	}
-
-	public static void rebuildTree(long companyId) throws PortalException {
-		getService().rebuildTree(companyId);
 	}
 
 	public static void revertFileEntry(
@@ -1049,4 +926,4 @@ public class DLFileEntryLocalServiceUtil {
 	private static volatile DLFileEntryLocalService _service;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-965612732
+// LIFERAY-SERVICE-BUILDER-HASH:1618013346

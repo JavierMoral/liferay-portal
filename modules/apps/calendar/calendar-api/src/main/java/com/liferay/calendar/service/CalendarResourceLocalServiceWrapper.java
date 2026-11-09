@@ -342,11 +342,6 @@ public class CalendarResourceLocalServiceWrapper
 		return _calendarResourceLocalService.getCalendarResources(start, end);
 	}
 
-	@Override
-	public java.util.List<CalendarResource> getCalendarResources(long groupId) {
-		return _calendarResourceLocalService.getCalendarResources(groupId);
-	}
-
 	/**
 	 * Returns all the calendar resources matching the UUID and company.
 	 *
@@ -434,19 +429,6 @@ public class CalendarResourceLocalServiceWrapper
 	}
 
 	@Override
-	public java.util.List<CalendarResource> search(
-		long companyId, long[] groupIds, long[] classNameIds, String code,
-		String name, String description, boolean active, boolean andOperator,
-		int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<CalendarResource>
-			orderByComparator) {
-
-		return _calendarResourceLocalService.search(
-			companyId, groupIds, classNameIds, code, name, description, active,
-			andOperator, start, end, orderByComparator);
-	}
-
-	@Override
 	public java.util.List<CalendarResource> searchByKeywords(
 		long companyId, long[] groupIds, long[] classNameIds, String keywords,
 		boolean active, boolean andOperator, int start, int end,
@@ -465,16 +447,6 @@ public class CalendarResourceLocalServiceWrapper
 
 		return _calendarResourceLocalService.searchCount(
 			companyId, groupIds, classNameIds, keywords, active);
-	}
-
-	@Override
-	public int searchCount(
-		long companyId, long[] groupIds, long[] classNameIds, String code,
-		String name, String description, boolean active, boolean andOperator) {
-
-		return _calendarResourceLocalService.searchCount(
-			companyId, groupIds, classNameIds, code, name, description, active,
-			andOperator);
 	}
 
 	@Override
@@ -560,4 +532,4 @@ public class CalendarResourceLocalServiceWrapper
 	private CalendarResourceLocalService _calendarResourceLocalService;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:883725680
+// LIFERAY-SERVICE-BUILDER-HASH:-1005504348

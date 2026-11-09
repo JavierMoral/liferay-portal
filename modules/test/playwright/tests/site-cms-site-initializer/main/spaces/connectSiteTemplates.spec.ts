@@ -24,13 +24,10 @@ test(
 	'Can connect and disconnect a site template alongside a connected site',
 	{tag: '@LPD-88037'},
 	async ({apiHelpers, page, spaceSummaryPage}) => {
-		const spaceName = `Space ${getRandomString()}`;
 		const siteTemplateName = `Site Template ${getRandomString()}`;
 
-		const space = await apiHelpers.headlessAssetLibrary.createAssetLibrary({
-			name: spaceName,
+		const space = await apiHelpers.headlessAssetLibrary.createSpace({
 			settings: {logoColor: 'outline-3'},
-			type: 'Space',
 		});
 
 		const layoutSetPrototype =
@@ -61,7 +58,7 @@ test(
 			{exact: true}
 		);
 
-		await spaceSummaryPage.goto(spaceName);
+		await spaceSummaryPage.goto(space.name);
 
 		await expect(globalRowLocator).toBeVisible();
 		await expect(templateRowLocator).not.toBeVisible();
@@ -69,7 +66,7 @@ test(
 		await spaceSummaryPage.connectSiteTemplate(siteTemplateName);
 
 		await expect(
-			page.getByRole('heading', {name: 'Sites (2)'})
+			page.getByRole('heading', {name: 'Connections (2)'})
 		).toBeVisible();
 		await expect(globalRowLocator).toBeVisible();
 		await expect(templateRowLocator).toBeVisible();
@@ -91,13 +88,10 @@ test(
 	'Can toggle searchable content on a connected site template',
 	{tag: '@LPD-88037'},
 	async ({apiHelpers, page, spaceSummaryPage}) => {
-		const spaceName = `Space ${getRandomString()}`;
 		const siteTemplateName = `Site Template ${getRandomString()}`;
 
-		await apiHelpers.headlessAssetLibrary.createAssetLibrary({
-			name: spaceName,
+		const space = await apiHelpers.headlessAssetLibrary.createSpace({
 			settings: {logoColor: 'outline-3'},
-			type: 'Space',
 		});
 
 		const layoutSetPrototype =
@@ -110,14 +104,14 @@ test(
 			type: 'layoutSetPrototype',
 		});
 
-		await spaceSummaryPage.goto(spaceName);
+		await spaceSummaryPage.goto(space.name);
 
 		await spaceSummaryPage.connectSiteTemplate(siteTemplateName);
 
 		await spaceSummaryPage.openConnectedSitesModal();
 
 		const templateRow = page
-			.getByLabel('Connected Sites')
+			.getByLabel('Connections')
 			.getByRole('listitem')
 			.filter({
 				has: page.getByText(templateLabel(siteTemplateName), {
@@ -144,13 +138,10 @@ test(
 	'Read-only space member cannot connect or disconnect site templates',
 	{tag: ['@LPD-88037', '@LPD-92500']},
 	async ({apiHelpers, page, spaceSummaryPage}) => {
-		const spaceName = `Space ${getRandomString()}`;
 		const siteTemplateName = `Site Template ${getRandomString()}`;
 
-		await apiHelpers.headlessAssetLibrary.createAssetLibrary({
-			name: spaceName,
+		const space = await apiHelpers.headlessAssetLibrary.createSpace({
 			settings: {logoColor: 'outline-3'},
-			type: 'Space',
 		});
 
 		const layoutSetPrototype =
@@ -171,7 +162,7 @@ test(
 			surname: user.familyName,
 		};
 
-		await spaceSummaryPage.goto(spaceName);
+		await spaceSummaryPage.goto(space.name);
 
 		await spaceSummaryPage.connectSiteTemplate(siteTemplateName);
 
@@ -180,14 +171,14 @@ test(
 		await performLogout(page);
 		await performLoginViaApi({page, screenName: user.alternateName});
 
-		await spaceSummaryPage.goto(spaceName);
+		await spaceSummaryPage.goto(space.name);
 
 		await spaceSummaryPage.openConnectedSitesModal();
 
 		const dialog = page.getByRole('dialog');
 
 		await expect(
-			dialog.getByLabel('Sites', {exact: true})
+			dialog.getByLabel('Type', {exact: true})
 		).not.toBeVisible();
 		await expect(
 			dialog.getByRole('button', {exact: true, name: 'Connect'})
@@ -206,13 +197,10 @@ test(
 	'Summary panel surfaces Make Unsearchable and Disconnect on a site template row',
 	{tag: '@LPD-88037'},
 	async ({apiHelpers, page, spaceSummaryPage}) => {
-		const spaceName = `Space ${getRandomString()}`;
 		const siteTemplateName = `Site Template ${getRandomString()}`;
 
-		await apiHelpers.headlessAssetLibrary.createAssetLibrary({
-			name: spaceName,
+		const space = await apiHelpers.headlessAssetLibrary.createSpace({
 			settings: {logoColor: 'outline-3'},
-			type: 'Space',
 		});
 
 		const layoutSetPrototype =
@@ -225,7 +213,7 @@ test(
 			type: 'layoutSetPrototype',
 		});
 
-		await spaceSummaryPage.goto(spaceName);
+		await spaceSummaryPage.goto(space.name);
 
 		await spaceSummaryPage.connectSiteTemplate(siteTemplateName);
 
@@ -253,14 +241,11 @@ test(
 	'Excludes already-connected sites and site templates from the autocomplete and clears the input',
 	{tag: '@LPD-91266'},
 	async ({apiHelpers, page, spaceSummaryPage}) => {
-		const spaceName = `Space ${getRandomString()}`;
 		const connectedTemplateName = `Site Template ${getRandomString()}`;
 		const otherTemplateName = `Site Template ${getRandomString()}`;
 
-		const space = await apiHelpers.headlessAssetLibrary.createAssetLibrary({
-			name: spaceName,
+		const space = await apiHelpers.headlessAssetLibrary.createSpace({
 			settings: {logoColor: 'outline-3'},
-			type: 'Space',
 		});
 
 		for (const name of [connectedTemplateName, otherTemplateName]) {
@@ -280,11 +265,11 @@ test(
 			'L_GLOBAL'
 		);
 
-		await spaceSummaryPage.goto(spaceName);
+		await spaceSummaryPage.goto(space.name);
 
 		await spaceSummaryPage.openConnectedSitesModal();
 
-		await page.getByLabel('Sites', {exact: true}).click();
+		await page.getByLabel('Type', {exact: true}).click();
 
 		await page
 			.getByRole('option', {exact: true, name: 'Site Templates'})
@@ -299,7 +284,10 @@ test(
 		await page
 			.getByRole('option', {exact: true, name: connectedTemplateName})
 			.click();
-		await page.getByRole('button', {exact: true, name: 'Connect'}).click();
+		await page
+			.getByRole('dialog')
+			.getByRole('button', {exact: true, name: 'Connect'})
+			.click();
 
 		await waitForAlert(
 			page,
@@ -308,7 +296,7 @@ test(
 		);
 
 		await page
-			.getByLabel('Connected Sites')
+			.getByLabel('Connections')
 			.getByText(templateLabel(connectedTemplateName), {exact: true})
 			.waitFor();
 
@@ -323,7 +311,7 @@ test(
 			page.getByRole('option', {exact: true, name: connectedTemplateName})
 		).toHaveCount(0);
 
-		await page.getByLabel('Sites', {exact: true}).click();
+		await page.getByLabel('Type', {exact: true}).click();
 
 		await page.getByRole('option', {exact: true, name: 'Sites'}).click();
 

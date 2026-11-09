@@ -4,8 +4,6 @@
  */
 
 import ClayAlert from '@clayui/alert';
-import ClayButton from '@clayui/button';
-import ClayIcon from '@clayui/icon';
 import {Form, Formik} from 'formik';
 import {sub} from 'frontend-js-web';
 import React from 'react';
@@ -23,20 +21,25 @@ import {Preview} from '../../types/exportImportPreview';
 import {
 	getSelectedDeletionCount,
 	getSelectedItemsCount,
+	toPortletDataHandlerSections,
 	toProcessRequestFlags,
 	withSelectedLayoutSetCount,
 } from '../../utils/contentSelection';
 import {getProcessFormErrors} from '../../utils/getProcessFormErrors';
-import {toRequestPortletDataHandlers} from '../../utils/toRequestPortletDataHandlers';
-import SiteSelection from './components/SiteSelection';
+import {getScopeSubtitle} from '../../utils/getScopeSubtitle';
+import {navigateToProcesses} from '../../utils/navigateToProcesses';
+import {toGroupReferences} from '../../utils/toGroupReferences';
+import {toPortletDataHandlers} from '../../utils/toPortletDataHandlers';
+import GroupSelection from './components/GroupSelection';
 
 type ExportFormValues = {
 	contentSelection: ContentSelection | null | undefined;
-	dateFilter: DateFilterValues;
+	dateFilterValues: DateFilterValues;
 	deletions: boolean;
 	name: string;
 	permissions: boolean;
 	siteExternalReferenceCodes: string[];
+	spaceExternalReferenceCodes: string[];
 };
 
 export function NewExport({
@@ -45,10 +48,11 @@ export function NewExport({
 	exportPreview,
 	exportPreviewAPIURL,
 	exportPreviewSitesAPIURL,
+	exportPreviewSpacesAPIURL,
 	exportProcessAPIURL,
-	lookAndFeelEnabled = false,
 	pageTreeModalConfiguration,
 	siteSelectionEnabled = false,
+	spaceSelectionEnabled = false,
 	timeZoneId,
 }: {
 	backURL: string;
@@ -56,10 +60,11 @@ export function NewExport({
 	exportPreview?: Preview;
 	exportPreviewAPIURL: string;
 	exportPreviewSitesAPIURL?: string;
+	exportPreviewSpacesAPIURL?: string;
 	exportProcessAPIURL: string;
-	lookAndFeelEnabled?: boolean;
 	pageTreeModalConfiguration: PageTreeModalConfiguration;
 	siteSelectionEnabled?: boolean;
+	spaceSelectionEnabled?: boolean;
 	timeZoneId: string;
 }) {
 	const {appliedDateFilterRef, error, handleApplyFilter, loading, preview} =
@@ -69,36 +74,52 @@ export function NewExport({
 		return <ClayAlert displayType="danger">{error}</ClayAlert>;
 	}
 
-	const previewPortletDataHandlerSections =
-		preview?.previewPortletDataHandlerSections ?? [];
+	const portletDataHandlerSections = toPortletDataHandlerSections(
+		preview?.portletDataHandlers ?? []
+	);
 
 	const initialFormValues: ExportFormValues = {
 		contentSelection: undefined,
-		dateFilter: {range: Range.All},
+		dateFilterValues: {range: Range.All},
 		deletions: false,
 		name: '',
 		permissions: false,
 		siteExternalReferenceCodes: [],
+		spaceExternalReferenceCodes: [],
 	};
+
+	const sitesAPIURL = siteSelectionEnabled
+		? exportPreviewSitesAPIURL
+		: undefined;
+	const spacesAPIURL = spaceSelectionEnabled
+		? exportPreviewSpacesAPIURL
+		: undefined;
 
 	return (
 		<Formik
 			initialValues={initialFormValues}
-			onSubmit={async (values) => {
+			onSubmit={async (values, {setStatus}) => {
 				const result = await postExportProcess({
 					exportProcessRequest: {
-						...appliedDateFilterRef.current,
 						...toProcessRequestFlags(values.contentSelection),
+						...(spaceSelectionEnabled && {
+							assetLibraries: toGroupReferences(
+								values.spaceExternalReferenceCodes
+							),
+						}),
+						dateFilter: appliedDateFilterRef.current,
 						deletions: values.deletions,
 						name: values.name,
 						permissions: values.permissions,
-						requestPortletDataHandlers:
-							toRequestPortletDataHandlers(
-								previewPortletDataHandlerSections,
-								values.contentSelection
+						portletDataHandlers: toPortletDataHandlers(
+							portletDataHandlerSections,
+							values.contentSelection
+						),
+						...(siteSelectionEnabled && {
+							sites: toGroupReferences(
+								values.siteExternalReferenceCodes
 							),
-						siteExternalReferenceCodes:
-							values.siteExternalReferenceCodes,
+						}),
 					},
 					url: exportProcessAPIURL,
 				});
@@ -112,10 +133,17 @@ export function NewExport({
 					return;
 				}
 
-				Liferay.Util.navigate(backURL);
+				navigateToProcesses(
+					setStatus,
+					Liferay.Language.get('the-process-has-started'),
+					backURL
+				);
 			}}
 			validate={(values) =>
-				getProcessFormErrors(values, siteSelectionEnabled)
+				getProcessFormErrors(values, {
+					siteSelectionEnabled,
+					spaceSelectionEnabled,
+				})
 			}
 			validateOnMount
 		>
@@ -132,26 +160,34 @@ export function NewExport({
 							placeholder={Liferay.Language.get(
 								'add-an-export-name'
 							)}
-							subtitle={Liferay.Language.get(
-								'provide-a-descriptive-name-for-your-file'
-							)}
 							title={sub(
 								Liferay.Language.get('x-details'),
-								Liferay.Language.get('export')
+								Liferay.Language.get('export[noun]')
 							)}
 						/>
 
-						{siteSelectionEnabled && exportPreviewSitesAPIURL && (
+						{(sitesAPIURL || spacesAPIURL) && (
 							<ScopeSection
-								subtitle={Liferay.Language.get(
-									'export-complete-sites,-including-all-their-pages,-content,-and-settings'
-								)}
+								subtitle={getScopeSubtitle('export', {
+									siteSelectionEnabled: !!sitesAPIURL,
+									spaceSelectionEnabled: !!spacesAPIURL,
+								})}
 							>
-								<SiteSelection
-									exportPreviewSitesAPIURL={
-										exportPreviewSitesAPIURL
-									}
-								/>
+								{sitesAPIURL && (
+									<GroupSelection
+										apiURL={sitesAPIURL}
+										name="siteExternalReferenceCodes"
+										type="site"
+									/>
+								)}
+
+								{spacesAPIURL && (
+									<GroupSelection
+										apiURL={spacesAPIURL}
+										name="spaceExternalReferenceCodes"
+										type="space"
+									/>
+								)}
 							</ScopeSection>
 						)}
 
@@ -161,7 +197,7 @@ export function NewExport({
 							}
 							deletionCount={getSelectedDeletionCount(
 								preview?.deletionCount,
-								previewPortletDataHandlerSections,
+								portletDataHandlerSections,
 								contentSelection
 							)}
 							deletionsDescription={Liferay.Language.get(
@@ -172,23 +208,23 @@ export function NewExport({
 							)}
 							itemsCount={getSelectedItemsCount(
 								preview?.additionCount,
-								previewPortletDataHandlerSections,
+								portletDataHandlerSections,
 								contentSelection
 							)}
 							loading={loading}
-							lookAndFeelEnabled={lookAndFeelEnabled}
 							onApplyFilter={handleApplyFilter}
-							pageTreeModalConfiguration={
-								pageTreeModalConfiguration
-							}
+							pageTreeModalConfiguration={{
+								...pageTreeModalConfiguration,
+								title: Liferay.Language.get('pages-to-export'),
+							}}
 							permissionsDescription={Liferay.Language.get(
 								'export-import-permissions-help'
 							)}
 							permissionsLabel={Liferay.Language.get(
 								'export-permissions'
 							)}
-							previewPortletDataHandlerSections={withSelectedLayoutSetCount(
-								previewPortletDataHandlerSections,
+							portletDataHandlerSections={withSelectedLayoutSetCount(
+								portletDataHandlerSections,
 								contentSelection
 							)}
 							subtitle={Liferay.Language.get(
@@ -198,7 +234,8 @@ export function NewExport({
 						/>
 
 						{(formik.touched.contentSelection ||
-							formik.touched.siteExternalReferenceCodes) &&
+							formik.touched.siteExternalReferenceCodes ||
+							formik.touched.spaceExternalReferenceCodes) &&
 							selectionError && (
 								<ClayAlert
 									className="mt-4"
@@ -210,23 +247,8 @@ export function NewExport({
 							)}
 
 						<Footer
-							actionButton={
-								<ClayButton
-									disabled={
-										formik.isSubmitting || !formik.isValid
-									}
-									type="submit"
-								>
-									<span className="inline-item inline-item-before">
-										<ClayIcon
-											className="mr-1"
-											symbol="export"
-										/>
-									</span>
-
-									{Liferay.Language.get('export')}
-								</ClayButton>
-							}
+							actionButtonLabel={Liferay.Language.get('export')}
+							actionButtonSymbol="export"
 							backURL={backURL}
 						/>
 					</Form>

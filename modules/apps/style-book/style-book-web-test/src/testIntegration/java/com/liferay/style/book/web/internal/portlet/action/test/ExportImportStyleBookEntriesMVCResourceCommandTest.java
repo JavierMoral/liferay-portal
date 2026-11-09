@@ -6,6 +6,7 @@
 package com.liferay.style.book.web.internal.portlet.action.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.frontend.token.definition.FrontendToken;
 import com.liferay.frontend.token.definition.FrontendTokenDefinition;
 import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
@@ -21,6 +22,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.Repository;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
@@ -37,6 +39,7 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.upload.FileItem;
 import com.liferay.portal.kernel.util.ContentTypes;
@@ -106,6 +109,44 @@ public class ExportImportStyleBookEntriesMVCResourceCommandTest {
 	public void setUp() throws Exception {
 		_sourceGroup = GroupTestUtil.addGroup();
 		_targetGroup = GroupTestUtil.addGroup();
+	}
+
+	@Test
+	public void testExportImportDefaultStyleBookEntry() throws Exception {
+		String styleBookEntryKey = RandomTestUtil.randomString();
+
+		StyleBookEntry styleBookEntry1 =
+			_styleBookEntryLocalService.addStyleBookEntry(
+				null, TestPropsValues.getUserId(), _sourceGroup.getGroupId(),
+				true, StringPool.BLANK, _read("frontend-tokens-values.json"),
+				RandomTestUtil.randomString(), styleBookEntryKey,
+				_THEME_ID_CLASSIC,
+				ServiceContextTestUtil.getServiceContext(
+					_sourceGroup, TestPropsValues.getUserId()));
+
+		StyleBookEntry styleBookEntry2 =
+			_styleBookEntryLocalService.addStyleBookEntry(
+				null, TestPropsValues.getUserId(), _targetGroup.getGroupId(),
+				true, StringPool.BLANK, _read("frontend-tokens-values.json"),
+				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+				_THEME_ID_CLASSIC,
+				ServiceContextTestUtil.getServiceContext(
+					_targetGroup, TestPropsValues.getUserId()));
+
+		_importStyleBookEntry(
+			_exportStyleBookEntry(styleBookEntry1.getStyleBookEntryId()),
+			false);
+
+		styleBookEntry2 = _styleBookEntryLocalService.getStyleBookEntry(
+			styleBookEntry2.getStyleBookEntryId());
+
+		Assert.assertFalse(styleBookEntry2.isDefaultStyleBookEntry());
+
+		StyleBookEntry targetGroupStyleBookEntry =
+			_styleBookEntryLocalService.fetchStyleBookEntry(
+				_targetGroup.getGroupId(), styleBookEntryKey);
+
+		Assert.assertTrue(targetGroupStyleBookEntry.isDefaultStyleBookEntry());
 	}
 
 	@Test
@@ -243,10 +284,15 @@ public class ExportImportStyleBookEntriesMVCResourceCommandTest {
 
 		StyleBookEntry updatedStyleBookEntry =
 			_styleBookEntryLocalService.updateStyleBookEntry(
+				TestPropsValues.getUserId(),
 				styleBookEntry.getStyleBookEntryId(),
+				styleBookEntry.isDefaultStyleBookEntry(),
 				styleBookEntry.getFrontendTokenDefinition(),
 				_read("updated-frontend-tokens-values.json"),
 				RandomTestUtil.randomString(),
+				styleBookEntry.getStyleBookEntryKey(),
+				styleBookEntry.getPreviewFileEntryId(),
+				styleBookEntry.getThemeId(),
 				ServiceContextTestUtil.getServiceContext(
 					_sourceGroup, TestPropsValues.getUserId()));
 
@@ -294,9 +340,14 @@ public class ExportImportStyleBookEntriesMVCResourceCommandTest {
 
 		StyleBookEntry updatedStyleBookEntry =
 			_styleBookEntryLocalService.updateStyleBookEntry(
+				TestPropsValues.getUserId(),
 				styleBookEntry.getStyleBookEntryId(),
+				styleBookEntry.isDefaultStyleBookEntry(),
 				styleBookEntry.getFrontendTokenDefinition(),
 				_read("updated-frontend-tokens-values.json"), name,
+				styleBookEntry.getStyleBookEntryKey(),
+				styleBookEntry.getPreviewFileEntryId(),
+				styleBookEntry.getThemeId(),
 				ServiceContextTestUtil.getServiceContext(
 					_sourceGroup, TestPropsValues.getUserId()));
 
@@ -363,6 +414,100 @@ public class ExportImportStyleBookEntriesMVCResourceCommandTest {
 		Assert.assertTrue(
 			Validator.isBlank(
 				updatedTargetGroupStyleBookEntry.getFrontendTokenDefinition()));
+	}
+
+	@Test
+	public void testExportImportSingleStyleBookEntryAndOverwriteWithAnotherUser()
+		throws Exception {
+
+		String styleBookEntryKey = RandomTestUtil.randomString();
+		String themeId = RandomTestUtil.randomString();
+
+		StyleBookEntry styleBookEntry =
+			_styleBookEntryLocalService.addStyleBookEntry(
+				null, TestPropsValues.getUserId(), _sourceGroup.getGroupId(),
+				false, StringPool.BLANK, _read("frontend-tokens-values.json"),
+				RandomTestUtil.randomString(), styleBookEntryKey, themeId,
+				ServiceContextTestUtil.getServiceContext(
+					_sourceGroup, TestPropsValues.getUserId()));
+
+		_user = UserTestUtil.addUser();
+
+		_styleBookEntryLocalService.addStyleBookEntry(
+			null, _user.getUserId(), _targetGroup.getGroupId(), false,
+			StringPool.BLANK, null, RandomTestUtil.randomString(),
+			styleBookEntryKey, themeId,
+			ServiceContextTestUtil.getServiceContext(
+				_targetGroup, _user.getUserId()));
+
+		_importStyleBookEntry(
+			_exportStyleBookEntry(styleBookEntry.getStyleBookEntryId()), true);
+
+		StyleBookEntry targetGroupStyleBookEntry =
+			_styleBookEntryLocalService.fetchStyleBookEntry(
+				_targetGroup.getGroupId(), styleBookEntryKey);
+
+		Assert.assertEquals(
+			styleBookEntry.getName(), targetGroupStyleBookEntry.getName());
+		Assert.assertEquals(
+			_user.getUserId(), targetGroupStyleBookEntry.getUserId());
+		Assert.assertEquals(
+			_user.getFullName(), targetGroupStyleBookEntry.getUserName());
+	}
+
+	@Test
+	public void testExportImportSingleStyleBookEntryAndOverwriteWithoutPreviewFileEntry()
+		throws Exception {
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				_sourceGroup, TestPropsValues.getUserId());
+
+		StyleBookEntry styleBookEntry =
+			_styleBookEntryLocalService.addStyleBookEntry(
+				null, TestPropsValues.getUserId(), _sourceGroup.getGroupId(),
+				false, StringPool.BLANK, _read("frontend-tokens-values.json"),
+				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+				RandomTestUtil.randomString(), serviceContext);
+
+		FileEntry fileEntry = _addFileEntry(styleBookEntry);
+
+		_styleBookEntryLocalService.updatePreviewFileEntryId(
+			styleBookEntry.getStyleBookEntryId(), fileEntry.getFileEntryId(),
+			serviceContext);
+
+		File file1 = _exportStyleBookEntry(
+			styleBookEntry.getStyleBookEntryId());
+
+		_importStyleBookEntry(file1, false);
+
+		StyleBookEntry targetGroupStyleBookEntry1 =
+			_styleBookEntryLocalService.fetchStyleBookEntry(
+				_targetGroup.getGroupId(),
+				styleBookEntry.getStyleBookEntryKey());
+
+		Assert.assertNotEquals(
+			0, targetGroupStyleBookEntry1.getPreviewFileEntryId());
+
+		_styleBookEntryLocalService.updatePreviewFileEntryId(
+			styleBookEntry.getStyleBookEntryId(), 0, serviceContext);
+
+		File file2 = _exportStyleBookEntry(
+			styleBookEntry.getStyleBookEntryId());
+
+		_importStyleBookEntry(file2, true);
+
+		StyleBookEntry targetGroupStyleBookEntry2 =
+			_styleBookEntryLocalService.fetchStyleBookEntry(
+				_targetGroup.getGroupId(),
+				styleBookEntry.getStyleBookEntryKey());
+
+		Assert.assertEquals(
+			0, targetGroupStyleBookEntry2.getPreviewFileEntryId());
+
+		Assert.assertNull(
+			_dlAppLocalService.fetchFileEntry(
+				targetGroupStyleBookEntry1.getPreviewFileEntryId()));
 	}
 
 	@FeatureFlag("LPD-84497")
@@ -551,7 +696,8 @@ public class ExportImportStyleBookEntriesMVCResourceCommandTest {
 			styleBookEntry.getStyleBookEntryId(), RandomTestUtil.randomString(),
 			repository.getDlFolderId(),
 			clazz.getResourceAsStream("dependencies/thumbnail.png"),
-			RandomTestUtil.randomString(), ContentTypes.IMAGE_PNG, false);
+			RandomTestUtil.randomString() + ".png", ContentTypes.IMAGE_PNG,
+			false);
 	}
 
 	private File _exportStyleBookEntry(long styleBookEntryId) throws Exception {
@@ -844,6 +990,9 @@ public class ExportImportStyleBookEntriesMVCResourceCommandTest {
 	@Inject
 	private CompanyLocalService _companyLocalService;
 
+	@Inject
+	private DLAppLocalService _dlAppLocalService;
+
 	@Inject(filter = "mvc.command.name=/style_book/export_style_book_entries")
 	private MVCResourceCommand _exportStyleBookEntriesMVCResourceCommand;
 
@@ -864,5 +1013,8 @@ public class ExportImportStyleBookEntriesMVCResourceCommandTest {
 
 	@DeleteAfterTestRun
 	private Group _targetGroup;
+
+	@DeleteAfterTestRun
+	private User _user;
 
 }

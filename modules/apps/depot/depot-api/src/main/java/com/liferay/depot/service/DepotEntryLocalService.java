@@ -318,14 +318,6 @@ public interface DepotEntryLocalService
 	public List<Long> getDepotEntryGroupIds(
 		long companyId, long userId, int type, boolean dynamicInheritanceOnly);
 
-	/**
-	 * @deprecated As of Cavanaugh (7.4.x)
-	 */
-	@Deprecated
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<DepotEntry> getDepotEntryGroupRelsByUuidAndCompanyId(
-		String uuid, long companyId);
-
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ExportActionableDynamicQuery getExportActionableDynamicQuery(
 		PortletDataContext portletDataContext);
@@ -377,6 +369,7 @@ public interface DepotEntryLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public DepotEntry updateDepotEntry(DepotEntry depotEntry);
 
+	@Indexable(type = IndexableType.REINDEX)
 	public DepotEntry updateDepotEntry(
 			long depotEntryId, Map<Locale, String> nameMap,
 			Map<Locale, String> descriptionMap,
@@ -401,4 +394,4 @@ public interface DepotEntryLocalService
 		throws E;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-1578473779
+// LIFERAY-SERVICE-BUILDER-HASH:953300651

@@ -11,6 +11,11 @@ import com.liferay.depot.constants.DepotRolesConstants;
 import com.liferay.depot.exception.DepotEntryNameException;
 import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryLocalService;
+import com.liferay.document.library.kernel.model.DLFolderConstants;
+import com.liferay.document.library.kernel.service.DLAppLocalService;
+import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
+import com.liferay.document.library.kernel.service.DLFolderLocalService;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.DuplicateGroupException;
 import com.liferay.portal.kernel.exception.LocaleException;
@@ -22,6 +27,8 @@ import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroup;
+import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.OrganizationLocalService;
@@ -30,6 +37,7 @@ import com.liferay.portal.kernel.service.UserGroupLocalService;
 import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
 import com.liferay.portal.kernel.test.AssertUtils;
 import com.liferay.portal.kernel.test.TestInfo;
+import com.liferay.portal.kernel.test.randomizerbumpers.SiteFriendlyURLKeywordRandomizerBumper;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.CompanyTestUtil;
@@ -40,6 +48,7 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserGroupTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -118,6 +127,87 @@ public class DepotEntryLocalServiceTest {
 			RandomTestUtil.randomString());
 	}
 
+	@Test(expected = DuplicateGroupException.class)
+	@TestInfo("LPD-109885")
+	public void testAddDepotEntryDuplicateTranslatedName() throws Exception {
+		DepotEntry depotEntry = _addDepotEntry(
+			RandomTestUtil.randomString(), RandomTestUtil.randomString());
+
+		Group group = _groupLocalService.getGroup(depotEntry.getGroupId());
+
+		String translatedName = RandomTestUtil.randomString();
+
+		_depotEntryLocalService.updateDepotEntry(
+			depotEntry.getDepotEntryId(),
+			HashMapBuilder.put(
+				LocaleUtil.getDefault(), group.getName(LocaleUtil.getDefault())
+			).put(
+				LocaleUtil.SPAIN, translatedName
+			).build(),
+			group.getDescriptionMap(), Collections.emptyMap(), null,
+			UnicodePropertiesBuilder.put(
+				PropsKeys.LOCALES,
+				StringUtil.merge(
+					new String[] {
+						LocaleUtil.toLanguageId(LocaleUtil.getDefault()),
+						LocaleUtil.toLanguageId(LocaleUtil.SPAIN)
+					})
+			).put(
+				"inheritLocales", Boolean.FALSE.toString()
+			).put(
+				"languageId", LocaleUtil.toLanguageId(LocaleUtil.SPAIN)
+			).build(),
+			ServiceContextTestUtil.getServiceContext());
+
+		_addDepotEntry(translatedName, RandomTestUtil.randomString());
+	}
+
+	@Test
+	@TestInfo("LPD-108842")
+	public void testAddDepotEntryFriendlyURL() throws Exception {
+		DepotEntry depotEntry = _addDepotEntry(
+			DepotConstants.TYPE_ASSET_LIBRARY);
+
+		Group group = _groupLocalService.getGroup(depotEntry.getGroupId());
+
+		Assert.assertEquals(
+			"/asset-library-" + depotEntry.getDepotEntryId(),
+			group.getFriendlyURL());
+
+		String name1 = RandomTestUtil.randomString(
+			SiteFriendlyURLKeywordRandomizerBumper.INSTANCE);
+		String name2 = RandomTestUtil.randomString();
+
+		depotEntry = _addDepotEntry(
+			StringBundler.concat(name1, StringPool.SPACE, name2),
+			RandomTestUtil.randomString(), DepotConstants.TYPE_SPACE);
+
+		group = _groupLocalService.getGroup(depotEntry.getGroupId());
+
+		String friendlyURL = StringUtil.toLowerCase(
+			StringBundler.concat(
+				StringPool.SLASH, name1, StringPool.DASH, name2));
+
+		Assert.assertEquals(friendlyURL, group.getFriendlyURL());
+
+		depotEntry = _addDepotEntry(
+			StringBundler.concat(name1, StringPool.DASH, name2),
+			RandomTestUtil.randomString(), DepotConstants.TYPE_SPACE);
+
+		group = _groupLocalService.getGroup(depotEntry.getGroupId());
+
+		Assert.assertEquals(friendlyURL + "-1", group.getFriendlyURL());
+
+		depotEntry = _addDepotEntry(
+			"API " + RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), DepotConstants.TYPE_SPACE);
+
+		group = _groupLocalService.getGroup(depotEntry.getGroupId());
+
+		Assert.assertEquals(
+			"/group-" + depotEntry.getDepotEntryId(), group.getFriendlyURL());
+	}
+
 	@Test
 	@TestInfo("LPD-92654")
 	public void testAddDepotEntryWithGroupExternalReferenceCode()
@@ -186,6 +276,40 @@ public class DepotEntryLocalServiceTest {
 		_depotEntries.remove(depotEntry);
 
 		_groupLocalService.getGroup(depotEntry.getGroupId());
+	}
+
+	@Test
+	@TestInfo("LPD-109885")
+	public void testDeleteDepotEntryWithDocuments() throws Exception {
+		DepotEntry depotEntry = _addDepotEntry(
+			RandomTestUtil.randomString(), RandomTestUtil.randomString());
+
+		Folder folder = _dlAppLocalService.addFolder(
+			null, TestPropsValues.getUserId(), depotEntry.getGroupId(),
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			ServiceContextTestUtil.getServiceContext(depotEntry.getGroupId()));
+
+		FileEntry fileEntry = _dlAppLocalService.addFileEntry(
+			null, TestPropsValues.getUserId(), depotEntry.getGroupId(),
+			folder.getFolderId(), RandomTestUtil.randomString(),
+			ContentTypes.APPLICATION_OCTET_STREAM,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			new byte[0], null, null, null,
+			ServiceContextTestUtil.getServiceContext(depotEntry.getGroupId()));
+
+		_depotEntryLocalService.deleteDepotEntry(depotEntry.getDepotEntryId());
+
+		_depotEntries.remove(depotEntry);
+
+		Assert.assertNull(
+			_dlFileEntryLocalService.fetchDLFileEntry(
+				fileEntry.getFileEntryId()));
+		Assert.assertNull(
+			_dlFolderLocalService.fetchDLFolder(folder.getFolderId()));
+		Assert.assertNull(
+			_groupLocalService.fetchGroup(depotEntry.getGroupId()));
 	}
 
 	@Test
@@ -356,6 +480,32 @@ public class DepotEntryLocalServiceTest {
 			group.getDescription(LocaleUtil.fromLanguageId("es_ES")));
 		Assert.assertEquals(
 			"nuevoNombre", group.getName(LocaleUtil.fromLanguageId("es_ES")));
+	}
+
+	@Test(expected = DuplicateGroupException.class)
+	@TestInfo("LPD-109885")
+	public void testUpdateDepotEntryDuplicateName() throws Exception {
+		String name = RandomTestUtil.randomString();
+
+		_addDepotEntry(name, RandomTestUtil.randomString());
+
+		DepotEntry depotEntry = _addDepotEntry(
+			RandomTestUtil.randomString(), RandomTestUtil.randomString());
+
+		_depotEntryLocalService.updateDepotEntry(
+			depotEntry.getDepotEntryId(),
+			HashMapBuilder.put(
+				LocaleUtil.getDefault(), name
+			).build(),
+			HashMapBuilder.put(
+				LocaleUtil.getDefault(), RandomTestUtil.randomString()
+			).build(),
+			Collections.emptyMap(), null,
+			UnicodePropertiesBuilder.put(
+				PropsKeys.LOCALES,
+				LocaleUtil.toLanguageId(LocaleUtil.getDefault())
+			).build(),
+			ServiceContextTestUtil.getServiceContext());
 	}
 
 	@Test
@@ -596,6 +746,15 @@ public class DepotEntryLocalServiceTest {
 
 	@Inject
 	private DepotEntryLocalService _depotEntryLocalService;
+
+	@Inject
+	private DLAppLocalService _dlAppLocalService;
+
+	@Inject
+	private DLFileEntryLocalService _dlFileEntryLocalService;
+
+	@Inject
+	private DLFolderLocalService _dlFolderLocalService;
 
 	@Inject
 	private GroupLocalService _groupLocalService;

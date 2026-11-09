@@ -12,13 +12,12 @@ import com.liferay.journal.service.JournalFolderLocalServiceUtil;
 import com.liferay.journal.service.JournalFolderServiceUtil;
 import com.liferay.journal.web.internal.configuration.JournalWebConfiguration;
 import com.liferay.journal.web.internal.item.selector.JournalArticleItemSelectorView;
-import com.liferay.portal.kernel.bean.BeanProperties;
-import com.liferay.portal.kernel.bean.BeanPropertiesUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
@@ -64,6 +63,9 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+
 /**
  * @author Jürgen Kappler
  */
@@ -77,7 +79,7 @@ public class JournalArticleItemSelectorViewDisplayContextTest {
 	@Before
 	public void setUp() throws Exception {
 		_setUpAncestorJournalFolder();
-		_setUpBeanProperties();
+		_setUpFrameworkUtil();
 		_setUpGroup();
 		_setUpGroupLocalServiceUtil(_group);
 		_setUpHttpServletRequest();
@@ -94,6 +96,7 @@ public class JournalArticleItemSelectorViewDisplayContextTest {
 
 	@After
 	public void tearDown() {
+		_frameworkUtilMockedStatic.close();
 		_groupLocalServiceUtilMockedStatic.close();
 		_journalFolderLocalServiceUtilMockedStatic.close();
 		_journalFolderServiceUtilMockedStatic.close();
@@ -129,10 +132,16 @@ public class JournalArticleItemSelectorViewDisplayContextTest {
 		);
 	}
 
-	private void _setUpBeanProperties() {
-		BeanPropertiesUtil beanPropertiesUtil = new BeanPropertiesUtil();
+	private void _setUpFrameworkUtil() {
+		_frameworkUtilMockedStatic = Mockito.mockStatic(FrameworkUtil.class);
 
-		beanPropertiesUtil.setBeanProperties(_beanProperties);
+		BundleContext bundleContext = SystemBundleUtil.getBundleContext();
+
+		Mockito.when(
+			FrameworkUtil.getBundle(Mockito.any())
+		).thenReturn(
+			bundleContext.getBundle()
+		);
 	}
 
 	private void _setUpGroup() throws Exception {
@@ -465,8 +474,7 @@ public class JournalArticleItemSelectorViewDisplayContextTest {
 
 	private final JournalFolder _ancestorJournalFolder = Mockito.mock(
 		JournalFolder.class);
-	private final BeanProperties _beanProperties = Mockito.mock(
-		BeanProperties.class);
+	private MockedStatic<FrameworkUtil> _frameworkUtilMockedStatic;
 	private final Group _group = Mockito.mock(Group.class);
 	private MockedStatic<GroupLocalServiceUtil>
 		_groupLocalServiceUtilMockedStatic;

@@ -4,7 +4,7 @@
  */
 
 import ClayLayout from '@clayui/layout';
-import React, {ReactNode, useId} from 'react';
+import React, {Children, ReactNode, useId} from 'react';
 
 import SectionHeader from './SectionHeader';
 
@@ -25,14 +25,20 @@ export default function ScopeSection({
 			role="group"
 		>
 			<SectionHeader
-				className="mt-4"
 				id={labelId}
 				subtitle={subtitle}
 				subtitleId={subtitleId}
 				title={Liferay.Language.get('scope')}
 			/>
 
-			<ClayLayout.Sheet>{children}</ClayLayout.Sheet>
+			{Children.toArray(children).map((child, index) => (
+				<ClayLayout.Sheet
+					className={index ? 'mt-4' : undefined}
+					key={index}
+				>
+					{child}
+				</ClayLayout.Sheet>
+			))}
 		</div>
 	);
 }

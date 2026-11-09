@@ -62,6 +62,13 @@ public class AttachmentResourceImpl extends BaseAttachmentResourceImpl {
 	public void deleteCartAttachment(Long attachmentId, Long cartId)
 		throws Exception {
 
+		CommerceOrderAttachment commerceOrderAttachment =
+			_commerceOrderAttachmentService.getCommerceOrderAttachment(
+				attachmentId);
+
+		_commerceOrderService.getCommerceOrder(
+			commerceOrderAttachment.getCommerceOrderId());
+
 		_commerceOrderAttachmentService.deleteCommerceOrderAttachment(
 			attachmentId);
 	}
@@ -90,8 +97,9 @@ public class AttachmentResourceImpl extends BaseAttachmentResourceImpl {
 					contextCompany.getCompanyId());
 
 		if (commerceOrderAttachment != null) {
-			_commerceOrderAttachmentService.deleteCommerceOrderAttachment(
-				commerceOrderAttachment.getCommerceOrderAttachmentId());
+			deleteCartAttachment(
+				commerceOrderAttachment.getCommerceOrderAttachmentId(),
+				commerceOrder.getCommerceOrderId());
 		}
 	}
 
@@ -264,6 +272,7 @@ public class AttachmentResourceImpl extends BaseAttachmentResourceImpl {
 					});
 				setExternalReferenceCode(
 					commerceOrderAttachment::getExternalReferenceCode);
+				setFileEntryId(commerceOrderAttachment::getFileEntryId);
 				setId(commerceOrderAttachment::getCommerceOrderAttachmentId);
 				setPriority(commerceOrderAttachment::getPriority);
 				setRestricted(commerceOrderAttachment::isRestricted);

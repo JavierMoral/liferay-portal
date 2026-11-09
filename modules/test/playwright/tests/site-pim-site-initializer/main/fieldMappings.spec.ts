@@ -119,14 +119,14 @@ test(
 		});
 
 		await test.step('Map the channel field to a source attribute', async () => {
-			await editFieldMappingsPage.mapToSourceAttribute('Code (code)');
+			await editFieldMappingsPage.mapToSourceAttribute('SKU (sku)');
 
 			await editFieldMappingsPage.saveButton.click();
 
 			await expect(page).toHaveURL(/\/field-mappings\?/);
 			await expect(fieldMappingsPage.status('SKU')).toHaveText('Mapped');
 			await expect(fieldMappingsPage.sourceAttributes('SKU')).toHaveText(
-				'Code'
+				'SKU'
 			);
 		});
 
@@ -134,21 +134,21 @@ test(
 			await fieldMappingsPage.channelField('SKU').click();
 
 			await expect(editFieldMappingsPage.sourceAttribute(0)).toHaveValue(
-				'code'
+				'sku'
 			);
 		});
 
 		await test.step('Narrow the mapping to one structure', async () => {
 			await editFieldMappingsPage.source(0).selectOption({
-				label: 'PIM Base SKU',
+				label: 'PIM Basic Product',
 			});
-			await editFieldMappingsPage.mapToSourceAttribute('Code (code)');
+			await editFieldMappingsPage.mapToSourceAttribute('SKU (sku)');
 
 			await editFieldMappingsPage.saveButton.click();
 
 			await expect(page).toHaveURL(/\/field-mappings\?/);
 			await expect(fieldMappingsPage.sourceAttributes('SKU')).toHaveText(
-				'PIM Base SKU/Code'
+				'PIM Basic Product/SKU'
 			);
 		});
 
@@ -163,7 +163,7 @@ test(
 
 			await expect(page).toHaveURL(/\/field-mappings\?/);
 			await expect(fieldMappingsPage.sourceAttributes('SKU')).toHaveText(
-				'PIM Base SKU/CodeABC-1'
+				'PIM Basic Product/SKUABC-1'
 			);
 		});
 
@@ -186,7 +186,7 @@ test(
 
 test(
 	'Map a channel field to two fixed values at once',
-	{tag: ['@LPD-107968']},
+	{tag: ['@LPD-107968', '@LPD-112214']},
 	async ({
 		connectorsPage,
 		editFieldMappingsPage,
@@ -219,12 +219,27 @@ test(
 		await expect(fieldMappingsPage.sourceAttributes('SKU')).toHaveText(
 			'ABC-1ABC-2'
 		);
+
+		await fieldMappingsPage.channelField('SKU').click();
+
+		await editFieldMappingsPage.openMappingRules();
+
+		await editFieldMappingsPage.fallbackLogic.selectOption({
+			label: 'First Nonempty Source',
+		});
+
+		await editFieldMappingsPage.saveButton.click();
+
+		await expect(page).toHaveURL(/\/field-mappings\?/);
+		await expect(fieldMappingsPage.sourceAttributes('SKU')).toHaveText(
+			'ABC-1+1'
+		);
 	}
 );
 
 test(
 	'Edit and clear a channel field mapping from its row actions',
-	{tag: ['@LPD-106221']},
+	{tag: ['@LPD-106221', '@LPD-112214']},
 	async ({
 		connectorsPage,
 		editFieldMappingsPage,
@@ -255,12 +270,34 @@ test(
 
 			await expect(page).toHaveURL(/\/edit-field-mappings\?/);
 
-			await editFieldMappingsPage.mapToSourceAttribute('Code (code)');
+			await editFieldMappingsPage.mapToSourceAttribute('SKU (sku)');
+
+			await editFieldMappingsPage.openMappingRules();
+
+			await editFieldMappingsPage.stripHTMLTags.check();
+
+			await editFieldMappingsPage.truncate.selectOption('80');
 
 			await editFieldMappingsPage.saveButton.click();
 
 			await expect(page).toHaveURL(/\/field-mappings\?/);
 			await expect(fieldMappingsPage.status('SKU')).toHaveText('Mapped');
+			await expect(
+				fieldMappingsPage.transformationRules('SKU')
+			).toHaveText('Strip HTML TagsTruncate 80 Characters');
+		});
+
+		await test.step('Reopen the channel field with its mapping rules', async () => {
+			await fieldMappingsPage.channelField('SKU').click();
+
+			await editFieldMappingsPage.openMappingRules();
+
+			await expect(editFieldMappingsPage.stripHTMLTags).toBeChecked();
+			await expect(editFieldMappingsPage.truncate).toHaveValue('80');
+
+			await editFieldMappingsPage.cancelButton.click();
+
+			await expect(page).toHaveURL(/\/field-mappings\?/);
 		});
 
 		await test.step('Clear the mapping from the row actions', async () => {
@@ -270,6 +307,63 @@ test(
 				'Required - Not Mapped'
 			);
 			await expect(fieldMappingsPage.sourceAttributes('SKU')).toBeEmpty();
+			await expect(
+				fieldMappingsPage.transformationRules('SKU')
+			).toBeEmpty();
+		});
+	}
+);
+
+test(
+	'Clearing a required channel field mapping hides execute',
+	{tag: ['@LPD-109731']},
+	async ({connectorsPage, fieldMappingsPage, page}) => {
+		const connectorName = getRandomString();
+
+		await test.step('Create an active connector with a complete mapping', async () => {
+			await connectorsPage.createConnector({
+				active: true,
+				connector: 'Liferay Commerce',
+				name: connectorName,
+			});
+
+			await connectorsPage.getConnector(connectorName).click();
+
+			await fieldMappingsPage.mapRequiredChannelFields();
+
+			await fieldMappingsPage.expectMoreActionsMenuItems({
+				visible: ['Execute', 'Schedule'],
+			});
+		});
+
+		await test.step('Clear a required mapping without reloading the page', async () => {
+			let loads = 0;
+
+			page.on('load', () => loads++);
+
+			await fieldMappingsPage.clearMapping('SKU');
+
+			await expect(fieldMappingsPage.status('SKU')).toHaveText(
+				'Required - Not Mapped'
+			);
+
+			await fieldMappingsPage.expectMoreActionsMenuItems({
+				hidden: ['Execute'],
+				visible: ['Schedule'],
+			});
+
+			expect(loads).toBe(0);
+		});
+
+		await test.step('The connector stays active with an incomplete mapping', async () => {
+			await connectorsPage.goto();
+
+			await expect(
+				connectorsPage.getConnectorStatus(connectorName)
+			).toHaveText('Active');
+			await expect(
+				connectorsPage.getConnectorMappingStatus(connectorName)
+			).toHaveText('Incomplete');
 		});
 	}
 );

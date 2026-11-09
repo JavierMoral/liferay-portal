@@ -679,6 +679,50 @@ public class GitWorkingDirectory {
 		}
 	}
 
+	public void deleteRemoteTrackingGitBranches(String branchName) {
+		GitUtil.ExecutionResult executionResult = executeBashCommands(
+			GitUtil.RETRIES_SIZE_MAX, GitUtil.MILLIS_RETRY_DELAY,
+			GitUtil.MILLIS_TIMEOUT,
+			JenkinsResultsParserUtil.combine(
+				"git for-each-ref --format='%(objectname) %(refname)' ",
+				"'refs/remotes/*/", branchName, "'"));
+
+		if (executionResult.getExitValue() != 0) {
+			throw new GitWorkingDirectoryRuntimeException(
+				this,
+				JenkinsResultsParserUtil.combine(
+					"Unable to list remote tracking branches for ", branchName,
+					"\n", executionResult.getStandardError()));
+		}
+
+		String standardOut = executionResult.getStandardOut();
+
+		for (String line : standardOut.split("\n")) {
+			String[] parts = line.split(" ");
+
+			if (parts.length != 2) {
+				continue;
+			}
+
+			executionResult = executeBashCommands(
+				GitUtil.RETRIES_SIZE_MAX, GitUtil.MILLIS_RETRY_DELAY,
+				GitUtil.MILLIS_TIMEOUT, "git update-ref -d " + parts[1]);
+
+			if (executionResult.getExitValue() != 0) {
+				throw new GitWorkingDirectoryRuntimeException(
+					this,
+					JenkinsResultsParserUtil.combine(
+						"Unable to delete remote tracking branch ", parts[1],
+						"\n", executionResult.getStandardError()));
+			}
+
+			System.out.println(
+				JenkinsResultsParserUtil.combine(
+					"Deleted remote tracking branch ", parts[1], " at ",
+					parts[0]));
+		}
+	}
+
 	public void displayLog() {
 		displayLog(1);
 	}
@@ -706,10 +750,6 @@ public class GitWorkingDirectory {
 
 	public void fetch(GitRemote gitRemote, boolean noTags) {
 		fetch(gitRemote.getRemoteURL(), noTags);
-	}
-
-	public LocalGitBranch fetch(LocalGitBranch localGitBranch) {
-		return fetch(null, localGitBranch);
 	}
 
 	public LocalGitBranch fetch(
@@ -1063,7 +1103,21 @@ public class GitWorkingDirectory {
 		}
 	}
 
-	public LocalGitBranch fetch(
+	public void fetchGitCommitParentFromUpstream(String sha) {
+		GitRemote upstreamGitRemote = getUpstreamGitRemote();
+
+		if (upstreamGitRemote == null) {
+			return;
+		}
+
+		executeBashCommands(
+			3, GitUtil.MILLIS_RETRY_DELAY, 1000 * 60 * 15,
+			JenkinsResultsParserUtil.combine(
+				"git fetch -f --depth=2 ", upstreamGitRemote.getRemoteURL(),
+				" ", sha));
+	}
+
+	public void fetchLocalGitBranch(
 		String branchName, LocalGitBranch localGitBranch) {
 
 		if (localGitBranch == null) {
@@ -1074,7 +1128,7 @@ public class GitWorkingDirectory {
 		StringBuilder sb = new StringBuilder();
 
 		sb.append("git fetch -f --no-tags ");
-		sb.append(String.valueOf(localGitBranch.getDirectory()));
+		sb.append(localGitBranch.getDirectory());
 		sb.append(" ");
 		sb.append(localGitBranch.getName());
 
@@ -1101,23 +1155,6 @@ public class GitWorkingDirectory {
 			JenkinsResultsParserUtil.getCurrentTimeMillis() - start);
 
 		System.out.println("Fetch completed in " + durationString);
-
-		return createLocalGitBranch(
-			localGitBranch.getName(), true, localGitBranch.getSHA());
-	}
-
-	public void fetchGitCommitParentFromUpstream(String sha) {
-		GitRemote upstreamGitRemote = getUpstreamGitRemote();
-
-		if (upstreamGitRemote == null) {
-			return;
-		}
-
-		executeBashCommands(
-			3, GitUtil.MILLIS_RETRY_DELAY, 1000 * 60 * 15,
-			JenkinsResultsParserUtil.combine(
-				"git fetch -f --depth=2 ", upstreamGitRemote.getRemoteURL(),
-				" ", sha));
 	}
 
 	public Set<File> findFiles(String fileName, String fileContentSnippet) {

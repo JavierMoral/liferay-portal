@@ -13,8 +13,8 @@ import {
 
 import {dataApiHelpersTest} from '../../../fixtures/dataApiHelpersTest';
 import {loginTest} from '../../../fixtures/loginTest';
-import {DataApiHelpers} from '../../../helpers/ApiHelpers';
 import {SiteMembershipsPage} from '../../../pages/users-admin-web/site-admin-web/SiteMembershipsPage';
+import {clickAndExpectToBeVisible} from '../../../utils/clickAndExpectToBeVisible';
 import getRandomString from '../../../utils/getRandomString';
 import {waitForAlert} from '../../../utils/waitForAlert';
 
@@ -26,19 +26,16 @@ const SITE_MEMBERSHIPS_NAMESPACE =
 const USERS_ADMIN_NAMESPACE =
 	'_com_liferay_users_admin_web_portlet_UsersAdminPortlet_';
 
-async function addDepot(apiHelpers: DataApiHelpers) {
-	return apiHelpers.headlessAssetLibrary.createAssetLibrary({
-		name: getRandomString(),
-		type: 'AssetLibrary',
-	});
-}
-
 async function assignMember(
 	page: Page,
 	iframeTitle: string,
 	getItem: (frameLocator: FrameLocator) => Locator
 ) {
-	await page.getByRole('button', {name: 'Add'}).click();
+	await clickAndExpectToBeVisible({
+		target: page.locator(`iframe[title="${iframeTitle}"]`),
+		timeout: 5000,
+		trigger: page.getByRole('button', {name: 'Add'}),
+	});
 
 	await getItem(page.frameLocator(`iframe[title="${iframeTitle}"]`)).check();
 
@@ -70,7 +67,8 @@ test(
 	'Organizations, users and user groups can be added to and removed from the depot memberships',
 	{tag: '@LPD-109572'},
 	async ({apiHelpers, page}) => {
-		const assetLibrary = await addDepot(apiHelpers);
+		const assetLibrary =
+			await apiHelpers.headlessAssetLibrary.createAssetLibrary();
 
 		const organization =
 			await apiHelpers.headlessAdminUser.postOrganization();
@@ -185,7 +183,8 @@ test(
 	'A depot is assigned from the user profile once, shown translated, and removed',
 	{tag: '@LPD-109572'},
 	async ({apiHelpers, page}) => {
-		const assetLibrary = await addDepot(apiHelpers);
+		const assetLibrary =
+			await apiHelpers.headlessAssetLibrary.createAssetLibrary();
 
 		const translatedName = getRandomString();
 
@@ -273,7 +272,8 @@ test(
 	'The depot memberships paginate users and organizations',
 	{tag: '@LPD-109572'},
 	async ({apiHelpers, page}) => {
-		const assetLibrary = await addDepot(apiHelpers);
+		const assetLibrary =
+			await apiHelpers.headlessAssetLibrary.createAssetLibrary();
 
 		const organizationIds = [];
 		const userIds = [];
@@ -321,5 +321,83 @@ test(
 
 			await expect(page.getByText(secondPage)).toBeVisible();
 		}
+	}
+);
+
+test(
+	'A depot member can be assigned a depot role and filtered by it',
+	{tag: '@LPD-109574'},
+	async ({apiHelpers, page}) => {
+		const assetLibrary =
+			await apiHelpers.headlessAssetLibrary.createAssetLibrary();
+
+		const memberUserAccount =
+			await apiHelpers.headlessAdminUser.postUserAccount();
+		const ownerUserAccount =
+			await apiHelpers.headlessAdminUser.postUserAccount();
+
+		await apiHelpers.jsonWebServicesUser.addGroupUsers(
+			String(assetLibrary.siteId),
+			[String(memberUserAccount.id), String(ownerUserAccount.id)]
+		);
+
+		const siteMembershipsPage = new SiteMembershipsPage(page);
+
+		await siteMembershipsPage.goto(`/asset-library-${assetLibrary.id}`);
+
+		await page
+			.locator(
+				`[id="${SITE_MEMBERSHIPS_NAMESPACE}users_${ownerUserAccount.alternateName}"]`
+			)
+			.getByLabel('More actions')
+			.click();
+
+		await page
+			.getByRole('menuitem', {exact: true, name: 'Assign Roles'})
+			.click();
+
+		const assignRolesFrame = page.frameLocator(
+			'iframe[title="Assign Roles"]'
+		);
+
+		for (const roleName of [
+			'Space Administrator',
+			'Space Content Reviewer',
+			'Space Owner',
+		]) {
+			await expect(
+				assignRolesFrame.getByText(roleName, {exact: true})
+			).toBeVisible();
+		}
+
+		await assignRolesFrame
+			.locator('.card')
+			.filter({hasText: 'Space Owner'})
+			.getByRole('checkbox')
+			.check();
+
+		await page.getByRole('button', {name: 'Done'}).click();
+
+		await waitForAlert(page);
+
+		await page.getByRole('button', {name: 'Filter'}).click();
+
+		await page.getByRole('menuitem', {name: 'Roles'}).click();
+
+		await page
+			.frameLocator('iframe[title="Select Role"]')
+			.getByText('Space Owner', {exact: true})
+			.click();
+
+		await expect(
+			page.locator(
+				`[id="${SITE_MEMBERSHIPS_NAMESPACE}users_${ownerUserAccount.alternateName}"]`
+			)
+		).toBeVisible();
+		await expect(
+			page.locator(
+				`[id="${SITE_MEMBERSHIPS_NAMESPACE}users_${memberUserAccount.alternateName}"]`
+			)
+		).toHaveCount(0);
 	}
 );

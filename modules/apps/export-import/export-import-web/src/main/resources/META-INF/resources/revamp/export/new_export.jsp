@@ -58,13 +58,15 @@ renderResponse.setTitle(exportImportProcessDisplayContext.getExportTitle());
 					).put(
 						"exportPreviewSitesAPIURL", exportImportProcessDisplayContext::getExportPreviewSitesAPIURL
 					).put(
-						"exportProcessAPIURL", exportImportProcessDisplayContext.getExportProcessAPIURL()
+						"exportPreviewSpacesAPIURL", exportImportProcessDisplayContext::getExportPreviewSpacesAPIURL
 					).put(
-						"lookAndFeelEnabled", exportImportProcessDisplayContext.isLookAndFeelEnabled()
+						"exportProcessAPIURL", exportImportProcessDisplayContext.getExportProcessAPIURL()
 					).put(
 						"pageTreeModalConfiguration", exportImportProcessDisplayContext.getPageTreeModalConfiguration()
 					).put(
 						"siteSelectionEnabled", exportImportProcessDisplayContext.isSiteSelectionEnabled()
+					).put(
+						"spaceSelectionEnabled", exportImportProcessDisplayContext.isSpaceSelectionEnabled()
 					).put(
 						"timeZoneId", timeZone.getID()
 					).build()

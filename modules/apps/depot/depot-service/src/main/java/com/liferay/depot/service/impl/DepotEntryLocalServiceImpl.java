@@ -38,6 +38,8 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.Users_GroupsTable;
 import com.liferay.portal.kernel.model.Users_OrgsTable;
 import com.liferay.portal.kernel.model.Users_UserGroupsTable;
+import com.liferay.portal.kernel.search.Indexable;
+import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
@@ -119,6 +121,12 @@ public class DepotEntryLocalServiceImpl extends DepotEntryLocalServiceBaseImpl {
 
 		depotEntry.setUuid(serviceContext.getUuid());
 
+		String friendlyURL = null;
+
+		if (type != DepotConstants.TYPE_SPACE) {
+			friendlyURL = "/asset-library-" + depotEntry.getDepotEntryId();
+		}
+
 		Group group = _groupLocalService.addGroup(
 			GetterUtil.getString(
 				serviceContext.getAttribute("groupExternalReferenceCode")),
@@ -126,9 +134,8 @@ public class DepotEntryLocalServiceImpl extends DepotEntryLocalServiceBaseImpl {
 			DepotEntry.class.getName(), depotEntry.getDepotEntryId(),
 			GroupConstants.DEFAULT_LIVE_GROUP_ID, nameMap, descriptionMap,
 			GroupConstants.TYPE_DEPOT, null, true,
-			GroupConstants.DEFAULT_MEMBERSHIP_RESTRICTION,
-			"/asset-library-" + depotEntry.getDepotEntryId(), false, false,
-			true, serviceContext);
+			GroupConstants.DEFAULT_MEMBERSHIP_RESTRICTION, friendlyURL, false,
+			false, true, serviceContext);
 
 		_groupLocalService.updateGroup(
 			group.getGroupId(),
@@ -327,17 +334,6 @@ public class DepotEntryLocalServiceImpl extends DepotEntryLocalServiceBaseImpl {
 			));
 	}
 
-	/**
-	 * @deprecated As of Cavanaugh (7.4.x)
-	 */
-	@Deprecated
-	@Override
-	public List<DepotEntry> getDepotEntryGroupRelsByUuidAndCompanyId(
-		String uuid, long companyId) {
-
-		return depotEntryPersistence.findByUuid_C(uuid, companyId);
-	}
-
 	@Override
 	public List<DepotEntry> getGroupConnectedDepotEntries(
 			long groupId, boolean ddmStructuresAvailable, int start, int end)
@@ -375,6 +371,7 @@ public class DepotEntryLocalServiceImpl extends DepotEntryLocalServiceBaseImpl {
 		return depotEntryPersistence.findByGroupId(groupId);
 	}
 
+	@Indexable(type = IndexableType.REINDEX)
 	@Override
 	public DepotEntry updateDepotEntry(
 			long depotEntryId, Map<Locale, String> nameMap,

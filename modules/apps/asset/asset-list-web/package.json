@@ -10,6 +10,7 @@
 		"@clayui/label": "^3.166.0",
 		"@clayui/link": "^3.166.0",
 		"@clayui/list": "^3.166.0",
+		"@clayui/modal": "^3.166.0",
 		"@clayui/multi-select": "^3.166.0",
 		"@clayui/tooltip": "^3.166.0",
 		"@liferay/frontend-js-item-selector-web": "*",
@@ -17,6 +18,7 @@
 		"@liferay/layout-js-components-web": "*",
 		"asset-taglib": "*",
 		"classnames": "2.3.1",
+		"date-fns": "2.29.3",
 		"frontend-js-components-web": "*",
 		"frontend-js-web": "*",
 		"prop-types": "15.7.2",
@@ -37,5 +39,5 @@
 		"format": "node-scripts format",
 		"test": "node-scripts test"
 	},
-	"version": "3.0.156"
+	"version": "3.0.157"
 }

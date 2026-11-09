@@ -43,11 +43,11 @@ renderResponse.setTitle(exportImportProcessDisplayContext.getImportTitle());
 			).put(
 				"importProcessAPIURL", exportImportProcessDisplayContext.getImportProcessAPIURL()
 			).put(
-				"lookAndFeelEnabled", exportImportProcessDisplayContext.isLookAndFeelEnabled()
-			).put(
 				"scope", exportImportProcessDisplayContext.getScope()
 			).put(
 				"siteSelectionEnabled", exportImportProcessDisplayContext.isSiteSelectionEnabled()
+			).put(
+				"spaceSelectionEnabled", exportImportProcessDisplayContext.isSpaceSelectionEnabled()
 			).build()
 		%>'
 	/>

@@ -33,7 +33,6 @@ import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
-import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Localization;
@@ -90,7 +89,7 @@ public class UserModelListenerTest {
 				StringBundler.concat(
 					"/o/", RandomTestUtil.randomString(), StringPool.SLASH,
 					RandomTestUtil.randomString())),
-			new HashMapDictionary<>());
+			null);
 	}
 
 	@After
@@ -98,14 +97,6 @@ public class UserModelListenerTest {
 		if (_serviceRegistration != null) {
 			_serviceRegistration.unregister();
 		}
-
-		UserTestUtil.setUser(
-			UserTestUtil.getAdminUser(_company.getCompanyId()));
-
-		_objectDefinitionLocalService.deleteCompanyObjectDefinitions(
-			_company.getCompanyId());
-
-		UserTestUtil.setUser(TestPropsValues.getUser());
 
 		_companyLocalService.deleteCompany(_company.getCompanyId());
 	}
@@ -182,6 +173,18 @@ public class UserModelListenerTest {
 		_assertEquals(LocaleUtil.BRAZIL, objectDefinition);
 		_assertEqualsSorted(
 			new String[] {"es_ES", "en_US", "pt_BR"}, objectDefinition);
+
+		CompanyTestUtil.resetCompanyLocales(
+			_company.getCompanyId(),
+			ListUtil.fromArray(LocaleUtil.GERMANY, LocaleUtil.US),
+			LocaleUtil.GERMANY);
+
+		objectDefinition = _objectDefinitionLocalService.fetchObjectDefinition(
+			_company.getCompanyId(), _OBJECT_DEFINITION_NAME);
+
+		_assertEquals(LocaleUtil.GERMANY, objectDefinition);
+
+		Assert.assertEquals("en_US", objectDefinition.getDefaultLanguageId());
 	}
 
 	private void _assertEquals(

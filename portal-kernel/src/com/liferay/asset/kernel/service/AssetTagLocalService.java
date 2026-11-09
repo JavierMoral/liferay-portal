@@ -480,17 +480,6 @@ public interface AssetTagLocalService
 	 * @param groupId the primary key of the group
 	 * @param start the lower bound of the range of asset tags
 	 * @param end the upper bound of the range of asset tags (not inclusive)
-	 * @return the range of matching asset tags
-	 */
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<AssetTag> getGroupTags(long groupId, int start, int end);
-
-	/**
-	 * Returns a range of all the asset tags in the group.
-	 *
-	 * @param groupId the primary key of the group
-	 * @param start the lower bound of the range of asset tags
-	 * @param end the upper bound of the range of asset tags (not inclusive)
 	 * @param orderByComparator the comparator to order the asset tags
 	 (optionally <code>null</code>)
 	 * @return the range of matching asset tags
@@ -499,15 +488,6 @@ public interface AssetTagLocalService
 	public List<AssetTag> getGroupTags(
 		long groupId, int start, int end,
 		OrderByComparator<AssetTag> orderByComparator);
-
-	/**
-	 * Returns the number of asset tags in the group.
-	 *
-	 * @param groupId the primary key of the group
-	 * @return the number of asset tags in the group
-	 */
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public int getGroupTagsCount(long groupId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery();
@@ -526,15 +506,6 @@ public interface AssetTagLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException;
-
-	/**
-	 * Returns the asset tag with the primary key.
-	 *
-	 * @param tagId the primary key of the asset tag
-	 * @return the asset tag with the primary key
-	 */
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public AssetTag getTag(long tagId) throws PortalException;
 
 	/**
 	 * Returns the asset tag with the name in the group.
@@ -586,14 +557,6 @@ public interface AssetTagLocalService
 	public long[] getTagIds(String name);
 
 	/**
-	 * Returns the names of all the asset tags.
-	 *
-	 * @return the names of all the asset tags
-	 */
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public String[] getTagNames();
-
-	/**
 	 * Returns the names of the asset tags of the entity.
 	 *
 	 * @param classNameId the class name ID of the entity
@@ -630,13 +593,6 @@ public interface AssetTagLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<AssetTag> getTags(long classNameId, long classPK);
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<AssetTag> getTags(long groupId, long classNameId, String name);
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<AssetTag> getTags(
-		long groupId, long classNameId, String name, int start, int end);
 
 	/**
 	 * Returns the asset tags of the entity.
@@ -764,4 +720,4 @@ public interface AssetTagLocalService
 		throws E;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:1993427931
+// LIFERAY-SERVICE-BUILDER-HASH:1666613710

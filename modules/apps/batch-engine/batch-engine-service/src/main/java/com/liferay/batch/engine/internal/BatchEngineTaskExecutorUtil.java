@@ -39,30 +39,37 @@ public class BatchEngineTaskExecutorUtil {
 			UnsafeSupplier<T, Throwable> unsafeSupplier, User user)
 		throws Throwable {
 
-		AuditRequestContext auditRequestContext =
+		PermissionChecker permissionChecker =
+			PermissionThreadLocal.getPermissionChecker();
+
+		String name = PrincipalThreadLocal.getName();
+
+		AuditRequestContext currentAuditRequestContext =
 			AuditRequestContextThreadLocal.getAuditRequestContext();
+
+		AuditRequestContext auditRequestContext =
+			currentAuditRequestContext.clone();
 
 		auditRequestContext.setRealUserEmailAddress(user.getEmailAddress());
 		auditRequestContext.setRealUserId(user.getUserId());
 
-		PermissionChecker permissionChecker =
-			PermissionThreadLocal.getPermissionChecker();
-
-		if (checkPermissions) {
-			PermissionThreadLocal.setPermissionChecker(
-				PermissionCheckerFactoryUtil.create(user));
-		}
-		else {
-			PermissionThreadLocal.setPermissionChecker(
-				new LiberalPermissionChecker(user));
-		}
-
-		String name = PrincipalThreadLocal.getName();
-
-		PrincipalThreadLocal.setName(user.getUserId());
-
-		try (SafeCloseable safeCloseable =
+		try (SafeCloseable safeCloseable1 =
+				AuditRequestContextThreadLocal.
+					setAuditRequestContextWithSafeCloseable(
+						auditRequestContext);
+			SafeCloseable safeCloseable2 =
 				ItemIndexThreadLocal.pushIndexQueueWithSafeCloseable()) {
+
+			if (checkPermissions) {
+				PermissionThreadLocal.setPermissionChecker(
+					PermissionCheckerFactoryUtil.create(user));
+			}
+			else {
+				PermissionThreadLocal.setPermissionChecker(
+					new LiberalPermissionChecker(user));
+			}
+
+			PrincipalThreadLocal.setName(user.getUserId());
 
 			return unsafeSupplier.get();
 		}

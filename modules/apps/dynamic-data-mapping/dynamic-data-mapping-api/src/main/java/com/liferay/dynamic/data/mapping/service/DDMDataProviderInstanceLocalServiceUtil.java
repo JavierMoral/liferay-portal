@@ -240,12 +240,6 @@ public class DDMDataProviderInstanceLocalServiceUtil {
 		return getService().dynamicQueryCount(dynamicQuery, projection);
 	}
 
-	public static DDMDataProviderInstance fetchDataProviderInstance(
-		long dataProviderInstanceId) {
-
-		return getService().fetchDataProviderInstance(dataProviderInstanceId);
-	}
-
 	public static DDMDataProviderInstance fetchDataProviderInstanceByUuid(
 		String uuid) {
 
@@ -280,13 +274,6 @@ public class DDMDataProviderInstanceLocalServiceUtil {
 		return getService().getActionableDynamicQuery();
 	}
 
-	public static DDMDataProviderInstance getDataProviderInstance(
-			long dataProviderInstanceId)
-		throws PortalException {
-
-		return getService().getDataProviderInstance(dataProviderInstanceId);
-	}
-
 	public static DDMDataProviderInstance getDataProviderInstanceByUuid(
 			String uuid)
 		throws PortalException {
@@ -298,20 +285,6 @@ public class DDMDataProviderInstanceLocalServiceUtil {
 		long[] groupIds) {
 
 		return getService().getDataProviderInstances(groupIds);
-	}
-
-	public static List<DDMDataProviderInstance> getDataProviderInstances(
-		long[] groupIds, int start, int end) {
-
-		return getService().getDataProviderInstances(groupIds, start, end);
-	}
-
-	public static List<DDMDataProviderInstance> getDataProviderInstances(
-		long[] groupIds, int start, int end,
-		OrderByComparator<DDMDataProviderInstance> orderByComparator) {
-
-		return getService().getDataProviderInstances(
-			groupIds, start, end, orderByComparator);
 	}
 
 	/**
@@ -438,38 +411,6 @@ public class DDMDataProviderInstanceLocalServiceUtil {
 		return getService().getPersistedModel(primaryKeyObj);
 	}
 
-	public static List<DDMDataProviderInstance> search(
-		long companyId, long[] groupIds, String keywords, int start, int end,
-		OrderByComparator<DDMDataProviderInstance> orderByComparator) {
-
-		return getService().search(
-			companyId, groupIds, keywords, start, end, orderByComparator);
-	}
-
-	public static List<DDMDataProviderInstance> search(
-		long companyId, long[] groupIds, String name, String description,
-		boolean andOperator, int start, int end,
-		OrderByComparator<DDMDataProviderInstance> orderByComparator) {
-
-		return getService().search(
-			companyId, groupIds, name, description, andOperator, start, end,
-			orderByComparator);
-	}
-
-	public static int searchCount(
-		long companyId, long[] groupIds, String keywords) {
-
-		return getService().searchCount(companyId, groupIds, keywords);
-	}
-
-	public static int searchCount(
-		long companyId, long[] groupIds, String name, String description,
-		boolean andOperator) {
-
-		return getService().searchCount(
-			companyId, groupIds, name, description, andOperator);
-	}
-
 	public static DDMDataProviderInstance updateDataProviderInstance(
 			long userId, long dataProviderInstanceId,
 			Map<java.util.Locale, String> nameMap,
@@ -511,4 +452,4 @@ public class DDMDataProviderInstanceLocalServiceUtil {
 			DDMDataProviderInstanceLocalService.class);
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-1330733970
+// LIFERAY-SERVICE-BUILDER-HASH:1296302195

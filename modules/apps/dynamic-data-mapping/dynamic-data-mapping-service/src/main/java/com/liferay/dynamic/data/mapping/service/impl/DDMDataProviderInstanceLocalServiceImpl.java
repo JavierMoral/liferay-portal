@@ -40,7 +40,6 @@ import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.GroupThreadLocal;
 import com.liferay.portal.kernel.util.InetAddressUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.net.URL;
@@ -183,14 +182,6 @@ public class DDMDataProviderInstanceLocalServiceImpl
 	}
 
 	@Override
-	public DDMDataProviderInstance fetchDataProviderInstance(
-		long dataProviderInstanceId) {
-
-		return ddmDataProviderInstancePersistence.fetchByPrimaryKey(
-			dataProviderInstanceId);
-	}
-
-	@Override
 	public DDMDataProviderInstance fetchDataProviderInstanceByUuid(
 		String uuid) {
 
@@ -202,15 +193,6 @@ public class DDMDataProviderInstanceLocalServiceImpl
 		}
 
 		return ddmDataProviderInstances.get(0);
-	}
-
-	@Override
-	public DDMDataProviderInstance getDataProviderInstance(
-			long dataProviderInstanceId)
-		throws PortalException {
-
-		return ddmDataProviderInstancePersistence.findByPrimaryKey(
-			dataProviderInstanceId);
 	}
 
 	@Override
@@ -233,58 +215,6 @@ public class DDMDataProviderInstanceLocalServiceImpl
 		long[] groupIds) {
 
 		return ddmDataProviderInstancePersistence.findByGroupId(groupIds);
-	}
-
-	@Override
-	public List<DDMDataProviderInstance> getDataProviderInstances(
-		long[] groupIds, int start, int end) {
-
-		return ddmDataProviderInstancePersistence.findByGroupId(
-			groupIds, start, end);
-	}
-
-	@Override
-	public List<DDMDataProviderInstance> getDataProviderInstances(
-		long[] groupIds, int start, int end,
-		OrderByComparator<DDMDataProviderInstance> orderByComparator) {
-
-		return ddmDataProviderInstancePersistence.findByGroupId(
-			groupIds, start, end, orderByComparator);
-	}
-
-	@Override
-	public List<DDMDataProviderInstance> search(
-		long companyId, long[] groupIds, String keywords, int start, int end,
-		OrderByComparator<DDMDataProviderInstance> orderByComparator) {
-
-		return ddmDataProviderInstanceFinder.findByKeywords(
-			companyId, groupIds, keywords, start, end, orderByComparator);
-	}
-
-	@Override
-	public List<DDMDataProviderInstance> search(
-		long companyId, long[] groupIds, String name, String description,
-		boolean andOperator, int start, int end,
-		OrderByComparator<DDMDataProviderInstance> orderByComparator) {
-
-		return ddmDataProviderInstanceFinder.findByC_G_N_D(
-			companyId, groupIds, name, description, andOperator, start, end,
-			orderByComparator);
-	}
-
-	@Override
-	public int searchCount(long companyId, long[] groupIds, String keywords) {
-		return ddmDataProviderInstanceFinder.countByKeywords(
-			companyId, groupIds, keywords);
-	}
-
-	@Override
-	public int searchCount(
-		long companyId, long[] groupIds, String name, String description,
-		boolean andOperator) {
-
-		return ddmDataProviderInstanceFinder.countByC_G_N_D(
-			companyId, groupIds, name, description, andOperator);
 	}
 
 	@Override

@@ -6,7 +6,7 @@
 --%>
 
 <%
-long fileEntryId = BeanParamUtil.getLong(cpAttachmentFileEntry, request, "fileEntryId");
+long fileEntryId = ParamUtil.getLong(request, "fileEntryId", GetterUtil.get(cpAttachmentFileEntry, CPAttachmentFileEntry::getFileEntryId, 0L));
 %>
 
 <liferay-ui:error exception="<%= DuplicateCPAttachmentFileEntryException.class %>" message="that-attachment-is-already-in-use-on-this-product" />
@@ -54,12 +54,10 @@ long fileEntryId = BeanParamUtil.getLong(cpAttachmentFileEntry, request, "fileEn
 	);
 
 	if (selectFileButton) {
-		const openerWindow = Liferay.Util.getOpener();
-
 		selectFileButton.addEventListener('click', (event) => {
 			event.preventDefault();
 
-			openerWindow.Liferay.Util.openSelectionModal({
+			Liferay.Util.openSelectionModal({
 				onSelect: (selectedItem) => {
 					if (!selectedItem || !selectedItem.value) {
 						return;

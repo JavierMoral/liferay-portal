@@ -226,24 +226,6 @@ public class CalendarBookingLocalServiceWrapper
 	}
 
 	@Override
-	public CalendarBooking deleteRecurringCalendarBooking(
-			CalendarBooking calendarBooking)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _calendarBookingLocalService.deleteRecurringCalendarBooking(
-			calendarBooking);
-	}
-
-	@Override
-	public CalendarBooking deleteRecurringCalendarBooking(
-			long calendarBookingId)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _calendarBookingLocalService.deleteRecurringCalendarBooking(
-			calendarBookingId);
-	}
-
-	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _calendarBookingLocalService.dslQuery(dslQuery);
 	}
@@ -484,25 +466,10 @@ public class CalendarBookingLocalServiceWrapper
 
 	@Override
 	public java.util.List<CalendarBooking> getCalendarBookings(
-		long calendarId) {
-
-		return _calendarBookingLocalService.getCalendarBookings(calendarId);
-	}
-
-	@Override
-	public java.util.List<CalendarBooking> getCalendarBookings(
 		long calendarId, int[] statuses) {
 
 		return _calendarBookingLocalService.getCalendarBookings(
 			calendarId, statuses);
-	}
-
-	@Override
-	public java.util.List<CalendarBooking> getCalendarBookings(
-		long calendarId, long startTime, long endTime) {
-
-		return _calendarBookingLocalService.getCalendarBookings(
-			calendarId, startTime, endTime);
 	}
 
 	@Override
@@ -577,14 +544,6 @@ public class CalendarBookingLocalServiceWrapper
 	}
 
 	@Override
-	public java.util.List<CalendarBooking> getChildCalendarBookings(
-		long parentCalendarBookingId, int status) {
-
-		return _calendarBookingLocalService.getChildCalendarBookings(
-			parentCalendarBookingId, status);
-	}
-
-	@Override
 	public long[] getChildCalendarIds(long calendarBookingId, long calendarId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -645,14 +604,6 @@ public class CalendarBookingLocalServiceWrapper
 
 		return _calendarBookingLocalService.getRecurringCalendarBookings(
 			calendarBooking);
-	}
-
-	@Override
-	public java.util.List<CalendarBooking> getRecurringCalendarBookings(
-		CalendarBooking calendarBooking, long startTime) {
-
-		return _calendarBookingLocalService.getRecurringCalendarBookings(
-			calendarBooking, startTime);
 	}
 
 	@Override
@@ -744,30 +695,6 @@ public class CalendarBookingLocalServiceWrapper
 			parentCalendarBookingId, title, description, location, startTime,
 			endTime, recurring, statuses, andOperator, start, end,
 			orderByComparator);
-	}
-
-	@Override
-	public int searchCount(
-		long companyId, long[] groupIds, long[] calendarIds,
-		long[] calendarResourceIds, long parentCalendarBookingId,
-		String keywords, long startTime, long endTime, int[] statuses) {
-
-		return _calendarBookingLocalService.searchCount(
-			companyId, groupIds, calendarIds, calendarResourceIds,
-			parentCalendarBookingId, keywords, startTime, endTime, statuses);
-	}
-
-	@Override
-	public int searchCount(
-		long companyId, long[] groupIds, long[] calendarIds,
-		long[] calendarResourceIds, long parentCalendarBookingId, String title,
-		String description, String location, long startTime, long endTime,
-		int[] statuses, boolean andOperator) {
-
-		return _calendarBookingLocalService.searchCount(
-			companyId, groupIds, calendarIds, calendarResourceIds,
-			parentCalendarBookingId, title, description, location, startTime,
-			endTime, statuses, andOperator);
 	}
 
 	@Override
@@ -984,4 +911,4 @@ public class CalendarBookingLocalServiceWrapper
 	private CalendarBookingLocalService _calendarBookingLocalService;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-1261786053
+// LIFERAY-SERVICE-BUILDER-HASH:-965390990

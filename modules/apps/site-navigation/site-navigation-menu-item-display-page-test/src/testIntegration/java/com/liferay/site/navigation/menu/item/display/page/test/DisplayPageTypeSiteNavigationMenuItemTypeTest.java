@@ -59,7 +59,6 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.UnicodeProperties;
@@ -83,6 +82,7 @@ import com.liferay.site.navigation.type.SiteNavigationMenuItemTypeRegistry;
 
 import java.io.File;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -98,7 +98,9 @@ import org.junit.runner.RunWith;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -173,7 +175,7 @@ public class DisplayPageTypeSiteNavigationMenuItemTypeTest {
 					}
 
 				},
-				new HashMapDictionary<String, String>());
+				null);
 
 			Assert.assertTrue(siteNavigationMenuItemType.isMultiSelection());
 		}
@@ -191,6 +193,30 @@ public class DisplayPageTypeSiteNavigationMenuItemTypeTest {
 				AssetCategory.class.getName());
 
 		Assert.assertTrue(siteNavigationMenuItemType.isMultiSelection());
+	}
+
+	@Test
+	public void testDisplayPageTypeServiceRanking() throws Exception {
+		Bundle bundle = FrameworkUtil.getBundle(
+			SiteNavigationMenuItemType.class);
+
+		BundleContext bundleContext = bundle.getBundleContext();
+
+		Collection<ServiceReference<SiteNavigationMenuItemType>>
+			serviceReferences = bundleContext.getServiceReferences(
+				SiteNavigationMenuItemType.class,
+				"(site.navigation.menu.item.type=" +
+					JournalArticle.class.getName() + ")");
+
+		Assert.assertEquals(
+			serviceReferences.toString(), 1, serviceReferences.size());
+
+		for (ServiceReference<SiteNavigationMenuItemType> serviceReference :
+				serviceReferences) {
+
+			Assert.assertEquals(
+				300, serviceReference.getProperty(Constants.SERVICE_RANKING));
+		}
 	}
 
 	@Test
@@ -453,6 +479,29 @@ public class DisplayPageTypeSiteNavigationMenuItemTypeTest {
 			siteNavigationMenuItemType.hasPermission(
 				PermissionCheckerFactoryUtil.create(
 					_userLocalService.getGuestUser(_group.getCompanyId())),
+				siteNavigationMenuItem));
+
+		journalArticle = _journalArticleLocalService.moveArticleToTrash(
+			TestPropsValues.getUserId(), journalArticle);
+
+		Assert.assertFalse(
+			siteNavigationMenuItemType.hasPermission(
+				PermissionThreadLocal.getPermissionChecker(),
+				siteNavigationMenuItem));
+
+		journalArticle = _journalArticleLocalService.restoreArticleFromTrash(
+			TestPropsValues.getUserId(), journalArticle);
+
+		Assert.assertTrue(
+			siteNavigationMenuItemType.hasPermission(
+				PermissionThreadLocal.getPermissionChecker(),
+				siteNavigationMenuItem));
+
+		_journalArticleLocalService.deleteArticle(journalArticle);
+
+		Assert.assertFalse(
+			siteNavigationMenuItemType.hasPermission(
+				PermissionThreadLocal.getPermissionChecker(),
 				siteNavigationMenuItem));
 	}
 

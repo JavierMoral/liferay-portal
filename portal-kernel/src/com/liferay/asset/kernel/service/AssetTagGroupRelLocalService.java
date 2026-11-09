@@ -131,6 +131,10 @@ public interface AssetTagGroupRelLocalService
 
 	public void deleteAssetTagGroupRelsByTagId(long tagId);
 
+	public void deleteAssetTagGroupRelsByTagIdAndDepotEntryType(
+			long tagId, int depotEntryType)
+		throws PortalException;
+
 	/**
 	 * @throws PortalException
 	 */
@@ -274,9 +278,6 @@ public interface AssetTagGroupRelLocalService
 			long groupId, int depotEntryType);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<AssetTagGroupRel> getAssetTagGroupRelsByTagId(long tagId);
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<AssetTagGroupRel> getAssetTagGroupRelsByTagIdAndDepotEntryType(
 		long tagId, int depotEntryType);
 
@@ -366,4 +367,4 @@ public interface AssetTagGroupRelLocalService
 		throws E;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:96965117
+// LIFERAY-SERVICE-BUILDER-HASH:809679208

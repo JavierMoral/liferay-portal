@@ -220,13 +220,6 @@ public interface DDMStructureLinkLocalService
 	public ActionableDynamicQuery getActionableDynamicQuery();
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<DDMStructureLink> getClassNameStructureLinks(long classNameId);
-
-	/**
 	 * Returns the ddm structure link with the primary key.
 	 *
 	 * @param structureLinkId the primary key of the ddm structure link
@@ -278,10 +271,6 @@ public interface DDMStructureLinkLocalService
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public DDMStructureLink getStructureLink(long structureLinkId)
-		throws PortalException;
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<DDMStructureLink> getStructureLinks(long structureId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -308,26 +297,6 @@ public interface DDMStructureLinkLocalService
 	public List<DDMStructure> getStructureLinkStructures(
 			long classNameId, long classPK, int start, int end)
 		throws PortalException;
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<DDMStructure> getStructureLinkStructures(
-			long classNameId, long classPK, String keywords)
-		throws PortalException;
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<DDMStructure> getStructureLinkStructures(
-			long classNameId, long classPK, String keywords, int start, int end)
-		throws PortalException;
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<DDMStructure> getStructureLinkStructures(
-			long classNameId, long classPK, String keywords, int start, int end,
-			OrderByComparator<DDMStructureLink> orderByComparator)
-		throws PortalException;
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public int getStructureLinkStructuresCount(
-		long classNameId, long classPK, String keywords);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DDMStructureLink getUniqueStructureLink(
@@ -369,4 +338,4 @@ public interface DDMStructureLinkLocalService
 		throws E;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-1075053711
+// LIFERAY-SERVICE-BUILDER-HASH:1299875531

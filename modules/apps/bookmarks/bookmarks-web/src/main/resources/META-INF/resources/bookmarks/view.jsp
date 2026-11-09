@@ -10,7 +10,7 @@
 <%
 BookmarksFolder folder = (BookmarksFolder)request.getAttribute(BookmarksWebKeys.BOOKMARKS_FOLDER);
 
-long folderId = BeanParamUtil.getLong(folder, request, "folderId", rootFolderId);
+long folderId = ParamUtil.getLong(request, "folderId", GetterUtil.get(folder, BookmarksFolder::getFolderId, rootFolderId));
 
 String keywords = ParamUtil.getString(request, "keywords");
 
@@ -20,7 +20,7 @@ if (Validator.isNotNull(keywords) && portletTitleBasedNavigation) {
 	portletDisplay.setShowBackIcon(true);
 	portletDisplay.setURLBack(ParamUtil.getString(request, "redirect"));
 
-	renderResponse.setTitle(LanguageUtil.get(resourceBundle, "search"));
+	renderResponse.setTitle(LanguageUtil.get(resourceBundle, "search[noun]"));
 }
 
 boolean defaultFolderView = false;

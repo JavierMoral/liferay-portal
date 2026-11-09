@@ -8,6 +8,7 @@ package com.liferay.document.library.web.internal.portlet.action.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.document.library.configuration.DLFileEntryMimeTypeConfiguration;
 import com.liferay.document.library.constants.DLPortletKeys;
+import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryMetadata;
 import com.liferay.document.library.kernel.model.DLFileEntryType;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
@@ -16,8 +17,13 @@ import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeService;
 import com.liferay.document.library.test.util.DLAppTestUtil;
+import com.liferay.dynamic.data.mapping.kernel.DDMFormFieldValue;
+import com.liferay.dynamic.data.mapping.kernel.DDMFormValues;
+import com.liferay.dynamic.data.mapping.kernel.Value;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
+import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.test.util.DDMFormTestUtil;
 import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
 import com.liferay.layout.test.util.LayoutTestUtil;
@@ -28,17 +34,24 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.ResourceConstants;
+import com.liferay.portal.kernel.model.Role;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.PortletConfigFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.repository.model.Folder;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.PortletLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletActionRequest;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletActionResponse;
 import com.liferay.portal.kernel.test.portlet.MockPortletSession;
@@ -74,6 +87,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -111,7 +125,9 @@ public class EditFileEntryMVCActionCommandTest {
 		throws Exception {
 
 		Folder folder = DLAppTestUtil.addFolder(_group.getGroupId());
-		DLFileEntryType dlFileEntryType = _addFileEntryTypeWithRequiredField();
+		DLFileEntryType dlFileEntryType = _addFileEntryType(
+			DDMFormTestUtil.createLocalizedTextDDMFormField(
+				RandomTestUtil.randomString(), false, true, LocaleUtil.US));
 
 		_dlAppLocalService.updateFolder(
 			folder.getFolderId(), folder.getParentFolderId(), folder.getName(),
@@ -309,6 +325,128 @@ public class EditFileEntryMVCActionCommandTest {
 	}
 
 	@Test
+	@TestInfo("LPD-113625")
+	public void testProcessActionAddMultipleFileEntriesViewableByOwner()
+		throws Exception {
+
+		FileEntry tempFileEntry1 = TempFileEntryUtil.addTempFileEntry(
+			_group.getGroupId(), TestPropsValues.getUserId(), _TEMP_FOLDER_NAME,
+			TempFileEntryUtil.getTempFileName("test.jpg"), _getInputStream(),
+			ContentTypes.IMAGE_JPEG);
+		FileEntry tempFileEntry2 = TempFileEntryUtil.addTempFileEntry(
+			_group.getGroupId(), TestPropsValues.getUserId(), _TEMP_FOLDER_NAME,
+			TempFileEntryUtil.getTempFileName("test.gif"), _getInputStream(),
+			ContentTypes.IMAGE_GIF);
+
+		_processAction(
+			_getMockLiferayPortletActionRequest(
+				HashMapBuilder.putAll(
+					_getParameters(
+						Constants.ADD_MULTIPLE, tempFileEntry1.getFolderId(),
+						tempFileEntry1.getRepositoryId(),
+						new String[] {
+							tempFileEntry1.getFileName(),
+							tempFileEntry2.getFileName()
+						})
+				).put(
+					"inputPermissionsViewRole",
+					new String[] {RoleConstants.OWNER}
+				).build()),
+			new MockLiferayPortletActionResponse());
+
+		FileEntry gifFileEntry = _dlAppLocalService.getFileEntryByFileName(
+			_group.getGroupId(), tempFileEntry1.getFolderId(), "test.gif");
+
+		_assertNoViewPermission(gifFileEntry, RoleConstants.GUEST);
+		_assertNoViewPermission(gifFileEntry, RoleConstants.SITE_MEMBER);
+
+		FileEntry jpgFileEntry = _dlAppLocalService.getFileEntryByFileName(
+			_group.getGroupId(), tempFileEntry1.getFolderId(), "test.jpg");
+
+		_assertNoViewPermission(jpgFileEntry, RoleConstants.GUEST);
+		_assertNoViewPermission(jpgFileEntry, RoleConstants.SITE_MEMBER);
+	}
+
+	@Test
+	public void testProcessActionAddMultipleFileEntriesWithFileEntryType()
+		throws Exception {
+
+		String fieldName = RandomTestUtil.randomString();
+
+		DLFileEntryType dlFileEntryType = _addFileEntryType(
+			DDMFormTestUtil.createLocalizedTextDDMFormField(
+				fieldName, false, false, LocaleUtil.US));
+
+		DDMStructure ddmStructure = _ddmStructureLocalService.getStructure(
+			dlFileEntryType.getDataDefinitionId());
+
+		FileEntry tempFileEntry1 = TempFileEntryUtil.addTempFileEntry(
+			_group.getGroupId(), TestPropsValues.getUserId(), _TEMP_FOLDER_NAME,
+			TempFileEntryUtil.getTempFileName("test1.txt"), _getInputStream(),
+			ContentTypes.TEXT_PLAIN);
+		FileEntry tempFileEntry2 = TempFileEntryUtil.addTempFileEntry(
+			_group.getGroupId(), TestPropsValues.getUserId(), _TEMP_FOLDER_NAME,
+			TempFileEntryUtil.getTempFileName("test2.txt"), _getInputStream(),
+			ContentTypes.TEXT_PLAIN);
+
+		String valueString = RandomTestUtil.randomString();
+
+		_processAction(
+			_getMockLiferayPortletActionRequest(
+				HashMapBuilder.putAll(
+					_getParameters(
+						Constants.ADD_MULTIPLE,
+						DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+						_group.getGroupId(),
+						new String[] {
+							tempFileEntry1.getFileName(),
+							tempFileEntry2.getFileName()
+						})
+				).put(
+					StringBundler.concat(
+						ddmStructure.getStructureId(), "_ddm$$", fieldName, "$",
+						RandomTestUtil.randomString(), "$0$$",
+						LocaleUtil.toLanguageId(LocaleUtil.US)),
+					new String[] {valueString}
+				).put(
+					"fileEntryTypeId",
+					new String[] {
+						String.valueOf(dlFileEntryType.getFileEntryTypeId())
+					}
+				).build()),
+			new MockLiferayPortletActionResponse());
+
+		for (String fileName : new String[] {"test1.txt", "test2.txt"}) {
+			FileEntry fileEntry = _dlAppLocalService.getFileEntryByFileName(
+				_group.getGroupId(), DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+				fileName);
+
+			DLFileEntry dlFileEntry = (DLFileEntry)fileEntry.getModel();
+
+			FileVersion fileVersion = fileEntry.getFileVersion();
+
+			Map<String, DDMFormValues> ddmFormValuesMap =
+				dlFileEntry.getDDMFormValuesMap(fileVersion.getFileVersionId());
+
+			DDMFormValues ddmFormValues = ddmFormValuesMap.get(
+				ddmStructure.getStructureKey());
+
+			Map<String, List<DDMFormFieldValue>> ddmFormFieldValuesMap =
+				ddmFormValues.getDDMFormFieldValuesMap();
+
+			List<DDMFormFieldValue> ddmFormFieldValues =
+				ddmFormFieldValuesMap.get(fieldName);
+
+			DDMFormFieldValue ddmFormFieldValue = ddmFormFieldValues.get(0);
+
+			Value value = ddmFormFieldValue.getValue();
+
+			Assert.assertEquals(
+				fileName, valueString, value.getString(LocaleUtil.US));
+		}
+	}
+
+	@Test
 	public void testProcessActionAddMultipleFileEntriesWithInvalidMimetype()
 		throws Exception {
 
@@ -465,17 +603,14 @@ public class EditFileEntryMVCActionCommandTest {
 		Assert.assertTrue(actualFileEntry.isCheckedOut());
 	}
 
-	private DLFileEntryType _addFileEntryTypeWithRequiredField()
+	private DLFileEntryType _addFileEntryType(DDMFormField ddmFormField)
 		throws Exception {
 
 		DDMForm ddmForm = DDMFormTestUtil.createDDMForm(
 			DDMFormTestUtil.createAvailableLocales(LocaleUtil.US),
 			LocaleUtil.US);
 
-		DDMFormTestUtil.addDDMFormFields(
-			ddmForm,
-			DDMFormTestUtil.createLocalizedTextDDMFormField(
-				RandomTestUtil.randomString(), false, true, LocaleUtil.US));
+		DDMFormTestUtil.addDDMFormFields(ddmForm, ddmFormField);
 
 		DDMStructure ddmStructure = DDMStructureTestUtil.addStructure(
 			_group.getGroupId(), DLFileEntryMetadata.class.getName(), ddmForm);
@@ -488,6 +623,19 @@ public class EditFileEntryMVCActionCommandTest {
 				LocaleUtil.US, RandomTestUtil.randomString()),
 			ServiceContextTestUtil.getServiceContext(
 				_group, TestPropsValues.getUserId()));
+	}
+
+	private void _assertNoViewPermission(FileEntry fileEntry, String roleName)
+		throws Exception {
+
+		Role role = _roleLocalService.getRole(_group.getCompanyId(), roleName);
+
+		Assert.assertFalse(
+			_resourcePermissionLocalService.hasResourcePermission(
+				_group.getCompanyId(), DLFileEntry.class.getName(),
+				ResourceConstants.SCOPE_INDIVIDUAL,
+				String.valueOf(fileEntry.getFileEntryId()), role.getRoleId(),
+				ActionKeys.VIEW));
 	}
 
 	private MockMultipartHttpServletRequest
@@ -746,6 +894,9 @@ public class EditFileEntryMVCActionCommandTest {
 	private CompanyLocalService _companyLocalService;
 
 	@Inject
+	private DDMStructureLocalService _ddmStructureLocalService;
+
+	@Inject
 	private DLAppLocalService _dlAppLocalService;
 
 	@Inject
@@ -767,5 +918,11 @@ public class EditFileEntryMVCActionCommandTest {
 
 	@Inject
 	private PortletLocalService _portletLocalService;
+
+	@Inject
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
+
+	@Inject
+	private RoleLocalService _roleLocalService;
 
 }

@@ -60,6 +60,16 @@ public class AssetTagGroupRelLocalServiceImpl
 	}
 
 	@Override
+	public void deleteAssetTagGroupRelsByTagIdAndDepotEntryType(
+			long tagId, int depotEntryType)
+		throws PortalException {
+
+		assetTagGroupRelPersistence.removeByT_D(tagId, depotEntryType);
+
+		_reindexAssetTag(tagId);
+	}
+
+	@Override
 	public List<AssetTagGroupRel> getAssetTagGroupRelsByGroupId(long groupId) {
 		return assetTagGroupRelPersistence.findByGroupId(groupId);
 	}
@@ -70,11 +80,6 @@ public class AssetTagGroupRelLocalServiceImpl
 			long groupId, int depotEntryType) {
 
 		return assetTagGroupRelPersistence.findByG_D(groupId, depotEntryType);
-	}
-
-	@Override
-	public List<AssetTagGroupRel> getAssetTagGroupRelsByTagId(long tagId) {
-		return assetTagGroupRelPersistence.findByTagId(tagId);
 	}
 
 	@Override

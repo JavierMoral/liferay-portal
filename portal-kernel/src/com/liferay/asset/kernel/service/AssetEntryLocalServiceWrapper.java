@@ -411,18 +411,6 @@ public class AssetEntryLocalServiceWrapper
 	}
 
 	@Override
-	public java.util.List<AssetEntry> getCompanyEntries(
-		long companyId, int start, int end) {
-
-		return _assetEntryLocalService.getCompanyEntries(companyId, start, end);
-	}
-
-	@Override
-	public int getCompanyEntriesCount(long companyId) {
-		return _assetEntryLocalService.getCompanyEntriesCount(companyId);
-	}
-
-	@Override
 	public java.util.List<AssetEntry> getEntries(
 		com.liferay.asset.kernel.service.persistence.AssetEntryQuery
 			entryQuery) {
@@ -431,61 +419,11 @@ public class AssetEntryLocalServiceWrapper
 	}
 
 	@Override
-	public java.util.List<AssetEntry> getEntries(
-		long[] groupIds, long[] classNameIds, long[] classTypeIds,
-		String keywords, String userName, String title, String description,
-		Boolean listable, boolean advancedSearch, boolean andOperator,
-		int start, int end, String orderByCol1, String orderByCol2,
-		String orderByType1, String orderByType2) {
-
-		return _assetEntryLocalService.getEntries(
-			groupIds, classNameIds, classTypeIds, keywords, userName, title,
-			description, listable, advancedSearch, andOperator, start, end,
-			orderByCol1, orderByCol2, orderByType1, orderByType2);
-	}
-
-	@Override
-	public java.util.List<AssetEntry> getEntries(
-		long[] groupIds, long[] classNameIds, String keywords, String userName,
-		String title, String description, Boolean listable,
-		boolean advancedSearch, boolean andOperator, int start, int end,
-		String orderByCol1, String orderByCol2, String orderByType1,
-		String orderByType2) {
-
-		return _assetEntryLocalService.getEntries(
-			groupIds, classNameIds, keywords, userName, title, description,
-			listable, advancedSearch, andOperator, start, end, orderByCol1,
-			orderByCol2, orderByType1, orderByType2);
-	}
-
-	@Override
 	public int getEntriesCount(
 		com.liferay.asset.kernel.service.persistence.AssetEntryQuery
 			entryQuery) {
 
 		return _assetEntryLocalService.getEntriesCount(entryQuery);
-	}
-
-	@Override
-	public int getEntriesCount(
-		long[] groupIds, long[] classNameIds, long[] classTypeIds,
-		String keywords, String userName, String title, String description,
-		Boolean listable, boolean advancedSearch, boolean andOperator) {
-
-		return _assetEntryLocalService.getEntriesCount(
-			groupIds, classNameIds, classTypeIds, keywords, userName, title,
-			description, listable, advancedSearch, andOperator);
-	}
-
-	@Override
-	public int getEntriesCount(
-		long[] groupIds, long[] classNameIds, String keywords, String userName,
-		String title, String description, Boolean listable,
-		boolean advancedSearch, boolean andOperator) {
-
-		return _assetEntryLocalService.getEntriesCount(
-			groupIds, classNameIds, keywords, userName, title, description,
-			listable, advancedSearch, andOperator);
 	}
 
 	@Override
@@ -550,22 +488,6 @@ public class AssetEntryLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _assetEntryLocalService.getPersistedModel(primaryKeyObj);
-	}
-
-	@Override
-	public java.util.List<AssetEntry> getTopViewedEntries(
-		String className, boolean asc, int start, int end) {
-
-		return _assetEntryLocalService.getTopViewedEntries(
-			className, asc, start, end);
-	}
-
-	@Override
-	public java.util.List<AssetEntry> getTopViewedEntries(
-		String[] className, boolean asc, int start, int end) {
-
-		return _assetEntryLocalService.getTopViewedEntries(
-			className, asc, start, end);
 	}
 
 	@Override
@@ -637,28 +559,6 @@ public class AssetEntryLocalServiceWrapper
 	@Override
 	public com.liferay.portal.kernel.search.Hits search(
 		long companyId, long[] groupIds, long userId, String className,
-		long classTypeId, String keywords, boolean showNonindexable, int status,
-		int start, int end) {
-
-		return _assetEntryLocalService.search(
-			companyId, groupIds, userId, className, classTypeId, keywords,
-			showNonindexable, status, start, end);
-	}
-
-	@Override
-	public com.liferay.portal.kernel.search.Hits search(
-		long companyId, long[] groupIds, long userId, String className,
-		long classTypeId, String keywords, boolean showNonindexable,
-		int[] statuses, int start, int end) {
-
-		return _assetEntryLocalService.search(
-			companyId, groupIds, userId, className, classTypeId, keywords,
-			showNonindexable, statuses, start, end);
-	}
-
-	@Override
-	public com.liferay.portal.kernel.search.Hits search(
-		long companyId, long[] groupIds, long userId, String className,
 		long classTypeId, String keywords, boolean showNonindexable,
 		int[] statuses, int start, int end,
 		com.liferay.portal.kernel.search.Sort sort) {
@@ -678,16 +578,6 @@ public class AssetEntryLocalServiceWrapper
 		return _assetEntryLocalService.search(
 			companyId, groupIds, userId, className, classTypeId, keywords,
 			showNonindexable, statuses, start, end, sorts);
-	}
-
-	@Override
-	public com.liferay.portal.kernel.search.Hits search(
-		long companyId, long[] groupIds, long userId, String className,
-		long classTypeId, String keywords, int status, int start, int end) {
-
-		return _assetEntryLocalService.search(
-			companyId, groupIds, userId, className, classTypeId, keywords,
-			status, start, end);
 	}
 
 	@Override
@@ -717,64 +607,6 @@ public class AssetEntryLocalServiceWrapper
 	}
 
 	@Override
-	public com.liferay.portal.kernel.search.Hits search(
-		long companyId, long[] groupIds, long userId, String className,
-		long classTypeId, String userName, String title, String description,
-		String assetCategoryIds, String assetTagNames, int status,
-		boolean andSearch, int start, int end) {
-
-		return _assetEntryLocalService.search(
-			companyId, groupIds, userId, className, classTypeId, userName,
-			title, description, assetCategoryIds, assetTagNames, status,
-			andSearch, start, end);
-	}
-
-	@Override
-	public com.liferay.portal.kernel.search.Hits search(
-		long companyId, long[] groupIds, long userId, String className,
-		String keywords, int status, int start, int end) {
-
-		return _assetEntryLocalService.search(
-			companyId, groupIds, userId, className, keywords, status, start,
-			end);
-	}
-
-	@Override
-	public com.liferay.portal.kernel.search.Hits search(
-		long companyId, long[] groupIds, long userId, String className,
-		String userName, String title, String description,
-		String assetCategoryIds, String assetTagNames, int status,
-		boolean andSearch, int start, int end) {
-
-		return _assetEntryLocalService.search(
-			companyId, groupIds, userId, className, userName, title,
-			description, assetCategoryIds, assetTagNames, status, andSearch,
-			start, end);
-	}
-
-	@Override
-	public long searchCount(
-		long companyId, long[] groupIds, long userId, long[] classNameIds,
-		long classTypeId, String keywords, boolean showNonindexable,
-		int[] statuses) {
-
-		return _assetEntryLocalService.searchCount(
-			companyId, groupIds, userId, classNameIds, classTypeId, keywords,
-			showNonindexable, statuses);
-	}
-
-	@Override
-	public long searchCount(
-		long companyId, long[] groupIds, long userId, String className,
-		long classTypeId, String keywords, boolean showNonindexable,
-		int[] statuses) {
-
-		return _assetEntryLocalService.searchCount(
-			companyId, groupIds, userId, className, classTypeId, keywords,
-			showNonindexable, statuses);
-	}
-
-	@Override
 	public long searchCount(
 		long companyId, long[] groupIds, long userId, String className,
 		long classTypeId, String keywords, String assetCategoryIds,
@@ -785,32 +617,6 @@ public class AssetEntryLocalServiceWrapper
 			companyId, groupIds, userId, className, classTypeId, keywords,
 			assetCategoryIds, assetTagNames, showInvisible, showNonindexable,
 			statuses, andSearch);
-	}
-
-	@Override
-	public long searchCount(
-		long companyId, long[] groupIds, long userId, String className,
-		long classTypeId, String userName, String title, String description,
-		String assetCategoryIds, String assetTagNames, boolean showInvisible,
-		boolean showNonindexable, int[] statuses, boolean andSearch) {
-
-		return _assetEntryLocalService.searchCount(
-			companyId, groupIds, userId, className, classTypeId, userName,
-			title, description, assetCategoryIds, assetTagNames, showInvisible,
-			showNonindexable, statuses, andSearch);
-	}
-
-	@Override
-	public long searchCount(
-		long companyId, long[] groupIds, long userId, String className,
-		long classTypeId, String userName, String title, String description,
-		String assetCategoryIds, String assetTagNames, boolean showNonindexable,
-		int[] statuses, boolean andSearch) {
-
-		return _assetEntryLocalService.searchCount(
-			companyId, groupIds, userId, className, classTypeId, userName,
-			title, description, assetCategoryIds, assetTagNames,
-			showNonindexable, statuses, andSearch);
 	}
 
 	@Override
@@ -971,4 +777,4 @@ public class AssetEntryLocalServiceWrapper
 	private AssetEntryLocalService _assetEntryLocalService;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-1238175294
+// LIFERAY-SERVICE-BUILDER-HASH:-1009719497

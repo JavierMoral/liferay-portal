@@ -186,14 +186,6 @@ public interface CalendarBookingLocalService
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException;
 
-	public CalendarBooking deleteRecurringCalendarBooking(
-			CalendarBooking calendarBooking)
-		throws PortalException;
-
-	public CalendarBooking deleteRecurringCalendarBooking(
-			long calendarBookingId)
-		throws PortalException;
-
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
 
@@ -351,15 +343,8 @@ public interface CalendarBookingLocalService
 	public List<CalendarBooking> getCalendarBookings(int start, int end);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<CalendarBooking> getCalendarBookings(long calendarId);
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CalendarBooking> getCalendarBookings(
 		long calendarId, int[] statuses);
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<CalendarBooking> getCalendarBookings(
-		long calendarId, long startTime, long endTime);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CalendarBooking> getCalendarBookings(
@@ -408,10 +393,6 @@ public interface CalendarBookingLocalService
 		long calendarBookingId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<CalendarBooking> getChildCalendarBookings(
-		long parentCalendarBookingId, int status);
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public long[] getChildCalendarIds(long calendarBookingId, long calendarId)
 		throws PortalException;
 
@@ -444,10 +425,6 @@ public interface CalendarBookingLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<CalendarBooking> getRecurringCalendarBookings(
 		CalendarBooking calendarBooking);
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<CalendarBooking> getRecurringCalendarBookings(
-		CalendarBooking calendarBooking, long startTime);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public boolean hasExclusiveCalendarBooking(
@@ -491,19 +468,6 @@ public interface CalendarBookingLocalService
 		String description, String location, long startTime, long endTime,
 		boolean recurring, int[] statuses, boolean andOperator, int start,
 		int end, OrderByComparator<CalendarBooking> orderByComparator);
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public int searchCount(
-		long companyId, long[] groupIds, long[] calendarIds,
-		long[] calendarResourceIds, long parentCalendarBookingId,
-		String keywords, long startTime, long endTime, int[] statuses);
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public int searchCount(
-		long companyId, long[] groupIds, long[] calendarIds,
-		long[] calendarResourceIds, long parentCalendarBookingId, String title,
-		String description, String location, long startTime, long endTime,
-		int[] statuses, boolean andOperator);
 
 	public void updateAsset(
 			long userId, CalendarBooking calendarBooking,
@@ -612,4 +576,4 @@ public interface CalendarBookingLocalService
 		throws E;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:-1662623616
+// LIFERAY-SERVICE-BUILDER-HASH:-211089781

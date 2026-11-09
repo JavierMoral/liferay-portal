@@ -13,6 +13,7 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.db.partition.test.util.BaseDBPartitionTestCase;
 import com.liferay.portal.db.partition.util.DBPartitionUtil;
 import com.liferay.portal.events.StartupHelperUtil;
+import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.instance.PortalInstancePool;
@@ -428,45 +429,6 @@ public class DBPartitionTest extends BaseDBPartitionTestCase {
 	}
 
 	@Test
-	public void testCounterRename() throws Exception {
-		try (SafeCloseable safeCloseable =
-				CompanyThreadLocal.setCompanyIdWithSafeCloseable(
-					COMPANY_IDS[0])) {
-
-			try {
-				DBPartitionUtil.forEachCompanyId(
-					companyId -> _counterLocalService.increment(_CLASS_NAME));
-
-				_counterLocalService.rename(_CLASS_NAME, _CLASS_NAME + ".test");
-
-				DBPartitionUtil.forEachCompanyId(
-					companyId -> {
-						List<String> counterNames =
-							_counterLocalService.getNames();
-
-						if (companyId.equals(COMPANY_IDS[0])) {
-							Assert.assertFalse(
-								counterNames.contains(_CLASS_NAME));
-							Assert.assertTrue(
-								counterNames.contains(_CLASS_NAME + ".test"));
-						}
-						else {
-							Assert.assertFalse(
-								counterNames.contains(_CLASS_NAME + ".test"));
-							Assert.assertTrue(
-								counterNames.contains(_CLASS_NAME));
-						}
-					});
-			}
-			finally {
-				DBPartitionUtil.forEachCompanyId(
-					companyId -> _counterLocalService.reset(
-						_CLASS_NAME + ".test"));
-			}
-		}
-	}
-
-	@Test
 	public void testCounterReset() throws Exception {
 		try (SafeCloseable safeCloseable =
 				CompanyThreadLocal.setCompanyIdWithSafeCloseable(
@@ -560,6 +522,64 @@ public class DBPartitionTest extends BaseDBPartitionTestCase {
 					unsupportedOperationException.getMessage());
 			}
 		}
+	}
+
+	@Test
+	public void testDefaultPartitionName() throws Exception {
+		_testDefaultPartitionName(
+			"drop view if exists " + defaultPartitionName + " .TestView", true);
+		_testDefaultPartitionName(
+			"drop view if exists " + defaultPartitionName + ".TestView", true);
+		_testDefaultPartitionName(
+			"drop view if exists " + defaultPartitionName + "/**/.TestView",
+			true);
+		_testDefaultPartitionName(
+			StringBundler.concat(
+				"drop view if exists ", defaultPartitionName, " -- ",
+				RandomTestUtil.randomString(), "\n.TestView"),
+			true);
+
+		if (db.getDBType() == DBType.POSTGRESQL) {
+			_testDefaultPartitionName(
+				"drop view if exists \"" + defaultPartitionName + "\".TestView",
+				true);
+			_testDefaultPartitionName(
+				"set search_path to " + defaultPartitionName, true);
+			_testDefaultPartitionName(
+				StringBundler.concat(
+					"drop view if exists ", dbInspector.getCatalog(), ".",
+					defaultPartitionName, ".TestView"),
+				true);
+		}
+		else {
+			_testDefaultPartitionName(
+				"drop view if exists `" + defaultPartitionName + "`.TestView",
+				true);
+			_testDefaultPartitionName("use " + defaultPartitionName, true);
+		}
+
+		_testDefaultPartitionName(
+			StringBundler.concat(
+				"delete from ClassName_ where value = '",
+				RandomTestUtil.randomString(), ".", defaultPartitionName, ".",
+				RandomTestUtil.randomString(), "'"),
+			false);
+		_testDefaultPartitionName(
+			StringBundler.concat(
+				"delete from ClassName_ where value = '",
+				RandomTestUtil.randomString(100000), "'"),
+			false);
+		_testDefaultPartitionName(
+			StringBundler.concat(
+				"delete from ClassName_ where value = 'This is ",
+				defaultPartitionName, ". ", RandomTestUtil.randomString(), "'"),
+			false);
+		_testDefaultPartitionName(
+			StringBundler.concat(
+				"delete from ClassName_ where value = 'https://",
+				defaultPartitionName, ".com/", RandomTestUtil.randomString(),
+				"'"),
+			false);
 	}
 
 	@Test
@@ -940,6 +960,39 @@ public class DBPartitionTest extends BaseDBPartitionTestCase {
 			_portletLocalService.deployRemotePortlet(
 				new long[] {companyId}, portlet,
 				new String[] {"category.hidden"}, true, true);
+		}
+	}
+
+	private void _testDefaultPartitionName(String sql, boolean unsupported)
+		throws Exception {
+
+		try (SafeCloseable safeCloseable =
+				CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+					CompanyConstants.SYSTEM)) {
+
+			db.runSQL(sql);
+		}
+
+		try (SafeCloseable safeCloseable =
+				CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+					PortalInstancePool.getDefaultCompanyId())) {
+
+			db.runSQL(sql);
+		}
+
+		try (SafeCloseable safeCloseable =
+				CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+					COMPANY_IDS[0])) {
+
+			db.runSQL(sql);
+
+			Assert.assertFalse(unsupported);
+		}
+		catch (UnsupportedOperationException unsupportedOperationException) {
+			Assert.assertTrue(unsupported);
+			Assert.assertEquals(
+				"Unsupported SQL: " + sql,
+				unsupportedOperationException.getMessage());
 		}
 	}
 

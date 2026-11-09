@@ -14,13 +14,23 @@ long ddmTemplateId = ParamUtil.getLong(request, "ddmTemplateId");
 
 DDMTemplate ddmTemplate = DDMTemplateLocalServiceUtil.fetchDDMTemplate(ddmTemplateId);
 
-long classNameId = BeanParamUtil.getLong(ddmTemplate, request, "classNameId");
-long classPK = BeanParamUtil.getLong(ddmTemplate, request, "classPK");
-long resourceClassNameId = BeanParamUtil.getLong(ddmTemplate, request, "resourceClassNameId");
+EditDDMTemplateDisplayContext editDDMTemplateDisplayContext = (EditDDMTemplateDisplayContext)request.getAttribute(WebKeys.PORTLET_DISPLAY_CONTEXT);
+
+long classNameId = editDDMTemplateDisplayContext.getClassNameId();
+
+long classPK = 0;
+long resourceClassNameId = 0;
+
+if (ddmTemplate != null) {
+	classPK = ddmTemplate.getClassPK();
+	resourceClassNameId = ddmTemplate.getResourceClassNameId();
+}
+else {
+	classPK = ParamUtil.getLong(request, "classPK");
+	resourceClassNameId = ParamUtil.getLong(request, "resourceClassNameId");
+}
 
 long templateEntryId = ParamUtil.getLong(request, "templateEntryId");
-
-EditDDMTemplateDisplayContext editDDMTemplateDisplayContext = (EditDDMTemplateDisplayContext)request.getAttribute(WebKeys.PORTLET_DISPLAY_CONTEXT);
 
 portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(redirect);

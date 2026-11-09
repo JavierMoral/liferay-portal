@@ -47,32 +47,6 @@ definition {
 	}
 
 	@summary = "Default summary"
-	macro addDMFolderLoginUserPG(viewableBy = null, dmFolderDescription = null, siteName = null, dmFolder = null, dmFolderName = null, userLoginFullName = null, userLoginEmailAddress = null, pageName = null) {
-		User.logoutAndLoginPG(
-			userLoginEmailAddress = "test@liferay.com",
-			userLoginFullName = "Test Test");
-
-		if (isSet(siteName)) {
-			Navigator.gotoSitePage(
-				pageName = ${pageName},
-				siteName = ${siteName});
-		}
-		else {
-			Navigator.gotoPage(pageName = ${pageName});
-		}
-
-		DMFolder.addPG(
-			dmFolder = ${dmFolder},
-			dmFolderDescription = ${dmFolderDescription},
-			dmFolderName = ${dmFolderName},
-			viewableBy = ${viewableBy});
-
-		User.logoutAndLoginPG(
-			userLoginEmailAddress = ${userLoginEmailAddress},
-			userLoginFullName = ${userLoginFullName});
-	}
-
-	@summary = "Default summary"
 	macro addPG(viewableBy = null, addOrRemoveViewPermission = null, roleTitle = null, dmFolderDescription = null, permissionDefinitionKeyList = null, dmFolder = null, dmFolderName = null) {
 		if (isSet(contentPage)) {
 			LexiconEntry.gotoAdd();
@@ -148,36 +122,6 @@ definition {
 		var key_mgFolderName = ${mgFolderName};
 
 		DMFolder.viewEntryPresent(dmFolderName = ${mgFolderName});
-	}
-
-	@summary = "Default summary"
-	macro assertExpectedFileNames(key_fileName = null) {
-		var tempDir = PropsUtil.get("output.dir.name");
-
-		var fileName = FileUtil.exists("${tempDir}/${key_fileName}");
-
-		if (${fileName} == "false") {
-			fail("Filename "${fileName}" was not expected.");
-		}
-	}
-
-	@summary = "Default summary"
-	macro assertExpectedFileNumber(key_folder = null, expectedFileNumber = null) {
-		var tempDir = PropsUtil.get("output.dir.name");
-
-		var folderPath = ${tempDir};
-
-		if (isSet(key_folder)) {
-			var folderPath = "${folderPath}${key_folder}";
-		}
-
-		var fileList = FileUtil.listFiles(${folderPath});
-
-		var listSize = ListUtil.size(${fileList});
-
-		if (${listSize} != ${expectedFileNumber}) {
-			fail("Number of files on "${key_folder}" differ from expected.");
-		}
 	}
 
 	@summary = "Default summary"
@@ -368,15 +312,6 @@ definition {
 		VerifyElementPresent(locator1 = "Message#SUCCESS");
 
 		AssertElementNotPresent(locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_FOLDER_ICON");
-	}
-
-	@summary = "Default summary"
-	macro downloadViaEllipsisMenu(dmFolderName = null) {
-		Click(
-			key_rowEntry = ${dmFolderName},
-			locator1 = "Icon#ROW_VERTICAL_ELLIPSIS");
-
-		MenuItem.click(menuItem = "Download");
 	}
 
 	@summary = "Default summary"
@@ -721,13 +656,6 @@ definition {
 		MenuItem.click(menuItem = "Permissions");
 
 		IFrame.selectPermissionsFrame();
-	}
-
-	@summary = "Default summary"
-	macro viewNoSubscribe() {
-		Click(locator1 = "Icon#INFO");
-
-		AssertElementNotPresent(locator1 = "Icon#SUBSCRIBE");
 	}
 
 	@summary = "Default summary"

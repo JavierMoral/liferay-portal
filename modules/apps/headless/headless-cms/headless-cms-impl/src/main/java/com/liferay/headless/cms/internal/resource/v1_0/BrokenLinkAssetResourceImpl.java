@@ -20,7 +20,6 @@ import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectEntryService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.license.util.LicenseManagerUtil;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
@@ -74,19 +73,12 @@ public class BrokenLinkAssetResourceImpl
 
 		LicenseManagerUtil.checkFreeTier();
 
-		if (!FeatureFlagManagerUtil.isEnabled(
-				contextCompany.getCompanyId(), "LPD-82226")) {
-
-			throw new UnsupportedOperationException();
-		}
-
-		Long[] spaceGroupIds = CMSGroupUtil.getSpaceGroupIds(
-			contextCompany.getCompanyId(), _depotEntryService,
-			contextUser.getUserId());
-
 		Long[] selectedSpaceGroupIds = CMSGroupUtil.getSelectedSpaceGroupIds(
 			assetLibraryId, contextCompany.getCompanyId(),
-			_depotEntryLocalService, groupLocalService, spaceGroupIds);
+			_depotEntryLocalService, groupLocalService,
+			CMSGroupUtil.getAdministeredSpaceGroupIds(
+				contextCompany.getCompanyId(), _depotEntryService,
+				contextUser.getUserId()));
 
 		if (ArrayUtil.isEmpty(selectedSpaceGroupIds)) {
 			return Page.of(Collections.emptyList());
@@ -117,7 +109,10 @@ public class BrokenLinkAssetResourceImpl
 		Map<String, BrokenLinkTarget> brokenLinkTargetsMap =
 			brokenLinkAssetSearcher.getBrokenLinkTargetsMap(
 				contextCompany.getCompanyId(), objectDefinitionIds,
-				selectedSpaceGroupIds, spaceGroupIds);
+				selectedSpaceGroupIds,
+				CMSGroupUtil.getSpaceGroupIds(
+					contextCompany.getCompanyId(), _depotEntryService,
+					contextUser.getUserId()));
 
 		if (brokenLinkTargetsMap.isEmpty()) {
 			return Page.of(Collections.emptyList());

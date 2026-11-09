@@ -89,7 +89,6 @@
 	<bean class="com.liferay.portlet.expando.service.persistence.impl.ExpandoTableModelArgumentsResolver" id="com.liferay.portlet.expando.service.persistence.impl.ExpandoTableModelArgumentsResolver" />
 	<bean class="com.liferay.portlet.expando.service.persistence.impl.ExpandoTablePersistenceImpl" id="com.liferay.expando.kernel.service.persistence.ExpandoTablePersistence" />
 	<bean class="com.liferay.portlet.expando.service.impl.ExpandoValueLocalServiceImpl" id="com.liferay.expando.kernel.service.ExpandoValueLocalService" />
-	<bean class="com.liferay.portlet.expando.service.impl.ExpandoValueServiceImpl" id="com.liferay.expando.kernel.service.ExpandoValueService" />
 	<bean class="com.liferay.portlet.expando.service.persistence.impl.ExpandoValueModelArgumentsResolver" id="com.liferay.portlet.expando.service.persistence.impl.ExpandoValueModelArgumentsResolver" />
 	<bean class="com.liferay.portlet.expando.service.persistence.impl.ExpandoValuePersistenceImpl" id="com.liferay.expando.kernel.service.persistence.ExpandoValuePersistence" />
 	<bean class="com.liferay.portlet.exportimport.service.impl.ExportImportLocalServiceImpl" id="com.liferay.exportimport.kernel.service.ExportImportLocalService" />
@@ -370,7 +369,6 @@
 	<bean class="com.liferay.portlet.social.service.impl.SocialActivityCounterLocalServiceImpl" id="com.liferay.social.kernel.service.SocialActivityCounterLocalService" />
 	<bean class="com.liferay.portlet.social.service.persistence.impl.SocialActivityCounterModelArgumentsResolver" id="com.liferay.portlet.social.service.persistence.impl.SocialActivityCounterModelArgumentsResolver" />
 	<bean class="com.liferay.portlet.social.service.persistence.impl.SocialActivityCounterPersistenceImpl" id="com.liferay.social.kernel.service.persistence.SocialActivityCounterPersistence" />
-	<bean class="com.liferay.portlet.social.service.persistence.impl.SocialActivityCounterFinderImpl" id="com.liferay.social.kernel.service.persistence.SocialActivityCounterFinder" />
 	<bean class="com.liferay.portlet.social.service.impl.SocialActivityInterpreterLocalServiceImpl" id="com.liferay.social.kernel.service.SocialActivityInterpreterLocalService" />
 	<bean class="com.liferay.portlet.social.service.impl.SocialActivityLimitLocalServiceImpl" id="com.liferay.social.kernel.service.SocialActivityLimitLocalService" />
 	<bean class="com.liferay.portlet.social.service.persistence.impl.SocialActivityLimitModelArgumentsResolver" id="com.liferay.portlet.social.service.persistence.impl.SocialActivityLimitModelArgumentsResolver" />

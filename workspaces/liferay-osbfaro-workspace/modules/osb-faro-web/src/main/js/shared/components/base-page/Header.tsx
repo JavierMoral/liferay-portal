@@ -102,6 +102,7 @@ interface IPageActionsProps {
 	actionsDisplayLimit?: number;
 	disabled?: boolean;
 	label?: string;
+	triggerAriaLabel?: string;
 }
 
 const renderActionItems = (actions: Action[]) =>
@@ -137,6 +138,7 @@ const PageActions: React.FC<IPageActionsProps> = ({
 	actionsDisplayLimit = 1,
 	disabled = false,
 	label = '',
+	triggerAriaLabel,
 }) => (
 	<>
 		{actions.length <= actionsDisplayLimit &&
@@ -171,7 +173,8 @@ const PageActions: React.FC<IPageActionsProps> = ({
 				trigger={
 					<ClayButton
 						aria-label={
-							label ? undefined : Liferay.Language.get('menu')
+							triggerAriaLabel ??
+							(label ? undefined : Liferay.Language.get('menu'))
 						}
 						borderless={!label}
 						disabled={disabled}
@@ -218,7 +221,7 @@ const PageActionsToolbar: React.FC<IPageActionsToolbarProps> = ({
 }) => (
 	<ClayToolbar className="page-actions-toolbar">
 		<ClayToolbar.Nav>
-			<ClayToolbar.Item>
+			<ClayToolbar.Item className="p-0">
 				<ClayDropDown
 					alignmentPosition={Align.BottomRight}
 					closeOnClick
@@ -250,6 +253,7 @@ const Section: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
 
 interface ITitleSectionProps extends React.HTMLAttributes<HTMLDivElement> {
 	label?: boolean;
+	sticker?: React.ReactNode;
 	subtitle?: React.ReactNode | string;
 	title?: string;
 	topLabel?: string;
@@ -270,11 +274,17 @@ const TitleSection: React.FC<ITitleSectionProps> = ({
 	children,
 	className,
 	label = false,
+	sticker,
 	subtitle,
 	title,
 	topLabel,
 }) => (
-	<Section className={getCN('title-section', className, {subtitle})}>
+	<Section
+		className={getCN('title-section', className, {
+			'mb-0': subtitle,
+			subtitle,
+		})}
+	>
 		{topLabel && (
 			<div className="mb-1">
 				<ClayLabel displayType="secondary" inverse size="lg">
@@ -284,6 +294,8 @@ const TitleSection: React.FC<ITitleSectionProps> = ({
 		)}
 
 		<span className="align-items-center d-flex">
+			{sticker}
+
 			<h1 className="title text-truncate">
 				<TextTruncate title={title} />
 			</h1>
@@ -352,7 +364,10 @@ const Header: React.FC<IHeaderProps> & {
 				<div className="mx-5">
 					{breadcrumbs && (
 						<Row>
-							<Breadcrumbs items={breadcrumbs} />
+							<Breadcrumbs
+								className="mb-2 p-0"
+								items={breadcrumbs}
+							/>
 						</Row>
 					)}
 
@@ -373,7 +388,7 @@ const Header: React.FC<IHeaderProps> & {
 			<div className="header-container">
 				{breadcrumbs && (
 					<Row>
-						<Breadcrumbs items={breadcrumbs} />
+						<Breadcrumbs className="mb-2 p-0" items={breadcrumbs} />
 					</Row>
 				)}
 

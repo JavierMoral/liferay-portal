@@ -64,6 +64,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.sql.DataSource;
 
@@ -137,6 +139,15 @@ public class DBPartitionUtil {
 			Connection connection = dataSource.getConnection();
 
 			AutoCloseable autoCloseable = _disableAutoCommit(connection)) {
+
+			String partitionName = getPartitionName(toCompanyId);
+
+			if (_dbPartitionDB.existsPartition(connection, partitionName)) {
+				throw new IllegalArgumentException(
+					StringBundler.concat(
+						"Database partition ", partitionName,
+						" already exists"));
+			}
 
 			_copyDBPartition(connection, fromCompanyId, toCompanyId);
 		}
@@ -347,6 +358,47 @@ public class DBPartitionUtil {
 		return DATABASE_EXPORTED_PARTITION_SCHEMA_NAME_PREFIX + companyId;
 	}
 
+	public static String getExportedVirtualHostname(long companyId)
+		throws PortalException {
+
+		DataSource dataSource = InfrastructureUtil.getDataSource();
+
+		_initializeDBPartitionDB(dataSource);
+
+		try (SafeCloseable safeCloseable =
+				CompanyThreadLocal.setCompanyIdWithSafeCloseable(
+					_defaultCompanyId);
+
+			Connection connection = dataSource.getConnection()) {
+
+			_checkImportDBPartition(connection, companyId);
+
+			try (PreparedStatement preparedStatement =
+					connection.prepareStatement(
+						StringBundler.concat(
+							"select hostname from ",
+							getExportedPartitionName(companyId),
+							".VirtualHost where companyId = ? and layoutSetId ",
+							"= 0 and ctCollectionId = 0 and ",
+							"defaultVirtualHost = ?"))) {
+
+				preparedStatement.setLong(1, companyId);
+				preparedStatement.setBoolean(2, true);
+
+				try (ResultSet resultSet = preparedStatement.executeQuery()) {
+					if (resultSet.next()) {
+						return resultSet.getString("hostname");
+					}
+
+					return null;
+				}
+			}
+		}
+		catch (SQLException sqlException) {
+			throw new PortalException(sqlException);
+		}
+	}
+
 	public static String getPartitionKey(Object key) {
 		if (!PropsValues.DATABASE_PARTITION_ENABLED) {
 			return key.toString();
@@ -550,16 +602,19 @@ public class DBPartitionUtil {
 	}
 
 	private static void _addDBPartition(Connection connection, long companyId)
-		throws PortalException {
+		throws PortalException, SQLException {
 
 		String partitionName = getPartitionName(companyId);
 
-		try (PreparedStatement preparedStatement = connection.prepareStatement(
-				_dbPartitionDB.getCreatePartitionSQL(
-					connection, partitionName))) {
+		if (_dbPartitionDB.existsPartition(connection, partitionName)) {
+			throw new IllegalArgumentException(
+				StringBundler.concat(
+					"Database partition ", partitionName, " already exists"));
+		}
 
-			preparedStatement.executeUpdate();
+		_createPartition(connection, partitionName);
 
+		try {
 			DBInspector dbInspector = new DBInspector(connection);
 
 			DatabaseMetaData databaseMetaData = connection.getMetaData();
@@ -692,16 +747,46 @@ public class DBPartitionUtil {
 		}
 	}
 
+	private static void _checkImportDBPartition(
+			Connection connection, long companyId)
+		throws SQLException {
+
+		String targetPartitionName = getPartitionName(companyId);
+
+		if (_dbPartitionDB.existsPartition(connection, targetPartitionName)) {
+			throw new IllegalArgumentException(
+				StringBundler.concat(
+					"Database partition ", targetPartitionName,
+					" already exists"));
+		}
+
+		String sourcePartitionName = getExportedPartitionName(companyId);
+
+		if (!_dbPartitionDB.existsPartition(connection, sourcePartitionName)) {
+			throw new IllegalArgumentException(
+				"Unable to insert the database partition " +
+					sourcePartitionName + " because it does not exist");
+		}
+	}
+
 	private static void _copyDBPartition(
 			Connection connection, long fromCompanyId, long toCompanyId)
 		throws PortalException {
 
-		List<String> quartzTableNames = new ArrayList<>();
-		String sourcePartitionName = getPartitionName(fromCompanyId);
 		String targetPartitionName = getPartitionName(toCompanyId);
 
+		_createPartition(connection, targetPartitionName);
+
+		List<String> quartzTableNames = new ArrayList<>();
+		String sourcePartitionName = getPartitionName(fromCompanyId);
+
 		try {
-			_copySchema(connection, sourcePartitionName, targetPartitionName);
+			_copySchema(
+				connection, sourcePartitionName, targetPartitionName,
+				"OA2Auths_OA2ScopeGrants", "OAuth2Authorization",
+				"OpenIdConnectSession", "RememberMeToken", "SamlIbSloMessage",
+				"SamlIdpSpSession", "SamlIdpSsoSession", "SamlSpAuthRequest",
+				"SamlSpSession", "SharepointOAuth2TokenEntry", "Ticket");
 
 			DatabaseMetaData databaseMetaData = connection.getMetaData();
 
@@ -813,6 +898,14 @@ public class DBPartitionUtil {
 								fromCompanyId));
 					}
 
+					if (StringUtil.equalsIgnoreCase(
+							fromTableName, "SharingEntry")) {
+
+						_deleteData(
+							toTableName, targetPartitionName, statement,
+							" where toTicketId > 0");
+					}
+
 					if (!StringUtil.equalsIgnoreCase(
 							fromTableName, "ResourcePermission")) {
 
@@ -892,65 +985,90 @@ public class DBPartitionUtil {
 
 	private static void _copySchema(
 			Connection connection, String sourcePartitionName,
-			String targetPartitionName)
+			String targetPartitionName, String... excludedDataTableNames)
 		throws SQLException {
+
+		DatabaseMetaData databaseMetaData = connection.getMetaData();
+
+		try (ResultSet resultSet = databaseMetaData.getTables(
+				_dbPartitionDB.getCatalog(connection, sourcePartitionName),
+				_dbPartitionDB.getSchema(connection, sourcePartitionName), null,
+				new String[] {"TABLE", "VIEW"});
+			Statement statement = connection.createStatement()) {
+
+			while (resultSet.next()) {
+				String fromTableName = resultSet.getString("TABLE_NAME");
+
+				if (Objects.equals(resultSet.getString("TABLE_TYPE"), "VIEW")) {
+					statement.executeUpdate(
+						_dbPartitionDB.getCreateViewSQL(
+							_defaultPartitionName, targetPartitionName,
+							fromTableName));
+
+					continue;
+				}
+
+				statement.executeUpdate(
+					_dbPartitionDB.getCreateTableSQL(
+						connection, sourcePartitionName, targetPartitionName,
+						fromTableName, fromTableName));
+
+				if (StringUtil.equalsIgnoreCase(
+						fromTableName, "Configuration_") ||
+					ArrayUtil.contains(
+						excludedDataTableNames, fromTableName, true)) {
+
+					continue;
+				}
+
+				statement.executeUpdate(
+					_getCopyDataSQL(
+						sourcePartitionName, targetPartitionName, fromTableName,
+						fromTableName,
+						_getColumnNames(
+							connection, sourcePartitionName, fromTableName),
+						StringPool.BLANK));
+			}
+		}
+
+		try (Statement statement = connection.createStatement()) {
+			for (String createRuleSQL :
+					_dbPartitionDB.getCreateRulesSQL(targetPartitionName)) {
+
+				statement.executeUpdate(createRuleSQL);
+			}
+		}
+	}
+
+	private static void _createPartition(
+			Connection connection, String partitionName)
+		throws PortalException {
 
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
 				_dbPartitionDB.getCreatePartitionSQL(
-					connection, targetPartitionName))) {
+					connection, partitionName))) {
 
 			preparedStatement.executeUpdate();
+		}
+		catch (SQLException sqlException1) {
+			DataSource dataSource = InfrastructureUtil.getDataSource();
 
-			DatabaseMetaData databaseMetaData = connection.getMetaData();
+			try (Connection existsConnection = dataSource.getConnection()) {
+				if (_dbPartitionDB.existsPartition(
+						existsConnection, partitionName)) {
 
-			try (ResultSet resultSet = databaseMetaData.getTables(
-					_dbPartitionDB.getCatalog(connection, sourcePartitionName),
-					_dbPartitionDB.getSchema(connection, sourcePartitionName),
-					null, new String[] {"TABLE", "VIEW"});
-				Statement statement = connection.createStatement()) {
-
-				while (resultSet.next()) {
-					String fromTableName = resultSet.getString("TABLE_NAME");
-
-					if (Objects.equals(
-							resultSet.getString("TABLE_TYPE"), "VIEW")) {
-
-						statement.executeUpdate(
-							_dbPartitionDB.getCreateViewSQL(
-								_defaultPartitionName, targetPartitionName,
-								fromTableName));
-
-						continue;
-					}
-
-					statement.executeUpdate(
-						_dbPartitionDB.getCreateTableSQL(
-							connection, sourcePartitionName,
-							targetPartitionName, fromTableName, fromTableName));
-
-					if (StringUtil.equalsIgnoreCase(
-							fromTableName, "Configuration_")) {
-
-						continue;
-					}
-
-					statement.executeUpdate(
-						_getCopyDataSQL(
-							sourcePartitionName, targetPartitionName,
-							fromTableName, fromTableName,
-							_getColumnNames(
-								connection, sourcePartitionName, fromTableName),
-							StringPool.BLANK));
+					throw new IllegalArgumentException(
+						StringBundler.concat(
+							"Database partition ", partitionName,
+							" already exists"),
+						sqlException1);
 				}
 			}
-
-			try (Statement statement = connection.createStatement()) {
-				for (String createRuleSQL :
-						_dbPartitionDB.getCreateRulesSQL(targetPartitionName)) {
-
-					statement.executeUpdate(createRuleSQL);
-				}
+			catch (SQLException sqlException2) {
+				sqlException1.addSuppressed(sqlException2);
 			}
+
+			throw new PortalException(sqlException1);
 		}
 	}
 
@@ -1043,64 +1161,56 @@ public class DBPartitionUtil {
 
 		_checkExportedPartition(companyId, connection, exportedPartitionName);
 
+		_createPartition(connection, exportedPartitionName);
+
 		try {
-			try (PreparedStatement preparedStatement =
-					connection.prepareStatement(
-						_dbPartitionDB.getCreatePartitionSQL(
-							connection, exportedPartitionName))) {
+			DatabaseMetaData databaseMetaData = connection.getMetaData();
 
-				preparedStatement.executeUpdate();
+			DBInspector dbInspector = new DBInspector(connection);
 
-				DatabaseMetaData databaseMetaData = connection.getMetaData();
+			try (ResultSet resultSet = databaseMetaData.getTables(
+					_dbPartitionDB.getCatalog(
+						connection, _defaultPartitionName),
+					_dbPartitionDB.getSchema(connection, _defaultPartitionName),
+					null, new String[] {"TABLE"});
+				Statement statement = connection.createStatement()) {
 
-				DBInspector dbInspector = new DBInspector(connection);
+				while (resultSet.next()) {
+					String tableName = resultSet.getString("TABLE_NAME");
 
-				try (ResultSet resultSet = databaseMetaData.getTables(
-						_dbPartitionDB.getCatalog(
-							connection, _defaultPartitionName),
-						_dbPartitionDB.getSchema(
-							connection, _defaultPartitionName),
-						null, new String[] {"TABLE"});
-					Statement statement = connection.createStatement()) {
+					if (StringUtil.equalsIgnoreCase(
+							tableName, "Configuration_")) {
 
-					while (resultSet.next()) {
-						String tableName = resultSet.getString("TABLE_NAME");
+						statement.executeUpdate(
+							_dbPartitionDB.getCreateTableSQL(
+								connection, _defaultPartitionName,
+								exportedPartitionName, tableName));
 
-						if (StringUtil.equalsIgnoreCase(
-								tableName, "Configuration_")) {
-
-							statement.executeUpdate(
-								_dbPartitionDB.getCreateTableSQL(
-									connection, _defaultPartitionName,
-									exportedPartitionName, tableName));
-
-							continue;
-						}
-
-						if (dbInspector.isObjectTable(tableName) &&
-							!dbInspector.isObjectTable(
-								List.of(companyId), tableName)) {
-
-							continue;
-						}
-
-						_exportTable(
-							companyId, connection, tableName, statement,
-							dbInspector, false);
-
-						if (!StringUtil.equalsIgnoreCase(
-								tableName, "DLFileEntryType")) {
-
-							continue;
-						}
-
-						_moveData(
-							_defaultPartitionName, exportedPartitionName,
-							tableName,
-							_getColumnNames(
-								connection, _defaultPartitionName, tableName),
-							statement, " where companyId = 0", false);
+						continue;
 					}
+
+					if (dbInspector.isObjectTable(tableName) &&
+						!dbInspector.isObjectTable(
+							List.of(companyId), tableName)) {
+
+						continue;
+					}
+
+					_exportTable(
+						companyId, connection, tableName, statement,
+						dbInspector, false);
+
+					if (!StringUtil.equalsIgnoreCase(
+							tableName, "DLFileEntryType")) {
+
+						continue;
+					}
+
+					_moveData(
+						_defaultPartitionName, exportedPartitionName, tableName,
+						_getColumnNames(
+							connection, _defaultPartitionName, tableName),
+						statement, " where companyId = 0", false);
 				}
 			}
 		}
@@ -1126,6 +1236,8 @@ public class DBPartitionUtil {
 		String exportedPartitionName = getExportedPartitionName(companyId);
 
 		_checkExportedPartition(companyId, connection, exportedPartitionName);
+
+		_createPartition(connection, exportedPartitionName);
 
 		DBInspector dbInspector = new DBInspector(connection);
 
@@ -1493,22 +1605,7 @@ public class DBPartitionUtil {
 		String targetPartitionName = getPartitionName(companyId);
 
 		try {
-			if (_dbPartitionDB.existsPartition(
-					connection, targetPartitionName)) {
-
-				throw new IllegalArgumentException(
-					StringBundler.concat(
-						"Database partition ", targetPartitionName,
-						" already exists"));
-			}
-
-			if (!_dbPartitionDB.existsPartition(
-					connection, sourcePartitionName)) {
-
-				throw new IllegalArgumentException(
-					"Unable to insert the database partition " +
-						sourcePartitionName + " because it does not exist");
-			}
+			_checkImportDBPartition(connection, companyId);
 
 			if (Validator.isNull(webId)) {
 				_validateWebId(connection, companyId, sourcePartitionName);
@@ -1676,6 +1773,13 @@ public class DBPartitionUtil {
 			_defaultPartitionName = _dbPartitionDB.getDefaultPartitionName(
 				connection);
 		}
+
+		_defaultPartitionNamePattern = Pattern.compile(
+			StringBundler.concat(
+				"(?<![\\w$])[`\"]?",
+				Pattern.quote(StringUtil.toLowerCase(_defaultPartitionName)),
+				"[`\"]?", _REGEX_SQL_WHITESPACE, "\\."),
+			Pattern.DOTALL);
 	}
 
 	private static boolean _isCopyableQuartzTable(String tableName) {
@@ -1849,26 +1953,23 @@ public class DBPartitionUtil {
 		throws CompanyVirtualHostException, SQLException {
 
 		String sql = StringBundler.concat(
-			"select VirtualHost1.hostname from ", partitionName,
-			".VirtualHost VirtualHost1 inner join ", _defaultPartitionName,
-			".VirtualHost VirtualHost2 on VirtualHost1.hostname = ",
-			"VirtualHost2.hostname where VirtualHost1.companyId = ? and ",
-			"VirtualHost1.ctCollectionId = 0 and VirtualHost2.ctCollectionId ",
-			"= 0");
+			"select hostname from ", partitionName,
+			".VirtualHost where companyId = ? and ctCollectionId = 0 and ",
+			"(hostname = ? or hostname in (select hostname from ",
+			_defaultPartitionName, ".VirtualHost where ctCollectionId = 0))");
 
 		if (Validator.isNotNull(virtualHostname)) {
-			sql = StringBundler.concat(
-				sql, " and not (VirtualHost1.layoutSetId = 0 and ",
-				"VirtualHost1.defaultVirtualHost = ?)");
+			sql += " and not (layoutSetId = 0 and defaultVirtualHost = ?)";
 		}
 
 		try (PreparedStatement preparedStatement = connection.prepareStatement(
 				sql)) {
 
 			preparedStatement.setLong(1, companyId);
+			preparedStatement.setString(2, virtualHostname);
 
 			if (Validator.isNotNull(virtualHostname)) {
-				preparedStatement.setBoolean(2, true);
+				preparedStatement.setBoolean(3, true);
 			}
 
 			try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -1933,6 +2034,23 @@ public class DBPartitionUtil {
 					}
 
 					if (count > 0) {
+						throw new UnsupportedOperationException(
+							"Unsupported SQL: " + sql);
+					}
+
+					Matcher quotedStringMatcher = _quotedStringPattern.matcher(
+						lowerCaseSQL);
+
+					String unquotedSQL = quotedStringMatcher.replaceAll("''");
+
+					Matcher defaultPartitionNameMatcher =
+						_defaultPartitionNamePattern.matcher(unquotedSQL);
+					Matcher setPartitionMatcher = _setPartitionPattern.matcher(
+						unquotedSQL);
+
+					if (defaultPartitionNameMatcher.find() ||
+						setPartitionMatcher.lookingAt()) {
+
 						throw new UnsupportedOperationException(
 							"Unsupported SQL: " + sql);
 					}
@@ -2018,6 +2136,9 @@ public class DBPartitionUtil {
 	private static final String _CLASS_NAME_PREFIX_CUSTOM_OBJECT_DEFINITION =
 		"com.liferay.object.model.ObjectDefinition#";
 
+	private static final String _REGEX_SQL_WHITESPACE =
+		"(?:\\s++|/\\*.*?\\*/|--[^\\n]*+|#[^\\n]*+)*+";
+
 	private static final String _TABLE_NAME_PREFIX_QUARTZ = GetterUtil.get(
 		PropsUtil.get("persisted.scheduler.org.quartz.jobStore.tablePrefix"),
 		"QUARTZ_");
@@ -2028,5 +2149,14 @@ public class DBPartitionUtil {
 	private static DBPartitionDB _dbPartitionDB;
 	private static volatile long _defaultCompanyId;
 	private static String _defaultPartitionName;
+	private static Pattern _defaultPartitionNamePattern;
+	private static final Pattern _quotedStringPattern = Pattern.compile(
+		"'(?:[^'\\\\]++|\\\\.|'')*+'");
+	private static final Pattern _setPartitionPattern = Pattern.compile(
+		StringBundler.concat(
+			_REGEX_SQL_WHITESPACE, "(?:use\\b|set\\b", _REGEX_SQL_WHITESPACE,
+			"(?:(?:local|session)\\b", _REGEX_SQL_WHITESPACE,
+			")?(?:schema|search_path)\\b)"),
+		Pattern.DOTALL);
 
 }

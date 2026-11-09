@@ -32,12 +32,20 @@ public class MonitorFactory {
 				return new JobHealthMonitor(monitorConfig);
 			}
 
+			if (type.equals("queued-build-duration")) {
+				return new QueuedBuildDurationMonitor(monitorConfig);
+			}
+
 			if (type.equals("report-freshness")) {
 				return new ReportFreshnessMonitor(monitorConfig);
 			}
 
 			if (type.equals("resource-threshold")) {
 				return new ResourceThresholdMonitor(monitorConfig);
+			}
+
+			if (type.equals("running-build-duration")) {
+				return new RunningBuildDurationMonitor(monitorConfig);
 			}
 
 			if (type.equals("smtp-endpoint")) {

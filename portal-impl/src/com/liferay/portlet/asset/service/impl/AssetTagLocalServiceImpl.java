@@ -18,7 +18,6 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.cache.thread.local.ThreadLocalCachable;
-import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.increment.BufferedIncrement;
 import com.liferay.portal.kernel.increment.NumberIncrement;
@@ -314,19 +313,6 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 	 * @param  groupId the primary key of the group
 	 * @param  start the lower bound of the range of asset tags
 	 * @param  end the upper bound of the range of asset tags (not inclusive)
-	 * @return the range of matching asset tags
-	 */
-	@Override
-	public List<AssetTag> getGroupTags(long groupId, int start, int end) {
-		return assetTagPersistence.findByGroupId(groupId, start, end);
-	}
-
-	/**
-	 * Returns a range of all the asset tags in the group.
-	 *
-	 * @param  groupId the primary key of the group
-	 * @param  start the lower bound of the range of asset tags
-	 * @param  end the upper bound of the range of asset tags (not inclusive)
 	 * @param  orderByComparator the comparator to order the asset tags
 	 *         (optionally <code>null</code>)
 	 * @return the range of matching asset tags
@@ -338,17 +324,6 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 
 		return assetTagPersistence.findByGroupId(
 			groupId, start, end, orderByComparator);
-	}
-
-	/**
-	 * Returns the number of asset tags in the group.
-	 *
-	 * @param  groupId the primary key of the group
-	 * @return the number of asset tags in the group
-	 */
-	@Override
-	public int getGroupTagsCount(long groupId) {
-		return assetTagPersistence.countByGroupId(groupId);
 	}
 
 	/**
@@ -366,17 +341,6 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 		}
 
 		return groupsTags;
-	}
-
-	/**
-	 * Returns the asset tag with the primary key.
-	 *
-	 * @param  tagId the primary key of the asset tag
-	 * @return the asset tag with the primary key
-	 */
-	@Override
-	public AssetTag getTag(long tagId) throws PortalException {
-		return assetTagPersistence.findByPrimaryKey(tagId);
 	}
 
 	/**
@@ -486,16 +450,6 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 	}
 
 	/**
-	 * Returns the names of all the asset tags.
-	 *
-	 * @return the names of all the asset tags
-	 */
-	@Override
-	public String[] getTagNames() {
-		return getTagNames(getTags());
-	}
-
-	/**
 	 * Returns the names of the asset tags of the entity.
 	 *
 	 * @param  classNameId the class name ID of the entity
@@ -548,21 +502,6 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 		}
 
 		return assetEntryPersistence.getAssetTags(entry.getEntryId());
-	}
-
-	@Override
-	public List<AssetTag> getTags(long groupId, long classNameId, String name) {
-		return assetTagFinder.findByG_C_N(
-			groupId, classNameId, name, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-			null);
-	}
-
-	@Override
-	public List<AssetTag> getTags(
-		long groupId, long classNameId, String name, int start, int end) {
-
-		return assetTagFinder.findByG_C_N(
-			groupId, classNameId, name, start, end, null);
 	}
 
 	/**

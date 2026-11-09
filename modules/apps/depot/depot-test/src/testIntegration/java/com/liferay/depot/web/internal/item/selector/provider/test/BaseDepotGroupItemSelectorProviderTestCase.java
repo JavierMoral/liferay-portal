@@ -9,12 +9,27 @@ import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryGroupRelLocalService;
 import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.item.selector.provider.GroupItemSelectorProvider;
+import com.liferay.layout.page.template.constants.LayoutPageTemplateCollectionTypeConstants;
+import com.liferay.layout.page.template.constants.LayoutPageTemplateConstants;
+import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
+import com.liferay.layout.page.template.model.LayoutPageTemplateCollection;
+import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
+import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionLocalService;
+import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.LayoutPrototype;
+import com.liferay.portal.kernel.service.LayoutPrototypeLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
 
 import java.util.ArrayList;
@@ -37,7 +52,7 @@ public abstract class BaseDepotGroupItemSelectorProviderTestCase {
 
 	@Test
 	public void testGetGroups() throws Exception {
-		DepotEntry depotEntry = _addDepotEntry();
+		DepotEntry depotEntry = _addDepotEntry(getDepotType());
 
 		_depotEntryGroupRelLocalService.addDepotEntryGroupRel(
 			depotEntry.getDepotEntryId(), _group.getGroupId());
@@ -50,7 +65,7 @@ public abstract class BaseDepotGroupItemSelectorProviderTestCase {
 
 	@Test
 	public void testGetGroupsCount() throws Exception {
-		DepotEntry depotEntry = _addDepotEntry();
+		DepotEntry depotEntry = _addDepotEntry(getDepotType());
 
 		_depotEntryGroupRelLocalService.addDepotEntryGroupRel(
 			depotEntry.getDepotEntryId(), _group.getGroupId());
@@ -63,7 +78,7 @@ public abstract class BaseDepotGroupItemSelectorProviderTestCase {
 
 	@Test
 	public void testGetGroupsCountStaging() throws Exception {
-		DepotEntry depotEntry = _addDepotEntry();
+		DepotEntry depotEntry = _addDepotEntry(getDepotType());
 
 		_depotEntryGroupRelLocalService.addDepotEntryGroupRel(
 			depotEntry.getDepotEntryId(), _group.getGroupId());
@@ -79,8 +94,59 @@ public abstract class BaseDepotGroupItemSelectorProviderTestCase {
 	}
 
 	@Test
+	@TestInfo({"LPD-112512", "LPS-118395"})
+	public void testGetGroupsLayoutPrototype() throws Exception {
+		DepotEntry depotEntry = _addDepotEntry(getDepotType());
+
+		_depotEntryGroupRelLocalService.addDepotEntryGroupRel(
+			depotEntry.getDepotEntryId(), _group.getGroupId());
+
+		ServiceContext serviceContext =
+			ServiceContextTestUtil.getServiceContext(
+				_group, TestPropsValues.getUserId());
+
+		LayoutPageTemplateCollection layoutPageTemplateCollection =
+			_layoutPageTemplateCollectionLocalService.
+				addLayoutPageTemplateCollection(
+					null, TestPropsValues.getUserId(), _group.getGroupId(),
+					LayoutPageTemplateConstants.
+						PARENT_LAYOUT_PAGE_TEMPLATE_COLLECTION_ID_DEFAULT,
+					null, RandomTestUtil.randomString(), StringPool.BLANK,
+					LayoutPageTemplateCollectionTypeConstants.BASIC,
+					serviceContext);
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
+				layoutPageTemplateCollection.
+					getLayoutPageTemplateCollectionId(),
+				null, RandomTestUtil.randomString(),
+				LayoutPageTemplateEntryTypeConstants.WIDGET_PAGE, 0,
+				WorkflowConstants.STATUS_APPROVED, serviceContext);
+
+		LayoutPrototype layoutPrototype =
+			_layoutPrototypeLocalService.getLayoutPrototype(
+				layoutPageTemplateEntry.getLayoutPrototypeId());
+
+		Group group = layoutPrototype.getGroup();
+
+		GroupItemSelectorProvider groupItemSelectorProvider =
+			getGroupItemSelectorProvider();
+
+		List<Group> groups = groupItemSelectorProvider.getGroups(
+			group.getCompanyId(), group.getGroupId(), null, 0, 20);
+
+		Assert.assertEquals(groups.toString(), 1, groups.size());
+
+		Assert.assertEquals(
+			1,
+			groupItemSelectorProvider.getGroupsCount(
+				group.getCompanyId(), group.getGroupId(), null));
+	}
+
+	@Test
 	public void testGetGroupsStaging() throws Exception {
-		DepotEntry depotEntry = _addDepotEntry();
+		DepotEntry depotEntry = _addDepotEntry(getDepotType());
 
 		_depotEntryGroupRelLocalService.addDepotEntryGroupRel(
 			depotEntry.getDepotEntryId(), _group.getGroupId());
@@ -96,34 +162,72 @@ public abstract class BaseDepotGroupItemSelectorProviderTestCase {
 		Assert.assertEquals(groups.toString(), 1, groups.size());
 	}
 
+	@FeatureFlag("LPD-81022")
 	@Test
+	@TestInfo("LPD-109452")
 	public void testGetIcon() {
-		Assert.assertEquals("books", getGroupItemSelectorProvider().getIcon());
+		Assert.assertEquals(
+			getIcon(), getGroupItemSelectorProvider().getIcon());
 	}
 
+	@FeatureFlag("LPD-81022")
 	@Test
+	@TestInfo("LPD-109452")
 	public void testGetLabel() {
 		Assert.assertEquals(
 			getLabel(), getGroupItemSelectorProvider().getLabel(LocaleUtil.US));
+	}
+
+	@Test
+	@TestInfo("LPD-109452")
+	public void testIsGroupType() throws Exception {
+		Assert.assertFalse(getGroupItemSelectorProvider().isGroupType(_group));
+		Assert.assertTrue(_isGroupType(getDepotType()));
+		Assert.assertFalse(_isGroupType(getOtherDepotType()));
+	}
+
+	@Test
+	@TestInfo("LPD-109452")
+	public void testIsGroupTypeStaging() throws Exception {
+		DepotEntry depotEntry = _addDepotEntry(getDepotType());
+
+		Group group = depotEntry.getGroup();
+
+		GroupTestUtil.enableLocalStaging(group);
+
+		Assert.assertTrue(
+			getGroupItemSelectorProvider().isGroupType(
+				group.getStagingGroup()));
 	}
 
 	protected abstract int getDepotType();
 
 	protected abstract GroupItemSelectorProvider getGroupItemSelectorProvider();
 
+	protected abstract String getIcon();
+
 	protected abstract String getLabel();
 
-	private DepotEntry _addDepotEntry() throws Exception {
+	protected abstract int getOtherDepotType();
+
+	private DepotEntry _addDepotEntry(int depotType) throws Exception {
 		DepotEntry depotEntry = _depotEntryLocalService.addDepotEntry(
 			Collections.singletonMap(
 				LocaleUtil.getDefault(), RandomTestUtil.randomString()),
 			Collections.singletonMap(
 				LocaleUtil.getDefault(), RandomTestUtil.randomString()),
-			getDepotType(), ServiceContextTestUtil.getServiceContext());
+			depotType, ServiceContextTestUtil.getServiceContext());
 
 		_depotEntries.add(depotEntry);
 
 		return depotEntry;
+	}
+
+	private boolean _isGroupType(int depotType) throws Exception {
+		DepotEntry depotEntry = _addDepotEntry(depotType);
+
+		return getGroupItemSelectorProvider().isGroupType(
+			depotEntry.getGroup());
 	}
 
 	@DeleteAfterTestRun
@@ -137,5 +241,16 @@ public abstract class BaseDepotGroupItemSelectorProviderTestCase {
 
 	@DeleteAfterTestRun
 	private Group _group;
+
+	@Inject
+	private LayoutPageTemplateCollectionLocalService
+		_layoutPageTemplateCollectionLocalService;
+
+	@Inject
+	private LayoutPageTemplateEntryLocalService
+		_layoutPageTemplateEntryLocalService;
+
+	@Inject
+	private LayoutPrototypeLocalService _layoutPrototypeLocalService;
 
 }

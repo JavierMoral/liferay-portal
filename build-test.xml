@@ -2056,15 +2056,9 @@ jdbc.default.connectionProperties=oracle.jdbc.ReadTimeout=0;oracle.net.CONNECT_T
 
 					Properties gradleProperties = JenkinsResultsParserUtil.getProperties(new File[] {new File("@{workspace.dir}", "gradle.properties")});
 
-					String product = JenkinsResultsParserUtil.getProperty(gradleProperties, "liferay.workspace.product");
+					String workspaceBundleURL = JenkinsResultsParserUtil.getProperty(gradleProperties, "liferay.workspace.bundle.url");
 
-					if (JenkinsResultsParserUtil.isNullOrEmpty(product)) {
-						String workspaceBundleURL = JenkinsResultsParserUtil.getProperty(gradleProperties, "liferay.workspace.bundle.url");
-
-						if (JenkinsResultsParserUtil.isNullOrEmpty(workspaceBundleURL)) {
-							return;
-						}
-
+					if (!JenkinsResultsParserUtil.isNullOrEmpty(workspaceBundleURL)) {
 						File bundleFile = new File(mirrorDirName, workspaceBundleURL.replaceFirst("^https?://[^/]+/", ""));
 
 						if (bundleFile.exists()) {
@@ -2078,6 +2072,12 @@ jdbc.default.connectionProperties=oracle.jdbc.ReadTimeout=0;oracle.net.CONNECT_T
 							System.out.println("Using the workspace bundle at " + workspaceBundleURL);
 						}
 
+						return;
+					}
+
+					String product = JenkinsResultsParserUtil.getProperty(gradleProperties, "liferay.workspace.product");
+
+					if (JenkinsResultsParserUtil.isNullOrEmpty(product)) {
 						return;
 					}
 
@@ -3678,6 +3678,12 @@ jdbc.read.password=password</echo>
 					<then>
 						<prepare-database-jndi />
 
+						<local name="database.read.url" />
+
+						<condition else="jdbc:mysql://${database.host}/lportal?useUnicode=true&amp;amp;characterEncoding=UTF-8&amp;amp;useFastDateParsing=false&amp;amp;serverTimezone=GMT&amp;amp;dontTrackOpenResources=true&amp;amp;holdResultsOpenOverStatementClose=true" property="database.read.url" value="${database.url}">
+							<equals arg1="${database.type}" arg2="postgresql" />
+						</condition>
+
 						<replace
 							file="${app.server.dir}/conf/context.xml"
 						>
@@ -3707,7 +3713,7 @@ jdbc.read.password=password</echo>
 											name="jdbc/LiferayReadPool"
 											password="password"
 											type="javax.sql.DataSource"
-											url="jdbc:mysql://${database.host}/lportal?useUnicode=true&amp;characterEncoding=UTF-8&amp;useFastDateParsing=false&amp;serverTimezone=GMT&amp;dontTrackOpenResources=true&amp;holdResultsOpenOverStatementClose=true"
+											url="${database.read.url}"
 											username="read_only_user"
 										/>
 								]]>
@@ -4059,6 +4065,36 @@ tell application "Safari" to quit
 							<echo append="true" file="${test.ext.properties.file}">
 								browser.chrome.bin.file=${browser.chrome.bin.file}
 							</echo>
+						</then>
+					</if>
+
+					<get-testcase-property property.name="test.liferay.virtual.instance" />
+
+					<if>
+						<equals arg1="${test.liferay.virtual.instance}" arg2="true" />
+						<then>
+							<propertyregex
+								input="${test.url}"
+								override="true"
+								property="test.url.origin"
+								regexp="(https?:\/\/[^\/]+)"
+								select="\1"
+							/>
+
+							<if>
+								<isset property="test.url.origin" />
+								<then>
+									<if>
+										<isset property="browser.chrome.bin.args" />
+										<then>
+											<var name="browser.chrome.bin.args" value="${browser.chrome.bin.args} --unsafely-treat-insecure-origin-as-secure=${test.url.origin}" />
+										</then>
+										<else>
+											<var name="browser.chrome.bin.args" value="--unsafely-treat-insecure-origin-as-secure=${test.url.origin}" />
+										</else>
+									</if>
+								</then>
+							</if>
 						</then>
 					</if>
 				</then>
@@ -7528,7 +7564,7 @@ log.sanitizer.enabled=false</echo>
 					</then>
 				</elseif>
 				<else>
-					<var name="app.server.tomcat.version" value="10.1.59" />
+					<var name="app.server.tomcat.version" value="10.1.61" />
 				</else>
 			</if>
 
@@ -10051,13 +10087,33 @@ create database lportal character set utf8mb4;</echo>
 				<if>
 					<isset property="configure.read.write.database" />
 					<then>
-						<echo append="true" file="create.sql">
+						<if>
+							<equals arg1="${database.type}" arg2="postgresql" />
+							<then>
+								<echo append="true" file="create.sql">
+
+\c lportal;
+
+do $do$ begin if not exists (select from pg_roles where rolname = 'read_only_user') then create role read_only_user login password 'password'; end if; end $do$;
+
+grant connect on database lportal to read_only_user;
+
+grant usage on schema public to read_only_user;
+
+grant select on all tables in schema public to read_only_user;
+
+alter default privileges in schema public grant select on tables to read_only_user;</echo>
+							</then>
+							<else>
+								<echo append="true" file="create.sql">
 
 create user 'read_only_user'@'%' identified BY 'password';
 
 grant select ON *.* TO 'read_only_user'@'%';
 
 flush privileges;</echo>
+							</else>
+						</if>
 					</then>
 				</if>
 
@@ -10938,7 +10994,10 @@ org.apache.catalina.ha.session.level=INFO]]>
 					</delete>
 
 					<if>
-						<equals arg1="${database.version}" arg2="2022" />
+						<or>
+							<equals arg1="${database.version}" arg2="2022" />
+							<equals arg1="${database.version}" arg2="2025" />
+						</or>
 						<then>
 							<mirrors-get
 								dest="${todir}"
@@ -14145,28 +14204,12 @@ enterprise.product.enterprise.search.enabled=false</echo>
 	</target>
 
 	<target name="prepare-release-bundle">
-		<ant antfile="build-release-slim.xml" dir="${release.tool.dir}" inheritAll="false" target="dist" useNativeBasedir="true">
-			<property name="override.decrement.module.bnd.versions" value="true" />
+		<ant antfile="build-developer.xml" dir="${release.tool.dir}" inheritAll="false" target="all" useNativeBasedir="true">
+			<property name="build.profile" value="${build.profile}" />
+			<property name="portal.dir" value="${project.dir}" />
 			<property name="project.release.dir.native" value="${release.tool.dir}" />
+			<property name="skip.reset.git" value="true" />
 		</ant>
-
-		<copy
-			overwrite="true"
-			tofile="${project.dir}/liferay-portal-bundle-tomcat.tar.gz"
-		>
-			<fileset
-				dir="dist/"
-				includes="liferay-*-tomcat-*.tar.gz"
-			/>
-		</copy>
-
-		<untar
-			compression="gzip"
-			dest="./bundles"
-			src="liferay-portal-bundle-tomcat.tar.gz"
-		>
-			<cutdirsmapper dirs="1" />
-		</untar>
 
 		<antcall target="deploy-license-xml">
 			<param name="test.build.cmp.license.url" value="${test.cmp.license.url}" />
@@ -14183,6 +14226,7 @@ enterprise.product.enterprise.search.enabled=false</echo>
 		</antcall>
 
 		<prepare-selenium-login-config />
+		<prepare-selenium-required-properties />
 
 		<prepare-selenium-analytics-cloud-properties />
 		<prepare-selenium-app-server-properties />
@@ -14200,7 +14244,6 @@ enterprise.product.enterprise.search.enabled=false</echo>
 		<prepare-selenium-onedrive-properties />
 		<prepare-selenium-openid-properties />
 		<prepare-selenium-recaptcha-properties />
-		<prepare-selenium-required-properties />
 		<prepare-selenium-sharepoint-properties />
 		<prepare-selenium-script-management-config />
 		<prepare-selenium-site-initializer-raylife-d2c-paypal-properties />
@@ -16767,6 +16810,8 @@ sendBlacklist=[]
 			</then>
 		</if>
 
+		<antcall target="deploy-osgi-modules" />
+
 		<get-testcase-property property.name="legacy.database.file" />
 		<get-testcase-property property.name="portal.version" />
 		<get-testcase-property property.name="rebuild.staging.database" />
@@ -17022,8 +17067,6 @@ sendBlacklist=[]
 		<antcall if:set="osgi.app.includes" target="deploy-osgi-apps" />
 
 		<antcall target="hot-deploy-osgi-apps" />
-
-		<antcall target="deploy-osgi-modules" />
 
 		<antcall target="deploy-specific-plugins">
 			<param name="test.class" value="${test.class}" />

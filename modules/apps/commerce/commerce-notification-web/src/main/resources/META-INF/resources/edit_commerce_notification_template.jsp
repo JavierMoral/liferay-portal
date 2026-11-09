@@ -12,14 +12,19 @@ CommerceNotificationTemplatesDisplayContext commerceNotificationTemplatesDisplay
 
 CommerceNotificationTemplate commerceNotificationTemplate = commerceNotificationTemplatesDisplayContext.getCommerceNotificationTemplate();
 
-String name = BeanParamUtil.getString(commerceNotificationTemplate, renderRequest, "name");
-String description = BeanParamUtil.getString(commerceNotificationTemplate, renderRequest, "description");
-String from = BeanParamUtil.getString(commerceNotificationTemplate, renderRequest, "from");
-String fromName = BeanParamUtil.getString(commerceNotificationTemplate, renderRequest, "fromName");
-String cc = BeanParamUtil.getString(commerceNotificationTemplate, renderRequest, "cc");
-String bcc = BeanParamUtil.getString(commerceNotificationTemplate, renderRequest, "bcc");
+String title = LanguageUtil.get(resourceBundle, "add-notification-template");
 
-String type = BeanParamUtil.getString(commerceNotificationTemplate, renderRequest, "type");
+if (commerceNotificationTemplate != null) {
+	title = LanguageUtil.format(request, "edit-x", commerceNotificationTemplate.getName(), false);
+}
+
+String type = StringPool.BLANK;
+
+if (commerceNotificationTemplate != null) {
+	type = commerceNotificationTemplate.getType();
+}
+
+type = ParamUtil.getString(renderRequest, "type", type);
 
 CommerceNotificationType commerceNotificationType = commerceNotificationTemplatesDisplayContext.getCommerceNotificationType(type);
 
@@ -27,12 +32,6 @@ Map<String, String> definitionTerms = null;
 
 if (commerceNotificationType != null) {
 	definitionTerms = commerceNotificationTemplatesDisplayContext.getDefinitionTerms(CommerceDefinitionTermConstants.RECIPIENT_DEFINITION_TERMS_CONTRIBUTOR, commerceNotificationType.getKey(), locale);
-}
-
-String title = LanguageUtil.get(resourceBundle, "add-notification-template");
-
-if (commerceNotificationTemplate != null) {
-	title = LanguageUtil.format(request, "edit-x", commerceNotificationTemplate.getName(), false);
 }
 %>
 
@@ -58,9 +57,9 @@ if (commerceNotificationTemplate != null) {
 		>
 			<div class="row">
 				<div class="col-12">
-					<aui:input name="name" value="<%= name %>" />
+					<aui:input name="name" />
 
-					<aui:input name="description" value="<%= description %>" />
+					<aui:input name="description" />
 				</div>
 
 				<div class="col-6">
@@ -102,15 +101,15 @@ if (commerceNotificationTemplate != null) {
 				</div>
 
 				<div class="col-6">
-					<aui:input name="cc" value="<%= cc %>" />
+					<aui:input name="cc" />
 
-					<aui:input label="from-address" name="from" value="<%= from %>" />
+					<aui:input label="from-address" name="from" />
 				</div>
 
 				<div class="col-6">
-					<aui:input name="bcc" value="<%= bcc %>" />
+					<aui:input name="bcc" />
 
-					<aui:input name="fromName" value="<%= fromName %>" />
+					<aui:input name="fromName" />
 				</div>
 
 				<c:if test="<%= (definitionTerms != null) && !definitionTerms.isEmpty() %>">

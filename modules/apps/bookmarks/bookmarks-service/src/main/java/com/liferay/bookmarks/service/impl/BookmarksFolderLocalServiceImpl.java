@@ -243,19 +243,6 @@ public class BookmarksFolderLocalServiceImpl
 	}
 
 	@Override
-	public List<BookmarksFolder> getCompanyFolders(
-		long companyId, int start, int end) {
-
-		return bookmarksFolderPersistence.findByCompanyId(
-			companyId, start, end);
-	}
-
-	@Override
-	public int getCompanyFoldersCount(long companyId) {
-		return bookmarksFolderPersistence.countByCompanyId(companyId);
-	}
-
-	@Override
 	public BookmarksFolder getFolder(long folderId) throws PortalException {
 		return bookmarksFolderPersistence.findByPrimaryKey(folderId);
 	}
@@ -301,14 +288,6 @@ public class BookmarksFolderLocalServiceImpl
 
 		return bookmarksFolderFinder.findF_E_ByG_F(
 			groupId, folderId, queryDefinition);
-	}
-
-	@Override
-	public List<Object> getFoldersAndEntries(
-		long groupId, long folderId, int status, int start, int end) {
-
-		return getFoldersAndEntries(
-			groupId, folderId, status, start, end, null);
 	}
 
 	@Override

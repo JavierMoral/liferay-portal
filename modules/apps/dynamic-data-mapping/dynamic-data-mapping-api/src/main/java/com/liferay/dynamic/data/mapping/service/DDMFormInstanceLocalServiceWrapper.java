@@ -203,13 +203,6 @@ public class DDMFormInstanceLocalServiceWrapper
 		_ddmFormInstanceLocalService.deleteFormInstance(ddmFormInstanceId);
 	}
 
-	@Override
-	public void deleteFormInstances(long groupId)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		_ddmFormInstanceLocalService.deleteFormInstances(groupId);
-	}
-
 	/**
 	 * @throws PortalException
 	 */
@@ -473,14 +466,6 @@ public class DDMFormInstanceLocalServiceWrapper
 	}
 
 	@Override
-	public DDMFormInstance getFormInstance(String uuid, long ddmFormInstanceId)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _ddmFormInstanceLocalService.getFormInstance(
-			uuid, ddmFormInstanceId);
-	}
-
-	@Override
 	public DDMFormInstance getFormInstanceByStructureId(long structureId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -559,33 +544,6 @@ public class DDMFormInstanceLocalServiceWrapper
 
 		return _ddmFormInstanceLocalService.search(
 			companyId, groupId, keywords, start, end, orderByComparator);
-	}
-
-	@Override
-	public java.util.List<DDMFormInstance> search(
-		long companyId, long groupId, String[] names, String[] descriptions,
-		boolean andOperator, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<DDMFormInstance>
-			orderByComparator) {
-
-		return _ddmFormInstanceLocalService.search(
-			companyId, groupId, names, descriptions, andOperator, start, end,
-			orderByComparator);
-	}
-
-	@Override
-	public int searchCount(long companyId, long groupId, String keywords) {
-		return _ddmFormInstanceLocalService.searchCount(
-			companyId, groupId, keywords);
-	}
-
-	@Override
-	public int searchCount(
-		long companyId, long groupId, String[] names, String[] descriptions,
-		boolean andOperator) {
-
-		return _ddmFormInstanceLocalService.searchCount(
-			companyId, groupId, names, descriptions, andOperator);
 	}
 
 	@Override
@@ -699,4 +657,4 @@ public class DDMFormInstanceLocalServiceWrapper
 	private DDMFormInstanceLocalService _ddmFormInstanceLocalService;
 
 }
-// LIFERAY-SERVICE-BUILDER-HASH:1325083969
+// LIFERAY-SERVICE-BUILDER-HASH:-324035988

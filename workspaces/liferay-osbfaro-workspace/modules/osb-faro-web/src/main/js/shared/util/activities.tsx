@@ -1,6 +1,5 @@
 import moment from 'moment';
 import React from 'react';
-import {DEFAULT_ACTIVITY_MAX} from 'shared/api/activities';
 import getEventDashboardUrl, {
 	EventDashboardContext,
 } from './getEventDashboardUrl';
@@ -12,13 +11,12 @@ import {
 } from 'shared/util/date';
 import {getSafeDecodedURIComponent} from './util';
 import {AssetTypes, TimeIntervals} from 'shared/util/constants';
+import {PayloadLayout} from 'shared/util/payloadTables';
 import {RangeSelectors} from 'shared/types';
 import {Routes, toRoute} from 'shared/util/router';
 import {sub} from 'shared/util/lang';
-import {toLocale} from 'shared/util/numbers';
 import {UserSession, UserSessionEvent} from 'shared/queries/UserSessionQuery';
 
-export const CHART_ACTIVITY_ID = 'activities';
 export const CHART_ID = 'individualActivity';
 
 export const INTERVAL_MAP = {
@@ -184,33 +182,6 @@ export const mapEventMetricToActivityHistory = (
 	) ?? [];
 
 /**
- * Format actvitiy metrics for use in ChangeLegend
- * @param {Object} changeMetrics - History data points.
- * @param {number} changeMetrics.activityChange - The activity count change from
- *                                                previous period.
- * @param {number} changeMetrics.activityCount - The activity count.
- * @return {Array} Activity metrics formatted for use in ChangeLegend.
- */
-export const buildLegendItems = ({
-	activityChange,
-	activityCount,
-}: {
-	activityChange: number;
-	activityCount: number;
-}): {change: number; id: string; secondaryInfo: string; title: string}[] => [
-	{
-		change: activityChange,
-		id: CHART_ACTIVITY_ID,
-		secondaryInfo: sub(Liferay.Language.get('x-day-change'), [
-			DEFAULT_ACTIVITY_MAX,
-		]) as string,
-		title: sub(Liferay.Language.get('total-activity-count-x'), [
-			toLocale(activityCount),
-		]) as string,
-	},
-];
-
-/**
  * An external data source reaches Analytics Cloud through a webhook, which it
  * announces in the session's user agent. Its events are not page bound, so they
  * are neither linked to a dashboard nor grouped by page.
@@ -242,6 +213,28 @@ const toAttributeMap = (
 	Object.fromEntries(attributes.map(({name, value}) => [name, value]));
 
 /**
+ * How the timeline lays out the payload `formatEvents` builds when a row is
+ * expanded. The event's own properties join its attributes, while the campaign
+ * the touch carried and its acquisition parameters each get a table, with the
+ * campaign name linking to the campaign's page.
+ */
+export const ACTIVITY_PAYLOAD_LAYOUT: PayloadLayout = {
+	groups: [
+		{key: 'properties'},
+		{
+			key: 'campaign',
+			links: {campaignName: 'campaignUrl'},
+			title: Liferay.Language.get('campaign'),
+		},
+		{
+			key: 'acquisitionProperties',
+			title: Liferay.Language.get('utm-parameters'),
+		},
+	],
+	title: Liferay.Language.get('event-attributes'),
+};
+
+/**
  * Formats UserSessions events and maps its attributes to the required to be used in VerticalTimeline component.
  * @param {Array} events Array of UserSessions events.
  * @returns {Array.<Object>} Array of objects for a vertical timeline.
@@ -258,6 +251,7 @@ export const formatEvents = (
 			acquisitionProperties,
 			applicationId,
 			assetTitle,
+			campaignEntityId,
 			canonicalUrl,
 			createDate,
 			eventDate,
@@ -270,6 +264,8 @@ export const formatEvents = (
 		} = event;
 
 		const campaign = getEventCampaign(event);
+
+		const {channelId, groupId} = context;
 
 		return {
 			attributes: {
@@ -285,6 +281,29 @@ export const formatEvents = (
 					acquisitionProperties: toAttributeMap(
 						acquisitionProperties
 					),
+				}),
+
+				// The campaign is its own group rather than an event attribute,
+				// and only an event that carried one has it, so the details of
+				// an event without a campaign show no campaign at all. The
+				// group carries the campaign's page too, which the details
+				// link the name to. The page is keyed by the campaign's own
+				// id rather than the utm_cid the touch carried, and only a
+				// resolved campaign has one.
+
+				...(campaign && {
+					campaign: {
+						campaignName: campaign.campaignName,
+						...(campaignEntityId &&
+							channelId &&
+							groupId && {
+								campaignUrl: toRoute(Routes.CAMPAIGNS_DETAIL, {
+									channelId,
+									groupId,
+									id: campaignEntityId,
+								}),
+							}),
+					},
 				}),
 			},
 			...(campaign && {campaign}),
@@ -418,7 +437,8 @@ export const groupEventsByPage = (
 
 				// The page group's own subtitle and campaign label already show
 				// the page URL and the touch it came from, so its nested
-				// events don't repeat either.
+				// events don't repeat either. Their details still name the
+				// campaign, which lives in their attributes.
 
 				nestedItems: formattedPageEvents.map((event) => ({
 					...event,

@@ -21,7 +21,6 @@ taglib uri="http://liferay.com/tld/util" prefix="liferay-util" %>
 <%@ page import="com.liferay.frontend.taglib.clay.servlet.taglib.util.JSPNavigationItemList" %><%@
 page import="com.liferay.petra.string.StringBundler" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
-page import="com.liferay.portal.kernel.bean.BeanParamUtil" %><%@
 page import="com.liferay.portal.kernel.cal.Recurrence" %><%@
 page import="com.liferay.portal.kernel.dao.orm.QueryUtil" %><%@
 page import="com.liferay.portal.kernel.dao.search.SearchContainer" %><%@
@@ -75,6 +74,7 @@ page import="com.liferay.portal.reports.engine.console.web.internal.permission.A
 page import="com.liferay.portal.reports.engine.console.web.internal.permission.DefinitionPermissionChecker" %><%@
 page import="com.liferay.portal.reports.engine.console.web.internal.permission.EntryPermissionChecker" %><%@
 page import="com.liferay.portal.reports.engine.console.web.internal.permission.SourcePermissionChecker" %><%@
+page import="com.liferay.portal.security.key.secret.SecretResolverUtil" %><%@
 page import="com.liferay.taglib.search.ResultRow" %>
 
 <%@ page import="jakarta.portlet.PortletURL" %><%@

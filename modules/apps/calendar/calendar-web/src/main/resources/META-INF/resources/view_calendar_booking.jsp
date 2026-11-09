@@ -12,7 +12,7 @@
 <%
 String backURL = ParamUtil.getString(request, "backURL");
 
-int instanceIndex = BeanParamUtil.getInteger(calendarBooking, request, "instanceIndex");
+int instanceIndex = ParamUtil.getInteger(request, "instanceIndex", GetterUtil.get(calendarBooking, CalendarBooking::getInstanceIndex, 0));
 
 calendarBooking = RecurrenceUtil.getCalendarBookingInstance(calendarBooking, instanceIndex);
 
@@ -112,7 +112,7 @@ portletDisplay.setShowBackIcon(Validator.isNotNull(backURL));
 
 						<c:if test="<%= Validator.isNotNull(calendarBooking.getLocation()) %>">
 							<dt>
-								<liferay-ui:message key="location" />:
+								<liferay-ui:message key="location[place]" />:
 							</dt>
 							<dd>
 								<span class="location"><%= HtmlUtil.escape(calendarBooking.getLocation()) %></span>

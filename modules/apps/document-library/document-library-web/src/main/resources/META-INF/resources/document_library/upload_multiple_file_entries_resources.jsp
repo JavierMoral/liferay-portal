@@ -10,20 +10,22 @@
 <%
 String redirect = ParamUtil.getString(request, "redirect");
 
+DLAdminDisplayContext dlAdminDisplayContext = (DLAdminDisplayContext)request.getAttribute(DLAdminDisplayContext.class.getName());
+
 FileEntry fileEntry = (FileEntry)request.getAttribute(WebKeys.DOCUMENT_LIBRARY_FILE_ENTRY);
 
-long groupId = BeanParamUtil.getLong(fileEntry, request, "groupId");
+long groupId = ParamUtil.getLong(request, "groupId", GetterUtil.get(fileEntry, FileEntry::getGroupId, 0L));
 
-long repositoryId = BeanParamUtil.getLong(fileEntry, request, "repositoryId");
+long repositoryId = ParamUtil.getLong(request, "repositoryId", GetterUtil.get(fileEntry, FileEntry::getRepositoryId, 0L));
 
 if (repositoryId <= 0) {
 
 	// <liferay-ui:asset_add_button /> only passes in groupId
 
-	repositoryId = BeanParamUtil.getLong(fileEntry, request, "groupId");
+	repositoryId = ParamUtil.getLong(request, "groupId", GetterUtil.get(fileEntry, FileEntry::getGroupId, 0L));
 }
 
-long folderId = BeanParamUtil.getLong(fileEntry, request, "folderId");
+long folderId = ParamUtil.getLong(request, "folderId", GetterUtil.get(fileEntry, FileEntry::getFolderId, 0L));
 
 Folder folder = null;
 
@@ -358,6 +360,8 @@ else {
 						className="<%= DLFileEntry.class.getName() %>"
 						classPK="<%= assetClassPK %>"
 						classTypePK="<%= fileEntryTypeId %>"
+						groupIds="<%= SiteConnectedGroupGroupProviderUtil.getCurrentAndAncestorSiteAndDepotGroupIds(dlAdminDisplayContext.getRepositoryGroupId(scopeGroupId, repositoryId)) %>"
+						visibilityTypes="<%= AssetVocabularyConstants.VISIBILITY_TYPES %>"
 					/>
 
 					<liferay-asset:asset-tags-selector

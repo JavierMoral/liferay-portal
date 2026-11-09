@@ -15,6 +15,7 @@ import com.liferay.petra.sql.dsl.query.FromStep;
 import com.liferay.petra.sql.dsl.query.GroupByStep;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.InlineSQLHelperUtil;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionRegistryUtil;
@@ -228,8 +229,7 @@ public class DLFileEntryTypeServiceImpl extends DLFileEntryTypeServiceBaseImpl {
 
 		return dlFileEntryTypePersistence.dslQuery(
 			_getGroupByStep(
-				DSLQueryFactoryUtil.selectDistinct(
-					DLFileEntryTypeTable.INSTANCE),
+				DSLQueryFactoryUtil.select(DLFileEntryTypeTable.INSTANCE),
 				companyId, groupIds, keywords, includeBasicFileEntryType, scope
 			).orderBy(
 				DLFileEntryTypeTable.INSTANCE, orderByComparator
@@ -362,6 +362,12 @@ public class DLFileEntryTypeServiceImpl extends DLFileEntryTypeServiceBaseImpl {
 						groupIdsPredicate.withParentheses());
 				}
 
+				predicate = predicate.and(
+					InlineSQLHelperUtil.getPermissionWherePredicate(
+						DLFileEntryType.class,
+						DLFileEntryTypeTable.INSTANCE.fileEntryTypeId,
+						groupIds));
+
 				if (includeBasicFileEntryType) {
 					predicate = predicate.withParentheses(
 					).or(
@@ -382,7 +388,8 @@ public class DLFileEntryTypeServiceImpl extends DLFileEntryTypeServiceBaseImpl {
 					}
 
 					Predicate keywordPredicate = DSLFunctionFactoryUtil.lower(
-						DLFileEntryTypeTable.INSTANCE.name
+						DSLFunctionFactoryUtil.castClobText(
+							DLFileEntryTypeTable.INSTANCE.name)
 					).like(
 						keyword
 					).or(

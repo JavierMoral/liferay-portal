@@ -6,39 +6,41 @@
 import React from 'react';
 
 import {GovernanceContextProvider} from './GovernanceContext';
-import {AttentionRequired} from './components/AttentionRequired';
-import {DuplicationAndSimilarity} from './components/DuplicationAndSimilarity';
 import {Filters} from './components/Filters';
 import {Freshness} from './components/Freshness';
 import {GovernanceHealth} from './components/GovernanceHealth';
 import {Operations} from './components/Operations';
+import {Quality} from './components/Quality';
 import {GovernanceAdditionalProps} from './types';
 
 import '../../../../css/dashboard/GovernanceDashboard.scss';
 
 export default function GovernanceDashboard({
 	additionalProps,
-	constants,
+	allSpacesAdministered,
+	spaceGroupIds,
+	spaceIds,
 }: {
 	additionalProps: GovernanceAdditionalProps;
-	constants: {[key: string]: string};
+	allSpacesAdministered: boolean;
+	spaceGroupIds: string[];
+	spaceIds: string[];
 }) {
 	return (
-		<GovernanceContextProvider>
+		<GovernanceContextProvider
+			allSpacesAdministered={allSpacesAdministered}
+			spaceGroupIds={spaceGroupIds}
+			spaceIds={spaceIds}
+		>
 			<Filters />
 
 			<GovernanceHealth />
 
-			<AttentionRequired />
+			<Quality additionalProps={additionalProps} />
 
 			<Freshness additionalProps={additionalProps} />
 
 			<Operations additionalProps={additionalProps} />
-
-			<DuplicationAndSimilarity
-				additionalProps={additionalProps}
-				constants={constants}
-			/>
 		</GovernanceContextProvider>
 	);
 }
