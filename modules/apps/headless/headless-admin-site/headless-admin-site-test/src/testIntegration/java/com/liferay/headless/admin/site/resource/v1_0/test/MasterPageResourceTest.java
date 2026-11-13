@@ -389,18 +389,6 @@ public class MasterPageResourceTest extends BaseMasterPageResourceTestCase {
 			designLibraryExternalReferenceCode,
 			WorkflowConstants.STATUS_APPROVED);
 
-		Map<String, Map<String, String>> actions = masterPage.getActions();
-
-		Map<String, String> updateAction = actions.get("update");
-
-		String updateHref = updateAction.get("href");
-
-		Assert.assertTrue(
-			updateHref.endsWith(
-				"/master-pages/" + masterPage.getExternalReferenceCode()));
-
-		Assert.assertEquals("PATCH", updateAction.get("method"));
-
 		String newName = RandomTestUtil.randomString();
 
 		MasterPage patchMasterPage =
@@ -425,8 +413,6 @@ public class MasterPageResourceTest extends BaseMasterPageResourceTestCase {
 			getMasterPage.getMarkedAsDefault());
 		Assert.assertEquals(newName, getMasterPage.getName());
 
-		_testPatchDesignLibraryMasterPageWithDuplicateName(
-			designLibraryExternalReferenceCode, newName);
 		_assertProblemException(
 			"BAD_REQUEST", "Name must not be null",
 			() -> masterPageResource.patchDesignLibraryMasterPage(
@@ -434,9 +420,12 @@ public class MasterPageResourceTest extends BaseMasterPageResourceTestCase {
 				masterPage.getExternalReferenceCode(),
 				new MasterPage() {
 					{
-						setName("");
+						setName(StringPool.BLANK);
 					}
 				}));
+
+		_testPatchDesignLibraryMasterPageWithDuplicateName(
+			designLibraryExternalReferenceCode, newName);
 	}
 
 	@Override
@@ -1512,6 +1501,16 @@ public class MasterPageResourceTest extends BaseMasterPageResourceTestCase {
 		Assert.assertTrue(actions.containsKey("permissions"));
 		Assert.assertFalse(actions.containsKey("unmarkAsDefault"));
 		Assert.assertTrue(actions.containsKey("update"));
+
+		Map<String, String> updateAction = actions.get("update");
+
+		String updateHref = updateAction.get("href");
+
+		Assert.assertTrue(
+			updateHref.endsWith(
+				"/master-pages/" + masterPage.getExternalReferenceCode()));
+
+		Assert.assertEquals("PATCH", updateAction.get("method"));
 	}
 
 	private void _testGetDesignLibraryMasterPageWithNestedFields()
@@ -2397,11 +2396,11 @@ public class MasterPageResourceTest extends BaseMasterPageResourceTestCase {
 			String designLibraryExternalReferenceCode, MasterPage masterPage)
 		throws Exception {
 
-		MasterPageResource userWithoutPermissionsMasterPageResource =
+		MasterPageResource masterPageResource =
 			_getUserWithoutPermissionsMasterPageResource();
 
 		MasterPage userMasterPage =
-			userWithoutPermissionsMasterPageResource.getDesignLibraryMasterPage(
+			masterPageResource.getDesignLibraryMasterPage(
 				designLibraryExternalReferenceCode,
 				masterPage.getExternalReferenceCode());
 
@@ -2411,16 +2410,14 @@ public class MasterPageResourceTest extends BaseMasterPageResourceTestCase {
 
 		_assertProblemException(
 			"FORBIDDEN", "Forbidden",
-			() ->
-				userWithoutPermissionsMasterPageResource.
-					putDesignLibraryMasterPage(
-						designLibraryExternalReferenceCode,
-						masterPage.getExternalReferenceCode(),
-						new MasterPage() {
-							{
-								setName(RandomTestUtil.randomString());
-							}
-						}));
+			() -> masterPageResource.putDesignLibraryMasterPage(
+				designLibraryExternalReferenceCode,
+				masterPage.getExternalReferenceCode(),
+				new MasterPage() {
+					{
+						setName(RandomTestUtil.randomString());
+					}
+				}));
 	}
 
 	private void _testPutSiteMasterPage(MasterPage masterPage)
