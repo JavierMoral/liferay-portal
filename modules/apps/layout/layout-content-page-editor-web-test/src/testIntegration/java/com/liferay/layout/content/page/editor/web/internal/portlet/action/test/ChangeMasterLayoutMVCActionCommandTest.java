@@ -20,15 +20,15 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.CompanyLocalService;
-import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.TestInfo;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletActionRequest;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletActionResponse;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
+import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.FeatureFlagTestUtil;
-import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.FeatureFlag;
 import com.liferay.portal.test.rule.Inject;
@@ -61,16 +61,13 @@ public class ChangeMasterLayoutMVCActionCommandTest {
 	@Test
 	@TestInfo("LPD-108822")
 	public void testChangeMasterLayout() throws Exception {
-		Group group = _groupLocalService.getGroup(TestPropsValues.getGroupId());
+		_group = GroupTestUtil.addGroup();
 
 		FeatureFlagTestUtil.invokeFeatureFlagListeners(
-			group.getCompanyId(), true, "LPD-57283");
-
-		Company company = _companyLocalService.getCompany(group.getCompanyId());
-		Layout layout = LayoutTestUtil.addTypeContentLayout(group);
+			_group.getCompanyId(), true, "LPD-57283");
 
 		Group designLibraryGroup = DesignLibraryTestUtil.addDesignLibraryGroup(
-			group.getGroupId(), true);
+			_group.getGroupId(), true);
 
 		LayoutPageTemplateEntry designLibraryMasterLayoutPageTemplateEntry =
 			LayoutPageTemplateTestUtil.addLayoutPageTemplateEntry(
@@ -78,18 +75,22 @@ public class ChangeMasterLayoutMVCActionCommandTest {
 				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT,
 				WorkflowConstants.STATUS_APPROVED);
 
+		Company company = _companyLocalService.getCompany(
+			_group.getCompanyId());
+		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
+
 		_testChangeMasterLayout(
-			company, group, layout, designLibraryMasterLayoutPageTemplateEntry,
+			company, layout, designLibraryMasterLayoutPageTemplateEntry,
 			designLibraryGroup.getExternalReferenceCode());
 
 		LayoutPageTemplateEntry siteMasterLayoutPageTemplateEntry =
 			LayoutPageTemplateTestUtil.addLayoutPageTemplateEntry(
-				group.getGroupId(),
+				_group.getGroupId(),
 				LayoutPageTemplateEntryTypeConstants.MASTER_LAYOUT,
 				WorkflowConstants.STATUS_APPROVED);
 
 		_testChangeMasterLayout(
-			company, group, layout, siteMasterLayoutPageTemplateEntry,
+			company, layout, siteMasterLayoutPageTemplateEntry,
 			StringPool.BLANK);
 	}
 
@@ -101,14 +102,14 @@ public class ChangeMasterLayoutMVCActionCommandTest {
 	}
 
 	private void _testChangeMasterLayout(
-			Company company, Group group, Layout layout,
+			Company company, Layout layout,
 			LayoutPageTemplateEntry masterLayoutPageTemplateEntry,
 			String masterLayoutPageTemplateEntryScopeERC)
 		throws Exception {
 
 		MockLiferayPortletActionRequest mockLiferayPortletActionRequest =
 			ContentLayoutTestUtil.getMockLiferayPortletActionRequest(
-				company, group, layout);
+				company, _group, layout);
 
 		mockLiferayPortletActionRequest.addParameter(
 			"masterLayoutPageTemplateEntryERC",
@@ -145,8 +146,8 @@ public class ChangeMasterLayoutMVCActionCommandTest {
 	@Inject
 	private CompanyLocalService _companyLocalService;
 
-	@Inject
-	private GroupLocalService _groupLocalService;
+	@DeleteAfterTestRun
+	private Group _group;
 
 	@Inject
 	private LayoutLocalService _layoutLocalService;
